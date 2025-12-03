@@ -268,7 +268,11 @@ export class ImportFlowWithNodes
     return flow;
   }
 
-  private async importEnhancedFormat(
+  /**
+   * Import flow from enhanced format JSON data directly (without file parsing).
+   * This is the core import logic used by both file import and workflow builder.
+   */
+  public async importFromJson(
     data: any,
     sessionId?: UniqueEntityID,
     agentModelOverrides?: Map<string, any>,
@@ -412,12 +416,16 @@ export class ImportFlowWithNodes
         const newNodeId = nodeIdMap.get(oldNodeId);
         if (!newNodeId) continue;
 
+        // Normalize logicOperator to uppercase (domain expects 'AND' | 'OR')
+        const rawOperator = (nodeData as any).logicOperator || "AND";
+        const normalizedOperator = rawOperator.toUpperCase() as "AND" | "OR";
+
         const ifNode = IfNode.create(
           {
             flowId: newFlowId,
             name: (nodeData as any).name,
             color: (nodeData as any).color,
-            logicOperator: (nodeData as any).logicOperator,
+            logicOperator: normalizedOperator,
             conditions: (nodeData as any).conditions || [],
           },
           new UniqueEntityID(newNodeId),
@@ -439,7 +447,7 @@ export class ImportFlowWithNodes
 
   /**
    * @deprecated Legacy import method - kept for reference only
-   * All imports now go through migrateLegacyToEnhanced() → importEnhancedFormat()
+   * All imports now go through migrateLegacyToEnhanced() → importFromJson()
    * This ensures single code path and proper ID management
    */
   private async importLegacyFormat(
@@ -675,7 +683,7 @@ export class ImportFlowWithNodes
 
       // Now import using enhanced format (single code path)
       if (this.isEnhancedFormat(parsedData)) {
-        return this.importEnhancedFormat(parsedData, sessionId, agentModelOverrides);
+        return this.importFromJson(parsedData, sessionId, agentModelOverrides);
       } else {
         // Should never reach here after migration, but handle gracefully
         console.error("❌ Unknown flow format detected:", {

@@ -199,5 +199,25 @@
     "bps": true,
     "folderMillis": 1763694696450,
     "hash": "1a09b4fa74cd06a040bf94ea7d3993b44776633b020d72ce664bbf6cbbafecd0"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ADD COLUMN IF NOT EXISTS \"is_play_session\" boolean DEFAULT false NOT NULL;",
+      "\nALTER TABLE \"sessions\" ADD COLUMN IF NOT EXISTS \"config\" jsonb DEFAULT '{}'::jsonb NOT NULL;",
+      "\nCREATE INDEX IF NOT EXISTS \"sessions_is_play_session_idx\" ON \"sessions\" (\"is_play_session\");",
+      "\nCREATE INDEX IF NOT EXISTS \"sessions_play_session_updated_at_idx\" ON \"sessions\" (\"is_play_session\", \"updated_at\" DESC) WHERE \"is_play_session\" = true;"
+    ],
+    "bps": true,
+    "folderMillis": 1764767677742,
+    "hash": "8deaac0705ebc271dc5b5fa9f84b3464a2ca3f11bc3e6540646114bae1fee343"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"characters\" ADD COLUMN \"scenario\" text;",
+      "\nALTER TABLE \"characters\" ADD COLUMN \"first_messages\" jsonb;"
+    ],
+    "bps": true,
+    "folderMillis": 1764774684656,
+    "hash": "3fd574b9b75eb8f1cdafb8977aa28a981ef591bcbae67b574e8e168c248ba450"
   }
 ]

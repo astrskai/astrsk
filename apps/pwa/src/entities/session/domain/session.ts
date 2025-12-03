@@ -12,6 +12,16 @@ export interface CardListItem {
   enabled: boolean;
 }
 
+/**
+ * Session configuration stored in JSONB.
+ * Used for persistent UI state and preferences.
+ */
+export interface SessionConfig {
+  // Panel visibility
+  isDataPanelOpen?: boolean;
+  isSettingsPanelOpen?: boolean;
+}
+
 export interface SessionProps {
   // Metadata
   title: string;
@@ -53,6 +63,12 @@ export interface SessionProps {
     h: number; // height in rows
   }>;
 
+  // Play session flag
+  isPlaySession: boolean;
+
+  // Permanent config storage (JSONB)
+  config: Record<string, unknown>;
+
   // Set by system
   createdAt: Date;
   updatedAt: Date;
@@ -74,6 +90,8 @@ export const SessionPropsKeys = [
   "autoReply",
   "dataSchemaOrder",
   "widgetLayout",
+  "isPlaySession",
+  "config",
   "createdAt",
   "updatedAt",
 ];
@@ -94,7 +112,7 @@ export class Session extends AggregateRoot<SessionProps> {
   }
 
   get plotCard(): CardListItem | undefined {
-    return this.props.allCards.find((card) => card.type === CardType.Plot || card.type === CardType.Scenario);
+    return this.props.allCards.find((card) => (card.type === CardType.Plot || card.type === CardType.Scenario) && card.enabled);
   }
 
   get userCharacterCardId(): UniqueEntityID | undefined {
@@ -103,7 +121,7 @@ export class Session extends AggregateRoot<SessionProps> {
 
   get aiCharacterCardIds(): UniqueEntityID[] {
     return this.props.allCards
-      .filter((card) => card.type === CardType.Character)
+      .filter((card) => card.type === CardType.Character && card.enabled)
       .map((card) => card.id)
       .filter((id) => !id.equals(this.userCharacterCardId));
   }
@@ -144,6 +162,14 @@ export class Session extends AggregateRoot<SessionProps> {
     return this.props.widgetLayout;
   }
 
+  get isPlaySession(): boolean {
+    return this.props.isPlaySession;
+  }
+
+  get config(): SessionConfig {
+    return this.props.config as SessionConfig;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -177,6 +203,8 @@ export class Session extends AggregateRoot<SessionProps> {
       autoReply: props.autoReply ?? AutoReply.Random,
       dataSchemaOrder: props.dataSchemaOrder || [],
       widgetLayout: props.widgetLayout,
+      isPlaySession: props.isPlaySession ?? false,
+      config: props.config ?? {},
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date(),
     };
@@ -286,5 +314,9 @@ export class Session extends AggregateRoot<SessionProps> {
 
   public setWidgetLayout(layout: Array<{ i: string; x: number; y: number; w: number; h: number }> | undefined): void {
     this.props.widgetLayout = layout;
+  }
+
+  public setConfig(config: Partial<SessionConfig>): void {
+    this.props.config = { ...this.props.config, ...config };
   }
 }

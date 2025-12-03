@@ -6,6 +6,7 @@ import {
 import { SessionService } from "@/app/services/session-service";
 import { Session } from "@/entities/session/domain/session";
 import { SessionDrizzleMapper } from "@/entities/session/mappers/session-drizzle-mapper";
+import { SessionListItem } from "@/entities/session/repos";
 import { Turn } from "@/entities/turn/domain/turn";
 import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
 import { Result } from "@/shared/core/result";
@@ -15,6 +16,34 @@ import { useMutation } from "@tanstack/react-query";
 import { sessionQueries } from "./query-factory";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
+
+/**
+ * Helper to update a session in the listItems cache
+ * Updates the item and moves it to the top (sorted by updatedAt desc)
+ */
+function updateSessionListItem(
+  sessionId: string,
+  updates: Partial<Pick<SessionListItem, "title" | "messageCount" | "updatedAt">>,
+) {
+  const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
+  queryClient.setQueryData<SessionListItem[]>(listItemQueryKey, (oldData) => {
+    if (!oldData) return oldData;
+
+    const existingIndex = oldData.findIndex((item) => item.id === sessionId);
+    if (existingIndex === -1) return oldData;
+
+    // Update the item
+    const updatedItem: SessionListItem = {
+      ...oldData[existingIndex],
+      ...updates,
+      updatedAt: updates.updatedAt || new Date(),
+    };
+
+    // Remove from current position and add to top (most recently updated first)
+    const newData = oldData.filter((_, i) => i !== existingIndex);
+    return [updatedItem, ...newData];
+  });
+}
 
 /**
  * Mutations
@@ -35,6 +64,7 @@ export const useSaveSession = () => {
       const sessionQueryKey = sessionQueries.detail(
         variables.session.id,
       ).queryKey;
+      const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
 
       // Cancel queries
       await context.client.cancelQueries({
@@ -43,14 +73,21 @@ export const useSaveSession = () => {
 
       // Save previous data
       const previousSession = context.client.getQueryData(sessionQueryKey);
+      const previousListItems = context.client.getQueryData<SessionListItem[]>(listItemQueryKey);
 
-      // Optimistic update
+      // Optimistic update - session detail
       context.client.setQueryData(
         sessionQueryKey,
         SessionDrizzleMapper.toPersistence(variables.session),
       );
 
-      return { previousSession };
+      // Optimistic update - listItems (update title and move to top)
+      updateSessionListItem(variables.session.id.toString(), {
+        title: variables.session.props.title,
+        updatedAt: new Date(),
+      });
+
+      return { previousSession, previousListItems };
     },
 
     onError: (error, variables, onMutateResult, context) => {
@@ -60,12 +97,18 @@ export const useSaveSession = () => {
       const sessionQueryKey = sessionQueries.detail(
         variables.session.id,
       ).queryKey;
+      const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
 
-      // Rollback data
+      // Rollback session detail
       context.client.setQueryData(
         sessionQueryKey,
         onMutateResult?.previousSession,
       );
+
+      // Rollback listItems
+      if (onMutateResult?.previousListItems) {
+        context.client.setQueryData(listItemQueryKey, onMutateResult.previousListItems);
+      }
     },
   });
 };
@@ -118,6 +161,7 @@ export const useAddMessage = (sessionId: UniqueEntityID) => {
       // Get query key
       const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
       const turnQueryKey = turnQueries.detail(variables.message.id).queryKey;
+      const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
 
       // Cancel queries
       await context.client.cancelQueries({
@@ -126,21 +170,32 @@ export const useAddMessage = (sessionId: UniqueEntityID) => {
 
       // Save previous data
       const previousSession = context.client.getQueryData(sessionQueryKey);
+      const previousListItems = context.client.getQueryData<SessionListItem[]>(listItemQueryKey);
 
-      // Optimistic update
+      // Optimistic update - turn detail
       context.client.setQueryData(
         turnQueryKey,
         TurnDrizzleMapper.toPersistence(variables.message),
       );
+
+      // Optimistic update - session detail
       context.client.setQueryData(sessionQueryKey, (old) => {
         if (!old) return old;
         return {
           ...old,
           turn_ids: [...old.turn_ids, variables.message.id.toString()],
+          updated_at: new Date(),
         };
       });
 
-      return { previousSession };
+      // Optimistic update - listItems (update messageCount and move to top)
+      const currentMessageCount = previousSession?.turn_ids?.length ?? 0;
+      updateSessionListItem(sessionId.toString(), {
+        messageCount: currentMessageCount + 1,
+        updatedAt: new Date(),
+      });
+
+      return { previousSession, previousListItems };
     },
 
     onError: (error, variables, onMutateResult, context) => {
@@ -149,8 +204,9 @@ export const useAddMessage = (sessionId: UniqueEntityID) => {
       // Get query key
       const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
       const turnQueryKey = turnQueries.detail(variables.message.id).queryKey;
+      const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
 
-      // Rollback data
+      // Rollback session detail
       context.client.setQueryData(
         sessionQueryKey,
         onMutateResult?.previousSession,
@@ -158,6 +214,11 @@ export const useAddMessage = (sessionId: UniqueEntityID) => {
       context.client.removeQueries({
         queryKey: turnQueryKey,
       });
+
+      // Rollback listItems
+      if (onMutateResult?.previousListItems) {
+        context.client.setQueryData(listItemQueryKey, onMutateResult.previousListItems);
+      }
     },
   });
 };
@@ -183,6 +244,7 @@ export const useDeleteMessage = (sessionId: UniqueEntityID) => {
     onMutate: async (variables, context) => {
       // Get query key
       const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
+      const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
 
       // Cancel queries
       await context.client.cancelQueries({
@@ -191,18 +253,27 @@ export const useDeleteMessage = (sessionId: UniqueEntityID) => {
 
       // Save previous data
       const previousSession = context.client.getQueryData(sessionQueryKey);
+      const previousListItems = context.client.getQueryData<SessionListItem[]>(listItemQueryKey);
 
-      // Optimistic update
+      // Optimistic update - session detail
       const deletedTurnId = variables.messageId.toString();
       context.client.setQueryData(sessionQueryKey, (old) => {
         if (!old) return old;
         return {
           ...old,
           turn_ids: old.turn_ids.filter((id) => id !== deletedTurnId),
+          updated_at: new Date(),
         };
       });
 
-      return { previousSession };
+      // Optimistic update - listItems (decrease messageCount and move to top)
+      const currentMessageCount = previousSession?.turn_ids?.length ?? 0;
+      updateSessionListItem(sessionId.toString(), {
+        messageCount: Math.max(0, currentMessageCount - 1),
+        updatedAt: new Date(),
+      });
+
+      return { previousSession, previousListItems };
     },
 
     onError: (error, _variables, onMutateResult, context) => {
@@ -210,12 +281,18 @@ export const useDeleteMessage = (sessionId: UniqueEntityID) => {
 
       // Get query key
       const sessionQueryKey = sessionQueries.detail(sessionId).queryKey;
+      const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
 
-      // Rollback data
+      // Rollback session detail
       context.client.setQueryData(
         sessionQueryKey,
         onMutateResult?.previousSession,
       );
+
+      // Rollback listItems
+      if (onMutateResult?.previousListItems) {
+        context.client.setQueryData(listItemQueryKey, onMutateResult.previousListItems);
+      }
     },
 
     onSuccess: (_data, variables, _onMutateResult, context) => {
@@ -252,6 +329,13 @@ export const useDeleteSession = () => {
         queryKey: sessionQueries.lists(),
       });
 
+      // Remove from listItems cache (optimistic removal)
+      const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
+      context.client.setQueryData<SessionListItem[]>(listItemQueryKey, (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.filter((item) => item.id !== variables.sessionId.toString());
+      });
+
       // Remove session detail cache
       context.client.removeQueries({
         queryKey: sessionQueries.detail(variables.sessionId).queryKey,
@@ -273,8 +357,58 @@ export const useDeleteSession = () => {
 };
 
 /**
- * Hook for importing a session from cloud storage by ID
+ * Hook for cloning a session (Save as preset)
+ * Clones the session without history and sets is_play_session to false
  */
+export const useCloneSession = () => {
+  return useMutation({
+    mutationKey: ["session", "cloneSession"],
+    mutationFn: async ({
+      sessionId,
+      includeHistory = false,
+    }: {
+      sessionId: UniqueEntityID;
+      includeHistory?: boolean;
+    }) => {
+      const result = await SessionService.cloneSession.execute({
+        sessionId,
+        includeHistory,
+      });
+
+      if (result.isFailure) {
+        throw new Error(result.getError());
+      }
+
+      return result.getValue();
+    },
+
+    onSuccess: (clonedSession, _variables, _onMutateResult, context) => {
+      // Set the cloned session data in cache
+      context.client.setQueryData(
+        sessionQueries.detail(clonedSession.id).queryKey,
+        SessionDrizzleMapper.toPersistence(clonedSession),
+      );
+
+      // Invalidate session list queries
+      context.client.invalidateQueries({
+        queryKey: sessionQueries.lists(),
+      });
+
+      // Invalidate card and flow lists (new resources were cloned)
+      context.client.invalidateQueries({
+        queryKey: cardQueries.lists(),
+      });
+      context.client.invalidateQueries({
+        queryKey: flowQueries.lists(),
+      });
+    },
+
+    onError: (error) => {
+      logger.error("Failed to clone session", error);
+    },
+  });
+};
+
 export const useImportSessionFromCloud = () => {
   return useMutation({
     mutationKey: ["session", "importFromCloud"],

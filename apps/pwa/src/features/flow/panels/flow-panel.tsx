@@ -31,8 +31,11 @@ import {
   ensureEdgesSelectable,
 } from "@/features/flow/utils/ensure-edge-selectable";
 import { invalidateSingleFlowQueries } from "@/features/flow/utils/invalidate-flow-queries";
+import { triggerExtensionHook } from "@/features/extensions/bootstrap";
 import { useFlowLocalStateSync } from "@/shared/lib/flow-local-state-sync";
-import { cn } from "@/shared/lib";
+import { cn, downloadFile } from "@/shared/lib";
+import { FlowService } from "@/app/services/flow-service";
+import { UniqueEntityID } from "@/shared/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { flowQueries, flowKeys } from "@/entities/flow/api/query-factory";
 import { useUpdateNodesPositions } from "@/entities/flow/api/mutations/nodes-positions-mutations";
@@ -60,6 +63,8 @@ import {
   Loader2,
   // SearchCheck, // TEMPORARILY DISABLED: Validation button
   HelpCircle,
+  Download,
+  Globe,
 } from "lucide-react";
 import { ButtonPill, Card } from "@/shared/ui";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
@@ -129,6 +134,10 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   const [isReady, setIsReady] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState<CustomNodeType>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdgeType>([]);
+
+  // Copy as Global / Download states
+  const [isCopyingAsGlobal, setIsCopyingAsGlobal] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // 2. Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -270,10 +279,83 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     setEditedTitle("");
   }, []);
 
+  // Check if flow is session-local (has sessionId)
+  const isSessionLocal = flow?.props.sessionId != null;
+
+  // Handler for "Copy as Global Resource"
+  const handleCopyAsGlobal = useCallback(async () => {
+    if (!flow || !flowId) return;
+
+    setIsCopyingAsGlobal(true);
+    try {
+      const result = await FlowService.cloneFlow.execute({
+        flowId: new UniqueEntityID(flowId),
+        // sessionId is NOT passed, so the cloned flow will be global
+        shouldRename: true,
+      });
+
+      if (result.isFailure) {
+        toastError("Failed to copy as global", {
+          description: result.getError(),
+        });
+        return;
+      }
+
+      toastSuccess("Copied as global resource!", {
+        description: `"${flow.props.name}" is now available in your library.`,
+      });
+    } catch (error) {
+      toastError("Failed to copy as global", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsCopyingAsGlobal(false);
+    }
+  }, [flow, flowId]);
+
+  // Handler for "Download"
+  const handleDownload = useCallback(async () => {
+    if (!flow || !flowId) return;
+
+    setIsDownloading(true);
+    try {
+      const result = await FlowService.exportFlowWithNodes.execute({
+        flowId: new UniqueEntityID(flowId),
+      });
+
+      if (result.isFailure) {
+        toastError("Failed to download", {
+          description: result.getError(),
+        });
+        return;
+      }
+
+      downloadFile(result.getValue());
+      toastSuccess("Downloaded!", {
+        description: `"${flow.props.name}" exported as JSON.`,
+      });
+    } catch (error) {
+      toastError("Failed to download", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [flow, flowId]);
+
   // Use ref to always have the latest flow
   const flowRef = useRef(flow);
   useEffect(() => {
     flowRef.current = flow;
+  }, [flow]);
+
+  // Trigger extension hook when flow loads (for scenario node auto-add)
+  const hasTriggeredExtensionRef = useRef(false);
+  useEffect(() => {
+    if (flow && !hasTriggeredExtensionRef.current) {
+      hasTriggeredExtensionRef.current = true;
+      triggerExtensionHook("flow:afterLoad", { flow });
+    }
   }, [flow]);
 
   // Update refs for nodes and edges to avoid stale closures
@@ -1528,9 +1610,9 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     [onEdgesChange, saveFlowChanges],
   );
 
-  // Preview session
+  // Preview session selector
   const { data: sessions = [], isLoading: isLoadingSessions } = useQuery({
-    ...sessionQueries.list({}), // SearchSessionsQuery doesn't have flowId
+    ...sessionQueries.list({}),
     enabled: !!flow,
   });
   const previewSessionId = useAgentStore.use.previewSessionId();
@@ -1640,7 +1722,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
               value={previewSessionId || "none"}
               onValueChange={handleSessionChange}
             >
-              <SelectTrigger className="bg-canvas outline-border-muted min-h-8 w-[242px] rounded-md px-4 py-2 outline-1 outline-offset-[-1px]">
+              <SelectTrigger className="bg-canvas outline-border-muted min-h-8 w-[180px] rounded-md px-4 py-2 outline-1 outline-offset-[-1px]">
                 <SelectValue placeholder="Select session" />
               </SelectTrigger>
               <SelectContent>
@@ -1666,6 +1748,32 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 )}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Copy as Global and Download buttons */}
+          <div className="flex flex-row items-center gap-2">
+            {/* Copy as Global - only shown for session-local flows */}
+            {isSessionLocal && (
+              <ButtonPill
+                size="default"
+                icon={<Globe className="h-4 w-4" />}
+                onClick={handleCopyAsGlobal}
+                disabled={isCopyingAsGlobal}
+                title="Copy as Global Resource"
+              >
+                {isCopyingAsGlobal ? "Copying..." : "Copy as Global"}
+              </ButtonPill>
+            )}
+            {/* Download */}
+            <ButtonPill
+              size="default"
+              icon={<Download className="h-4 w-4" />}
+              onClick={handleDownload}
+              disabled={isDownloading}
+              title="Download as JSON"
+            >
+              {isDownloading ? "Downloading..." : "Download"}
+            </ButtonPill>
           </div>
         </div>
 

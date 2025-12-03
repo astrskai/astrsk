@@ -3,49 +3,35 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Settings,
   UserRound,
-  BookOpen,
   PanelLeft,
   Menu,
   X,
   LogOut,
   LogIn,
 } from "lucide-react";
-import { IconSessions, IconWorkflow, AstrskLogo } from "@/shared/assets/icons";
+import { IconSessions, AstrskLogo } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
 import { UpdaterNew } from "@/widgets/updater-new";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useQuery } from "convex/react";
+import { useQuery as useTanstackQuery } from "@tanstack/react-query";
 import { api } from "@/convex";
+import { sessionQueries } from "@/entities/session/api/query-factory";
 
 // --- Navigation Data ---
 const NAVIGATION_CATEGORIES = [
   {
-    title: "Play",
+    title: "", // No section title
     items: [
       {
         icon: IconSessions,
         label: "Sessions",
         path: "/sessions",
       },
-    ],
-  },
-  {
-    title: "Assets",
-    items: [
       {
         icon: UserRound,
         label: "Characters",
         path: "/assets/characters",
-      },
-      {
-        icon: BookOpen,
-        label: "Scenarios",
-        path: "/assets/scenarios",
-      },
-      {
-        icon: IconWorkflow,
-        label: "Workflows",
-        path: "/assets/workflows",
       },
     ],
   },
@@ -129,6 +115,82 @@ const NavItem = ({
   );
 };
 
+// --- Play Session NavItem Component (with count/date badge) ---
+const PlaySessionNavItem = ({
+  label,
+  path,
+  active = false,
+  isCollapsed = false,
+  onClick,
+  count,
+  updatedAt,
+}: {
+  label: string;
+  path: string;
+  active?: boolean;
+  isCollapsed?: boolean;
+  onClick?: () => void;
+  count?: number;
+  updatedAt?: Date;
+}) => {
+  // Don't render anything when collapsed (no icon to show)
+  if (isCollapsed) {
+    return null;
+  }
+
+  // Format date as relative time or short date
+  const formatDate = (date: Date | string) => {
+    const now = new Date();
+    // Handle both Date objects and ISO strings (from TanStack Query cache serialization)
+    const dateObj = date instanceof Date ? date : new Date(date);
+    const diff = now.getTime() - dateObj.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m`;
+    if (hours < 24) return `${hours}h`;
+    if (days < 7) return `${days}d`;
+    return dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+
+  return (
+    <Link
+      to={path}
+      onClick={onClick}
+      className={cn(
+        "group relative flex items-center rounded-lg border text-sm font-medium transition-all duration-200",
+        "w-full justify-between px-3 py-2",
+        active
+          ? "border-zinc-700 bg-zinc-800 text-white shadow-sm"
+          : "border-transparent text-zinc-400 hover:bg-zinc-900 hover:text-zinc-300",
+      )}
+    >
+      {/* Title only, no icon */}
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+
+      {/* Badge: shows count by default, date on hover */}
+      {(count !== undefined || updatedAt) && (
+        <span
+          className={cn(
+            "ml-2 flex h-5 min-w-[20px] flex-shrink-0 items-center justify-center rounded px-1 text-[10px]",
+            active
+              ? "bg-zinc-700 text-zinc-200"
+              : "bg-zinc-800 text-zinc-500",
+          )}
+        >
+          {/* Count shown by default, date on hover */}
+          <span className="group-hover:hidden">{count ?? 0}</span>
+          <span className="hidden group-hover:inline">
+            {updatedAt ? formatDate(updatedAt) : count ?? 0}
+          </span>
+        </span>
+      )}
+    </Link>
+  );
+};
+
 // --- CategorySection Component ---
 const CategorySection = ({
   title,
@@ -149,16 +211,18 @@ const CategorySection = ({
 }) => {
   return (
     <div className="mb-6 space-y-1">
-      <div
-        className={cn(
-          "mb-2 px-2 text-[10px] font-bold tracking-widest whitespace-nowrap text-zinc-500 uppercase transition-all duration-300",
-          isCollapsed
-            ? "h-0 overflow-hidden text-center opacity-0"
-            : "opacity-100",
-        )}
-      >
-        {title}
-      </div>
+      {title && (
+        <div
+          className={cn(
+            "mb-2 px-2 text-[10px] font-bold tracking-widest whitespace-nowrap text-zinc-500 uppercase transition-all duration-300",
+            isCollapsed
+              ? "h-0 overflow-hidden text-center opacity-0"
+              : "opacity-100",
+          )}
+        >
+          {title}
+        </div>
+      )}
       {items.map((item) => (
         <NavItem
           key={item.path}
@@ -168,6 +232,54 @@ const CategorySection = ({
           active={isActivePath(item.path)}
           isCollapsed={isCollapsed}
           onClick={onItemClick}
+        />
+      ))}
+    </div>
+  );
+};
+
+// --- Play Sessions Section Component (Dynamic) ---
+const PlaySessionsSection = ({
+  isCollapsed,
+  isActivePath,
+  onItemClick,
+}: {
+  isCollapsed: boolean;
+  isActivePath: (path: string) => boolean;
+  onItemClick?: () => void;
+}) => {
+  // Query play sessions using lightweight listItem query (only id, title, messageCount, updatedAt)
+  const { data: playSessions = [] } = useTanstackQuery(
+    sessionQueries.listItem({ isPlaySession: true }),
+  );
+
+  // Don't show section when collapsed or if there are no play sessions
+  if (isCollapsed || playSessions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-6 space-y-1">
+      <div
+        className={cn(
+          "mb-2 px-2 text-[10px] font-bold tracking-widest whitespace-nowrap text-zinc-500 uppercase transition-all duration-300",
+          isCollapsed
+            ? "h-0 overflow-hidden text-center opacity-0"
+            : "opacity-100",
+        )}
+      >
+        Recents
+      </div>
+      {playSessions.map((session) => (
+        <PlaySessionNavItem
+          key={session.id}
+          label={session.title || "Untitled"}
+          path={`/sessions/${session.id}`}
+          active={isActivePath(`/sessions/${session.id}`)}
+          isCollapsed={isCollapsed}
+          onClick={onItemClick}
+          count={session.messageCount}
+          updatedAt={session.updatedAt}
         />
       ))}
     </div>
@@ -344,7 +456,14 @@ export const LeftMainSidebar = ({
   // Mobile always shows expanded sidebar, collapse only applies to desktop
   const isCollapsed = isMobileOpen ? false : isCollapsedProp;
 
-  const isActivePath = (path: string) => location.pathname.startsWith(path);
+  // Check if path is active
+  // Special case: /sessions should only match exactly, not /sessions/{id}
+  const isActivePath = (path: string) => {
+    if (path === "/sessions") {
+      return location.pathname === "/sessions" || location.pathname === "/sessions/";
+    }
+    return location.pathname.startsWith(path);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -392,6 +511,13 @@ export const LeftMainSidebar = ({
               onItemClick={closeMobileMenu}
             />
           ))}
+
+          {/* Play Sessions - Dynamic list of play sessions */}
+          <PlaySessionsSection
+            isCollapsed={isCollapsed}
+            isActivePath={isActivePath}
+            onItemClick={closeMobileMenu}
+          />
 
           {/* Settings */}
           <div className="mt-auto">

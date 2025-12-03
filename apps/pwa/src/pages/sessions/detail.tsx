@@ -20,7 +20,7 @@ import { logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   backgroundQueries,
   getDefaultBackground,
@@ -35,7 +35,6 @@ export default function SessionDetailPage({
 }) {
   const navigate = useNavigate();
   const { sessionId } = Route.useParams();
-  const [isOpenSettings, setIsOpenSettings] = useState(false);
   const [sidebarKeyword, setSidebarKeyword] = useState("");
   const selectSession = useSessionStore.use.selectSession();
 
@@ -44,6 +43,18 @@ export default function SessionDetailPage({
   const { data: session, isLoading } = useQuery(
     sessionQueries.detail(sessionIdEntity),
   );
+
+  // Settings panel state from store (per-session)
+  const settingsPanelOpen = useSessionStore.use.settingsPanelOpen();
+  const setSettingsPanelOpen = useSessionStore.use.setSettingsPanelOpen();
+  const isOpenSettings = sessionId ? (settingsPanelOpen[sessionId] ?? false) : false;
+
+  // Toggle settings panel
+  const toggleSettingsPanel = useCallback((open: boolean) => {
+    if (sessionId) {
+      setSettingsPanelOpen(sessionId, open);
+    }
+  }, [sessionId, setSettingsPanelOpen]);
   const { data: sessions = [] } = useQuery(
     sessionQueries.list({ keyword: sidebarKeyword }),
   );
@@ -93,7 +104,7 @@ export default function SessionDetailPage({
   const refEditCards = useRef<HTMLDivElement>(null);
   const refInitCardTab = useRef<CardTab>(CardTabValue.AI);
   const onAddPlotCard = () => {
-    setIsOpenSettings(true);
+    toggleSettingsPanel(true);
     refInitCardTab.current = CardTabValue.Plot;
     refEditCards.current?.click();
   };
@@ -133,7 +144,7 @@ export default function SessionDetailPage({
 
         {/* Right: Settings/Close button */}
         <button
-          onClick={() => setIsOpenSettings(!isOpenSettings)}
+          onClick={() => toggleSettingsPanel(!isOpenSettings)}
           className="text-fg-muted hover:text-fg-default -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
           aria-label={isOpenSettings ? "Close settings" : "Session settings"}
         >
@@ -198,7 +209,7 @@ export default function SessionDetailPage({
               isOpenSettings && "pointer-events-none opacity-0",
             )}
             onClick={() => {
-              setIsOpenSettings(true);
+              toggleSettingsPanel(true);
             }}
             onboarding={shouldShowSessionEditTooltip && !isOpenSettings}
             onboardingTooltip="Click to edit session details"
@@ -212,7 +223,7 @@ export default function SessionDetailPage({
               !isOpenSettings && "pointer-events-none opacity-0",
             )}
             onClick={() => {
-              setIsOpenSettings(false);
+              toggleSettingsPanel(false);
             }}
           />
           <div
@@ -225,7 +236,7 @@ export default function SessionDetailPage({
             <header className="border-border-default bg-surface relative z-10 flex h-14 items-center justify-between border-b px-4 md:hidden">
               {/* Left: Back button */}
               <button
-                onClick={() => setIsOpenSettings(false)}
+                onClick={() => toggleSettingsPanel(false)}
                 className="text-fg-muted hover:text-fg-default -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
                 aria-label="Back to session"
               >
@@ -243,7 +254,7 @@ export default function SessionDetailPage({
 
             <ScrollArea className="flex-1">
               <SessionSettings
-                setIsOpenSettings={setIsOpenSettings}
+                setIsOpenSettings={toggleSettingsPanel}
                 refEditCards={refEditCards}
                 refInitCardTab={refInitCardTab}
                 isSettingsOpen={isOpenSettings}

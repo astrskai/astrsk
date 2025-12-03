@@ -1,0 +1,1413 @@
+{
+  "name": "Dice of Fate",
+  "description": "",
+  "nodes": [
+    {
+      "id": "019adf4e-a5c0-7006-8c25-d184686f252e",
+      "type": "start",
+      "position": {
+        "x": -339.6809773703256,
+        "y": -215.2303276730642
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c25-d9a17d320abb",
+      "type": "end",
+      "position": {
+        "x": 4311.322649192604,
+        "y": -166.52774641205013
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c25-e517960b4447",
+      "type": "agent",
+      "position": {
+        "x": 292.6101037209358,
+        "y": -16.445290267927078
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c25-e98c9741a904",
+      "type": "dataStore",
+      "position": {
+        "x": 662.7529990824828,
+        "y": 44.237208426415776
+      },
+      "data": {
+        "name": "Update Summary",
+        "color": "#FDBA74",
+        "dataStoreFields": [
+          {
+            "id": "0198deea-68fd-7ee8-b913-9608040edc9b",
+            "logic": "{{summary.new_summary}}",
+            "schemaFieldId": "0198d103-292d-7aae-adb6-dd8553dd2001"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c25-f00ee444eb8a",
+      "type": "if",
+      "position": {
+        "x": -129.25352589585094,
+        "y": -278.0553884504377
+      },
+      "data": {
+        "name": "Check user name and look",
+        "color": "#BEF264",
+        "conditions": [
+          {
+            "id": "0198f46e-da52-755d-b1e5-b8cd16692dba",
+            "value1": "{{user_name}}",
+            "value2": "No name",
+            "dataType": "string",
+            "operator": "string_equals"
+          },
+          {
+            "id": "0198f46f-0e50-755d-b1e5-c0a57d667e10",
+            "value1": "{{user_look}}",
+            "value2": "No look",
+            "dataType": "string",
+            "operator": "string_equals"
+          }
+        ],
+        "logicOperator": "OR"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c25-fa535a3a7631",
+      "type": "agent",
+      "position": {
+        "x": 294.3616404982199,
+        "y": -605.8964964209579
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-051258cecc9b",
+      "type": "dataStore",
+      "position": {
+        "x": 655.7589069939232,
+        "y": -546.2458130448837
+      },
+      "data": {
+        "name": "Update user data",
+        "color": "#F0ABFC",
+        "dataStoreFields": [
+          {
+            "id": "0198f4a6-7291-7aa1-ad09-0870f9571314",
+            "logic": "{{get_user_data.user_name}}",
+            "schemaFieldId": "0198f027-5df9-7444-86b9-80be04476257"
+          },
+          {
+            "id": "0198f4a6-7a44-7aa1-ad09-11595c93b69c",
+            "logic": "{{get_user_data.user_look}}",
+            "schemaFieldId": "0198f027-8b30-7444-86b9-8bf7d720239f"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-0af4be586096",
+      "type": "agent",
+      "position": {
+        "x": 2022.1380161852662,
+        "y": 609.376605326241
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-1546e4dd6c85",
+      "type": "if",
+      "position": {
+        "x": 2405.353060698738,
+        "y": 705.6536765067672
+      },
+      "data": {
+        "name": "Check dice roll",
+        "color": "#86EFAC",
+        "conditions": [
+          {
+            "id": "0198f504-9e25-7333-badd-621157acf49d",
+            "value1": "{{judge_dice.is_required_dice_check}}",
+            "value2": "",
+            "dataType": "boolean",
+            "operator": "boolean_is_true"
+          }
+        ],
+        "logicOperator": "AND"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-1bd2b75d8ed3",
+      "type": "agent",
+      "position": {
+        "x": 2803.0732486365955,
+        "y": 856.1491646479858
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-25017557e89e",
+      "type": "agent",
+      "position": {
+        "x": 2807.336203678825,
+        "y": 423.1485160392275
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-2e181ae5146b",
+      "type": "agent",
+      "position": {
+        "x": 1077.0368535747762,
+        "y": -24.339731304956295
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-379e8f005b84",
+      "type": "if",
+      "position": {
+        "x": 1498.7550581756027,
+        "y": 78.31499570407208
+      },
+      "data": {
+        "name": "Check OOC",
+        "color": "#6EE7B7",
+        "conditions": [
+          {
+            "id": "0198f52a-dc59-755e-8c86-7f23b6a283e9",
+            "value1": "{{judge_ooc.is_ooc}}",
+            "value2": "",
+            "dataType": "boolean",
+            "operator": "boolean_is_true"
+          }
+        ],
+        "logicOperator": "AND"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-3f3a385f886a",
+      "type": "agent",
+      "position": {
+        "x": 1980.8089133331648,
+        "y": -15.662601175244246
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-44ab49698f96",
+      "type": "dataStore",
+      "position": {
+        "x": 2401.435283595497,
+        "y": 3.8909910498691076
+      },
+      "data": {
+        "name": "Update by OOC",
+        "color": "#5EEAD4",
+        "dataStoreFields": [
+          {
+            "id": "01990985-af14-7882-bb66-03ff2cbb5bf0",
+            "logic": "{{process_ooc.new_dice_str}}",
+            "schemaFieldId": "0198f025-9b65-7444-86b9-492b39f24913"
+          },
+          {
+            "id": "01990985-b8f0-7882-bb66-09bb3f739d84",
+            "logic": "{{process_ooc.new_dice_dex}}",
+            "schemaFieldId": "0198f025-9bd7-7444-86b9-5625a4f22f0a"
+          },
+          {
+            "id": "01990985-c551-7882-bb66-1bb5739117f6",
+            "logic": "{{process_ooc.new_dice_con}}",
+            "schemaFieldId": "0198f025-9cc2-7444-86b9-5f7c13a9287d"
+          },
+          {
+            "id": "01990985-be66-7882-bb66-1769f99ffd00",
+            "logic": "{{process_ooc.new_dice_int}}",
+            "schemaFieldId": "0198f025-9dca-7444-86b9-667fa7d777a1"
+          },
+          {
+            "id": "01990985-cb8c-7882-bb66-23cb6f027c84",
+            "logic": "{{process_ooc.new_dice_wis}}",
+            "schemaFieldId": "0198f025-9e95-7444-86b9-6edcbaaf023e"
+          },
+          {
+            "id": "01990985-d013-7882-bb66-2da377a2b1c3",
+            "logic": "{{process_ooc.new_dice_cha}}",
+            "schemaFieldId": "0198f026-8626-7444-86b9-7002c05ef4f3"
+          },
+          {
+            "id": "01990985-e094-7882-bb66-452f75cdfc88",
+            "logic": "{{process_ooc.new_trial_tokens}}",
+            "schemaFieldId": "0198f4c5-90d4-7996-908e-8faec5eef9e9"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-4d48055e9838",
+      "type": "dataStore",
+      "position": {
+        "x": 3183.347340535503,
+        "y": 515.1571007470098
+      },
+      "data": {
+        "name": "Update trial tokens",
+        "color": "#A5B4FC",
+        "dataStoreFields": [
+          {
+            "id": "01990974-4825-7882-bb65-f4870f751f62",
+            "logic": "{{trial_tokens}} + {{roll_dice.gained_trial_tokens}}",
+            "schemaFieldId": "0198f4c5-90d4-7996-908e-8faec5eef9e9"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+      "type": "dataStore",
+      "position": {
+        "x": 3723.9629865440766,
+        "y": -165.32043110209355
+      },
+      "data": {},
+      "deletable": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "019adf4e-a5c0-7006-8c26-5acd0e2fdc2e",
+      "source": "019adf4e-a5c0-7006-8c25-e517960b4447",
+      "target": "019adf4e-a5c0-7006-8c25-e98c9741a904"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-61f4fdabcb87",
+      "source": "019adf4e-a5c0-7006-8c25-fa535a3a7631",
+      "target": "019adf4e-a5c0-7006-8c26-051258cecc9b"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-68427451eb4f",
+      "source": "019adf4e-a5c0-7006-8c26-0af4be586096",
+      "target": "019adf4e-a5c0-7006-8c26-1546e4dd6c85"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-769cafdec257",
+      "source": "019adf4e-a5c0-7006-8c25-e98c9741a904",
+      "target": "019adf4e-a5c0-7006-8c26-2e181ae5146b"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-7ed6b076cf51",
+      "source": "019adf4e-a5c0-7006-8c26-2e181ae5146b",
+      "target": "019adf4e-a5c0-7006-8c26-379e8f005b84"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-81d61371ad8d",
+      "source": "019adf4e-a5c0-7006-8c26-3f3a385f886a",
+      "target": "019adf4e-a5c0-7006-8c26-44ab49698f96"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-8c9c41e69afb",
+      "source": "019adf4e-a5c0-7006-8c26-25017557e89e",
+      "target": "019adf4e-a5c0-7006-8c26-4d48055e9838"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-970d1d859a65",
+      "source": "019adf4e-a5c0-7006-8c25-f00ee444eb8a",
+      "target": "019adf4e-a5c0-7006-8c25-fa535a3a7631",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-9a34ef9708a9",
+      "source": "019adf4e-a5c0-7006-8c25-f00ee444eb8a",
+      "target": "019adf4e-a5c0-7006-8c25-e517960b4447",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-a51cc466dd6d",
+      "source": "019adf4e-a5c0-7006-8c26-379e8f005b84",
+      "target": "019adf4e-a5c0-7006-8c26-3f3a385f886a",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-ae61a74dae1f",
+      "source": "019adf4e-a5c0-7006-8c26-379e8f005b84",
+      "target": "019adf4e-a5c0-7006-8c26-0af4be586096",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-b5c7f8dd95de",
+      "source": "019adf4e-a5c0-7006-8c26-1546e4dd6c85",
+      "target": "019adf4e-a5c0-7006-8c26-25017557e89e",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "019adf4e-a5c0-7006-8c26-b9cb00b3f55a",
+      "source": "019adf4e-a5c0-7006-8c26-1546e4dd6c85",
+      "target": "019adf4e-a5c0-7006-8c26-1bd2b75d8ed3",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "xy-edge__019adf4e-a5c0-7006-8c26-051258cecc9b-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+      "source": "019adf4e-a5c0-7006-8c26-051258cecc9b",
+      "target": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+    },
+    {
+      "id": "xy-edge__019adf4e-a5c0-7006-8c26-44ab49698f96-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+      "source": "019adf4e-a5c0-7006-8c26-44ab49698f96",
+      "target": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+    },
+    {
+      "id": "xy-edge__019adf4e-a5c0-7006-8c26-4d48055e9838-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+      "source": "019adf4e-a5c0-7006-8c26-4d48055e9838",
+      "target": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+    },
+    {
+      "id": "xy-edge__019adf4e-a5c0-7006-8c26-1bd2b75d8ed3-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+      "source": "019adf4e-a5c0-7006-8c26-1bd2b75d8ed3",
+      "target": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+    }
+  ],
+  "responseTemplate": "{%- if get_user_data -%}\n{{get_user_data.gm_response}}\n{%- elif process_ooc -%}\n{{process_ooc.gm_response}}\n{%- elif roll_dice -%}\n{{roll_dice.narration}}\n{%- elif narrate -%}\n{{narrate.response}}\n{%- endif -%}",
+  "createdAt": "2025-12-02T13:45:08.964Z",
+  "updatedAt": "2025-12-02T13:45:08.964Z",
+  "panelStructure": {
+    "panels": [],
+    "version": 2,
+    "activePanel": "flow-panel-main",
+    "panelMetadata": {
+      "flow-panel-main": {
+        "title": "Flow Editor",
+        "params": {
+          "title": "Flow Editor",
+          "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+        },
+        "component": "flow"
+      },
+      "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2": {
+        "title": "[Data Update] Data update",
+        "params": {
+          "title": "[before_end_node] Data update",
+          "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed",
+          "nodeId": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+          "agentId": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+          "panelType": "dataStore",
+          "agentColor": "#FCA5A5"
+        },
+        "component": "dataStore"
+      }
+    },
+    "serializedLayout": {
+      "grid": {
+        "root": {
+          "data": [
+            {
+              "data": {
+                "id": "1",
+                "views": [
+                  "flow-panel-main"
+                ],
+                "locked": true,
+                "activeView": "flow-panel-main"
+              },
+              "size": 1860,
+              "type": "leaf"
+            },
+            {
+              "data": {
+                "id": "2",
+                "views": [
+                  "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+                ],
+                "activeView": "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+              },
+              "size": 620,
+              "type": "leaf"
+            }
+          ],
+          "size": 1328,
+          "type": "branch"
+        },
+        "width": 2480,
+        "height": 1328,
+        "orientation": "HORIZONTAL"
+      },
+      "panels": {
+        "flow-panel-main": {
+          "id": "flow-panel-main",
+          "title": "Flow Editor",
+          "params": {
+            "title": "Flow Editor",
+            "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "flow"
+        },
+        "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2": {
+          "id": "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+          "title": "[Data Update] Data update",
+          "params": {
+            "title": "[before_end_node] Data update",
+            "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed",
+            "nodeId": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+            "agentId": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+            "panelType": "dataStore",
+            "agentColor": "#FCA5A5"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "dataStore"
+        }
+      },
+      "activeGroup": "1"
+    }
+  },
+  "viewport": {
+    "x": -870.3698649803669,
+    "y": 551.5525338262892,
+    "zoom": 0.5288201194257555
+  },
+  "dataStoreSchema": {
+    "fields": [
+      {
+        "id": "0198d103-292d-7aae-adb6-dd8553dd2001",
+        "name": "previous_summary",
+        "type": "string",
+        "initialValue": "No summary"
+      },
+      {
+        "id": "0198f025-9b65-7444-86b9-492b39f24913",
+        "name": "dice_str",
+        "type": "string",
+        "initialValue": "d4"
+      },
+      {
+        "id": "0198f025-9bd7-7444-86b9-5625a4f22f0a",
+        "name": "dice_dex",
+        "type": "string",
+        "initialValue": "d4"
+      },
+      {
+        "id": "0198f025-9cc2-7444-86b9-5f7c13a9287d",
+        "name": "dice_con",
+        "type": "string",
+        "initialValue": "d4"
+      },
+      {
+        "id": "0198f025-9dca-7444-86b9-667fa7d777a1",
+        "name": "dice_int",
+        "type": "string",
+        "initialValue": "d4"
+      },
+      {
+        "id": "0198f025-9e95-7444-86b9-6edcbaaf023e",
+        "name": "dice_wis",
+        "type": "string",
+        "initialValue": "d4"
+      },
+      {
+        "id": "0198f026-8626-7444-86b9-7002c05ef4f3",
+        "name": "dice_cha",
+        "type": "string",
+        "initialValue": "d4"
+      },
+      {
+        "id": "0198f027-5df9-7444-86b9-80be04476257",
+        "name": "user_name",
+        "type": "string",
+        "initialValue": "No name"
+      },
+      {
+        "id": "0198f027-8b30-7444-86b9-8bf7d720239f",
+        "name": "user_look",
+        "type": "string",
+        "initialValue": "No look"
+      },
+      {
+        "id": "0198f4c5-90d4-7996-908e-8faec5eef9e9",
+        "name": "trial_tokens",
+        "type": "number",
+        "initialValue": "0"
+      }
+    ]
+  },
+  "readyState": "draft",
+  "agents": {
+    "019adf4e-a5c0-7006-8c25-e517960b4447": {
+      "name": "Summary",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "openai-compatible:google/gemini-2.5-flash",
+      "modelName": "Gemini 2.5 Flash",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are a professional summary agent that continuously tracks conversation content and updates summaries. You analyze previous summaries and new messages to generate an integrated, up-to-date summary.\n\n## Scenario\n{{session.scenario}}\n\n## Previous Summary\nExisting summary of conversation content up to the last update.\n\n```\n{{previous_summary}}\n```\n\n## New Messages\nNew conversation messages added since the last summary.",
+              "type": "plain",
+              "createdAt": "2025-09-03T04:47:28.926Z",
+              "updatedAt": "2025-09-03T04:47:28.926Z",
+              "id": "01990de6-ba9e-7dd2-afa5-686cc0d05bd4"
+            }
+          ],
+          "createdAt": "2025-09-03T04:47:28.926Z",
+          "id": "message-1754643044921"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 3,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History (last 3 messages)",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-03T04:47:28.927Z",
+              "updatedAt": "2025-09-03T04:47:28.927Z",
+              "id": "01990de6-ba9f-7dd2-afa5-730bae93ed4b"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History (last 3 messages)",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-03T04:47:28.927Z",
+              "updatedAt": "2025-09-03T04:47:28.927Z",
+              "id": "01990de6-ba9f-7dd2-afa5-796c1b932eed"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-09-03T04:47:28.927Z",
+          "id": "history-1754640010968"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {
+        "context": true,
+        "temperature": false,
+        "reasoning_effort": false
+      },
+      "parameterValues": {
+        "context": 24000
+      },
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "new_summary",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Updated summary integrating existing information with new information.\n\n## Summary Generation Rules\n\n### 1. Information Integration Principles\n- Preserve core information from previous summary while adding new information\n- Update with latest information when new information modifies or supplements existing information\n- Prioritize most recent information when contradictory information exists\n\n### 2. Processing Newly Discovered Facts\n- Clearly identify new facts, insights, and decisions found in New Messages\n- Add new topics or perspectives not present in existing summary\n- Reflect conversation progress or status changes\n\n### 3. Structure and Organization\n- Group information by topic to maintain logical flow\n- Maintain chronological order when temporal sequence is important\n- Clearly mark key points with bullet points\n\n### 4. Deduplication and Conciseness\n- Avoid repetition of identical information; mention only once\n- Remove unnecessary details while maintaining information needed for context understanding\n- Keep summary length proportional to information volume, but as concise as possible\n\n### 5. Context Preservation\n- Include conversation purpose, participants, and major decisions\n- Specify unresolved questions or action items\n- Emphasize important agreements or conclusions\n\n## Processing Process\n\n### 1. Analysis Phase\n - Read entire Previous Summary and identify core information\n - Analyze New Messages to extract new information\n - Identify relationships between information and changes\n\n### 2. Integration Phase\n - Map existing and new information by topic\n - Resolve conflicting information (prioritize latest information)\n - Add new topics or categories\n\n### 3. Refinement Phase\n - Remove duplicates\n - Reorganize for logical flow\n - Ensure clarity and conciseness\n\n### 4. Verification Phase\n - Confirm all important information is included\n - Verify new information is properly marked\n - Review overall consistency"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#A5B4FC",
+      "createdAt": "2025-12-02T13:44:24.779Z",
+      "updatedAt": "2025-12-02T13:44:24.779Z",
+      "modelTier": "light",
+      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+    },
+    "019adf4e-a5c0-7006-8c25-fa535a3a7631": {
+      "name": "Get user data",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "openai-compatible:deepseek/deepseek-chat-v3.1",
+      "modelName": "DeepSeek V3.1",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the Game Master for 'Dice of Fate' RPG. {{char.description}}\n\n## Scenario\n{{session.scenario}}\n\n## User Name\n{{user_name}}\n\n## User Look\n{{user_look}}\n\n## Main Task\nCharacter Creation and Opening Scene\n\n### CRITICAL: Validate User Input First\n\n**Check for BOTH requirements:**\n1. **NAME**: User must provide a clear character name\n2. **APPEARANCE**: User must describe at least basic physical features (race, build, notable characteristics)\n\n**If EITHER is missing or unclear:**\n- DO NOT proceed to the opening scene\n- Specifically ask for what's missing\n- Be friendly but clear about what you need\n\n**Examples of insufficient responses:**\n- \"I'm a warrior\" → Ask: \"What's your warrior's name? And what do they look like?\"\n- \"My name is Marcus\" → Ask: \"Excellent, Marcus! Now, what do you look like? Your race, build, any distinguishing features?\"\n- \"I'm ready to start\" → Ask: \"Before we begin, I need to know your character's name and appearance. Who are you?\"\n\n### Once BOTH name AND appearance are confirmed:\n\n1. **Acknowledge their character**\n   - Use their name in bold: **[NAME]**\n   - Summarize their appearance with specific details they gave\n   - Make them feel seen: \"I can see [specific detail they mentioned]\"\n   - Express anticipation: \"The dice at your side sense your potential...\"\n\n2. **Transition into the adventure**\n   - \"The dice sense your destiny stirring...\"\n   - \"Your journey begins as...\"\n   - \"Fate has brought you to Rollhaven...\"\n\n3. **Describe the opening scene**\n   - Location: Arriving at Rollhaven's gates/market/tavern\n   - Atmosphere: Time, weather, sensory details\n   - Current tension: Hints about the Wild Dice situation\n   - Immediate hook: Something requiring their response\n\n### Validation Response Templates:\n\n**Missing both:**\n\"Hold on, adventurer! Before we begin your tale, I need to know who you are. What is your character's name, and what do they look like?\"\n\n**Missing name only:**\n\"I can see you're [appearance summary], but what should I call you? What's your name?\"\n\n**Missing appearance only:**\n\"Well met, **[Name]**! But I need to see you more clearly. What do you look like? Describe your race, build, and any distinctive features.\"\n\n**Vague appearance:**\n\"**[Name]**, I need a clearer picture of you. Are you human? Elf? What's your build? Any scars, tattoos, or notable equipment?\"\n\n### Successful Opening Example:\n\nUser: \"I'm Garrett, a scarred human veteran with grey hair and a worn military cloak\"\n\nGM: \"Ah, **Garrett**! A battle-worn veteran with grey hair and scars that tell countless stories. That weathered military cloak speaks of years of service. The dice at your side seem to resonate with your experienced presence...\n\nYour journey begins as you approach Rollhaven's main gate just as the sun sets. Guards nervously eye everyone entering, their hands never far from their weapons. You overhear them muttering about 'another Wild Dice incident' in the Harbor District.\n\nAs you pass through the checkpoint, a desperate woman grabs your cloak. 'Please, you look capable—they say you can help! The Guild is recruiting, but so are... others.' She presses a torn piece of parchment into your hand before melting back into the crowd. The paper has two addresses: one for the Dice Guild, another for somewhere called 'The Sanctuary.'\n\nWhat do you do?\"",
+              "type": "plain",
+              "createdAt": "2025-09-19T04:49:36.417Z",
+              "updatedAt": "2025-09-19T04:49:36.417Z",
+              "id": "0199604e-6ca1-7551-ab7e-baa8f107d7b1"
+            }
+          ],
+          "createdAt": "2025-09-19T04:49:36.417Z",
+          "id": "message-1756449141109"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 8,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History",
+              "template": "{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-19T04:49:36.417Z",
+              "updatedAt": "2025-09-19T04:49:36.417Z",
+              "id": "0199604e-6ca1-7551-ab7e-c1c88532add8"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History",
+              "template": "{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-19T04:49:36.417Z",
+              "updatedAt": "2025-09-19T04:49:36.417Z",
+              "id": "0199604e-6ca1-7551-ab7e-ccc05b056f3c"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-09-19T04:49:36.417Z",
+          "id": "history-1756449143147"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "user_name",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Name of the user. Returns `No name` if no name is found in the user's input."
+        },
+        {
+          "name": "user_look",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Look of the user. Returns `No look` if no look is found in the user's input."
+        },
+        {
+          "name": "gm_response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Once the user has provided their character's name and look:\n\n1. **Acknowledge their character** with specific details they mentioned\n  - Reference their name directly\n  - Comment on 1-2 notable features they described\n  - Make them feel their character is unique and noticed\n  - If the user's name and look are unclear, DO NOT describe the opening scene and ask the user for a specific answer.\n\n2. **Transition into the adventure** using one of these approaches:\n  - \"The dice sense your destiny stirring...\"\n  - \"Your journey begins as...\"\n  - \"Fate has brought you to...\"\n\n3. **Describe the opening scene** including:\n  - Location: Where in Diceheim they are\n  - Atmosphere: Time of day, weather, sounds, smells\n  - Immediate situation: What's happening around them\n  - A hook: Something that demands their attention\n\nExample:\n\"Ah, **[NAME]**! A **[LOOK SUMMARY]** - I can see the potential for greatness in you. The dice at your side hum with anticipation...\n\nYour journey begins on a misty morning in *Diceheim*'s lower market. The smell of fresh bread mingles with the acrid smoke from the blacksmith's forge. People hurry past, whispering nervously about strange black dice that have been appearing throughout the city.\n\nSuddenly, a hooded figure bumps into you, pressing a small scroll into your hand before disappearing into the crowd. The parchment bears a single line: 'The Guild Master awaits. Come alone.' \n\nWhat do you do?\""
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#67E8F9",
+      "createdAt": "2025-12-02T13:44:24.785Z",
+      "updatedAt": "2025-12-02T13:44:24.785Z",
+      "modelTier": "heavy",
+      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+    },
+    "019adf4e-a5c0-7006-8c26-0af4be586096": {
+      "name": "Judge dice",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "openai-compatible:google/gemini-2.5-flash",
+      "modelName": "Gemini 2.5 Flash",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the Game Master for 'Dice of Fate' RPG. {{char.description}}\n\n## Scenario\n{{session.scenario}}\n\n## Main Task\nUse the following protocols to determine whether the user's actions require dice check.\n\n## Dice Check Evaluation Protocol\n\n### Step 1: Analyze Action Type\nClassify the user's action into categories:\n\nPHYSICAL ACTIONS:\n- STR: Lifting, breaking, pushing, melee attacks, climbing\n- DEX: Dodging, stealth, lockpicking, ranged attacks, acrobatics\n- CON: Endurance, resisting poison/disease, long activities\n\nMENTAL ACTIONS:\n- INT: Recalling knowledge, investigating, solving puzzles, magic theory\n- WIS: Perceiving, intuition, resisting mental effects, survival\n- CHA: Persuading, deceiving, intimidating, performing, leadership\n\n### Step 2: Determine Check Necessity\n\nNO CHECK if:\n- Success is guaranteed (opening an unlocked door)\n- Failure is impossible (walking on stable ground)\n- No time pressure exists for basic tasks\n- Character background makes it trivial\n- Pure conversation without persuasion/deception\n\nCHECK REQUIRED if:\n- Meaningful consequences for failure exist\n- Opposition or resistance present\n- Time pressure or stress involved\n- Skill/effort needed beyond basic capability\n- Competition or contest occurring\n\n### Step 3: Set Target Number\n\nWhen setting target numbers, consider:\n\n1. Character's dice level first:\n   - D4: Set targets 2-4 only\n   - D6: Set targets 2-6 only\n   - D8: Set targets 3-8 mostly\n   - D10: Set targets 4-10 mostly\n   - D12: Set targets 5-12 mostly\n   - D20: Set targets 7-18\n\n2. Desired success rate:\n   - Routine: 75%+ (low target)\n   - Standard: 50-60% (medium target)\n   - Challenging: 25-40% (high target)\n   - Desperate: 10-25% (near max)\n\n3. Never set impossible targets:\n   - If action is beyond dice capability, \n     narrate impossibility instead\n\n4. Consider growth motivation:\n   - Failures give Trial Tokens\n   - Set targets that encourage attempts\n   - 30-50% success rate is ideal for growth",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:47:26.006Z",
+              "updatedAt": "2025-09-23T01:47:26.006Z",
+              "id": "01997441-13b6-7004-b25f-b34856a4196e"
+            }
+          ],
+          "createdAt": "2025-09-23T01:47:26.006Z",
+          "id": "message-1756791870683"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 1,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "Last user message",
+              "template": "# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User Input\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:47:26.006Z",
+              "updatedAt": "2025-09-23T01:47:26.006Z",
+              "id": "01997441-13b6-7004-b25f-bd59bf4803a1"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "Last user message",
+              "template": "# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User Input\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:47:26.006Z",
+              "updatedAt": "2025-09-23T01:47:26.006Z",
+              "id": "01997441-13b6-7004-b25f-c3fe03c3b0ae"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-09-23T01:47:26.006Z",
+          "id": "history-1756792905877"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "is_required_dice_check",
+          "type": "boolean",
+          "array": false,
+          "required": true,
+          "description": "Whether a roll of dice is required."
+        },
+        {
+          "enum": [
+            "STR",
+            "DEX",
+            "CON",
+            "INT",
+            "WIS",
+            "CHA",
+            "NO_CHECK"
+          ],
+          "name": "target_stat",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Determine which stat (STR/DEX/CON/INT/WIS/CHA) to use.\n\nSTR: Physical force, melee combat, lifting, breaking\nDEX: Agility, stealth, precision, dodging, ranged attacks\nCON: Endurance, health, resistance, stamina\nINT: Knowledge, reasoning, magic theory, investigation\nWIS: Perception, intuition, willpower, survival\nCHA: Persuasion, deception, intimidation, leadership\nNONE: No need to roll the dice"
+        },
+        {
+          "name": "target_value",
+          "type": "integer",
+          "array": false,
+          "maximum": 18,
+          "minimum": 2,
+          "required": true,
+          "description": "Dice check target value."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#C4B5FD",
+      "createdAt": "2025-12-02T13:44:24.789Z",
+      "updatedAt": "2025-12-02T13:44:24.789Z",
+      "modelTier": "light",
+      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+    },
+    "019adf4e-a5c0-7006-8c26-1bd2b75d8ed3": {
+      "name": "Narrate",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "openai-compatible:deepseek/deepseek-chat-v3.1",
+      "modelName": "DeepSeek V3.1",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the Game Master for 'Dice of Fate' RPG. {{char.description}}\n\n## Scenario\n{{session.scenario}}\n\n## No-Roll Narration Guidelines\n\nWhen dice rolls are NOT required, you will receive:\n- Session context: [PREVIOUS_CONTENT]\n- User's action: [USER_MESSAGE]\n\n### Core Principles for No-Roll Narration:\n\n1. **Acknowledge and Advance**\n   - Accept the player's action as it happens\n   - Move the story forward naturally\n   - Don't pause or hesitate - maintain narrative flow\n\n2. **Add Sensory Details**\n   - What they see, hear, smell, feel\n   - Environmental reactions to their action\n   - Small details that make the world feel alive\n\n3. **Introduce New Information**\n   - NPC reactions and dialogue\n   - Environmental discoveries  \n   - Plot hooks or clues\n   - Choices and opportunities\n\n4. **Maintain Momentum**\n   - End with a clear situation\n   - Prompt engagement (implicit or explicit)\n   - Keep energy appropriate to scene\n\n### Narration Templates by Action Type:\n\n#### Simple Movement\n\"You [acknowledge their movement]. [Describe what they encounter]. [New detail or character appears].\"\n\nExample:\nUser: \"I walk to the marketplace\"\nGM: \"You make your way through the morning crowds toward the marketplace. The smell of fresh bread mingles with exotic spices, and merchants call out their wares. A familiar face catches your eye—Lila waves at you from her dice stall, a mysterious black velvet pouch in her hand.\"\n\n#### Routine Investigation\n\"[Acknowledge their search/examination]. [Describe what they find]. [Reveal information or prompt decision].\"\n\nExample:\nUser: \"I examine the bookshelf\"\nGM: \"You run your fingers along the dusty spines. Most are common texts on history and trade, but three catch your attention: a worn journal with no title, a book on 'Probability Manipulation' with pages marked, and behind them—a small lever partially hidden. The journal appears frequently handled.\"\n\n#### Social Interaction (No Persuasion Needed)\n\"[NPC's immediate reaction]. '[Dialogue].' [NPC's action or expression]. '[More dialogue if needed].'\"\n\nExample:\nUser: \"I greet the innkeeper and ask for a room\"\nGM: \"The innkeeper looks up with a practiced smile. 'Welcome to the Tumbling Die! Single room's two silver a night, includes breakfast.' She slides a worn brass key across the counter. 'Room seven—lucky number, they say. Second floor, end of the hall. You arriving for the Festival of Chances tomorrow?'\"\n\n#### Environmental Interaction\n\"[Immediate effect of their action]. [Environmental response]. [New situation created].\"\n\nExample:\nUser: \"I light the torch\"\nGM: \"The torch flares to life, casting dancing shadows across the ancient walls. The sudden light reveals faded murals depicting dice falling from a cracked sky—the Great Rupture, perhaps? In the flickering glow, you notice footprints in the dust leading deeper into the corridor. They look fresh.\"\n\n### Scene Transition Techniques:\n\n**Time Skip**:\n\"Hours pass as you [activity]. When you finish, [new situation].\"\n\n**Location Change**:\n\"You leave [location A] behind. [Travel description]. [Arrival at location B with new detail].\"\n\n**Interrupt**:\n\"As you [action], [sudden event/person appears].\"\n\n### Important Do's and Don'ts:\n\n**DO:**\n- Keep narration proportional to action importance\n- Add details that can become relevant later\n- Let NPCs have personality in their responses\n- Use this chance to build atmosphere\n- Connect actions to the larger narrative\n\n**DON'T:**\n- Over-narrate simple actions\n- Block player intent without reason\n- Add unnecessary complications\n- Forget ongoing environmental factors\n- Make it feel like player has no agency\n\n### Quick Examples:\n\n**Opening a normal door:**\n\"The door swings open with a soft creak. Beyond lies a study, candlelight still flickering despite the room being empty. Papers are scattered across the desk as if someone left in a hurry.\"\n\n**Buying common items:**\n\"The merchant nods, counting out your change. 'Rope and torches—planning an expedition? Word of advice: avoid the old mines. Strange dice been rolling out of there on their own.' She wraps your purchases in oiled cloth.\"\n\n**Eating a meal:**\n\"The stew is hearty and warming, with chunks of meat you don't quite recognize. As you eat, you overhear two guards at the next table: '—saw him near the Rupture again. That Black Prophet gives me the creeps.'\"\n\n**Going to sleep:**\n\"You settle into the inn's surprisingly comfortable bed. Through the thin walls, you hear dice clattering in the room next door—someone practicing, perhaps? Or gambling? Sleep takes you as the sound becomes almost rhythmic...\"\n\n### Ending Your Narration:\n\nAlways conclude with one of these:\n- Open question: \"What do you do?\"\n- Implicit prompt: Description that clearly needs response\n- Direct choice: \"Will you [A] or [B]?\"\n- Natural pause: Clear moment for player input",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:47:53.703Z",
+              "updatedAt": "2025-09-23T01:47:53.703Z",
+              "id": "01997441-7fe7-7004-b260-a6cb131b1003"
+            }
+          ],
+          "createdAt": "2025-09-23T01:47:53.703Z",
+          "id": "message-1756793960874"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 1,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "Session context and user input",
+              "template": "# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User's action\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:47:53.703Z",
+              "updatedAt": "2025-09-23T01:47:53.703Z",
+              "id": "01997441-7fe7-7004-b260-ad12f2986e34"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "Session context and user input",
+              "template": "# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User's action\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:47:53.703Z",
+              "updatedAt": "2025-09-23T01:47:53.703Z",
+              "id": "01997441-7fe7-7004-b260-b7b232208a21"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-09-23T01:47:53.703Z",
+          "id": "history-1756799531038"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#FDA4AF",
+      "createdAt": "2025-12-02T13:44:24.792Z",
+      "updatedAt": "2025-12-02T13:44:24.792Z",
+      "modelTier": "heavy",
+      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+    },
+    "019adf4e-a5c0-7006-8c26-25017557e89e": {
+      "name": "Roll dice",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "openai-compatible:deepseek/deepseek-chat-v3.1",
+      "modelName": "DeepSeek V3.1",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the Game Master for 'Dice of Fate' RPG. {{char.description}}\n\n## Scenario\n{{session.scenario}}\n\n## Dice Roll Narration Protocol\n\nWhen narrating dice rolls, you will receive:\n- Dice to roll: [STAT] [DICE_TYPE]  [asdfasfasfd][asdfasdf]\n- Roll result: [NUMBER]\n- Target number: [TARGET]\n- Session context: [PREVIOUS_CONTENT]\n- User's last action: [USER_MESSAGE]\n\n### Your Narration Must:\n\n1. **Connect to the Immediate Action**\n   Reference exactly what the player attempted from their last message.\n   Don't generic describe - be specific to THEIR action.\n\n2. **Describe the Physical Dice Roll**\n   Include the dice color and type based on stat:\n   - STR: \"crimson D[X]\"\n   - DEX: \"golden D[X]\"  \n   - CON: \"emerald D[X]\"\n   - INT: \"sapphire D[X]\"\n   - WIS: \"violet D[X]\"\n   - CHA: \"pearl D[X]\"\n\n3. **Build Appropriate Tension**\n   - Low stakes: Quick, simple description\n   - High stakes: More dramatic pause and detail\n   - Match the weight of the moment\n\n4. **Narrate the Specific Outcome**\n   SUCCESS: Describe exactly HOW their specific action succeeds\n   FAILURE: Show exactly WHY their specific attempt falls short\n   \n5. **Connect to Session Context**\n   Reference relevant NPCs, locations, or situations from previous content.\n   Make the result affect the ongoing story.\n\n### Narration Template:\n\n\"[Acknowledge the specific action they're attempting].\n[This requires *STAT* check. Target: **X**.]\n\n[Physical dice description with appropriate drama level]... **[RESULT]**!\n\n[Specific outcome based on their exact action, incorporating session context]\n\n[If failure: How it goes wrong + 'You gain **1 OR 2** Trial Token']\n[If success: How it succeeds and what happens next]\"\n\n### Examples with Context:\n\n**Context**: Player is in a tavern, trying to gather information about the Black Prophet\n**User's Action**: \"I buy the hooded stranger a drink and casually ask about unusual dice\"\n**Roll**: CHA D8, Result: 9, Target: 7\n\n\"You slide a tankard toward the hooded figure while weaving your question into casual conversation.\nThis requires a *Charisma* check. Target: **7**.\n\nYour *pearl D8* tumbles smoothly across fate's design... **9**!\n\nThe stranger's shoulders relax as they accept your drink. 'Unusual dice, you say?' They lean closer, voice dropping. 'If it's the black ones you mean, I've seen them. But that knowledge comes with a price...' They eye you meaningfully.\"\n\n**Context**: Player is escaping city guards through narrow alleys\n**User's Action**: \"I leap across to the opposite rooftop\"\n**Roll**: DEX D6, Result: 4, Target: 6\n\n\"You sprint toward the edge, preparing to leap the gap between buildings as guards shout below.\nThis requires a *Dexterity* check. Target: **6**.\n\nYour *golden D6* spins frantically... only **4**!\n\nYour foot slips on the loose tiles mid-leap. You slam into the opposite wall, fingers barely catching the edge as your legs dangle. The guards spot you immediately—'There! On the rooftops!' Though you failed the jump, your body learns the rhythm of rooftop running.\n(You gain **1** Trial Token)\"\n\n### Critical Result Variations:\n\n**Natural 1 (Critical Failure)**:\n\"[Action acknowledgment]\nThe *[color] die* tumbles mockingly... **1**! Disaster strikes!\n[Dramatic failure directly related to their action]\n(You gain **2** Trial Tokens)\"\n\n**Maximum Roll (Critical Success)**:\n\"[Action acknowledgment]  \nYour [color] die dances with destiny... [MAX]! Perfection!\n[Exceptional success that exceeds their intent]\"\n\n### Important Guidelines:\n- NEVER use generic descriptions like \"you try to do something\"\n- ALWAYS reference their specific action\n- INTEGRATE the roll into the ongoing narrative\n- Make failures lead to interesting complications, not dead ends\n- Use NPCs' names and location details from session context\n- Keep the story moving forward regardless of success/failure",
+              "type": "plain",
+              "createdAt": "2025-10-16T08:56:38.936Z",
+              "updatedAt": "2025-10-16T08:56:38.936Z",
+              "id": "0199ec3c-4d18-7bbb-b661-c4495df7317a"
+            }
+          ],
+          "createdAt": "2025-10-16T08:56:38.936Z",
+          "id": "message-1756793953392"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 1,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "Summary & User Input & Roll",
+              "template": "# Dice to roll\n{{judge_dice.target_stat}} {% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha}}\n{%- endif %}\n\n# Roll result\n{% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str | roll}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex | roll}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con | roll}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int | roll}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis | roll}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha | roll}}\n{%- endif %}\n\n# Target number\n{{judge_dice.target_value}}\n\n# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User's last action\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-10-16T08:56:38.936Z",
+              "updatedAt": "2025-10-16T08:56:38.936Z",
+              "id": "0199ec3c-4d18-7bbb-b661-ccb8a88e348b"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "Summary & User Input & Roll",
+              "template": "# Dice to roll\n{{judge_dice.target_stat}} {% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha}}\n{%- endif %}\n\n# Roll result\n{% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str | roll}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex | roll}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con | roll}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int | roll}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis | roll}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha | roll}}\n{%- endif %}\n\n# Target number\n{{judge_dice.target_value}}\n\n# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User's last action\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-10-16T08:56:38.936Z",
+              "updatedAt": "2025-10-16T08:56:38.936Z",
+              "id": "0199ec3c-4d18-7bbb-b661-d33e00fb7c3c"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-10-16T08:56:38.936Z",
+          "id": "history-1756795077615"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "narration",
+          "type": "string",
+          "array": false,
+          "maximum": 2,
+          "minimum": 0,
+          "required": true,
+          "description": "GM narration generated according to the guidelines."
+        },
+        {
+          "name": "gained_trial_tokens",
+          "type": "integer",
+          "array": false,
+          "maximum": 2,
+          "required": true,
+          "description": "Trial talkens gained through dice check failure."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#7DD3FC",
+      "createdAt": "2025-12-02T13:44:24.800Z",
+      "updatedAt": "2025-12-02T13:44:24.800Z",
+      "modelTier": "heavy",
+      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+    },
+    "019adf4e-a5c0-7006-8c26-2e181ae5146b": {
+      "name": "Judge OOC",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "openai-compatible:google/gemini-2.5-flash",
+      "modelName": "Gemini 2.5 Flash",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the Game Master for 'Dice of Fate' RPG. {{char.description}}\n\n## Scenario\n{{session.scenario}}\n\n## Main Task\nAnalyze user input for the following OOC indicators:\n\n### DEFINITE OOC markers:\n- Starts with \"OOC:\" or \"(\" or \"[\" \n- Contains \"my stats\", \"my dice\", \"my tokens\"\n- Questions with \"how does\", \"what are the rules\"\n- \"Can I change my [name/appearance/character]\"\n- \"I want to upgrade my [stat] dice\"\n- \"What's my current [anything]\"\n- References to game mechanics directly\n\n### PROBABLE OOC patterns:\n- Questions about the world/lore without character context\n- Requests for clarification on previous events\n- Comments about the game system\n- Discussions about strategy in meta terms\n\n### IC (In-Character) patterns:\n- First-person actions: \"I [verb]\"\n- Direct speech to NPCs\n- Environmental interactions\n- Emotional reactions or thoughts\n- Questions that character would ask in-world\n\n### Edge cases:\n- \"Can I do X?\" → Could be either\n  - If X is an action: IC\n  - If X is about rules: OOC\n- \"What do I see?\" → Usually IC\n- \"What happened last time?\" → Usually OOC",
+              "type": "plain",
+              "createdAt": "2025-09-03T04:48:34.662Z",
+              "updatedAt": "2025-09-03T04:48:34.662Z",
+              "id": "01990de7-bb66-7dd2-afa8-0d04b49a4ddb"
+            }
+          ],
+          "createdAt": "2025-09-03T04:48:34.662Z",
+          "id": "message-1756459566716"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 1,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "Last user message",
+              "template": "# User Input\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-03T04:48:34.662Z",
+              "updatedAt": "2025-09-03T04:48:34.662Z",
+              "id": "01990de7-bb66-7dd2-afa8-10541a0c1c2b"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "Last user message",
+              "template": "# User Input\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-03T04:48:34.662Z",
+              "updatedAt": "2025-09-03T04:48:34.662Z",
+              "id": "01990de7-bb66-7dd2-afa8-1b1d8b864ca0"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-09-03T04:48:34.662Z",
+          "id": "history-1756459578042"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "is_ooc",
+          "type": "boolean",
+          "array": false,
+          "required": true,
+          "description": "Whether the user's input is OOC."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#F9A8D4",
+      "createdAt": "2025-12-02T13:44:24.804Z",
+      "updatedAt": "2025-12-02T13:44:24.804Z",
+      "modelTier": "light",
+      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+    },
+    "019adf4e-a5c0-7006-8c26-3f3a385f886a": {
+      "name": "Process OOC",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "astrsk-ai",
+      "modelId": "openai-compatible:google/gemini-2.5-flash",
+      "modelName": "Gemini 2.5 Flash",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the Game Master for 'Dice of Fate' RPG.\n\n## OOC (Out of Character) Request Handler\n\nWhen a player makes an OOC request, identify the type and respond completely in a single message. No back-and-forth clarification - provide full information immediately.\n\n### OOC Categories and Responses:\n\n#### 1. CHARACTER STATUS CHECK\nRequest examples: \"What are my stats?\" \"How many tokens do I have?\" \"Show character sheet\"\n\nResponse format:\n\"**Current Character Status:**\n- **Name**: [Character name]\n- **Dice**: STR [D?], DEX [D?], CON [D?], INT [D?], WIS [D?], CHA [D?]\n- **Trial Tokens**: [X] total (can be used for any stat upgrade)\n- **Current Location**: [Location]\n- **Notable Items**: [List items]\n\nReady to continue your adventure?\"\n\n#### 2. DICE UPGRADE REQUEST\nRequest examples: \"Upgrade my STR\" \"Use tokens to improve DEX\" \"Level up my INT dice\"\n\nCheck requirements and process:\n\"**Dice Upgrade Process:**\nCurrent [STAT]: [Current die] → [Next die]\nRequired tokens: [Number needed based on current die]\nYour tokens: [X]\n\n[If sufficient]: ✅ Upgrade successful! Your [STAT] is now [new die]. \nRemaining tokens: [X]\n\n[If insufficient]: ❌ Need [Y] more tokens. Keep failing to earn more!\n\nReturning to the adventure...\"\n\n**Token Requirements:**\n- D4→D6: 4 tokens\n- D6→D8: 6 tokens  \n- D8→D10: 8 tokens\n- D10→D12: 10 tokens\n- D12→D20: 12 tokens\n\n#### 3. RULES QUESTIONS\nRequest examples: \"How do trials tokens work?\" \"What's the difficulty scale?\" \"How do I upgrade?\"\n\nResponse format:\n\"**Rule Explanation:**\n[Clear, concise explanation of the requested rule]\n\nQuick reminder of key mechanics:\n- Roll dice vs target number to succeed\n- Failures grant Trial Tokens\n- Collect enough tokens to upgrade any die\n- Higher dice = better chances but same token costs\n\nBack to your adventure...\"\n\n#### 4. WORLD LORE QUESTIONS\nRequest examples: \"Who is the Black Prophet?\" \"What's the Great Rupture?\" \"Tell me about Diceheim\"\n\nResponse format:\n\"**Lore Information:**\n[Provide relevant world information that the character would know]\n\n[Add any rumors or additional context if appropriate]\n\nNow, back to your current situation...\"\n\n### Quick Reference Responses:\n\n**For \"Help\" or \"Commands\":**\n\"**Quick Commands:**\n- Check stats: Ask about your character/dice/tokens\n- Upgrade: 'Upgrade [STAT]' when you have enough tokens  \n- Lore: Ask about places, people, or events\n- Rules: Ask how any mechanic works\n\nWhat would you like to know?\"\n\n**For Invalid Requests:**\n\"I don't understand that OOC request. You can:\n- Check your stats\n- Upgrade dice with tokens\n- Ask about rules or lore\n\nLet's continue the adventure...\"\n\n### Important Processing Rules:\n\n1. **Complete Resolution**: Answer fully in one response, don't ask for clarification\n2. **Automatic Processing**: If request is clear (like \"upgrade STR\"), process immediately\n3. **Return to Game**: Always end with returning to the IC narrative\n4. **Token Simplification**: All dice use the same token pool (Trial Tokens)\n\n### Example Complete Responses:\n\n**Upgrade Request with Success:**\n\"**Dice Upgrade - DEX:**\nCurrent: D6 → Upgrading to: D8\nCost: 6 Trial Tokens\nYour tokens: 8\n\n✅ Upgrade complete! Your DEX is now D8!\nRemaining tokens: 2\n\nYour improved dexterity tingles through your fingers as we return to the scene...\"\n\n**Multiple Questions:**\n\"**Your Questions Answered:**\n\n1. Current Stats: STR D8, DEX D6, CON D6, INT D8, WIS D6, CHA D8\n2. Trial Tokens: 5 (need 1 more to upgrade a D6)\n3. The Black Prophet: A former Guild researcher who opened the Rupture seeking the legendary Seventh Prime Die\n\nNow, you're still facing the locked door in the dungeon. What's your next move?\"\n\n### Always Remember:\n- Single response only - no dialogue\n- Process requests immediately when possible\n- Provide complete information\n- Smoothly transition back to game\n- Keep OOC responses concise but complete",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:50:57.972Z",
+              "updatedAt": "2025-09-23T01:50:57.972Z",
+              "id": "01997444-4fb4-7004-b264-1921270eb5d8"
+            }
+          ],
+          "createdAt": "2025-09-23T01:50:57.972Z",
+          "id": "message-1756791852470"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 1,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "Last user message",
+              "template": "# User Information\n- Name: {{user_name}}\n- Look: {{user_look}}\n\n# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n- Trial tokens: {{trial_tokens}}\n\n# Session context\n{{previous_summary}}\n{% if session.char_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.char_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User Input\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:50:57.972Z",
+              "updatedAt": "2025-09-23T01:50:57.972Z",
+              "id": "01997444-4fb4-7004-b264-2758a892e78c"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "Last user message",
+              "template": "# User Information\n- Name: {{user_name}}\n- Look: {{user_look}}\n\n# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n- Trial tokens: {{trial_tokens}}\n\n# Session context\n{{previous_summary}}\n{% if session.char_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.char_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User Input\n{{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:50:57.972Z",
+              "updatedAt": "2025-09-23T01:50:57.972Z",
+              "id": "01997444-4fb4-7004-b264-291ed0bf3aa8"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-09-23T01:50:57.972Z",
+          "id": "history-1756802595849"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "gm_response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "GM narration generated according to the guidelines."
+        },
+        {
+          "name": "new_dice_str",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Updated STR dice."
+        },
+        {
+          "name": "new_dice_dex",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Updated DEX dice."
+        },
+        {
+          "name": "new_dice_con",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Updated CON dice."
+        },
+        {
+          "name": "new_dice_int",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Updated INT dice."
+        },
+        {
+          "name": "new_dice_wis",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Updated WIS dice."
+        },
+        {
+          "name": "new_dice_cha",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Updated CHA dice."
+        },
+        {
+          "name": "new_trial_tokens",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Updated trial tokens dice."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#D8B4FE",
+      "createdAt": "2025-12-02T13:44:24.807Z",
+      "updatedAt": "2025-12-02T13:44:24.807Z",
+      "modelTier": "light",
+      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+    }
+  },
+  "dataStoreNodes": {
+    "019adf4e-a5c0-7006-8c25-e98c9741a904": {
+      "name": "Update Summary",
+      "color": "#FDBA74",
+      "dataStoreFields": [
+        {
+          "id": "0198deea-68fd-7ee8-b913-9608040edc9b",
+          "schemaFieldId": "0198d103-292d-7aae-adb6-dd8553dd2001",
+          "logic": "{{summary.new_summary}}"
+        }
+      ],
+      "createdAt": "2025-12-02T13:44:24.809Z",
+      "updatedAt": "2025-12-02T13:44:24.809Z"
+    },
+    "019adf4e-a5c0-7006-8c26-051258cecc9b": {
+      "name": "Update user data",
+      "color": "#F0ABFC",
+      "dataStoreFields": [
+        {
+          "id": "0198f4a6-7291-7aa1-ad09-0870f9571314",
+          "schemaFieldId": "0198f027-5df9-7444-86b9-80be04476257",
+          "logic": "{{get_user_data.user_name}}"
+        },
+        {
+          "id": "0198f4a6-7a44-7aa1-ad09-11595c93b69c",
+          "schemaFieldId": "0198f027-8b30-7444-86b9-8bf7d720239f",
+          "logic": "{{get_user_data.user_look}}"
+        }
+      ],
+      "createdAt": "2025-12-02T13:44:24.815Z",
+      "updatedAt": "2025-12-02T13:44:24.815Z"
+    },
+    "019adf4e-a5c0-7006-8c26-44ab49698f96": {
+      "name": "Update by OOC",
+      "color": "#5EEAD4",
+      "dataStoreFields": [
+        {
+          "id": "01990985-af14-7882-bb66-03ff2cbb5bf0",
+          "schemaFieldId": "0198f025-9b65-7444-86b9-492b39f24913",
+          "logic": "{{process_ooc.new_dice_str}}"
+        },
+        {
+          "id": "01990985-b8f0-7882-bb66-09bb3f739d84",
+          "schemaFieldId": "0198f025-9bd7-7444-86b9-5625a4f22f0a",
+          "logic": "{{process_ooc.new_dice_dex}}"
+        },
+        {
+          "id": "01990985-c551-7882-bb66-1bb5739117f6",
+          "schemaFieldId": "0198f025-9cc2-7444-86b9-5f7c13a9287d",
+          "logic": "{{process_ooc.new_dice_con}}"
+        },
+        {
+          "id": "01990985-be66-7882-bb66-1769f99ffd00",
+          "schemaFieldId": "0198f025-9dca-7444-86b9-667fa7d777a1",
+          "logic": "{{process_ooc.new_dice_int}}"
+        },
+        {
+          "id": "01990985-cb8c-7882-bb66-23cb6f027c84",
+          "schemaFieldId": "0198f025-9e95-7444-86b9-6edcbaaf023e",
+          "logic": "{{process_ooc.new_dice_wis}}"
+        },
+        {
+          "id": "01990985-d013-7882-bb66-2da377a2b1c3",
+          "schemaFieldId": "0198f026-8626-7444-86b9-7002c05ef4f3",
+          "logic": "{{process_ooc.new_dice_cha}}"
+        },
+        {
+          "id": "01990985-e094-7882-bb66-452f75cdfc88",
+          "schemaFieldId": "0198f4c5-90d4-7996-908e-8faec5eef9e9",
+          "logic": "{{process_ooc.new_trial_tokens}}"
+        }
+      ],
+      "createdAt": "2025-12-02T13:44:24.822Z",
+      "updatedAt": "2025-12-02T13:44:24.822Z"
+    },
+    "019adf4e-a5c0-7006-8c26-4d48055e9838": {
+      "name": "Update trial tokens",
+      "color": "#A5B4FC",
+      "dataStoreFields": [
+        {
+          "id": "01990974-4825-7882-bb65-f4870f751f62",
+          "schemaFieldId": "0198f4c5-90d4-7996-908e-8faec5eef9e9",
+          "logic": "{{trial_tokens}} + {{roll_dice.gained_trial_tokens}}"
+        }
+      ],
+      "createdAt": "2025-12-02T13:44:24.826Z",
+      "updatedAt": "2025-12-02T13:44:24.826Z"
+    },
+    "019adf4e-bfcc-7006-8c26-fcdb4985ccf2": {
+      "name": "before_end_node",
+      "color": "#FCA5A5",
+      "dataStoreFields": [],
+      "createdAt": "2025-12-02T13:44:31.502Z",
+      "updatedAt": "2025-12-02T13:44:53.291Z"
+    }
+  },
+  "ifNodes": {
+    "019adf4e-a5c0-7006-8c25-f00ee444eb8a": {
+      "name": "Check user name and look",
+      "color": "#BEF264",
+      "logicOperator": "OR",
+      "conditions": [
+        {
+          "id": "0198f46e-da52-755d-b1e5-b8cd16692dba",
+          "value1": "{{user_name}}",
+          "value2": "No name",
+          "dataType": "string",
+          "operator": "string_equals"
+        },
+        {
+          "id": "0198f46f-0e50-755d-b1e5-c0a57d667e10",
+          "value1": "{{user_look}}",
+          "value2": "No look",
+          "dataType": "string",
+          "operator": "string_equals"
+        }
+      ],
+      "createdAt": "2025-12-02T13:45:08.972Z",
+      "updatedAt": "2025-12-02T13:45:08.972Z"
+    },
+    "019adf4e-a5c0-7006-8c26-1546e4dd6c85": {
+      "name": "Check dice roll",
+      "color": "#86EFAC",
+      "logicOperator": "AND",
+      "conditions": [
+        {
+          "id": "0198f504-9e25-7333-badd-621157acf49d",
+          "value1": "{{judge_dice.is_required_dice_check}}",
+          "value2": "",
+          "dataType": "boolean",
+          "operator": "boolean_is_true"
+        }
+      ],
+      "createdAt": "2025-12-02T13:45:08.984Z",
+      "updatedAt": "2025-12-02T13:45:08.984Z"
+    },
+    "019adf4e-a5c0-7006-8c26-379e8f005b84": {
+      "name": "Check OOC",
+      "color": "#6EE7B7",
+      "logicOperator": "AND",
+      "conditions": [
+        {
+          "id": "0198f52a-dc59-755e-8c86-7f23b6a283e9",
+          "value1": "{{judge_ooc.is_ooc}}",
+          "value2": "",
+          "dataType": "boolean",
+          "operator": "boolean_is_true"
+        }
+      ],
+      "createdAt": "2025-12-02T13:45:08.999Z",
+      "updatedAt": "2025-12-02T13:45:08.999Z"
+    }
+  },
+  "exportedAt": "2025-12-02T13:45:09.008Z",
+  "exportedBy": "astrsk-v2.3.0",
+  "metadata": {
+    "processing": {
+      "agents": {
+        "found": 7,
+        "exported": 7,
+        "failed": 0
+      },
+      "dataStoreNodes": {
+        "found": 5,
+        "exported": 5,
+        "failed": 0
+      },
+      "ifNodes": {
+        "found": 3,
+        "exported": 3,
+        "failed": 0
+      }
+    },
+    "totalNodes": 17,
+    "nodeTypes": {
+      "start": 1,
+      "end": 1,
+      "agent": 7,
+      "dataStore": 5,
+      "if": 3
+    }
+  }
+}

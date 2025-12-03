@@ -1,0 +1,878 @@
+{
+  "name": "Fantasy_vf",
+  "description": "",
+  "nodes": [
+    {
+      "id": "019adf4e-1fca-7006-8c25-0b84946d0db4",
+      "type": "start",
+      "position": {
+        "x": 186.52199663856533,
+        "y": 238.92161608076094
+      },
+      "data": {},
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-16f16bd9a09d",
+      "type": "end",
+      "position": {
+        "x": 3339.681269605057,
+        "y": 219.9755383276664
+      },
+      "data": {},
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-1e49daf0b251",
+      "type": "agent",
+      "position": {
+        "x": 782.0528920856339,
+        "y": -143.02162864299328
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-21c3879a7960",
+      "type": "if",
+      "position": {
+        "x": 384.851628802734,
+        "y": 167.34965537422963
+      },
+      "data": {
+        "name": "Is battle?",
+        "color": "#FDBA74",
+        "conditions": [
+          {
+            "id": "019a2b00-8c10-7333-ab7d-c298e61ac233",
+            "value1": "{{cast.active.id}}",
+            "value2": "{{user.id}}",
+            "dataType": "string",
+            "operator": "string_not_equals"
+          }
+        ],
+        "logicOperator": "AND"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-2f48a8fd493a",
+      "type": "agent",
+      "position": {
+        "x": 1209.9165498173952,
+        "y": 706.5643134494894
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-3234993e18bf",
+      "type": "agent",
+      "position": {
+        "x": 1960.043987473423,
+        "y": 146.67499096417816
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-3b3534696922",
+      "type": "agent",
+      "position": {
+        "x": 1181.8957336188691,
+        "y": -182.7361655425746
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-464d7fd1d08b",
+      "type": "dataStore",
+      "position": {
+        "x": 1567.7175403769104,
+        "y": -17.00105627258389
+      },
+      "data": {
+        "name": "New Data Update",
+        "color": "#FCD34D",
+        "dataStoreFields": [
+          {
+            "id": "019a2e91-3fa3-7eeb-9d6f-7ca5c478a941",
+            "logic": "{{hp-results_tally.hp_diff}}",
+            "schemaFieldId": "019a2ae9-32ea-7333-ab7d-88985327b33d"
+          },
+          {
+            "id": "019a2e93-6783-7eeb-9d6f-87a36cf8420f",
+            "logic": "{{mp-results_tally.mp_diff}}",
+            "schemaFieldId": "019a2aea-62e5-7333-ab7d-9dd99fb3acbb"
+          },
+          {
+            "id": "019a2e93-d33d-7eeb-9d6f-8e851f571bcd",
+            "logic": "{{results_tally.user_status}}",
+            "schemaFieldId": "019a2aeb-744e-7333-ab7d-a8d4ae783943"
+          },
+          {
+            "id": "019a2e94-571d-7eeb-9d6f-90f9527ccad2",
+            "logic": "{{results_tally.is_battle}}",
+            "schemaFieldId": "019a2b00-b800-7333-ab7d-c926a56b202c"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-4cec0c734207",
+      "type": "agent",
+      "position": {
+        "x": 1247.6574864971412,
+        "y": 246.9460234237623
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-521c817357be",
+      "type": "dataStore",
+      "position": {
+        "x": 2360.043987473423,
+        "y": 198.0583271929939
+      },
+      "data": {
+        "name": "Summary update",
+        "color": "#F0ABFC",
+        "dataStoreFields": [
+          {
+            "id": "019a71b7-f5b0-7445-a1a0-8f0a55165e64",
+            "logic": "{{summarization.response}}",
+            "schemaFieldId": "019a71a6-bc7b-711e-956d-ffea65a0f685"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4e-4b77-7006-8c25-cc8268be3abb",
+      "type": "dataStore",
+      "position": {
+        "x": 2760.043987473423,
+        "y": 248.0583271929939
+      },
+      "data": {},
+      "deletable": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "019adf4e-1fcb-7006-8c25-607c0349d8c6",
+      "source": "019adf4e-1fca-7006-8c25-21c3879a7960",
+      "target": "019adf4e-1fca-7006-8c25-1e49daf0b251",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "019adf4e-1fcb-7006-8c25-6ec6144823dc",
+      "source": "019adf4e-1fca-7006-8c25-2f48a8fd493a",
+      "target": "019adf4e-1fca-7006-8c25-3234993e18bf"
+    },
+    {
+      "id": "019adf4e-1fcb-7006-8c25-7245253df10b",
+      "source": "019adf4e-1fca-7006-8c25-1e49daf0b251",
+      "target": "019adf4e-1fca-7006-8c25-3b3534696922"
+    },
+    {
+      "id": "019adf4e-1fcb-7006-8c25-7d6d565f3256",
+      "source": "019adf4e-1fca-7006-8c25-3b3534696922",
+      "target": "019adf4e-1fca-7006-8c25-464d7fd1d08b"
+    },
+    {
+      "id": "019adf4e-1fcb-7006-8c25-8291bb68bb42",
+      "source": "019adf4e-1fca-7006-8c25-464d7fd1d08b",
+      "target": "019adf4e-1fca-7006-8c25-3234993e18bf"
+    },
+    {
+      "id": "019adf4e-1fcb-7006-8c25-8b370e2a7cfb",
+      "source": "019adf4e-1fca-7006-8c25-4cec0c734207",
+      "target": "019adf4e-1fca-7006-8c25-3234993e18bf"
+    },
+    {
+      "id": "019adf4e-1fcb-7006-8c25-905a71a4f7af",
+      "source": "019adf4e-1fca-7006-8c25-21c3879a7960",
+      "target": "019adf4e-1fca-7006-8c25-4cec0c734207",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "019adf4e-1fcb-7006-8c25-9e8aebaf2e06",
+      "source": "019adf4e-1fca-7006-8c25-3234993e18bf",
+      "target": "019adf4e-1fca-7006-8c25-521c817357be"
+    },
+    {
+      "id": "019adf4e-1fca-7006-8c25-521c817357be-019adf4e-4b77-7006-8c25-cc8268be3abb",
+      "source": "019adf4e-1fca-7006-8c25-521c817357be",
+      "target": "019adf4e-4b77-7006-8c25-cc8268be3abb"
+    }
+  ],
+  "responseTemplate": "{{battle_response_ai_char.response}}\n{{impersonation_user_char.response}}\n{{plot_progression_scenario.response}}",
+  "createdAt": "2025-12-02T13:44:14.475Z",
+  "updatedAt": "2025-12-02T13:44:14.475Z",
+  "panelStructure": {
+    "panels": [],
+    "version": 2,
+    "activePanel": "flow-panel-main",
+    "panelMetadata": {
+      "flow-panel-main": {
+        "title": "Flow Editor",
+        "params": {
+          "title": "Flow Editor",
+          "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+        },
+        "component": "flow"
+      }
+    },
+    "serializedLayout": {
+      "grid": {
+        "root": {
+          "data": [
+            {
+              "data": {
+                "id": "1",
+                "views": [
+                  "flow-panel-main"
+                ],
+                "locked": true,
+                "activeView": "flow-panel-main"
+              },
+              "size": 2480,
+              "type": "leaf"
+            }
+          ],
+          "size": 1328,
+          "type": "branch"
+        },
+        "width": 2480,
+        "height": 1328,
+        "orientation": "HORIZONTAL"
+      },
+      "panels": {
+        "flow-panel-main": {
+          "id": "flow-panel-main",
+          "title": "Flow Editor",
+          "params": {
+            "title": "Flow Editor",
+            "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "flow"
+        }
+      },
+      "activeGroup": "1"
+    }
+  },
+  "viewport": {
+    "x": -537.3581072570023,
+    "y": 476.2385505552146,
+    "zoom": 0.7364177401723261
+  },
+  "dataStoreSchema": {
+    "fields": [
+      {
+        "id": "019a2ae9-32ea-7333-ab7d-88985327b33d",
+        "name": "hp",
+        "type": "integer",
+        "initialValue": "30"
+      },
+      {
+        "id": "019a2aea-24b4-7333-ab7d-93cbc6de4158",
+        "name": "max_hp",
+        "type": "integer",
+        "initialValue": "30"
+      },
+      {
+        "id": "019a2aea-62e5-7333-ab7d-9dd99fb3acbb",
+        "name": "mp",
+        "type": "integer",
+        "initialValue": "80"
+      },
+      {
+        "id": "019a2aea-9f93-7333-ab7d-a2aec41df5f8",
+        "name": "max_mp",
+        "type": "integer",
+        "initialValue": "100"
+      },
+      {
+        "id": "019a2aeb-744e-7333-ab7d-a8d4ae783943",
+        "name": "user_status",
+        "type": "string",
+        "initialValue": "✅ Normal"
+      },
+      {
+        "id": "019a2b00-b800-7333-ab7d-c926a56b202c",
+        "name": "is_battle",
+        "type": "boolean",
+        "initialValue": "false"
+      },
+      {
+        "id": "019a71a6-bc7b-711e-956d-ffea65a0f685",
+        "name": "previous_summary",
+        "type": "string",
+        "initialValue": ""
+      }
+    ]
+  },
+  "readyState": "draft",
+  "agents": {
+    "019adf4e-1fca-7006-8c25-1e49daf0b251": {
+      "name": "Battle response AI char",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "lmstudio",
+      "modelId": "llama-3.1-8b-stheno-v3.4",
+      "modelName": "llama-3.1-8b-stheno-v3.4",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You are {{cast.active}} in a physical situation. You must prevail in someway over those who threaten you.\r\n\r\n## Current Character Status\r\n- {{user.name}}'s current HP: {{hp}} / {{max_hp}}\r\n- {{user.name}}'s current MP: {{mp}} / {{max_mp}}\r\n- {{user.name}}'s status Conditions: {{user_status}}\r\n\r\n## Character Information\r\n{{cast.active}}\r\n\r\n## Scenario\r\n{{session.scenario}}\r\n\r\n## Guidelines\r\n1. **Combat & Mechanics**\r\n   - Calculate damage and healing realistically based on the action described\r\n   - Track resource consumption (MP for spells, HP for damage)\r\n   - Apply status effects logically (poison deals damage over time, paralysis prevents action, etc.)\r\n   - Make combat challenging but fair - avoid arbitrary deaths\r\n\r\n2. **Narrative Style**\r\n   - Write in an epic, immersive fantasy tone\r\n   - Use vivid descriptions of magic, combat, and environments\r\n   - Show consequences of actions through the story, not just numbers\r\n   - Maintain dramatic pacing - tension, action, and resolution\r\n\r\n3. **Consistency**\r\n   - Remember the current story summary and build upon it\r\n   - Keep character personalities and abilities consistent\r\n   - Respect established world-building and lore\r\n\r\n4. **User Agency**\r\n   - Respond to what the user actually does - don't decide their actions for them\r\n   - Present meaningful choices and consequences\r\n   - Allow creative problem-solving\r\n\r\n## Response Structure\r\nGenerate a structured response with:\r\n- Updated HP/MP values based on events\r\n- Current status conditions\r\n- A detailed scene description (2-4 paragraphs)\r\n\r\nMake the adventure feel alive, dangerous, and rewarding. Every action should have weight and consequence.\r\n\r\n## Additional Information\r\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it:\r\n\r\n{% for entry in session.entries %}\r\n{{entry}}\r\n{% endfor %}\r\n\r\n## Previous Summary\r\nExisting summary of conversation content up to the last update:\r\n{{previous_summary}}\r\n\r\n## New Messages\r\nNew conversation messages added since the last summary:",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:55:45.727Z",
+              "updatedAt": "2025-11-11T06:55:45.727Z",
+              "id": "019a71b2-f83f-7998-815f-e473e0cba349"
+            }
+          ],
+          "createdAt": "2025-11-11T06:55:45.727Z",
+          "id": "message-1761658276122"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:55:45.727Z",
+              "updatedAt": "2025-11-11T06:55:45.727Z",
+              "id": "019a71b2-f83f-7998-815f-ed51b7f3debc"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:55:45.727Z",
+              "updatedAt": "2025-11-11T06:55:45.727Z",
+              "id": "019a71b2-f83f-7998-815f-f7264de05307"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-11T06:55:45.727Z",
+          "id": "history-1761659441197"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Message 3",
+              "template": "Dont forget you are playing as {{char.name}}. Do not speak or take action on behalf of user characters. User can play a lot of characters, but you should only focus on \"{{char.name}}\". You should always respond in first person, in the perspective of {{char.name}}.\n",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:55:45.727Z",
+              "updatedAt": "2025-11-11T06:55:45.727Z",
+              "id": "019a71b2-f83f-7998-815f-fc591fa8f262"
+            }
+          ],
+          "createdAt": "2025-11-11T06:55:45.727Z",
+          "id": "message-1762844082551"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#A5B4FC",
+      "createdAt": "2025-12-02T13:43:50.486Z",
+      "updatedAt": "2025-12-02T13:43:50.486Z",
+      "modelTier": "light",
+      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+    },
+    "019adf4e-1fca-7006-8c25-2f48a8fd493a": {
+      "name": "Plot progression Scenario",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "lmstudio",
+      "modelId": "llama-3.1-8b-stheno-v3.4",
+      "modelName": "llama-3.1-8b-stheno-v3.4",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "Introduce challenges, opportunities, and NPCs that fit the world's tone and theme. Whatever the characters do, decide how the environment and the surrounding elements and characters will act according to the character actions. When characters walk into danger, you determine what lurks in the shadows. When the user seeks purpose, you present goals worth pursuing—or warnings worth heeding.\r\n\r\nRespond to the character's choices with consequences, both immediate and long-term. Actions have weight. Decisions matter. The world reacts and also initiates conflicts, events, and relationships.\r\n\r\nGoal: ensure {{user.name}}'s journey remains engaging: provide conflicts to overcome, mysteries to unravel, allies to meet, and enemies to face. Every scene should present something interesting—a choice to make, a threat to handle, or a secret to discover.\r\n\r\nDo not be the {{user.name}}'s enemy, nor its servant. You are the world itself, responding to what the user does and offering what the user needs to create a memorable story.\r\n\r\nAbide by the following information as you actively create and initiate the storyline forward.\r\n\r\n## Scenario\r\n{{scenario.scenario}}\r\n\r\n## Significant information\r\n{{scenario.entries}}\r\n\r\n## Previous Summary\r\n{{previous_summary}}\r\n\r\n## Last Message",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:53:34.664Z",
+              "updatedAt": "2025-11-11T06:53:34.664Z",
+              "id": "019a71b0-f848-7bb4-bba9-cde67ac6b936"
+            }
+          ],
+          "createdAt": "2025-11-11T06:53:34.664Z",
+          "id": "message-1761719181030"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:53:34.664Z",
+              "updatedAt": "2025-11-11T06:53:34.664Z",
+              "id": "019a71b0-f848-7bb4-bba9-d29a13feb19c"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:53:34.664Z",
+              "updatedAt": "2025-11-11T06:53:34.664Z",
+              "id": "019a71b0-f848-7bb4-bba9-d8e2f0cd27ee"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-11T06:53:34.664Z",
+          "id": "history-1761723427617"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#BEF264",
+      "createdAt": "2025-12-02T13:43:50.490Z",
+      "updatedAt": "2025-12-02T13:43:50.490Z",
+      "modelTier": "light",
+      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+    },
+    "019adf4e-1fca-7006-8c25-3234993e18bf": {
+      "name": "Summarization",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "lmstudio",
+      "modelId": "llama-3.1-8b-stheno-v3.4",
+      "modelName": "llama-3.1-8b-stheno-v3.4",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You are a professional summary agent that continuously tracks conversation content and updates summaries. \r\n\r\n## Previous Summary\r\n{{previous_summary}}\r\n\r\n## Scenario\r\n{{session.scenario}}\r\n\r\n## Summary Generation Rules\r\n\r\n### 1. Information Integration Principles\r\n- Preserve core information from previous summary while adding new information\r\n- Update with latest information when new information modifies or supplements existing information\r\n- Prioritize most recent information when contradictory information exists\r\n\r\n### 2. Processing Newly Discovered Facts\r\n- Clearly identify new facts, insights, and decisions found in New Messages\r\n- Add new topics or perspectives not present in existing summary\r\n- Reflect conversation progress or status changes\r\n\r\n### 3. Structure and Organization\r\n- Group information by topic to maintain logical flow\r\n- Maintain chronological order when temporal sequence is important\r\n- Clearly mark key points with bullet points\r\n\r\n### 4. Deduplication and Conciseness\r\n- Avoid repetition of identical information; mention only once\r\n- Remove unnecessary details while maintaining information needed for context understanding\r\n- Keep summary length proportional to information volume, but as concise as possible\r\n\r\n### 5. Context Preservation\r\n- Include conversation purpose, participants, and major decisions\r\n- Specify unresolved questions or action items\r\n- Emphasize important agreements or conclusions\r\n\r\n## Processing Process\r\n\r\n### 1. Analysis Phase\r\n - Read entire Previous Summary and identify core information\r\n - Analyze New Messages to extract new information\r\n - Identify relationships between information and changes\r\n\r\n### 2. Integration Phase\r\n - Map existing and new information by topic\r\n - Resolve conflicting information (prioritize latest information)\r\n - Add new topics or categories\r\n\r\n### 3. Refinement Phase\r\n - Remove duplicates\r\n - Reorganize for logical flow\r\n - Ensure clarity and conciseness\r\n\r\n### 4. Verification Phase\r\n - Confirm all important information is included\r\n - Verify new information is properly marked\r\n - Review overall consistency\r\n\r\n## Recent Messages",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:54:10.817Z",
+              "updatedAt": "2025-11-11T06:54:10.817Z",
+              "id": "019a71b1-8581-7bb4-bbaa-9e9e49234b84"
+            }
+          ],
+          "createdAt": "2025-11-11T06:54:10.817Z",
+          "id": "message-1761718281364"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 5,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:54:10.817Z",
+              "updatedAt": "2025-11-11T06:54:10.817Z",
+              "id": "019a71b1-8581-7bb4-bbaa-a41d8f56a8bc"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:54:10.817Z",
+              "updatedAt": "2025-11-11T06:54:10.817Z",
+              "id": "019a71b1-8581-7bb4-bbaa-acf5d5f4ad66"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-11T06:54:10.817Z",
+          "id": "history-1761718321659"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": false,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#FCA5A5",
+      "createdAt": "2025-12-02T13:43:50.494Z",
+      "updatedAt": "2025-12-02T13:43:50.494Z",
+      "modelTier": "light",
+      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+    },
+    "019adf4e-1fca-7006-8c25-3b3534696922": {
+      "name": "Results Tally",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "lmstudio",
+      "modelId": "llama-3.1-8b-stheno-v3.4",
+      "modelName": "llama-3.1-8b-stheno-v3.4",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "Analyze the situation and give an appropriate and logical response:\r\n\r\n## Current Character Status\r\n- {{user.name}}'s current HP: {{hp}} / {{max_hp}}\r\n- {{user.name}}'s current MP: {{mp}} / {{max_mp}}\r\n- {{user.name}}'s status Conditions: {{user_status}}\r\n\r\n## Most Recent Situation\r\n{{battle_response_ai_char.response}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T07:04:39.507Z",
+              "updatedAt": "2025-11-11T07:04:39.507Z",
+              "id": "019a71bb-1d53-7445-a1a0-f958d0f7dafe"
+            }
+          ],
+          "createdAt": "2025-11-11T07:04:39.507Z",
+          "id": "message-1761712710868"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Message 3",
+              "template": "## Situation Leading upto Now\r\n",
+              "type": "plain",
+              "createdAt": "2025-11-11T07:04:39.507Z",
+              "updatedAt": "2025-11-11T07:04:39.507Z",
+              "id": "019a71bb-1d53-7445-a1a1-02aaf8697622"
+            }
+          ],
+          "createdAt": "2025-11-11T07:04:39.507Z",
+          "id": "message-1761712933646"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T07:04:39.507Z",
+              "updatedAt": "2025-11-11T07:04:39.507Z",
+              "id": "019a71bb-1d53-7445-a1a1-0d5ae42e018f"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T07:04:39.507Z",
+              "updatedAt": "2025-11-11T07:04:39.507Z",
+              "id": "019a71bb-1d53-7445-a1a1-1494f49454ac"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-11T07:04:39.507Z",
+          "id": "history-1761712919655"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": false,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "hp_diff",
+          "type": "number",
+          "array": false,
+          "maximum": 15,
+          "minimum": -15,
+          "required": true,
+          "description": "How much health points did {{user.name}} gain or lose based on the most recent situation. Positive number means a health gain and negative number means a health loss."
+        },
+        {
+          "name": "mp_diff",
+          "type": "number",
+          "array": false,
+          "maximum": 15,
+          "minimum": -15,
+          "required": true,
+          "description": "How much magic points did {{user.name}} gain or use based on the most recent situation. Positive number means a magic point gain and negative number means a magic point spent."
+        },
+        {
+          "name": "user_status",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Describe the user character's current status conditions as a concise list with appropriate emoji prefixes.\r\nInclude: status ailments (poisoned, paralyzed, cursed, bleeding, etc.), buffs (blessed, strengthened, hastened, etc.), and any temporary conditions.\r\nIf the character has no special conditions, return \"✅ Normal\".\r\n\r\nFormat: \"[Emoji] Status\" - use comma to separate multiple statuses.\r\n\r\nCommon status emojis:\r\n- ✅ Normal (no conditions)\r\n- ☠️ Poisoned\r\n- 🩸 Bleeding\r\n- 💫 Paralyzed / Stunned\r\n- 🌑 Cursed\r\n- ✨ Blessed\r\n- 💪 Strengthened\r\n- 💨 Hastened\r\n- 🌿 Regenerating\r\n- 🔥 Burning\r\n- ❄️ Frozen\r\n- 😵 Confused\r\n- 🛡️ Protected\r\n\r\nExamples: \r\n- \"☠️ Poisoned, 💫 Weakened\" \r\n- \"✨ Blessed, 🌿 Regenerating\" \r\n- \"✅ Normal\"\r\n\r\nKeep it brief and clear - use standard RPG terminology with matching emojis."
+        },
+        {
+          "name": "is_battle",
+          "type": "boolean",
+          "array": false,
+          "required": true,
+          "description": "Is {{user.name}} still in physical conflict that {{user.name}} has most recently engaged in?"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#93C5FD",
+      "createdAt": "2025-12-02T13:43:50.498Z",
+      "updatedAt": "2025-12-02T13:43:50.498Z",
+      "modelTier": "light",
+      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+    },
+    "019adf4e-1fca-7006-8c25-4cec0c734207": {
+      "name": "Impersonation User char",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "lmstudio",
+      "modelId": "llama-3.1-8b-stheno-v3.4",
+      "modelName": "llama-3.1-8b-stheno-v3.4",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You are {{user.name}}. Your role is to deliver the scene narration and perform one main NPC character in detail, while other NPCs are described indirectly through narration.\r\n\r\n## Additional Information\r\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\r\n\r\n{% for entry in session.entries %}\r\n{{entry}}\r\n{% endfor %}\r\n\r\n## Scenario\r\n{{session.scenario}}\r\n\r\n## Previous Summary\r\n{{previous_summary}}\r\n\r\n## Last Message",
+              "type": "plain",
+              "createdAt": "2025-11-11T07:09:23.061Z",
+              "updatedAt": "2025-11-11T07:09:23.061Z",
+              "id": "019a71bf-70f5-7445-a1a1-5d5f654a58df"
+            }
+          ],
+          "createdAt": "2025-11-11T07:09:23.061Z",
+          "id": "message-1761719181030"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T07:09:23.061Z",
+              "updatedAt": "2025-11-11T07:09:23.061Z",
+              "id": "019a71bf-70f5-7445-a1a1-65b7270b7bc9"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{char.name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-11T07:09:23.061Z",
+              "updatedAt": "2025-11-11T07:09:23.061Z",
+              "id": "019a71bf-70f5-7445-a1a1-685daf03ccc2"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-11T07:09:23.061Z",
+          "id": "history-1761724048843"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Message 3",
+              "template": "Dont forget you are playing as {{user.name}}. Do not speak or take action on behalf of user characters. User can play a lot of characters, but you should only focus on \"{{user.name}}\". You should always respond in first person, in the perspective of {{user.name}}.\n",
+              "type": "plain",
+              "createdAt": "2025-11-11T07:09:23.061Z",
+              "updatedAt": "2025-11-11T07:09:23.061Z",
+              "id": "019a71bf-70f5-7445-a1a1-7245f18747cf"
+            }
+          ],
+          "createdAt": "2025-11-11T07:09:23.061Z",
+          "id": "message-1762844198674"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#67E8F9",
+      "createdAt": "2025-12-02T13:43:50.503Z",
+      "updatedAt": "2025-12-02T13:43:50.503Z",
+      "modelTier": "light",
+      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+    }
+  },
+  "dataStoreNodes": {
+    "019adf4e-1fca-7006-8c25-464d7fd1d08b": {
+      "name": "New Data Update",
+      "color": "#FCD34D",
+      "dataStoreFields": [
+        {
+          "id": "019a2e91-3fa3-7eeb-9d6f-7ca5c478a941",
+          "schemaFieldId": "019a2ae9-32ea-7333-ab7d-88985327b33d",
+          "logic": "{{hp-results_tally.hp_diff}}"
+        },
+        {
+          "id": "019a2e93-6783-7eeb-9d6f-87a36cf8420f",
+          "schemaFieldId": "019a2aea-62e5-7333-ab7d-9dd99fb3acbb",
+          "logic": "{{mp-results_tally.mp_diff}}"
+        },
+        {
+          "id": "019a2e93-d33d-7eeb-9d6f-8e851f571bcd",
+          "schemaFieldId": "019a2aeb-744e-7333-ab7d-a8d4ae783943",
+          "logic": "{{results_tally.user_status}}"
+        },
+        {
+          "id": "019a2e94-571d-7eeb-9d6f-90f9527ccad2",
+          "schemaFieldId": "019a2b00-b800-7333-ab7d-c926a56b202c",
+          "logic": "{{results_tally.is_battle}}"
+        }
+      ],
+      "createdAt": "2025-12-02T13:43:50.509Z",
+      "updatedAt": "2025-12-02T13:43:50.509Z"
+    },
+    "019adf4e-1fca-7006-8c25-521c817357be": {
+      "name": "Summary update",
+      "color": "#F0ABFC",
+      "dataStoreFields": [
+        {
+          "id": "019a71b7-f5b0-7445-a1a0-8f0a55165e64",
+          "schemaFieldId": "019a71a6-bc7b-711e-956d-ffea65a0f685",
+          "logic": "{{summarization.response}}"
+        }
+      ],
+      "createdAt": "2025-12-02T13:43:50.514Z",
+      "updatedAt": "2025-12-02T13:43:50.514Z"
+    },
+    "019adf4e-4b77-7006-8c25-cc8268be3abb": {
+      "name": "before_end_node",
+      "color": "#FDE047",
+      "dataStoreFields": [],
+      "createdAt": "2025-12-02T13:44:01.704Z",
+      "updatedAt": "2025-12-02T13:44:09.404Z"
+    }
+  },
+  "ifNodes": {
+    "019adf4e-1fca-7006-8c25-21c3879a7960": {
+      "name": "Is battle?",
+      "color": "#FDBA74",
+      "logicOperator": "AND",
+      "conditions": [
+        {
+          "id": "019a2b00-8c10-7333-ab7d-c298e61ac233",
+          "value1": "{{cast.active.id}}",
+          "value2": "{{user.id}}",
+          "dataType": "string",
+          "operator": "string_not_equals"
+        }
+      ],
+      "createdAt": "2025-12-02T13:44:14.483Z",
+      "updatedAt": "2025-12-02T13:44:14.483Z"
+    }
+  },
+  "exportedAt": "2025-12-02T13:44:14.511Z",
+  "exportedBy": "astrsk-v2.3.0",
+  "metadata": {
+    "processing": {
+      "agents": {
+        "found": 5,
+        "exported": 5,
+        "failed": 0
+      },
+      "dataStoreNodes": {
+        "found": 3,
+        "exported": 3,
+        "failed": 0
+      },
+      "ifNodes": {
+        "found": 1,
+        "exported": 1,
+        "failed": 0
+      }
+    },
+    "totalNodes": 11,
+    "nodeTypes": {
+      "start": 1,
+      "end": 1,
+      "agent": 5,
+      "if": 1,
+      "dataStore": 3
+    }
+  }
+}

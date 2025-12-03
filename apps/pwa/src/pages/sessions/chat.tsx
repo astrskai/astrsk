@@ -169,28 +169,53 @@ export default function ChatPage() {
     <Loading />
   ) : session ? (
     <div className="relative z-0 flex h-dvh flex-col">
-      {shouldShowBackground && (
+      {shouldShowBackground ? (
         <div
           className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-60"
           style={{ backgroundImage: `url(${backgroundSrc})` }}
         />
+      ) : (
+        /* Galaxy theme gradient background when no background image is selected */
+        <div
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              "radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 50%), " +
+              "radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), " +
+              "radial-gradient(ellipse at 50% 50%, rgba(79, 70, 229, 0.06) 0%, transparent 70%), " +
+              "linear-gradient(to bottom, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%)",
+          }}
+        >
+          {/* Subtle star-like dots */}
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage:
+                "radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.3), transparent), " +
+                "radial-gradient(1px 1px at 40px 70px, rgba(139, 92, 246, 0.4), transparent), " +
+                "radial-gradient(1px 1px at 90px 40px, rgba(99, 102, 241, 0.3), transparent), " +
+                "radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.2), transparent), " +
+                "radial-gradient(1px 1px at 160px 20px, rgba(139, 92, 246, 0.3), transparent)",
+              backgroundSize: "180px 100px",
+            }}
+          />
+        </div>
       )}
 
       <SessionHeader
         title={session.title ?? "Session"}
-        isOpenDataSidebar={isOpenSessionDataSidebar}
-        onDataSidebarClick={() => setIsOpenSessionDataSidebar((prev) => !prev)}
         onSettingsClick={() => setIsOpenSettings(true)}
       />
 
-      <div className="flex flex-1">
+      <div className="relative flex flex-1 overflow-hidden">
         <SessionDataSidebar
           session={session}
           isOpen={isOpenSessionDataSidebar}
+          onToggle={() => setIsOpenSessionDataSidebar((prev) => !prev)}
           sortedDataSchemaFields={sortedDataSchemaFields}
           isInitialDataStore={isInitialDataStore}
           lastTurnDataStore={lastTurnDataStore}
-          savedLayout={session.widgetLayout}
+          lastTurn={lastTurn}
         />
 
         <ChatMainArea

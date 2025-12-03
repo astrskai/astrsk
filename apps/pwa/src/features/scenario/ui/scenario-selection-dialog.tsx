@@ -102,7 +102,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: ScenarioCard }) => {
       {/* Scenario Image */}
       <div className="relative mx-auto aspect-[3/4] max-w-[200px] overflow-hidden rounded-lg md:max-w-xs">
         <img
-          src={scenarioImageUrl || "/img/placeholder/scenario-card-image.png"}
+          src={scenarioImageUrl || "/default/card/GM_ Dice of Fate.png"}
           alt={plot.props.title}
           className="h-full w-full object-cover"
         />

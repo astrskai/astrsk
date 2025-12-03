@@ -9,6 +9,28 @@ import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { LocalPersistStorage } from "@/shared/stores/local-persist-storage";
 
+// Non-persisted state for tracking skipped scenario dialogs per session
+// This resets when the app is refreshed
+interface SessionUIState {
+  skippedScenarioDialogSessionIds: Set<string>;
+  skipScenarioDialog: (sessionId: string) => void;
+  hasSkippedScenarioDialog: (sessionId: string) => boolean;
+}
+
+const useSessionUIStoreBase = create<SessionUIState>()(
+  immer((set, get) => ({
+    skippedScenarioDialogSessionIds: new Set<string>(),
+    skipScenarioDialog: (sessionId: string) =>
+      set((state) => {
+        state.skippedScenarioDialogSessionIds.add(sessionId);
+      }),
+    hasSkippedScenarioDialog: (sessionId: string) =>
+      get().skippedScenarioDialogSessionIds.has(sessionId),
+  })),
+);
+
+export const useSessionUIStore = createSelectors(useSessionUIStoreBase);
+
 export const RightSidebarDetail = {
   LLM: "llm",
   Display: "display",
@@ -47,6 +69,12 @@ interface SessionState {
   // Create session
   createSessionName: string;
   setCreateSessionName: (name: string) => void;
+
+  // Panel visibility per session (keyed by sessionId)
+  settingsPanelOpen: Record<string, boolean>;
+  dataPanelOpen: Record<string, boolean>;
+  setSettingsPanelOpen: (sessionId: string, open: boolean) => void;
+  setDataPanelOpen: (sessionId: string, open: boolean) => void;
 }
 
 const useSessionStoreBase = create<SessionState>()(
@@ -87,6 +115,18 @@ const useSessionStoreBase = create<SessionState>()(
       setCreateSessionName: (name) =>
         set((state) => {
           state.createSessionName = name;
+        }),
+
+      // Panel visibility per session
+      settingsPanelOpen: {},
+      dataPanelOpen: {},
+      setSettingsPanelOpen: (sessionId: string, open: boolean) =>
+        set((state) => {
+          state.settingsPanelOpen[sessionId] = open;
+        }),
+      setDataPanelOpen: (sessionId: string, open: boolean) =>
+        set((state) => {
+          state.dataPanelOpen[sessionId] = open;
         }),
     })),
     {

@@ -36,6 +36,29 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
   ) { }
 
   private async importCharacterCard(json: any, sessionId?: UniqueEntityID): Promise<Result<CharacterCard>> {
+    // Build firstMessages array from first_mes and alternate_greetings (for 1:1 sessions)
+    let firstMessages: { name: string; description: string }[] | undefined;
+    if (
+      json.data.first_mes ||
+      (json.data.alternate_greetings && isArray(json.data.alternate_greetings) && json.data.alternate_greetings.length > 0)
+    ) {
+      firstMessages = [];
+      if (json.data.first_mes) {
+        firstMessages.push({
+          name: "firstMessage",
+          description: json.data.first_mes,
+        });
+      }
+      if (json.data.alternate_greetings && isArray(json.data.alternate_greetings)) {
+        firstMessages = firstMessages.concat(
+          json.data.alternate_greetings.map((greeting: string) => ({
+            name: "alternateGreeting",
+            description: greeting,
+          })),
+        );
+      }
+    }
+
     const cardOrError = CharacterCard.create(
       {
         iconAssetId: json.data.iconAssetId ? new UniqueEntityID(json.data.iconAssetId) : undefined,
@@ -66,6 +89,9 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
             })),
           }).getValue()
           : undefined,
+        // 1:1 Session specific fields (stored in character card)
+        scenario: json.data.scenario || undefined,
+        firstMessages,
         sessionId, // Add sessionId if provided (creates session-local card)
         createdAt: new Date(), // Always use current timestamp on import
         updatedAt: new Date(), // Always use current timestamp on import
@@ -190,70 +216,13 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
         jsonData.spec === "chara_card_v2" ||
         jsonData.spec === "chara_card_v3"
       ) {
-        // Import character card
+        // Import character card (scenario and firstMessages are now stored in character card)
         const characterCardResult = await this.importCharacterCard(jsonData, sessionId);
         if (characterCardResult.isSuccess) {
           const savedCharacterCardResult = await this.saveCardRepo.saveCard(
             characterCardResult.getValue(),
           );
           cards.push(savedCharacterCardResult.getValue());
-        }
-
-        // If file has scenario data, Import scenario card (new format)
-        if (
-          jsonData.data.scenario !== "" ||
-          jsonData.data.first_mes !== "" ||
-          (jsonData.data.alternate_greetings &&
-            jsonData.data.alternate_greetings.length > 0)
-        ) {
-          let firstMessages = [];
-          if (jsonData.data.first_mes) {
-            // @ts-ignore
-            firstMessages.push({
-              name: "firstMessage",
-              description: jsonData.data.first_mes,
-            });
-          }
-          if (
-            jsonData.data.alternate_greetings &&
-            isArray(jsonData.data.alternate_greetings) &&
-            jsonData.data.alternate_greetings.length > 0
-          ) {
-            firstMessages = firstMessages.concat(
-              jsonData.data.alternate_greetings.map((greeting: string) => ({
-                name: "alternateGreeting",
-                description: greeting,
-              })),
-            );
-          }
-
-          const scenarioCardResult = await this.importScenarioCard({
-            spec: "scenario_card_v2",
-            version: "2.0",
-            data: {
-              title: jsonData.data.name,
-              description: jsonData.data.scenario,
-              first_messages: firstMessages,
-              extensions: {
-                tags: jsonData.data.tags,
-                creator: jsonData.data.creator,
-                cardSummary:
-                  jsonData.data.cardSummary ??
-                  jsonData.data.creator_notes ??
-                  jsonData.data.extensions?.creatorNote,
-                version: jsonData.data.character_version,
-                conceptualOrigin:
-                  jsonData.data.conceptualOrigin ??
-                  jsonData.data.extensions?.source,
-              },
-            },
-          }, sessionId);
-          if (scenarioCardResult.isSuccess) {
-            const savedScenarioCardResult = await this.saveCardRepo.saveCard(
-              scenarioCardResult.getValue(),
-            );
-            cards.push(savedScenarioCardResult.getValue());
-          }
         }
       } else if (jsonData.spec === "plot_card_v1") {
         // Import plot card (legacy) → MIGRATE to ScenarioCard

@@ -25,6 +25,14 @@ export interface LorebookEntryData {
 }
 
 /**
+ * First message data structure for 1:1 session config
+ */
+export interface FirstMessageData {
+  name: string;
+  description: string;
+}
+
+/**
  * Data for creating a new character
  */
 export interface CreateCharacterData {
@@ -38,6 +46,9 @@ export interface CreateCharacterData {
   conceptualOrigin?: string;
   imageFile?: File;
   lorebookEntries?: LorebookEntryData[];
+  // 1:1 Session Config
+  scenario?: string;
+  firstMessages?: FirstMessageData[];
 }
 
 /**
@@ -57,6 +68,9 @@ export interface UpdateCharacterData {
   iconAssetId?: string;
   imageFile?: File;
   lorebookEntries?: LorebookEntryData[];
+  // 1:1 Session Config
+  scenario?: string;
+  firstMessages?: FirstMessageData[];
 }
 
 /**
@@ -134,6 +148,9 @@ export const useCreateCharacterCard = () => {
         version: data.version,
         conceptualOrigin: data.conceptualOrigin,
         lorebook,
+        // 1:1 Session Config
+        scenario: data.scenario,
+        firstMessages: data.firstMessages,
       });
 
       if (cardResult.isFailure) {
@@ -280,6 +297,30 @@ export const useUpdateCharacterCard = (cardId: string) => {
             lorebook: lorebookResult.getValue(),
           }),
         );
+      }
+
+      // Handle 1:1 Session Config fields (scenario and firstMessages)
+      // These are updated together via load/update/save pattern
+      if (data.scenario !== undefined || data.firstMessages !== undefined) {
+        const scenario = data.scenario;
+        const firstMessages = data.firstMessages;
+        operations.push(async () => {
+          const loadResult = await CardService.getCard.execute(
+            new UniqueEntityID(cardId),
+          );
+          if (loadResult.isFailure) {
+            return loadResult;
+          }
+          const card = loadResult.getValue();
+          if (!(card instanceof CharacterCard)) {
+            return { isFailure: true, getError: () => "Not a character card" };
+          }
+          card.update({
+            scenario,
+            firstMessages,
+          });
+          return CardService.saveCard.execute(card);
+        });
       }
 
       // Execute all operations only after validation passes

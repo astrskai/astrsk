@@ -16,6 +16,7 @@ import {
   GetSessionsQuery,
   LoadSessionRepo,
   SearchSessionsQuery,
+  SessionListItem,
 } from "@/entities/session/repos/load-session-repo";
 import { SaveSessionRepo } from "@/entities/session/repos/save-session-repo";
 import { SORT_VALUES } from "@/shared/config/sort-options";
@@ -67,7 +68,7 @@ export class DrizzleSessionRepo
   }
 
   async searchSessions(
-    { cursor, pageSize = 100, keyword, sort }: SearchSessionsQuery,
+    { cursor, pageSize = 100, keyword, sort, isPlaySession }: SearchSessionsQuery,
     tx?: Transaction,
   ): Promise<Result<Session[]>> {
     const db = tx ?? (await Drizzle.getInstance());
@@ -77,11 +78,16 @@ export class DrizzleSessionRepo
       if (keyword) {
         filters.push(ilike(sessions.title, `%${keyword}%`));
       }
+      // Filter by play session if specified
+      if (isPlaySession !== undefined) {
+        filters.push(eq(sessions.is_play_session, isPlaySession));
+      }
       // if (cursor) {
       //   filters.push(gt(sessions.id, cursor.toString()));
       // }
 
       // Make order by
+      // For play sessions, sort by updated_at by default so most recently played appear first
       let orderBy: PgColumn | SQL;
       switch (sort) {
         case SORT_VALUES.LATEST:
@@ -97,7 +103,8 @@ export class DrizzleSessionRepo
           orderBy = desc(sessions.title);
           break;
         default:
-          orderBy = desc(sessions.created_at);
+          // For play sessions, default to updated_at; otherwise created_at
+          orderBy = isPlaySession ? desc(sessions.updated_at) : desc(sessions.created_at);
           break;
       }
 
@@ -229,6 +236,49 @@ export class DrizzleSessionRepo
       return Result.ok(entities);
     } catch (error) {
       return formatFail("Failed to get sessions by flow id", error);
+    }
+  }
+
+  /**
+   * Get lightweight session list items for sidebar
+   * Only fetches id, title, message count (via jsonb_array_length), and updatedAt
+   * Much more efficient than fetching full session data
+   */
+  async getSessionListItems(
+    { isPlaySession, pageSize = 100 }: { isPlaySession?: boolean; pageSize?: number },
+    tx?: Transaction,
+  ): Promise<Result<SessionListItem[]>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      const filters = [];
+      if (isPlaySession !== undefined) {
+        filters.push(eq(sessions.is_play_session, isPlaySession));
+      }
+
+      // Select only needed fields, use jsonb_array_length for message count
+      const rows = await db
+        .select({
+          id: sessions.id,
+          title: sessions.title,
+          messageCount: sql<number>`jsonb_array_length(${sessions.turn_ids})`,
+          updatedAt: sessions.updated_at,
+        })
+        .from(sessions)
+        .where(and(...filters))
+        .orderBy(isPlaySession ? desc(sessions.updated_at) : desc(sessions.created_at))
+        .limit(pageSize);
+
+      // Map to SessionListItem type
+      const items: SessionListItem[] = rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        messageCount: row.messageCount,
+        updatedAt: new Date(row.updatedAt),
+      }));
+
+      return Result.ok(items);
+    } catch (error) {
+      return formatFail("Failed to get session list items", error);
     }
   }
 }

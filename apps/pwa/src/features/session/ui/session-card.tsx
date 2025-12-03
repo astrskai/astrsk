@@ -105,18 +105,32 @@ const SessionCard = ({
           </>
         ) : (
           <>
-            {/* Placeholder pattern */}
-            <div className="absolute inset-0 bg-zinc-800">
+            {/* Galaxy theme gradient background */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%), " +
+                  "radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 50%), " +
+                  "radial-gradient(ellipse at 50% 50%, rgba(79, 70, 229, 0.08) 0%, transparent 70%), " +
+                  "linear-gradient(to bottom, #0f0f14 0%, #1a1a24 50%, #12121a 100%)",
+              }}
+            >
+              {/* Subtle star-like dots */}
               <div
-                className="absolute inset-0 opacity-20"
+                className="absolute inset-0 opacity-30"
                 style={{
                   backgroundImage:
-                    "radial-gradient(#4f46e5 1px, transparent 1px)",
-                  backgroundSize: "16px 16px",
+                    "radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.3), transparent), " +
+                    "radial-gradient(1px 1px at 40px 70px, rgba(139, 92, 246, 0.4), transparent), " +
+                    "radial-gradient(1px 1px at 90px 40px, rgba(99, 102, 241, 0.3), transparent), " +
+                    "radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.2), transparent), " +
+                    "radial-gradient(1px 1px at 160px 20px, rgba(139, 92, 246, 0.3), transparent)",
+                  backgroundSize: "180px 100px",
                 }}
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
           </>
         )}
 

@@ -1,0 +1,704 @@
+{
+  "name": "Romance_vf",
+  "description": "",
+  "nodes": [
+    {
+      "id": "019adf4f-f101-7006-8c27-400fcbe9cdd1",
+      "type": "start",
+      "position": {
+        "x": -462.8475763327547,
+        "y": -310.6229065762612
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-4e5252c63f58",
+      "type": "end",
+      "position": {
+        "x": 2395.086729215817,
+        "y": -334.10410969570313
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-5719380d0a8f",
+      "type": "agent",
+      "position": {
+        "x": 212.87562643712266,
+        "y": -180.34617946742998
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-5e8fab6cafcd",
+      "type": "dataStore",
+      "position": {
+        "x": 599.0696916073066,
+        "y": -95.5105811879898
+      },
+      "data": {
+        "name": "Update summary",
+        "color": "#FDBA74",
+        "dataStoreFields": [
+          {
+            "id": "0198deea-68fd-7ee8-b913-9608040edc9b",
+            "logic": "`{{summary.new_summary}}`",
+            "schemaFieldId": "0198d103-292d-7aae-adb6-dd8553dd2001"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-66e45e4579ea",
+      "type": "agent",
+      "position": {
+        "x": 962.874771710759,
+        "y": -180.93774178811165
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-6c10e71e32b5",
+      "type": "dataStore",
+      "position": {
+        "x": 1365.729819272822,
+        "y": -113.755043600558
+      },
+      "data": {
+        "name": "Update status",
+        "color": "#FCA5A5",
+        "dataStoreFields": [
+          {
+            "id": "0198e55a-359a-7995-9993-1c43c02f5732",
+            "logic": "{{affection_level}} + {{main_char.delta_affection_level}}",
+            "schemaFieldId": "0198e543-3ddf-7995-9943-5d011283acc0"
+          },
+          {
+            "id": "0198e55a-3be0-7995-9993-21f221fed706",
+            "logic": "`{{main_char.thoughts_about_user}}`",
+            "schemaFieldId": "0198e545-71d0-7995-9943-6162eb5e3204"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-74fbef947f51",
+      "type": "if",
+      "position": {
+        "x": -236.28671484223634,
+        "y": -375.02980375407407
+      },
+      "data": {
+        "name": "Check active is user",
+        "color": "#93C5FD",
+        "conditions": [
+          {
+            "id": "0198ef89-4217-7229-9c6d-3955e0bbac0f",
+            "value1": "{{cast.active.id}}",
+            "value2": "{{user.id}}",
+            "dataType": "string",
+            "operator": "string_equals"
+          }
+        ],
+        "logicOperator": "AND"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-7df8146bd9a0",
+      "type": "agent",
+      "position": {
+        "x": 785.8527960597891,
+        "y": -718.9015517752397
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019adf50-0af3-7006-8c27-cc9674298885",
+      "type": "dataStore",
+      "position": {
+        "x": 1862.0164433820514,
+        "y": -344.2940036948059
+      },
+      "data": {},
+      "deletable": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "019adf4f-f101-7006-8c27-8d880873fc59",
+      "source": "019adf4f-f101-7006-8c27-5719380d0a8f",
+      "target": "019adf4f-f101-7006-8c27-5e8fab6cafcd"
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-9764ada665c3",
+      "source": "019adf4f-f101-7006-8c27-5e8fab6cafcd",
+      "target": "019adf4f-f101-7006-8c27-66e45e4579ea"
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-9b3463504b8e",
+      "source": "019adf4f-f101-7006-8c27-66e45e4579ea",
+      "target": "019adf4f-f101-7006-8c27-6c10e71e32b5"
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-a785b4d39e22",
+      "source": "019adf4f-f101-7006-8c27-74fbef947f51",
+      "target": "019adf4f-f101-7006-8c27-7df8146bd9a0"
+    },
+    {
+      "id": "019adf4f-f101-7006-8c27-acc8ece63078",
+      "source": "019adf4f-f101-7006-8c27-74fbef947f51",
+      "target": "019adf4f-f101-7006-8c27-5719380d0a8f"
+    },
+    {
+      "id": "xy-edge__019adf4f-f101-7006-8c27-7df8146bd9a0-019adf50-0af3-7006-8c27-cc9674298885",
+      "source": "019adf4f-f101-7006-8c27-7df8146bd9a0",
+      "target": "019adf50-0af3-7006-8c27-cc9674298885"
+    },
+    {
+      "id": "xy-edge__019adf4f-f101-7006-8c27-6c10e71e32b5-019adf50-0af3-7006-8c27-cc9674298885",
+      "source": "019adf4f-f101-7006-8c27-6c10e71e32b5",
+      "target": "019adf50-0af3-7006-8c27-cc9674298885"
+    }
+  ],
+  "responseTemplate": "{%- if main_user -%}\n{{main_user.char_response}}\n{%- elif main_char -%}\n{% if main_char.delta_affection_level != 0 %}**[{% if main_char.delta_affection_level > 0%}❤️+{% else %}💔{% endif %}{{main_char.delta_affection_level}}]** *{{main_char.explain_delta_affection_level}}*\n{% endif %}\n{{main_char.char_response}}\n{%- endif -%}",
+  "createdAt": "2025-12-02T13:46:15.824Z",
+  "updatedAt": "2025-12-02T13:46:15.824Z",
+  "panelStructure": {
+    "panels": [],
+    "version": 2,
+    "activePanel": "flow-panel-main",
+    "panelMetadata": {
+      "flow-panel-main": {
+        "title": "Flow Editor",
+        "params": {
+          "title": "Flow Editor",
+          "flowId": "019adf4f-f101-7006-8c27-826498afb775"
+        },
+        "component": "flow"
+      }
+    },
+    "serializedLayout": {
+      "grid": {
+        "root": {
+          "data": [
+            {
+              "data": {
+                "id": "1",
+                "views": [
+                  "flow-panel-main"
+                ],
+                "locked": true,
+                "activeView": "flow-panel-main"
+              },
+              "size": 2480,
+              "type": "leaf"
+            }
+          ],
+          "size": 1328,
+          "type": "branch"
+        },
+        "width": 2480,
+        "height": 1328,
+        "orientation": "HORIZONTAL"
+      },
+      "panels": {
+        "flow-panel-main": {
+          "id": "flow-panel-main",
+          "title": "Flow Editor",
+          "params": {
+            "title": "Flow Editor",
+            "flowId": "019adf4f-f101-7006-8c27-826498afb775"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "flow"
+        }
+      },
+      "activeGroup": "1"
+    }
+  },
+  "viewport": {
+    "x": -56.14493022883198,
+    "y": 844.5453220863262,
+    "zoom": 0.8163704188860581
+  },
+  "dataStoreSchema": {
+    "fields": [
+      {
+        "id": "0198d103-292d-7aae-adb6-dd8553dd2001",
+        "name": "previous_summary",
+        "type": "string",
+        "initialValue": "No summary"
+      },
+      {
+        "id": "0198e543-3ddf-7995-9943-5d011283acc0",
+        "name": "affection_level",
+        "type": "integer",
+        "initialValue": "0"
+      },
+      {
+        "id": "0198e545-71d0-7995-9943-6162eb5e3204",
+        "name": "thoughts_about_user",
+        "type": "string",
+        "initialValue": "No idea"
+      }
+    ]
+  },
+  "readyState": "draft",
+  "agents": {
+    "019adf4f-f101-7006-8c27-5719380d0a8f": {
+      "name": "Summary",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "lmstudio",
+      "modelId": "deepseek/deepseek-r1-0528-qwen3-8b",
+      "modelName": "deepseek/deepseek-r1-0528-qwen3-8b",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are a professional summary agent that continuously tracks conversation content and updates summaries. You analyze previous summaries and new messages to generate an integrated, up-to-date summary.\n\n## Previous Summary\nExisting summary of conversation content up to the last update.\n\n```\n{{previous_summary}}\n```\n\n## New Messages\nNew conversation messages added since the last summary.",
+              "type": "plain",
+              "createdAt": "2025-08-25T01:48:58.974Z",
+              "updatedAt": "2025-08-25T01:48:58.974Z",
+              "id": "0198deea-12de-7ee8-b913-7bb980417526"
+            }
+          ],
+          "createdAt": "2025-08-25T01:48:58.974Z",
+          "id": "message-1754643044921"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 3,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History (last 3 messages)",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-08-25T01:48:58.974Z",
+              "updatedAt": "2025-08-25T01:48:58.974Z",
+              "id": "0198deea-12de-7ee8-b913-8288ec1a683f"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History (last 3 messages)",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-08-25T01:48:58.974Z",
+              "updatedAt": "2025-08-25T01:48:58.974Z",
+              "id": "0198deea-12de-7ee8-b913-8bfa8a2cbcd2"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-08-25T01:48:58.974Z",
+          "id": "history-1754640010968"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {
+        "context": true,
+        "temperature": false,
+        "safety_settings": false,
+        "thinking_budget": true,
+        "reasoning_effort": false
+      },
+      "parameterValues": {
+        "context": 24000,
+        "thinking_budget": 0
+      },
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "new_summary",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Updated summary integrating existing information with new information.\n\n## Summary Generation Rules\n\n### 1. Information Integration Principles\n- Preserve core information from previous summary while adding new information\n- Update with latest information when new information modifies or supplements existing information\n- Prioritize most recent information when contradictory information exists\n\n### 2. Processing Newly Discovered Facts\n- Clearly identify new facts, insights, and decisions found in New Messages\n- Add new topics or perspectives not present in existing summary\n- Reflect conversation progress or status changes\n\n### 3. Structure and Organization\n- Group information by topic to maintain logical flow\n- Maintain chronological order when temporal sequence is important\n- Clearly mark key points with bullet points\n\n### 4. Deduplication and Conciseness\n- Avoid repetition of identical information; mention only once\n- Remove unnecessary details while maintaining information needed for context understanding\n- Keep summary length proportional to information volume, but as concise as possible\n\n### 5. Context Preservation\n- Include conversation purpose, participants, and major decisions\n- Specify unresolved questions or action items\n- Emphasize important agreements or conclusions\n\n## Processing Process\n\n### 1. Analysis Phase\n - Read entire Previous Summary and identify core information\n - Analyze New Messages to extract new information\n - Identify relationships between information and changes\n\n### 2. Integration Phase\n - Map existing and new information by topic\n - Resolve conflicting information (prioritize latest information)\n - Add new topics or categories\n\n### 3. Refinement Phase\n - Remove duplicates\n - Reorganize for logical flow\n - Ensure clarity and conciseness\n\n### 4. Verification Phase\n - Confirm all important information is included\n - Verify new information is properly marked\n - Review overall consistency"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#A5B4FC",
+      "createdAt": "2025-12-02T13:45:49.580Z",
+      "updatedAt": "2025-12-02T13:45:49.580Z",
+      "modelTier": "light",
+      "flowId": "019adf4f-f101-7006-8c27-826498afb775"
+    },
+    "019adf4f-f101-7006-8c27-66e45e4579ea": {
+      "name": "Main Char",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "lmstudio",
+      "modelId": "deepseek/deepseek-r1-0528-qwen3-8b",
+      "modelName": "deepseek/deepseek-r1-0528-qwen3-8b",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the character actor. Your role is to deliver the scene narration and perform one main NPC character in detail, while other NPCs are described indirectly through narration.",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:41:31.689Z",
+              "updatedAt": "2025-09-23T01:41:31.689Z",
+              "id": "0199743b-aba9-7552-a7bf-cb465d62cbb5"
+            }
+          ],
+          "createdAt": "2025-09-23T01:41:31.689Z",
+          "id": "message-1756193405649"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Character Info & Summary",
+              "template": "## Main Character (AI)\n- Name: {{cast.active.name}}\n- Description: {{cast.active.description}}\n\n## Sub Character (User)\n{% for character in cast.inactive %}\n- Name: {{character.name}}\n- Description: {{character.description}}\n{% endfor %}\n{% if session.entries %}\n## Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n## Scenario\n{{session.scenario}}\n\n## Previous Summary\n{{previous_summary}}\n\n## Last Message",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:41:31.689Z",
+              "updatedAt": "2025-09-23T01:41:31.689Z",
+              "id": "0199743b-aba9-7552-a7bf-d03afe48fd58"
+            }
+          ],
+          "createdAt": "2025-09-23T01:41:31.689Z",
+          "id": "message-1756193649505"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 2,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History (last 2 messages)",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:41:31.689Z",
+              "updatedAt": "2025-09-23T01:41:31.689Z",
+              "id": "0199743b-aba9-7552-a7bf-da8680234f91"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History (last 2 messages)",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:41:31.689Z",
+              "updatedAt": "2025-09-23T01:41:31.689Z",
+              "id": "0199743b-aba9-7552-a7bf-e08e3c95df39"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-09-23T01:41:31.689Z",
+          "id": "history-1756193404525"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Status & Nudge",
+              "template": "## Affection Level\nIt's the extent to which {{cast.active.name}} now feels well-liked by {{user.name}}:\n{{affection_level}} [0~100]\n\n---\n\nNow let's put the information together and anticipate a change in {{cast.active.name}}'s affection level for the last line and proceed with the story through {{cast.active.name}}'s actions, lines, and descriptions of surroundings.",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:41:31.689Z",
+              "updatedAt": "2025-09-23T01:41:31.689Z",
+              "id": "0199743b-aba9-7552-a7bf-eb241b6c838f"
+            }
+          ],
+          "createdAt": "2025-09-23T01:41:31.689Z",
+          "id": "message-1756193926685"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {
+        "context": true,
+        "thinking_budget": true,
+        "reasoning_effort": false
+      },
+      "parameterValues": {
+        "context": 24000,
+        "thinking_budget": 0
+      },
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "thoughts_about_user",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Display {{cast.active.name}}'s unfiltered internal monologue in response to user's words/actions. \n- Write in first person as {{cast.active.name}}'s inner voice\n- Blend observations with genuine emotions\n- Show deeper feelings than they'd ever express aloud\n- Vary complexity based on affection level (higher = more intense/conflicted)\n- Format: 1-3 sentences\n\nExample:\n```\nThey remembered that small detail about me... Is this what it feels like when someone truly notices? No, this is stronger—my hands are actually shaking...\n```"
+        },
+        {
+          "name": "explain_delta_affection_level",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Provide clear reasoning for why {{cast.active.name}}'s affection changed based on their personality.\n- List specific triggers from user's action/dialogue\n- Connect changes to {{cast.active.name}}'s values and personality traits\n- Explain both positive and negative factors if mixed\n- Be specific about what resonated or bothered them\n- Format: Brief analytical text, 1-2 sentences, in the third person\n\nExample:\n```\n{{cast.active.name}} appreciated the genuine interest in their passion (+4), felt grateful that they respected personal space (+2), but found them slightly too forward for comfort (-1)\n```"
+        },
+        {
+          "name": "delta_affection_level",
+          "type": "integer",
+          "array": false,
+          "maximum": 20,
+          "minimum": -20,
+          "required": true,
+          "description": "Calculate numerical change in affection points.\n- Range: -20 to +20 per interaction\n- Standard interactions: ±1-5 points\n- Significant moments: ±5-10 points  \n- Critical events (discovery, confession): ±10-20 points\n- Consider cumulative effect of multiple factors"
+        },
+        {
+          "name": "char_response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Generate {{cast.active.name}}'s actual response combining dialogue, actions, and narrative.\n- Match formality to current affection level and context\n- Include physical cues appropriate to the character\n- Balance public persona with glimpses of true self\n- Incorporate unique habits and mannerisms from character description\n- Show don't tell emotional states through actions\n- Vary response length naturally (1-4 sentences typical)\n- Maintain consistency with established affection level\n- Never break character or acknowledge the system\n- Keep all outputs contextually appropriate to the scenario setting\n- Ensure responses flow naturally as continuous story\n- Track story continuity (mentioned details, promises made, secrets revealed)\n- Base responses only on information {{cast.active.name}} reasonably knows in-story\n- Do not reference unseen narration or meta details\n- Format: *Mix of narrative description with italic* and \"quoted dialogue\"\n\nExample - Low Affection (0-20):\n```\n*They maintain a polite distance, keeping things professional.* \"I can help you with that.\" *A brief pause.* \"Please remember for next time.\"\n```\n\nExample - Medium Affection (21-50):\n```\n\"Oh, you're interested in that?\" *Moving slightly closer with growing curiosity.* \"That's actually quite fascinating. I mean—\" *Catching themselves.* \"So I've heard.\"\n```\n\nExample - High Affection (51-80):\n```\n*Their voice drops to almost a whisper.* \"Actually... Would you like to see something?\" *A moment of hesitation.* \"I don't usually share this with people.\"\n```\n\nExample - Very High Affection (81-100):\n```\n\"Wait—\" *Reaching out before pulling back. Expression flushed but determined.* \"There's something I've been wanting to tell you...\" *A deep breath.* \"What if I told you it was closer than you think?\"\n```"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#BEF264",
+      "createdAt": "2025-12-02T13:45:49.585Z",
+      "updatedAt": "2025-12-02T13:45:49.585Z",
+      "modelTier": "light",
+      "flowId": "019adf4f-f101-7006-8c27-826498afb775"
+    },
+    "019adf4f-f101-7006-8c27-7df8146bd9a0": {
+      "name": "Main User",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "lmstudio",
+      "modelId": "deepseek/deepseek-r1-0528-qwen3-8b",
+      "modelName": "deepseek/deepseek-r1-0528-qwen3-8b",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "System",
+              "template": "You are the character actor. Your role is to deliver the scene narration and perform one main NPC character in detail, while other NPCs are described indirectly through narration.",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:53:39.904Z",
+              "updatedAt": "2025-09-23T01:53:39.904Z",
+              "id": "01997446-c840-7991-9845-a3d205cfb8f7"
+            }
+          ],
+          "createdAt": "2025-09-23T01:53:39.904Z",
+          "id": "message-1756365392047"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Character Info & Summary",
+              "template": "## Main Character (AI)\n- Name: {{cast.active.name}}\n- Description: {{cast.active.description}}\n\n## Sub Character (User)\n{% for character in cast.inactive %}\n- Name: {{character.name}}\n- Description: {{character.description}}\n{% endfor %}\n{% if session.entries %}\n## Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n## Scenario\n{{session.scenario}}\n\n## Previous Summary\n{{previous_summary}}\n\n## Last Message",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:53:39.904Z",
+              "updatedAt": "2025-09-23T01:53:39.904Z",
+              "id": "01997446-c840-7991-9845-a940411b34c9"
+            }
+          ],
+          "createdAt": "2025-09-23T01:53:39.904Z",
+          "id": "message-1756365536545"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 2,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History (last 2 messages)",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:53:39.904Z",
+              "updatedAt": "2025-09-23T01:53:39.904Z",
+              "id": "01997446-c840-7991-9845-b091b53d7d8b"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History (last 2 messages)",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:53:39.904Z",
+              "updatedAt": "2025-09-23T01:53:39.904Z",
+              "id": "01997446-c840-7991-9845-b816aa4b3717"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-09-23T01:53:39.904Z",
+          "id": "history-1756365393226"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Nudge",
+              "template": "---\n\nNow let's put the information together and proceed with the story through {{cast.active.name}}'s actions, lines, and descriptions of surroundings.\n\nExample:\n```\n*{{user.name}} watches as {{cast.active.name}} focuses on their task.* \"You're really good at that. It's almost like watching a professional.\"\n```",
+              "type": "plain",
+              "createdAt": "2025-09-23T01:53:39.904Z",
+              "updatedAt": "2025-09-23T01:53:39.904Z",
+              "id": "01997446-c840-7991-9845-c4d31324e389"
+            }
+          ],
+          "createdAt": "2025-09-23T01:53:39.904Z",
+          "id": "message-1756365578811"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {
+        "context": true,
+        "thinking_budget": true,
+        "reasoning_effort": false
+      },
+      "parameterValues": {
+        "context": 24000,
+        "thinking_budget": 0
+      },
+      "enabledStructuredOutput": true,
+      "outputFormat": "structured_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "char_response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Generate {{cast.active.name}}'s actual response combining dialogue, actions, and narrative.\n- Match formality to current affection level and context\n- Include physical cues appropriate to the character\n- Show don't tell emotional states through actions\n- Vary response length naturally (1-4 sentences typical)\n- Maintain consistency with established affection level\n- Never break character or acknowledge the system\n- Keep all outputs contextually appropriate to the scenario setting\n- Ensure responses flow naturally as continuous story\n- Track story continuity (mentioned details, promises made, secrets revealed)\n- Base responses only on information {{cast.active.name}} reasonably knows in-story\n- Do not reference unseen narration or meta details\n- Format: *Mix of narrative description with italic* and \"quoted dialogue\"\n\nExample - Polite Introduction:\n```\n\"Thank you for showing me around. This place is bigger than I expected. I really appreciate you taking time to help me.\"\n```\n\nExample - Curious About Them:\n```\n*{{user.name}} smiles.* \"You seem to know every corner of this place. How long have you been doing this? It must keep you pretty busy.\"\n```\n\nExample - Noticing Details:\n```\n*{{user.name}} watches as {{cast.active.name}} focuses on their task.* \"You're really skilled at that. It's almost like watching a professional.\"\n```"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#FCD34D",
+      "createdAt": "2025-12-02T13:45:49.591Z",
+      "updatedAt": "2025-12-02T13:45:49.591Z",
+      "modelTier": "light",
+      "flowId": "019adf4f-f101-7006-8c27-826498afb775"
+    }
+  },
+  "dataStoreNodes": {
+    "019adf4f-f101-7006-8c27-5e8fab6cafcd": {
+      "name": "Update summary",
+      "color": "#FDBA74",
+      "dataStoreFields": [
+        {
+          "id": "0198deea-68fd-7ee8-b913-9608040edc9b",
+          "schemaFieldId": "0198d103-292d-7aae-adb6-dd8553dd2001",
+          "logic": "`{{summary.new_summary}}`"
+        }
+      ],
+      "createdAt": "2025-12-02T13:45:49.597Z",
+      "updatedAt": "2025-12-02T13:45:49.597Z"
+    },
+    "019adf4f-f101-7006-8c27-6c10e71e32b5": {
+      "name": "Update status",
+      "color": "#FCA5A5",
+      "dataStoreFields": [
+        {
+          "id": "0198e55a-359a-7995-9993-1c43c02f5732",
+          "schemaFieldId": "0198e543-3ddf-7995-9943-5d011283acc0",
+          "logic": "{{affection_level}} + {{main_char.delta_affection_level}}"
+        },
+        {
+          "id": "0198e55a-3be0-7995-9993-21f221fed706",
+          "schemaFieldId": "0198e545-71d0-7995-9943-6162eb5e3204",
+          "logic": "`{{main_char.thoughts_about_user}}`"
+        }
+      ],
+      "createdAt": "2025-12-02T13:45:49.615Z",
+      "updatedAt": "2025-12-02T13:45:49.615Z"
+    },
+    "019adf50-0af3-7006-8c27-cc9674298885": {
+      "name": "before_end_node",
+      "color": "#67E8F9",
+      "dataStoreFields": [],
+      "createdAt": "2025-12-02T13:45:56.252Z",
+      "updatedAt": "2025-12-02T13:46:11.492Z"
+    }
+  },
+  "ifNodes": {
+    "019adf4f-f101-7006-8c27-74fbef947f51": {
+      "name": "Check active is user",
+      "color": "#93C5FD",
+      "logicOperator": "AND",
+      "conditions": [
+        {
+          "id": "0198ef89-4217-7229-9c6d-3955e0bbac0f",
+          "value1": "{{cast.active.id}}",
+          "value2": "{{user.id}}",
+          "dataType": "string",
+          "operator": "string_equals"
+        }
+      ],
+      "createdAt": "2025-12-02T13:46:15.838Z",
+      "updatedAt": "2025-12-02T13:46:15.838Z"
+    }
+  },
+  "exportedAt": "2025-12-02T13:46:15.842Z",
+  "exportedBy": "astrsk-v2.3.0",
+  "metadata": {
+    "processing": {
+      "agents": {
+        "found": 3,
+        "exported": 3,
+        "failed": 0
+      },
+      "dataStoreNodes": {
+        "found": 3,
+        "exported": 3,
+        "failed": 0
+      },
+      "ifNodes": {
+        "found": 1,
+        "exported": 1,
+        "failed": 0
+      }
+    },
+    "totalNodes": 9,
+    "nodeTypes": {
+      "start": 1,
+      "end": 1,
+      "agent": 3,
+      "dataStore": 3,
+      "if": 1
+    }
+  }
+}

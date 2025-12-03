@@ -36,6 +36,20 @@ export class TemplateRenderer {
         this.env.addFilter("roll", (notation: string) => {
           return roll.roll(notation).result;
         });
+        // Safe 'last' filter that returns undefined for empty arrays instead of throwing
+        this.env.addFilter("last", (arr: any[] | undefined | null) => {
+          if (!arr || !Array.isArray(arr) || arr.length === 0) {
+            return undefined;
+          }
+          return arr[arr.length - 1];
+        });
+        // Safe 'first' filter that returns undefined for empty arrays instead of throwing
+        this.env.addFilter("first", (arr: any[] | undefined | null) => {
+          if (!arr || !Array.isArray(arr) || arr.length === 0) {
+            return undefined;
+          }
+          return arr[0];
+        });
       })
       .catch((error) => {
         logger.error("Failed to initialize TemplateRenderer", error);

@@ -26,7 +26,8 @@ export class CardDrizzleMapper {
 
   // Type guard to check if row is a scenario
   private static isScenarioRow(row: SelectCardRow): row is SelectScenario {
-    return "first_messages" in row; // Scenarios have first_messages, characters don't
+    // Scenarios don't have example_dialogue field
+    return !("example_dialogue" in row);
   }
 
   public static toDomain(row: SelectCardRow): Card {
@@ -57,6 +58,9 @@ export class CardDrizzleMapper {
           lorebook: row.lorebook
             ? Lorebook.fromJSON(row.lorebook).throwOnFailure().getValue()
             : undefined,
+          // 1:1 Session specific fields
+          scenario: row.scenario ?? undefined,
+          firstMessages: row.first_messages ?? undefined,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
         },
@@ -132,6 +136,9 @@ export class CardDrizzleMapper {
       description: domain.props.description ?? null,
       example_dialogue: domain.props.exampleDialogue ?? null,
       lorebook: domain.props.lorebook ? domain.props.lorebook.toJSON() : null,
+      // 1:1 Session specific fields
+      scenario: domain.props.scenario ?? null,
+      first_messages: domain.props.firstMessages ?? null,
       created_at: domain.props.createdAt,
       updated_at: domain.props.updatedAt,
     };

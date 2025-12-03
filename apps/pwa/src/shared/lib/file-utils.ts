@@ -45,31 +45,28 @@ export async function getFileHash(file: File): Promise<string> {
 }
 
 /**
- * Sanitizes a file name to ensure it's safe for all file systems
- * Removes or replaces invalid characters and ensures valid length
- * WARNING: Only use this for file names, NOT full paths!
- * @param fileName The raw file name to sanitize
- * @returns A sanitized file name
+ * Sanitizes a string to snake_case for use as variable/field names in templates.
+ * Only allows lowercase letters, numbers, and underscores.
+ * @param name The raw name to sanitize
+ * @returns A valid snake_case name
  */
-export function sanitizeFileName(fileName: string): string {
-  // Replace invalid characters with underscores
-  // This handles Windows, macOS, Linux, and web restrictions
-  const sanitized = fileName
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_") // Remove characters illegal in Windows and others
-    .replace(/\s+/g, "_") // Replace spaces with underscores
-    .replace(/\.+$/g, "") // Remove trailing periods (illegal in Windows)
-    .replace(/^\.+/g, "") // Remove leading periods (can hide files in Unix)
+export function sanitizeFileName(name: string): string {
+  const sanitized = name
+    .replace(/[']/g, "") // Remove apostrophes (e.g., "Ring's" -> "Rings")
+    .replace(/[^a-zA-Z0-9\s_-]/g, "") // Remove all other special characters
+    .replace(/[\s-]+/g, "_") // Replace spaces and hyphens with underscores
+    .replace(/([a-z])([A-Z])/g, "$1_$2") // Handle camelCase -> snake_case
     .replace(/_+/g, "_") // Collapse multiple underscores
-    .trim();
+    .replace(/^_+|_+$/g, "") // Remove leading/trailing underscores
+    .toLowerCase();
 
   // Ensure the name isn't blank
   if (!sanitized) {
-    return "untitled";
+    return "field";
   }
 
-  // Limit maximum length (Windows has 255 char limit for path components)
-  // Using 100 as a safe limit
-  return sanitized.slice(0, 100).toLowerCase();
+  // Limit maximum length
+  return sanitized.slice(0, 100);
 }
 
 export function humanizeBytes(bytes: number): string {

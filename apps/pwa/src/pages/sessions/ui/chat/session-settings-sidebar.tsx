@@ -11,12 +11,13 @@ import {
   Plus,
   FileUp,
   Image,
+  Copy,
+  Save,
 } from "lucide-react";
 
 import { AssetService } from "@/app/services/asset-service";
-import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
-import WorkflowCard from "@/features/flow/ui/workflow-card";
 import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
+import { IconWorkflow } from "@/shared/assets";
 import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 import { Session } from "@/entities/session/domain/session";
 import { ScenarioCard, CardType } from "@/entities/card/domain";
@@ -25,6 +26,7 @@ import {
   fetchSession,
   useSaveSession,
   useDeleteSession,
+  useCloneSession,
 } from "@/entities/session/api";
 import CharacterItem from "./settings/character-item";
 
@@ -64,17 +66,62 @@ const ScenarioPreviewItem = ({
   const [scenario] = useCard<ScenarioCard>(scenarioId);
   const [imageUrl] = useAsset(scenario?.props?.iconAssetId);
 
+  if (!scenario) return null;
+
   return (
-    <ScenarioCardUI
-      title={scenario?.props?.title ?? ""}
-      imageUrl={imageUrl}
-      summary={scenario?.props?.summary}
-      tags={scenario?.props?.tags || []}
-      tokenCount={scenario?.props?.tokenCount}
-      firstMessages={scenario?.props?.firstMessages?.length || 0}
-      className="min-h-[200px]"
+    <div
+      className="group flex h-[64px] cursor-pointer overflow-hidden rounded-lg border border-border-subtle hover:border-fg-subtle"
       onClick={onClick}
-    />
+    >
+      <div className="relative w-[25%]">
+        <img
+          className="h-full w-full object-cover"
+          src={imageUrl ?? "/default/card/GM_ Dice of Fate.png"}
+          alt={scenario?.props?.title || "Scenario"}
+        />
+      </div>
+      <div className="flex w-[75%] items-center justify-between gap-2 p-4">
+        <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-fg-default">
+          {scenario?.props?.title ?? ""}
+        </h3>
+        <p className="flex-shrink-0 text-sm text-fg-subtle">
+          <span className="font-semibold text-fg-default">
+            {scenario?.props?.tokenCount ?? 0}
+          </span>{" "}
+          <span>Tokens</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const WorkflowPreviewItem = ({
+  title,
+  nodeCount,
+  onClick,
+}: {
+  title: string;
+  nodeCount?: number;
+  onClick?: () => void;
+}) => {
+  return (
+    <div
+      className="group flex h-[64px] cursor-pointer overflow-hidden rounded-lg border border-border-subtle hover:border-fg-subtle"
+      onClick={onClick}
+    >
+      <div className="relative flex w-[25%] items-center justify-center bg-blue-500/10">
+        <IconWorkflow className="h-6 w-6 text-blue-400" />
+      </div>
+      <div className="flex w-[75%] items-center justify-between gap-2 p-4">
+        <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-fg-default">
+          {title}
+        </h3>
+        <p className="flex-shrink-0 text-sm text-fg-subtle">
+          <span className="font-semibold text-fg-default">{nodeCount ?? 0}</span>{" "}
+          <span>Nodes</span>
+        </p>
+      </div>
+    </div>
   );
 };
 
@@ -88,6 +135,7 @@ const SessionSettingsSidebar = ({
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
   const saveSessionMutation = useSaveSession();
   const deleteSessionMutation = useDeleteSession();
+  const cloneSessionMutation = useCloneSession();
   const [isBackgroundDialogOpen, setIsBackgroundDialogOpen] =
     useState<boolean>(false);
   const [isBackgroundPopoverOpen, setIsBackgroundPopoverOpen] =
@@ -282,6 +330,33 @@ const SessionSettingsSidebar = ({
     [session.id, saveSessionMutation],
   );
 
+  const handleToggleCharacterActive = useCallback(
+    async (characterId: UniqueEntityID) => {
+      try {
+        // Fetch latest session data
+        const latestSession = await fetchSession(session.id);
+
+        // Find the card and toggle its enabled state
+        const card = latestSession.allCards.find((c) => c.id.equals(characterId));
+        if (!card) return;
+
+        const newEnabled = !card.enabled;
+        latestSession.setCardEnabled(characterId, newEnabled);
+
+        // Save to backend
+        await saveSessionMutation.mutateAsync({ session: latestSession });
+
+        // Show success message
+        toastSuccess(newEnabled ? "Character activated" : "Character deactivated");
+      } catch (error) {
+        toastError("Failed to toggle character", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [session.id, saveSessionMutation],
+  );
+
   const handleChangeBackground = useCallback(
     async (backgroundId: UniqueEntityID | undefined) => {
       try {
@@ -359,6 +434,31 @@ const SessionSettingsSidebar = ({
       });
     }
   }, [session.id, deleteSessionMutation, navigate]);
+
+  const handleSaveAsPreset = useCallback(async () => {
+    try {
+      const clonedSession = await cloneSessionMutation.mutateAsync({
+        sessionId: session.id,
+        includeHistory: false,
+      });
+
+      // Update the cloned session to set is_play_session to false
+      clonedSession.update({ isPlaySession: false });
+      await saveSessionMutation.mutateAsync({ session: clonedSession });
+
+      toastSuccess("Saved as preset successfully");
+
+      // Navigate to the cloned session
+      navigate({
+        to: "/sessions/$sessionId",
+        params: { sessionId: clonedSession.id.toString() },
+      });
+    } catch (error) {
+      toastError("Failed to save as preset", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [session.id, cloneSessionMutation, saveSessionMutation, navigate]);
 
   const coverImageInputId = useId();
 
@@ -482,12 +582,12 @@ const SessionSettingsSidebar = ({
             </button>
           </div>
         ) : (
-          <span className="flex items-center gap-2 text-base font-semibold text-fg-default">
-            {session.title ?? "Untitled Session"}
+          <span className="flex flex-1 items-center gap-2 min-w-0 text-base font-semibold text-fg-default">
+            <span className="truncate">{session.title ?? "Untitled Session"}</span>
             <button
               type="button"
               aria-label="Edit session title"
-              className="cursor-pointer text-fg-subtle hover:text-fg-default"
+              className="cursor-pointer text-fg-subtle hover:text-fg-default flex-shrink-0"
               onClick={() => {
                 setIsEditingTitle(true);
                 setEditedTitle(session.title ?? "");
@@ -509,6 +609,11 @@ const SessionSettingsSidebar = ({
           }
           items={[
             {
+              label: "Save as preset",
+              icon: <Save className="h-4 w-4" />,
+              onClick: handleSaveAsPreset,
+            },
+            {
               label: "Delete session",
               icon: <Trash2 className="h-4 w-4" />,
               onClick: () => setIsDeleteDialogOpen(true),
@@ -527,25 +632,32 @@ const SessionSettingsSidebar = ({
           confirmVariant="destructive"
           onConfirm={handleDeleteSession}
         />
+
       </div>
 
       <div className="space-y-4 p-4 [&>section]:flex [&>section]:flex-col [&>section]:gap-2">
         <section>
           <h3 className="font-semibold">AI Characters</h3>
           <div className="space-y-2">
-            {session.aiCharacterCardIds.length > 0 ? (
-              session.aiCharacterCardIds.map((characterId, index) => (
-                <CharacterItem
-                  key={`ai-character-${index}-${characterId.toString()}`}
-                  characterId={characterId}
-                  onClick={() => {
-                    navigate({
-                      to: "/assets/characters/{-$characterId}",
-                      params: { characterId: characterId.toString() },
-                    });
-                  }}
-                />
-              ))
+            {session.characterCards
+              .filter((card) => !card.id.equals(session.userCharacterCardId))
+              .length > 0 ? (
+              session.characterCards
+                .filter((card) => !card.id.equals(session.userCharacterCardId))
+                .map((card, index) => (
+                  <CharacterItem
+                    key={`ai-character-${index}-${card.id.toString()}`}
+                    characterId={card.id}
+                    isEnabled={card.enabled}
+                    onClick={() => {
+                      navigate({
+                        to: "/assets/characters/{-$characterId}",
+                        params: { characterId: card.id.toString() },
+                      });
+                    }}
+                    onToggleActive={() => handleToggleCharacterActive(card.id)}
+                  />
+                ))
             ) : (
               <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-surface-raised/50">
                 <p className="text-sm text-fg-subtle">No AI characters</p>
@@ -583,28 +695,37 @@ const SessionSettingsSidebar = ({
 
         <section>
           <h3 className="font-semibold">User Character</h3>
-          <div>
+          <div className="space-y-2">
             {session.userCharacterCardId ? (
-              <CharacterItem
-                key={`user-character-${session.userCharacterCardId.toString()}`}
-                characterId={session.userCharacterCardId}
-                onClick={() => {
-                  navigate({
-                    to: "/assets/characters/{-$characterId}",
-                    params: {
-                      characterId:
-                        session.userCharacterCardId?.toString() ?? "",
-                    },
-                  });
-                }}
-              />
+              (() => {
+                const userCard = session.characterCards.find((c) =>
+                  c.id.equals(session.userCharacterCardId)
+                );
+                return (
+                  <CharacterItem
+                    key={`user-character-${session.userCharacterCardId.toString()}`}
+                    characterId={session.userCharacterCardId}
+                    isEnabled={userCard?.enabled ?? true}
+                    onClick={() => {
+                      navigate({
+                        to: "/assets/characters/{-$characterId}",
+                        params: {
+                          characterId:
+                            session.userCharacterCardId?.toString() ?? "",
+                        },
+                      });
+                    }}
+                    onToggleActive={() => handleToggleCharacterActive(session.userCharacterCardId!)}
+                  />
+                );
+              })()
             ) : (
               <div
                 className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base"
                 onClick={handleAddUserCharacter}
               >
                 <Plus className="h-5 w-5" />
-                <p>Add User Character</p>
+                <p>Set User Character</p>
               </div>
             )}
           </div>
@@ -669,11 +790,9 @@ const SessionSettingsSidebar = ({
             {isLoadingFlow ? (
               <Loading size="sm" />
             ) : flow ? (
-              <WorkflowCard
+              <WorkflowPreviewItem
                 title={flow?.props.name ?? "No flow selected"}
-                description={flow?.props.description}
                 nodeCount={flow?.props.nodes.length}
-                className="min-h-[140px]"
                 onClick={() => {
                   if (!flow?.id) return;
 
@@ -727,7 +846,7 @@ const SessionSettingsSidebar = ({
           >
             {coverImageSrc ? (
               <img
-                className="h-32 w-full rounded-lg object-cover"
+                className="h-[64px] w-full rounded-lg object-cover"
                 src={coverImageSrc}
                 alt="Cover image"
               />
@@ -758,7 +877,7 @@ const SessionSettingsSidebar = ({
           >
             {backgroundImageSrc ? (
               <img
-                className="h-32 w-full rounded-lg object-cover"
+                className="h-[64px] w-full rounded-lg object-cover"
                 src={backgroundImageSrc}
                 alt="Background image"
               />
@@ -798,7 +917,7 @@ const SessionSettingsSidebar = ({
               <div className="cursor-pointer rounded-lg transition-opacity hover:brightness-110">
                 {backgroundImageSrc ? (
                   <img
-                    className="h-32 w-full rounded-lg object-cover"
+                    className="h-[64px] w-full rounded-lg object-cover"
                     src={backgroundImageSrc}
                     alt="Background image"
                   />
@@ -822,12 +941,23 @@ const SessionSettingsSidebar = ({
         </section>
 
         <section>
-          <h3 className="font-semibold">Message styling</h3>
+          <h3 className="font-semibold">Message text colors</h3>
 
           <MessageStyling
             sessionId={session.id}
             chatStyles={session.chatStyles}
           />
+        </section>
+
+        <section className="pt-4">
+          <button
+            type="button"
+            onClick={handleSaveAsPreset}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
+          >
+            <Save className="h-5 w-5" />
+            Save as preset
+          </button>
         </section>
       </div>
     </aside>

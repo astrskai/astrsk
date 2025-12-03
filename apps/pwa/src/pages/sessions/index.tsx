@@ -33,10 +33,13 @@ export function SessionsPage() {
 
   // Fetch sessions with character metadata prefetched
   // Uses Batch Prefetch pattern for optimal performance
+  // Filter to show only non-play sessions (is_play_session: false)
+  // Play sessions are shown in the left sidebar instead
   const { sessions, isSessionsLoading, areCharactersLoading } =
     useSessionsWithCharacterMetadata({
       keyword,
       sort: sortOption,
+      isPlaySession: false,
     });
 
   // Import dialog hook - manages file input and parsing
