@@ -103,7 +103,7 @@ export function SessionImportDialog({
     <ImportDialog
       open={open}
       onOpenChange={onOpenChange}
-      onImport={() => importingFile && handleImportFile(importingFile)}
+      onImport={() => importingFile ? handleImportFile(importingFile) : Promise.resolve()}
       title={title}
       description={description}
       accept=".session"

@@ -56,9 +56,10 @@ const useSessionUIStoreBase = create<SessionUIState>()(
       name: "session-ui-store",
       storage: new LocalPersistStorage<SessionUIState>(),
       // Only persist the skipped dialogs data
-      partialize: (state) => ({
-        skippedScenarioDialogs: state.skippedScenarioDialogs,
-      }),
+      partialize: (state) =>
+        ({
+          skippedScenarioDialogs: state.skippedScenarioDialogs,
+        }) as SessionUIState,
       // Clean up expired entries on rehydration
       onRehydrateStorage: () => (state) => {
         if (state) {

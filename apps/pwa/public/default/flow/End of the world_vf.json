@@ -95,7 +95,7 @@
           },
           {
             "id": "019a9b5f-6fe7-7ffa-bf17-a501e3dd67b1",
-            "logic": "{{hydration}}+{{hydration.hydration_diff}}",
+            "logic": "{{hydration}}+{{response.hydration_diff}}",
             "schemaFieldId": "019a9b2c-0305-7ffa-bf17-73c4ba27b265"
           },
           {
