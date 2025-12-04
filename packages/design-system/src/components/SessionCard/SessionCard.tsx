@@ -236,7 +236,7 @@ export function SessionCard({
 
         {/* Session Title */}
         <div className='absolute bottom-0 left-0 w-full p-5'>
-          <h2 className='line-clamp-2 h-[3.75rem] text-2xl leading-tight font-bold break-words text-white'>
+          <h2 className='line-clamp-2 h-[3.75rem] text-xl md:text-2xl leading-tight font-bold break-words text-white'>
             {title}
           </h2>
         </div>
@@ -244,7 +244,7 @@ export function SessionCard({
 
       {/* Session Details */}
       <div className='flex flex-grow flex-col justify-between p-5'>
-        <div className='space-y-3'>
+        <div className='space-y-2 md:space-y-3'>
           {/* Tags */}
           {tags.length > 0 && (
             <div className='flex flex-wrap gap-2'>
@@ -266,7 +266,7 @@ export function SessionCard({
 
           {/* Summary */}
           {summary && (
-            <p className='line-clamp-2 text-xs leading-relaxed text-zinc-400'>
+            <p className='line-clamp-2 text-xs leading-relaxed break-all text-ellipsis text-zinc-400'>
               {summary}
             </p>
           )}
