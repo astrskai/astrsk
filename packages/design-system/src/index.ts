@@ -8,7 +8,14 @@ export { cn } from './lib/utils';
 
 // Components
 export { Button, type ButtonProps } from './components/Button';
-export { Input, type InputProps, IconInput, type IconInputProps } from './components/Input';
+export {
+  Input,
+  type InputProps,
+  IconInput,
+  type IconInputProps,
+  PasswordInput,
+  type PasswordInputProps,
+} from './components/Input';
 export { Label, type LabelProps } from './components/Label';
 export { LabeledInput, type LabeledInputProps } from './components/LabeledInput';
 export { Textarea, type TextareaProps } from './components/Textarea';
@@ -33,6 +40,7 @@ export {
   type SessionCardProps,
   type SessionCardSkeletonProps,
   type CharacterAvatar,
+  type CardBadge,
 } from './components/SessionCard';
 
 // Navigation Components

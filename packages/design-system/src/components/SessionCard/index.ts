@@ -5,6 +5,7 @@ export {
   type SessionCardProps,
   type CharacterAvatar,
   type CardAction,
+  type CardBadge,
 } from './SessionCard';
 export {
   SessionCardSkeleton,
