@@ -12,6 +12,7 @@ import { ApiService } from "@/app/services/api-service";
 import { createLiteModel } from "@/app/services/ai-model-factory";
 import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib";
+import { toastError } from "@/shared/ui/toast";
 
 import {
   type WorkflowBuilderContext,
@@ -335,6 +336,15 @@ async function runBuilderStage(
   };
 
   const modelStore = useModelStore.getState();
+
+  // Check if lite model is configured - show toast if not
+  if (!modelStore.defaultLiteModel) {
+    toastError("No AI model configured", {
+      description: "Please set up a lite model in Settings > Providers to use workflow generation.",
+    });
+    throw new Error("No AI model configured. Please set up a lite model in Settings > Providers.");
+  }
+
   const liteModelInfo = await getModelFromStore(modelStore.defaultLiteModel, "lite");
 
   logger.info("[WorkflowBuilder:Builder] Initial state", {
@@ -436,7 +446,26 @@ async function runFixerStage(
   };
 
   const modelStore = useModelStore.getState();
-  const strongModelInfo = await getModelFromStore(modelStore.defaultStrongModel, "strong");
+
+  // Try strong model first, fall back to lite model if not available
+  let modelInfo: ModelInfo;
+  let usingFallback = false;
+
+  if (modelStore.defaultStrongModel) {
+    modelInfo = await getModelFromStore(modelStore.defaultStrongModel, "strong");
+  } else if (modelStore.defaultLiteModel) {
+    logger.warn("[WorkflowBuilder:Fixer] No strong model configured, falling back to lite model");
+    modelInfo = await getModelFromStore(modelStore.defaultLiteModel, "lite");
+    usingFallback = true;
+  } else {
+    // No models available at all - show toast and throw error
+    toastError("No AI model configured", {
+      description: "Please set up a lite model in Settings > Providers to use workflow generation.",
+    });
+    throw new Error("No AI model configured. Please set up a lite model in Settings > Providers.");
+  }
+
+  const strongModelInfo = modelInfo;
 
   logger.info("[WorkflowBuilder:Fixer] Starting fixer stage", {
     nodeCount: state.nodes.length,
@@ -465,34 +494,48 @@ async function runFixerStage(
 
   logger.info("[WorkflowBuilder:Fixer] Fixer prompt prepared", {
     systemPromptLength: systemPrompt.length,
+    userMessageLength: userMessage.length,
+    totalPromptChars: systemPrompt.length + userMessage.length,
+    estimatedTokens: Math.ceil((systemPrompt.length + userMessage.length) / 4),
   });
 
-  const result = await generateText({
-    model: strongModelInfo.model,
-    messages,
-    tools,
-    stopWhen: stepCountIs(MAX_STEPS),
-    abortSignal,
-    onStepFinish: ({ toolCalls, toolResults, text }) => {
-      progressState.currentStep++;
+  let result;
+  try {
+    logger.info("[WorkflowBuilder:Fixer] Calling generateText...");
+    result = await generateText({
+      model: strongModelInfo.model,
+      messages,
+      tools,
+      stopWhen: stepCountIs(MAX_STEPS),
+      abortSignal,
+      onStepFinish: ({ toolCalls, toolResults, text }) => {
+        progressState.currentStep++;
 
-      logger.info(`[WorkflowBuilder:Fixer] Step ${progressState.currentStep} completed`, {
-        toolCallCount: toolCalls?.length || 0,
-        toolNames: toolCalls?.map((tc) => tc.toolName) || [],
-        hasText: !!text,
-        textPreview: text?.substring(0, 100),
-      });
-
-      if (toolResults && toolResults.length > 0) {
-        toolResults.forEach((tr, idx) => {
-          logger.info(`[WorkflowBuilder:Fixer] Step ${progressState.currentStep} tool result ${idx + 1}`, {
-            toolName: toolCalls?.[idx]?.toolName,
-            result: JSON.stringify((tr as any).result ?? tr, null, 2).substring(0, 500),
-          });
+        logger.info(`[WorkflowBuilder:Fixer] Step ${progressState.currentStep} completed`, {
+          toolCallCount: toolCalls?.length || 0,
+          toolNames: toolCalls?.map((tc) => tc.toolName) || [],
+          hasText: !!text,
+          textPreview: text?.substring(0, 100),
         });
-      }
-    },
-  });
+
+        if (toolResults && toolResults.length > 0) {
+          toolResults.forEach((tr, idx) => {
+            logger.info(`[WorkflowBuilder:Fixer] Step ${progressState.currentStep} tool result ${idx + 1}`, {
+              toolName: toolCalls?.[idx]?.toolName,
+              result: JSON.stringify((tr as any).result ?? tr, null, 2).substring(0, 500),
+            });
+          });
+        }
+      },
+    });
+    logger.info("[WorkflowBuilder:Fixer] generateText completed successfully");
+  } catch (error) {
+    logger.error("[WorkflowBuilder:Fixer] generateText failed", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
+  }
 
   logger.info("[WorkflowBuilder:Fixer] Stage complete", {
     finalNodeCount: state.nodes.length,

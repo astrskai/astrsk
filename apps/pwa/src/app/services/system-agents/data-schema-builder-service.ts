@@ -36,23 +36,6 @@ export interface DataSchemaContext {
   scenario?: string; // The scenario background text
 }
 
-// Tool result types
-interface AddDataStoreResult {
-  success: boolean;
-  id: string;
-  message: string;
-}
-
-interface RemoveDataStoreResult {
-  success: boolean;
-  message: string;
-}
-
-interface ClearAllResult {
-  success: boolean;
-  message: string;
-  count: number;
-}
 
 /**
  * Build system prompt (instructions only - scenario context goes in user message)
@@ -88,9 +71,11 @@ Fields are updated by AI agents in a workflow with branching. In descriptions, n
 - "Affected by: [fields]" - what influences this field
 
 ## Tools:
-- **add_data_store** - Add a tracker
+- **add_data_stores** - Add multiple trackers in ONE call (PREFERRED - pass all stores as an array)
 - **remove_data_store** - Remove by ID
 - **clear_all** - Clear all
+
+**IMPORTANT**: Create ALL data stores in a SINGLE add_data_stores call. Do NOT call the tool multiple times.
 
 Analyze the scenario and create appropriate data stores. Don't ask for clarification.`;
 }
@@ -139,90 +124,132 @@ function createDataSchemaTools(
     onClearAll: () => void;
   },
 ) {
+  // Maximum total data stores allowed
+  const MAX_DATA_STORES = 30;
+
   // Track stores created during this session (backup for message parsing)
   const createdStores: DataSchemaEntry[] = [];
 
-  return {
-    add_data_store: tool({
-      description: "Add a new trackable data store/variable to the HUD. Creates a value that will be displayed to players and tracked by the AI. The tool result will show all previously created stores so you can reference them in descriptions.",
-      inputSchema: z.object({
-        name: z.string().describe("snake_case name for this tracker. Use only lowercase letters, numbers, and underscores (e.g., 'health', 'alert_status', 'current_location'). No spaces or special characters."),
-        type: z.enum(["integer", "boolean", "string"]).describe("Data type: 'integer' for numbers, 'boolean' for on/off flags, 'string' for text values"),
-        description: z.string().describe("Brief explanation of what this tracks and when it changes. Include 'May affect: [fields]' and 'Affected by: [fields]' referencing other stores."),
-        initial: z.union([z.number(), z.boolean(), z.string()]).describe("Initial/starting value"),
-        min: z.number().optional().describe("Minimum value (only for integer type, enables slider display)"),
-        max: z.number().optional().describe("Maximum value (only for integer type, enables slider display)"),
-      }),
-      // Second parameter contains messages from all previous steps (AI SDK 4.1+)
-      execute: async ({ name, type, description, initial, min, max }, { messages }) => {
-        // Sanitize name to snake_case and check for duplicates
-        const sanitizedName = sanitizeFileName(name);
-        const existingInCurrent = currentStores.find(
-          (s) => s.name === sanitizedName
-        );
-        const existingInCreated = createdStores.find(
-          (s) => s.name === sanitizedName
-        );
+  // Schema for a single data store entry
+  const dataStoreEntrySchema = z.object({
+    name: z.string().describe("snake_case name for this tracker. Use only lowercase letters, numbers, and underscores (e.g., 'health', 'alert_status', 'current_location'). No spaces or special characters."),
+    type: z.enum(["integer", "number", "boolean", "string"]).describe("Data type: 'integer' for whole numbers, 'number' for decimals, 'boolean' for on/off flags, 'string' for text values"),
+    description: z.string().describe("Brief explanation of what this tracks and when it changes. Include 'May affect: [fields]' and 'Affected by: [fields]' referencing other stores."),
+    initial: z.union([z.number(), z.boolean(), z.string()]).describe("Initial/starting value"),
+    min: z.number().optional().describe("Minimum value (only for integer/number type, enables slider display)"),
+    max: z.number().optional().describe("Maximum value (only for integer/number type, enables slider display)"),
+  });
 
-        if (existingInCurrent || existingInCreated) {
-          const existingStore = existingInCurrent || existingInCreated;
+  return {
+    add_data_stores: tool({
+      description: "Add one or more trackable data stores/variables to the HUD. Creates values that will be displayed to players and tracked by the AI. PREFERRED: Add all data stores in a single call for efficiency.",
+      inputSchema: z.object({
+        stores: z.array(dataStoreEntrySchema).min(1).describe("Array of data stores to add. Add all planned stores in one call."),
+      }),
+      execute: async ({ stores }, { messages }) => {
+        const results: Array<{
+          success: boolean;
+          id: string;
+          name: string;
+          message: string;
+        }> = [];
+
+        // Check total limit before processing
+        const currentTotal = currentStores.length + createdStores.length;
+        const remainingSlots = MAX_DATA_STORES - currentTotal;
+
+        if (remainingSlots <= 0) {
           return {
             success: false,
-            id: existingStore!.id,
-            message: `Data store "${name}" already exists (ID: ${existingStore!.id}). Use a different name or remove the existing one first.`,
-            existingStore: {
-              id: existingStore!.id,
-              name: existingStore!.name,
-              type: existingStore!.type,
-            },
+            results: [],
+            summary: `Cannot add data stores. Maximum limit of ${MAX_DATA_STORES} reached. Current total: ${currentTotal}.`,
             allCreatedStores: [...currentStores.map(s => s.name), ...createdStores.map(s => s.name)],
+            totalStores: currentTotal,
           };
         }
 
-        const id = generateUniqueId();
+        // Limit stores to add based on remaining slots
+        const storesToProcess = stores.slice(0, remainingSlots);
+        const skippedDueToLimit = stores.length - storesToProcess.length;
 
-        // Validate initial value matches type
-        let validatedInitial = initial;
-        if (type === "integer") {
-          validatedInitial = typeof initial === "number" ? initial : 0;
-        } else if (type === "boolean") {
-          validatedInitial = typeof initial === "boolean" ? initial : false;
-        } else {
-          validatedInitial = typeof initial === "string" ? initial : "";
+        for (const { name, type, description, initial, min, max } of storesToProcess) {
+          // Sanitize name to snake_case and check for duplicates
+          const sanitizedName = sanitizeFileName(name);
+          const existingInCurrent = currentStores.find(
+            (s) => s.name === sanitizedName
+          );
+          const existingInCreated = createdStores.find(
+            (s) => s.name === sanitizedName
+          );
+
+          if (existingInCurrent || existingInCreated) {
+            const existingStore = existingInCurrent || existingInCreated;
+            results.push({
+              success: false,
+              id: existingStore!.id,
+              name: sanitizedName,
+              message: `Data store "${name}" already exists (ID: ${existingStore!.id}). Skipped.`,
+            });
+            continue;
+          }
+
+          const id = generateUniqueId();
+
+          // Validate initial value matches type
+          let validatedInitial = initial;
+          if (type === "integer" || type === "number") {
+            validatedInitial = typeof initial === "number" ? initial : 0;
+          } else if (type === "boolean") {
+            validatedInitial = typeof initial === "boolean" ? initial : false;
+          } else {
+            validatedInitial = typeof initial === "string" ? initial : "";
+          }
+
+          const store: DataSchemaEntry = {
+            id,
+            name: sanitizedName,
+            type,
+            description,
+            initial: validatedInitial,
+            ...((type === "integer" || type === "number") && min !== undefined && { min }),
+            ...((type === "integer" || type === "number") && max !== undefined && { max }),
+          };
+
+          // Track for context and notify callback
+          createdStores.push(store);
+          callbacks.onAddStore(store);
+
+          results.push({
+            success: true,
+            id,
+            name: sanitizedName,
+            message: `Added data store "${sanitizedName}" (${type})`,
+          });
         }
-
-        const store: DataSchemaEntry = {
-          id,
-          name: sanitizedName,
-          type,
-          description,
-          initial: validatedInitial,
-          ...(type === "integer" && min !== undefined && { min }),
-          ...(type === "integer" && max !== undefined && { max }),
-        };
-
-        // Track for context and notify callback
-        createdStores.push(store);
-        callbacks.onAddStore(store);
 
         // Get previously created stores from message history (AI SDK provides this)
         const previousStoreNames = messages ? extractCreatedStoresFromMessages(messages) : [];
         // Combine with our local tracker for complete list
         const allStoreNames = [...new Set([...previousStoreNames, ...createdStores.map(s => s.name)])];
 
+        const successCount = results.filter(r => r.success).length;
+        const failCount = results.filter(r => !r.success).length;
+
+        // Build summary with all skip reasons
+        let summary = `Added ${successCount} data store(s)`;
+        if (failCount > 0) {
+          summary += `, ${failCount} skipped (duplicates)`;
+        }
+        if (skippedDueToLimit > 0) {
+          summary += `, ${skippedDueToLimit} skipped (limit of ${MAX_DATA_STORES} reached)`;
+        }
+
         return {
-          success: true,
-          id,
-          message: `Added data store "${name}" (${type})`,
-          createdStore: {
-            name: store.name,
-            type: store.type,
-            description: store.description,
-          },
+          success: successCount > 0,
+          results,
+          summary,
           allCreatedStores: allStoreNames,
-          hint: allStoreNames.length > 1
-            ? `You've created ${allStoreNames.length} stores so far: ${allStoreNames.join(", ")}. When creating the next store, reference these in the description's "May affect" or "Affected by" sections where appropriate.`
-            : "This is the first store. Future stores can reference this one in their descriptions.",
+          totalStores: allStoreNames.length,
         };
       },
     }),
