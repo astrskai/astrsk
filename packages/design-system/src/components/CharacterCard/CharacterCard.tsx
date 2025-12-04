@@ -125,12 +125,12 @@ export function CharacterCard({
 
       {/* Content Area - Overlapping with image */}
       <div className="relative z-10 -mt-12 flex flex-grow flex-col p-4">
-        <h3 className="mb-1 line-clamp-2 text-xl font-bold break-words text-white drop-shadow-md">
+        <h3 className="mb-1 line-clamp-2 text-lg md:text-xl font-bold break-words text-white drop-shadow-md">
           {name}
         </h3>
 
         {/* Tags */}
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-2 md:mb-4 flex flex-wrap gap-2">
           {tags.length > 0 ? (
             <>
               {tags.slice(0, 3).map((tag, index) => (
@@ -153,7 +153,7 @@ export function CharacterCard({
         </div>
 
         {(summary || emptySummaryText) && (
-          <p className="mb-4 line-clamp-3 flex-grow text-xs leading-relaxed break-words text-zinc-400">
+          <p className="mb-2 md:mb-4 line-clamp-2 flex-grow text-xs leading-relaxed break-all text-ellipsis text-zinc-400">
             {summary || emptySummaryText}
           </p>
         )}
