@@ -364,9 +364,11 @@ export const agentQueries = {
  */
 
 export async function fetchAgent(id: UniqueEntityID): Promise<Agent> {
-  const data = await queryClient.fetchQuery(
-    agentQueries.detail(id.toString()),
-  );
+  // Always fetch fresh data from DB (staleTime: 0 forces refetch)
+  const data = await queryClient.fetchQuery({
+    ...agentQueries.detail(id.toString()),
+    staleTime: 0, // Force fresh fetch, don't use cached data
+  });
   if (!data) {
     throw new Error(`Agent not found: ${id.toString()}`);
   }

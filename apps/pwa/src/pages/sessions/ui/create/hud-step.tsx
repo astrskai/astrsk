@@ -27,12 +27,29 @@ import {
   type DataSchemaEntry,
   type DataSchemaContext,
 } from "@/app/services/system-agents";
-import {
-  selectFlowTemplate,
-  loadFlowTemplate,
-  type TemplateSelectionResult,
-  type FlowTemplateName,
-} from "@/app/services/system-agents/flow-template-matcher";
+
+// Simple template is the only template - no AI selection needed
+const SIMPLE_TEMPLATE = {
+  templateName: "Simple" as const,
+  filename: "Simple_vf.json",
+  reason: "Default template",
+};
+
+export type FlowTemplateName = "Simple";
+export interface TemplateSelectionResult {
+  templateName: FlowTemplateName;
+  filename: string;
+  reason: string;
+}
+
+async function loadFlowTemplate(filename: string): Promise<any> {
+  const path = `/default/flow/${filename}`;
+  const response = await fetch(path);
+  if (!response.ok) {
+    throw new Error(`Failed to load flow template: ${filename}`);
+  }
+  return response.json();
+}
 
 // Shared input styles matching the design system
 const INPUT_FOCUS_STYLES = "outline-none focus:ring-2 focus:ring-brand-500/20 focus:ring-offset-0 focus:border-brand-500";
@@ -361,16 +378,11 @@ export function HudStep({
       const ctx = sessionContextRef.current;
       const scenario = ctx?.scenario || "";
 
-      // Step 1: Select flow template using AI
-      setTemplateStatus("Selecting workflow template...");
-      logger.info("[HudStep] Selecting flow template...");
+      // Step 1: Use Simple template (only template available)
+      setTemplateStatus("Loading workflow template...");
+      logger.info("[HudStep] Using Simple template");
 
-      const templateResult = await selectFlowTemplate(
-        scenario,
-        abortControllerRef.current.signal
-      );
-
-      logger.info("[HudStep] Template selected", templateResult);
+      const templateResult = SIMPLE_TEMPLATE;
       onSelectedTemplateChange?.(templateResult);
 
       // Step 2: Load template and extract dataStoreSchema fields

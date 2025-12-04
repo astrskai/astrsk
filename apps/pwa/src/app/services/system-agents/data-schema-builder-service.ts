@@ -402,6 +402,9 @@ export async function generateDataSchema({
   ];
 
   try {
+    // GLM models require thinking to be disabled for tool calling
+    const isGlmModel = defaultModel.modelId.toLowerCase().includes("glm");
+
     // Generate response with tools
     // Use prepareStep to update system prompt with newly created stores before each step
     const result = await generateText({
@@ -410,6 +413,11 @@ export async function generateDataSchema({
       tools,
       stopWhen: stepCountIs(10), // Allow multiple tool calls for each data store
       abortSignal,
+      ...(isGlmModel && {
+        providerOptions: {
+          zhipu: { thinking: { type: "disabled" } },
+        },
+      }),
       // prepareStep allows modifying messages before each step
       prepareStep: ({ stepNumber, steps }) => {
         // After first step, include created stores in the system prompt
@@ -530,6 +538,9 @@ export async function refineDataSchema({
   ];
 
   try {
+    // GLM models require thinking to be disabled for tool calling
+    const isGlmModel = defaultModel.modelId.toLowerCase().includes("glm");
+
     // Generate response with tools
     const result = await generateText({
       model,
@@ -537,6 +548,11 @@ export async function refineDataSchema({
       tools,
       stopWhen: stepCountIs(5),
       abortSignal,
+      ...(isGlmModel && {
+        providerOptions: {
+          zhipu: { thinking: { type: "disabled" } },
+        },
+      }),
     });
 
     logger.info("[DataSchemaBuilder] Refinement completed", {

@@ -3,7 +3,7 @@
   "description": "",
   "nodes": [
     {
-      "id": "019ae7c6-4485-7ccb-896a-8016d6d032b9",
+      "id": "019ae945-99d8-722e-b274-1326876bf8ec",
       "type": "start",
       "position": {
         "x": -76.49702747874153,
@@ -14,18 +14,18 @@
       "zIndex": 1000
     },
     {
-      "id": "019ae7c6-4485-7ccb-896a-8e3320d01719",
+      "id": "019ae945-99d8-722e-b274-1b9be0764378",
       "type": "end",
       "position": {
-        "x": 1732.5678003279068,
-        "y": 66.50861557689295
+        "x": 2280.4406722367553,
+        "y": 138.4301508853904
       },
       "data": {},
       "deletable": false,
       "zIndex": 1000
     },
     {
-      "id": "019ae7c6-4485-7ccb-896a-94206085d299",
+      "id": "019ae945-99d8-722e-b274-25fa6666b6f5",
       "type": "agent",
       "position": {
         "x": 347.5702021573969,
@@ -35,25 +35,11 @@
       "deletable": false
     },
     {
-      "id": "019ae7c6-4485-7ccb-896a-9d663613470e",
-      "type": "dataStore",
-      "position": {
-        "x": 944.6294338222093,
-        "y": 63.25618271212389
-      },
-      "data": {
-        "name": "before_end_node",
-        "color": "#FDBA74",
-        "dataStoreFields": []
-      },
-      "deletable": false
-    },
-    {
-      "id": "3f794855-4db3-4533-9b62-e808e7ad53a7",
+      "id": "019ae945-99d8-722e-b274-3272df7ec2b4",
       "type": "start",
       "position": {
-        "x": -87.10481682580638,
-        "y": 636.4048098100109
+        "x": -76.52812045690969,
+        "y": 657.5582025478043
       },
       "data": {
         "nodeVariant": "scenario"
@@ -62,7 +48,7 @@
       "zIndex": 1000
     },
     {
-      "id": "12a35031-f5ff-4c19-846c-8e68e91855fe",
+      "id": "019ae945-99d8-722e-b274-3f002ded9a37",
       "type": "start",
       "position": {
         "x": -72.08674495928804,
@@ -75,7 +61,7 @@
       "zIndex": 1000
     },
     {
-      "id": "019ae7c6-b6c7-7ccb-896a-ba263c3fbc20",
+      "id": "019ae945-99d8-722e-b274-40943efd260a",
       "type": "agent",
       "position": {
         "x": 339.44008471846485,
@@ -85,7 +71,7 @@
       "deletable": false
     },
     {
-      "id": "019ae7c7-25fb-7ccb-896a-c61451a27817",
+      "id": "019ae945-99d8-722e-b274-4e394420cdb7",
       "type": "agent",
       "position": {
         "x": 346.3280391460512,
@@ -93,197 +79,95 @@
       },
       "data": {},
       "deletable": false
+    },
+    {
+      "id": "019ae947-7ac2-722e-b274-a7b33d1927af",
+      "type": "agent",
+      "position": {
+        "x": 1357.9005235972566,
+        "y": 36.14673784703075
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae947-cf9e-722e-b274-b35e1e3bfde9",
+      "type": "dataStore",
+      "position": {
+        "x": 1821.3607018106368,
+        "y": 126.33818404883813
+      },
+      "data": {
+        "name": "data_management_update",
+        "color": "#F0ABFC",
+        "dataStoreFields": []
+      },
+      "deletable": false
     }
   ],
   "edges": [
     {
-      "id": "019ae7c6-4485-7ccb-896a-afe3543d6303",
-      "source": "019ae7c6-4485-7ccb-896a-94206085d299",
-      "target": "019ae7c6-4485-7ccb-896a-9d663613470e"
+      "id": "xy-edge__019ae945-99d8-722e-b274-1326876bf8ec-019ae945-99d8-722e-b274-25fa6666b6f5",
+      "source": "019ae945-99d8-722e-b274-1326876bf8ec",
+      "target": "019ae945-99d8-722e-b274-25fa6666b6f5"
     },
     {
-      "id": "xy-edge__019ae7c6-b6c7-7ccb-896a-ba263c3fbc20-019ae7c6-4485-7ccb-896a-9d663613470e",
-      "source": "019ae7c6-b6c7-7ccb-896a-ba263c3fbc20",
-      "target": "019ae7c6-4485-7ccb-896a-9d663613470e"
+      "id": "xy-edge__019ae945-99d8-722e-b274-3f002ded9a37-019ae945-99d8-722e-b274-40943efd260a",
+      "source": "019ae945-99d8-722e-b274-3f002ded9a37",
+      "target": "019ae945-99d8-722e-b274-40943efd260a"
     },
     {
-      "id": "xy-edge__019ae7c7-25fb-7ccb-896a-c61451a27817-019ae7c6-4485-7ccb-896a-9d663613470e",
-      "source": "019ae7c7-25fb-7ccb-896a-c61451a27817",
-      "target": "019ae7c6-4485-7ccb-896a-9d663613470e"
+      "id": "xy-edge__019ae945-99d8-722e-b274-3272df7ec2b4-019ae945-99d8-722e-b274-4e394420cdb7",
+      "source": "019ae945-99d8-722e-b274-3272df7ec2b4",
+      "target": "019ae945-99d8-722e-b274-4e394420cdb7"
+    },
+    {
+      "id": "019ae947-7ac2-722e-b274-a7b33d1927af-019ae947-cf9e-722e-b274-b35e1e3bfde9",
+      "source": "019ae947-7ac2-722e-b274-a7b33d1927af",
+      "target": "019ae947-cf9e-722e-b274-b35e1e3bfde9"
+    },
+    {
+      "id": "xy-edge__019ae947-cf9e-722e-b274-b35e1e3bfde9-019ae945-99d8-722e-b274-1b9be0764378",
+      "source": "019ae947-cf9e-722e-b274-b35e1e3bfde9",
+      "target": "019ae945-99d8-722e-b274-1b9be0764378"
+    },
+    {
+      "id": "xy-edge__019ae945-99d8-722e-b274-25fa6666b6f5-019ae947-7ac2-722e-b274-a7b33d1927af",
+      "source": "019ae945-99d8-722e-b274-25fa6666b6f5",
+      "target": "019ae947-7ac2-722e-b274-a7b33d1927af"
+    },
+    {
+      "id": "xy-edge__019ae945-99d8-722e-b274-40943efd260a-019ae947-7ac2-722e-b274-a7b33d1927af",
+      "source": "019ae945-99d8-722e-b274-40943efd260a",
+      "target": "019ae947-7ac2-722e-b274-a7b33d1927af"
+    },
+    {
+      "id": "xy-edge__019ae945-99d8-722e-b274-4e394420cdb7-019ae947-7ac2-722e-b274-a7b33d1927af",
+      "source": "019ae945-99d8-722e-b274-4e394420cdb7",
+      "target": "019ae947-7ac2-722e-b274-a7b33d1927af"
     }
   ],
   "responseTemplate": "{{rp_agent_character.response}}\n{{rp_agent_user.response}}\n{{rp_agent_scenario.response}}",
-  "createdAt": "2025-12-04T05:16:52.386Z",
-  "updatedAt": "2025-12-04T05:16:52.386Z",
-  "panelStructure": {
-    "panels": [],
-    "version": 2,
-    "activePanel": "flow-panel-main",
-    "panelMetadata": {
-      "flow-panel-main": {
-        "title": "Flow Editor",
-        "params": {
-          "title": "Flow Editor",
-          "flowId": "019ae7c6-4485-7ccb-896a-a421e66653f9"
-        },
-        "component": "flow"
-      }
-    },
-    "serializedLayout": {
-      "grid": {
-        "root": {
-          "data": [
-            {
-              "data": {
-                "id": "1",
-                "views": [
-                  "flow-panel-main"
-                ],
-                "locked": true,
-                "activeView": "flow-panel-main"
-              },
-              "size": 1648,
-              "type": "leaf"
-            }
-          ],
-          "size": 992,
-          "type": "branch"
-        },
-        "width": 1648,
-        "height": 992,
-        "orientation": "HORIZONTAL"
-      },
-      "panels": {
-        "flow-panel-main": {
-          "id": "flow-panel-main",
-          "title": "Flow Editor",
-          "params": {
-            "title": "Flow Editor",
-            "flowId": "019ae7c6-4485-7ccb-896a-a421e66653f9"
-          },
-          "tabComponent": "colored",
-          "contentComponent": "flow"
-        }
-      },
-      "activeGroup": "1"
-    }
-  },
+  "createdAt": "2025-12-04T12:50:53.449Z",
+  "updatedAt": "2025-12-04T12:50:53.449Z",
   "viewport": {
-    "x": 143.13590209386348,
-    "y": 394.17936771486006,
-    "zoom": 0.6370510177060803
+    "x": -756.6543716269377,
+    "y": 396.3162926597822,
+    "zoom": 0.7395683851285261
   },
   "dataStoreSchema": {
-    "fields": [
-      {
-        "id": "0199eba1-6a6d-722f-99ce-b027ec060d71",
-        "name": "participants",
-        "type": "string",
-        "initialValue": ""
-      },
-      {
-        "id": "0199eba1-c8c9-722f-99ce-bb3a8f7d6f50",
-        "name": "world_context",
-        "type": "string",
-        "initialValue": ""
-      }
-    ]
+    "fields": []
   },
   "readyState": "draft",
-  "validationIssues": [
-    {
-      "id": "MISSING_USER_MESSAGE_AFTER_SYSTEM_0199082d-90e4-7776-a4ac-ef616ff8d28d_1756787362667_lihdkol",
-      "code": "MISSING_USER_MESSAGE_AFTER_SYSTEM",
-      "title": "First message role for Gemini",
-      "agentId": "0199082d-90e4-7776-a4ac-ef616ff8d28d",
-      "severity": "warning",
-      "agentName": "RP Agent",
-      "suggestion": "A filler message will be added with role:user right after the system message",
-      "description": "Agent \"RP Agent\" is using Gemini but has a prompt that does not have a user message immediately after its system message"
-    },
-    {
-      "id": "UNUSED_OUTPUT_VARIABLE_0199082d-90e4-7776-a4ac-ef616ff8d28d_1756787362669_s6ex2gn",
-      "code": "UNUSED_OUTPUT_VARIABLE",
-      "title": "Unused output variable",
-      "agentId": "0199082d-90e4-7776-a4ac-ef616ff8d28d",
-      "metadata": {
-        "field": "analysis",
-        "variable": "rp_agent.analysis"
-      },
-      "severity": "warning",
-      "agentName": "RP Agent",
-      "suggestion": "Remove unused field or use it in downstream agents",
-      "description": "A field has been defined but is never used: {{\"RP Agent\".\"analysis\"}}"
-    },
-    {
-      "id": "UNDEFINED_PROVIDER_PARAMETER_0199082d-90e4-7776-a4ac-ef616ff8d28d_1756787362670_jdaz1fp",
-      "code": "UNDEFINED_PROVIDER_PARAMETER",
-      "title": "Undefined provider parameter",
-      "agentId": "0199082d-90e4-7776-a4ac-ef616ff8d28d",
-      "metadata": {
-        "provider": "astrsk-ai",
-        "modelName": "gemini-2.5-flash-preview-05-20",
-        "parameter": "context"
-      },
-      "severity": "warning",
-      "agentName": "RP Agent",
-      "suggestion": "This parameter is not supported by the model provider. Check provider documentation or disable this parameter",
-      "description": "Agent \"RP Agent\" has a parameter that cannot be processed: \"context\""
-    },
-    {
-      "id": "UNDEFINED_PROVIDER_PARAMETER_0199082d-90e4-7776-a4ac-ef616ff8d28d_1756787362670_90zh8pq",
-      "code": "UNDEFINED_PROVIDER_PARAMETER",
-      "title": "Undefined provider parameter",
-      "agentId": "0199082d-90e4-7776-a4ac-ef616ff8d28d",
-      "metadata": {
-        "provider": "astrsk-ai",
-        "modelName": "gemini-2.5-flash-preview-05-20",
-        "parameter": "max_tokens"
-      },
-      "severity": "warning",
-      "agentName": "RP Agent",
-      "suggestion": "This parameter is not supported by the model provider. Check provider documentation or disable this parameter",
-      "description": "Agent \"RP Agent\" has a parameter that cannot be processed: \"max_tokens\""
-    },
-    {
-      "id": "UNDEFINED_PROVIDER_PARAMETER_0199082d-90e4-7776-a4ac-ef616ff8d28d_1756787362670_sw3ny7j",
-      "code": "UNDEFINED_PROVIDER_PARAMETER",
-      "title": "Undefined provider parameter",
-      "agentId": "0199082d-90e4-7776-a4ac-ef616ff8d28d",
-      "metadata": {
-        "provider": "astrsk-ai",
-        "modelName": "gemini-2.5-flash-preview-05-20",
-        "parameter": "safety_settings"
-      },
-      "severity": "warning",
-      "agentName": "RP Agent",
-      "suggestion": "This parameter is not supported by the model provider. Check provider documentation or disable this parameter",
-      "description": "Agent \"RP Agent\" has a parameter that cannot be processed: \"safety_settings\""
-    },
-    {
-      "id": "UNDEFINED_PROVIDER_PARAMETER_0199082d-90e4-7776-a4ac-ef616ff8d28d_1756787362670_uwk4br5",
-      "code": "UNDEFINED_PROVIDER_PARAMETER",
-      "title": "Undefined provider parameter",
-      "agentId": "0199082d-90e4-7776-a4ac-ef616ff8d28d",
-      "metadata": {
-        "provider": "astrsk-ai",
-        "modelName": "gemini-2.5-flash-preview-05-20",
-        "parameter": "thinking_budget"
-      },
-      "severity": "warning",
-      "agentName": "RP Agent",
-      "suggestion": "This parameter is not supported by the model provider. Check provider documentation or disable this parameter",
-      "description": "Agent \"RP Agent\" has a parameter that cannot be processed: \"thinking_budget\""
-    }
-  ],
+  "validationIssues": [],
   "agents": {
-    "019ae7c6-4485-7ccb-896a-94206085d299": {
+    "019ae945-99d8-722e-b274-25fa6666b6f5": {
       "name": "rp_agent_character",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "astrsk-ai",
       "modelId": "openai-compatible:google/gemini-2.5-flash",
-      "modelName": "Gemini 2.5 Flash",
+      "modelName": "Light Model",
       "promptMessages": [
         {
           "type": "plain",
@@ -389,56 +273,34 @@
       ],
       "textPrompt": "",
       "enabledParameters": {
-        "top_p": true,
-        "context": true,
-        "max_tokens": true,
-        "temperature": true,
-        "safety_settings": true,
-        "thinking_budget": true,
+        "top_p": false,
+        "context": false,
+        "max_tokens": false,
+        "temperature": false,
+        "safety_settings": false,
+        "thinking_budget": false,
         "reasoning_effort": false
       },
-      "parameterValues": {
-        "top_p": 0.95,
-        "context": 132000,
-        "max_tokens": 1000,
-        "temperature": 1,
-        "safety_settings": "[{\"category\":\"HARM_CATEGORY_SEXUALLY_EXPLICIT\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_HATE_SPEECH\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_HARASSMENT\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_DANGEROUS_CONTENT\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_CIVIC_INTEGRITY\",\"threshold\":\"BLOCK_NONE\"}]",
-        "thinking_budget": 2000
-      },
+      "parameterValues": {},
       "enabledStructuredOutput": false,
       "outputFormat": "structured_output",
       "outputStreaming": true,
       "schemaName": "response",
-      "schemaFields": [
-        {
-          "name": "analysis",
-          "type": "string",
-          "array": false,
-          "required": true,
-          "description": "The analysis content must be written in English and the response content must be written in designated language.\n\nThe content structure MUST follow the template below:\n```\n##Context-Adaptive Draft Analysis\n\n1.  **Draft: Objective & Context:** [Goal keywords]; [Context keywords]; [Stakes keywords]\n\n2.  **Draft: System Prompt Analysis:** [What should do]; [What should NOT do]; [Desired Response volume]\n\n3.  **Draft: Character States & Motives:** [Character1: state/motive/intent keywords]; [Character2: state/motive/intent keywords]\n\n4.  **Draft: Relevant Background:** [History keywords]; [Relationship keywords]; [Known info keywords]\n\n5.  **Draft: Environment & Discovery:** [Env features keywords]; [Discovery elements keywords]; [Interest points keywords]\n\n6.  **Draft: Exploration Patterns:** [NPC: Tendencies keywords]; [Interests keywords]; [Interaction keywords]\n\n7.  **Draft: Dialogue Dynamics:** [Topic keywords]; [Hidden intent keywords]; [Power dynamics keywords]; [Unique Topic keywords related to the settings]; [Inner thoughts of Main charcter]\n\n8.  **Draft: Communication Signals:** [NPC1: Verbal/Non-verbal keywords]; [NPC2: Verbal/Non-verbal keywords]; [Character's speech characteristics]\n\n9.  **Draft: Related Settings:** [Character settings that are related to the context]; [World Settings that are related to the context]; [Past Events that are related to the context(If exist)]\n\n10. **Draft: Development of Events and Interaction between Characters:** [Highly probable and interesting event that can be unfolded]; [Active and unique Character interaction]\n```"
-        },
-        {
-          "name": "approved_response",
-          "type": "string",
-          "array": false,
-          "required": true,
-          "description": "The actions and lines of the characters based on analysis.\n\nWrite the character's line between \"\".\nWrite the character's action or background description in markdown italic.\nWrite the sound effects, onomatopoeia, or words you want to emphasize in markdown bold."
-        }
-      ],
+      "schemaFields": [],
       "tokenCount": 0,
       "color": "#A5B4FC",
-      "createdAt": "2025-12-04T05:12:01.947Z",
-      "updatedAt": "2025-12-04T05:12:42.964Z",
+      "createdAt": "2025-12-04T12:10:44.074Z",
+      "updatedAt": "2025-12-04T12:46:45.560Z",
       "modelTier": "light",
-      "flowId": "019ae7c6-4485-7ccb-896a-a421e66653f9"
+      "flowId": "019ae945-99d8-722e-b274-56e13847faa4"
     },
-    "019ae7c6-b6c7-7ccb-896a-ba263c3fbc20": {
+    "019ae945-99d8-722e-b274-40943efd260a": {
       "name": "rp_agent_user",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "astrsk-ai",
       "modelId": "openai-compatible:google/gemini-2.5-flash",
-      "modelName": "Gemini 2.5 Flash",
+      "modelName": "Light Model",
       "promptMessages": [
         {
           "type": "plain",
@@ -544,50 +406,28 @@
       ],
       "textPrompt": "",
       "enabledParameters": {
-        "top_p": true,
-        "context": true,
-        "max_tokens": true,
-        "temperature": true,
-        "safety_settings": true,
-        "thinking_budget": true,
+        "top_p": false,
+        "context": false,
+        "max_tokens": false,
+        "temperature": false,
+        "safety_settings": false,
+        "thinking_budget": false,
         "reasoning_effort": false
       },
-      "parameterValues": {
-        "top_p": 0.95,
-        "context": 132000,
-        "max_tokens": 1000,
-        "temperature": 1,
-        "safety_settings": "[{\"category\":\"HARM_CATEGORY_SEXUALLY_EXPLICIT\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_HATE_SPEECH\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_HARASSMENT\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_DANGEROUS_CONTENT\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_CIVIC_INTEGRITY\",\"threshold\":\"BLOCK_NONE\"}]",
-        "thinking_budget": 2000
-      },
+      "parameterValues": {},
       "enabledStructuredOutput": false,
       "outputFormat": "structured_output",
       "outputStreaming": true,
       "schemaName": "response",
-      "schemaFields": [
-        {
-          "name": "analysis",
-          "type": "string",
-          "array": false,
-          "required": true,
-          "description": "The analysis content must be written in English and the response content must be written in designated language.\n\nThe content structure MUST follow the template below:\n```\n##Context-Adaptive Draft Analysis\n\n1.  **Draft: Objective & Context:** [Goal keywords]; [Context keywords]; [Stakes keywords]\n\n2.  **Draft: System Prompt Analysis:** [What should do]; [What should NOT do]; [Desired Response volume]\n\n3.  **Draft: Character States & Motives:** [Character1: state/motive/intent keywords]; [Character2: state/motive/intent keywords]\n\n4.  **Draft: Relevant Background:** [History keywords]; [Relationship keywords]; [Known info keywords]\n\n5.  **Draft: Environment & Discovery:** [Env features keywords]; [Discovery elements keywords]; [Interest points keywords]\n\n6.  **Draft: Exploration Patterns:** [NPC: Tendencies keywords]; [Interests keywords]; [Interaction keywords]\n\n7.  **Draft: Dialogue Dynamics:** [Topic keywords]; [Hidden intent keywords]; [Power dynamics keywords]; [Unique Topic keywords related to the settings]; [Inner thoughts of Main charcter]\n\n8.  **Draft: Communication Signals:** [NPC1: Verbal/Non-verbal keywords]; [NPC2: Verbal/Non-verbal keywords]; [Character's speech characteristics]\n\n9.  **Draft: Related Settings:** [Character settings that are related to the context]; [World Settings that are related to the context]; [Past Events that are related to the context(If exist)]\n\n10. **Draft: Development of Events and Interaction between Characters:** [Highly probable and interesting event that can be unfolded]; [Active and unique Character interaction]\n```"
-        },
-        {
-          "name": "approved_response",
-          "type": "string",
-          "array": false,
-          "required": true,
-          "description": "The actions and lines of the characters based on analysis.\n\nWrite the character's line between \"\".\nWrite the character's action or background description in markdown italic.\nWrite the sound effects, onomatopoeia, or words you want to emphasize in markdown bold."
-        }
-      ],
+      "schemaFields": [],
       "tokenCount": 0,
       "color": "#BEF264",
-      "createdAt": "2025-12-04T05:12:31.218Z",
-      "updatedAt": "2025-12-04T05:12:57.476Z",
+      "createdAt": "2025-12-04T12:10:44.082Z",
+      "updatedAt": "2025-12-04T12:46:47.470Z",
       "modelTier": "light",
-      "flowId": "019ae7c6-4485-7ccb-896a-a421e66653f9"
+      "flowId": "019ae945-99d8-722e-b274-56e13847faa4"
     },
-    "019ae7c7-25fb-7ccb-896a-c61451a27817": {
+    "019ae945-99d8-722e-b274-4e394420cdb7": {
       "name": "rp_agent_scenario",
       "description": "",
       "targetApiType": "chat",
@@ -699,66 +539,133 @@
       ],
       "textPrompt": "",
       "enabledParameters": {
-        "top_p": true,
-        "context": true,
-        "max_tokens": true,
-        "temperature": true,
-        "safety_settings": true,
-        "thinking_budget": true,
+        "top_p": false,
+        "context": false,
+        "max_tokens": false,
+        "temperature": false,
+        "safety_settings": false,
+        "thinking_budget": false,
         "reasoning_effort": false
       },
-      "parameterValues": {
-        "top_p": 0.95,
-        "context": 132000,
-        "max_tokens": 1000,
-        "temperature": 1,
-        "safety_settings": "[{\"category\":\"HARM_CATEGORY_SEXUALLY_EXPLICIT\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_HATE_SPEECH\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_HARASSMENT\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_DANGEROUS_CONTENT\",\"threshold\":\"BLOCK_NONE\"},{\"category\":\"HARM_CATEGORY_CIVIC_INTEGRITY\",\"threshold\":\"BLOCK_NONE\"}]",
-        "thinking_budget": 2000
-      },
+      "parameterValues": {},
       "enabledStructuredOutput": false,
       "outputFormat": "structured_output",
       "outputStreaming": true,
       "schemaName": "response",
-      "schemaFields": [
-        {
-          "name": "analysis",
-          "type": "string",
-          "array": false,
-          "required": true,
-          "description": "The analysis content must be written in English and the response content must be written in designated language.\n\nThe content structure MUST follow the template below:\n```\n##Context-Adaptive Draft Analysis\n\n1.  **Draft: Objective & Context:** [Goal keywords]; [Context keywords]; [Stakes keywords]\n\n2.  **Draft: System Prompt Analysis:** [What should do]; [What should NOT do]; [Desired Response volume]\n\n3.  **Draft: Character States & Motives:** [Character1: state/motive/intent keywords]; [Character2: state/motive/intent keywords]\n\n4.  **Draft: Relevant Background:** [History keywords]; [Relationship keywords]; [Known info keywords]\n\n5.  **Draft: Environment & Discovery:** [Env features keywords]; [Discovery elements keywords]; [Interest points keywords]\n\n6.  **Draft: Exploration Patterns:** [NPC: Tendencies keywords]; [Interests keywords]; [Interaction keywords]\n\n7.  **Draft: Dialogue Dynamics:** [Topic keywords]; [Hidden intent keywords]; [Power dynamics keywords]; [Unique Topic keywords related to the settings]; [Inner thoughts of Main charcter]\n\n8.  **Draft: Communication Signals:** [NPC1: Verbal/Non-verbal keywords]; [NPC2: Verbal/Non-verbal keywords]; [Character's speech characteristics]\n\n9.  **Draft: Related Settings:** [Character settings that are related to the context]; [World Settings that are related to the context]; [Past Events that are related to the context(If exist)]\n\n10. **Draft: Development of Events and Interaction between Characters:** [Highly probable and interesting event that can be unfolded]; [Active and unique Character interaction]\n```"
-        },
-        {
-          "name": "approved_response",
-          "type": "string",
-          "array": false,
-          "required": true,
-          "description": "The actions and lines of the characters based on analysis.\n\nWrite the character's line between \"\".\nWrite the character's action or background description in markdown italic.\nWrite the sound effects, onomatopoeia, or words you want to emphasize in markdown bold."
-        }
-      ],
+      "schemaFields": [],
       "tokenCount": 0,
       "color": "#FCA5A5",
-      "createdAt": "2025-12-04T05:12:59.684Z",
-      "updatedAt": "2025-12-04T05:13:55.584Z",
+      "createdAt": "2025-12-04T12:10:44.087Z",
+      "updatedAt": "2025-12-04T12:46:49.823Z",
       "modelTier": "light",
-      "flowId": "019ae7c6-4485-7ccb-896a-a421e66653f9"
+      "flowId": "019ae945-99d8-722e-b274-56e13847faa4"
+    },
+    "019ae947-7ac2-722e-b274-a7b33d1927af": {
+      "name": "data_management_agent",
+      "description": "",
+      "targetApiType": "chat",
+      "modelName": "Light Model",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You are a data store management agent. Your job ins to analyze the recent conversation history and the generated response and extract information and update the values to make good evaluations. \n\nFollowing is the recent conversation history:",
+              "type": "plain",
+              "createdAt": "2025-12-04T12:49:52.605Z",
+              "updatedAt": "2025-12-04T12:49:52.605Z",
+              "id": "019ae969-6fdd-777a-bf9b-ba0fa2eae3c0"
+            }
+          ],
+          "createdAt": "2025-12-04T12:49:52.605Z",
+          "id": "message-1764850385000"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 3,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T12:49:52.605Z",
+              "updatedAt": "2025-12-04T12:49:52.605Z",
+              "id": "019ae969-6fdd-777a-bf9b-c6101b0620c7"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T12:49:52.605Z",
+              "updatedAt": "2025-12-04T12:49:52.605Z",
+              "id": "019ae969-6fdd-777a-bf9b-ceffb8aafb81"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-12-04T12:49:52.605Z",
+          "id": "history-1764850442576"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Message 3",
+              "template": "Last last response from character, user, or scenario \n{{char.name}}:  {{rp_agent_character.response}}\n{{rp_agent_user.response}}\n{{rp_agent_scenario.response}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T12:49:52.605Z",
+              "updatedAt": "2025-12-04T12:49:52.605Z",
+              "id": "019ae969-6fdd-777a-bf9b-d1f580a4ebb5"
+            }
+          ],
+          "createdAt": "2025-12-04T12:49:52.605Z",
+          "id": "message-1764850605850"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#67E8F9",
+      "createdAt": "2025-12-04T12:12:47.235Z",
+      "updatedAt": "2025-12-04T12:49:52.606Z",
+      "modelTier": "light",
+      "flowId": "019ae945-99d8-722e-b274-56e13847faa4"
     }
   },
   "dataStoreNodes": {
-    "019ae7c6-4485-7ccb-896a-9d663613470e": {
-      "name": "before_end_node",
-      "color": "#FDBA74",
+    "019ae947-cf9e-722e-b274-b35e1e3bfde9": {
+      "name": "data_management_update",
+      "color": "#F0ABFC",
       "dataStoreFields": [],
-      "createdAt": "2025-12-04T05:12:01.952Z",
-      "updatedAt": "2025-12-04T05:12:01.952Z"
+      "createdAt": "2025-12-04T12:13:08.926Z",
+      "updatedAt": "2025-12-04T12:47:40.147Z"
     }
   },
-  "exportedAt": "2025-12-04T05:16:52.400Z",
+  "exportedAt": "2025-12-04T12:50:53.471Z",
   "exportedBy": "astrsk-v2.3.0",
   "metadata": {
     "processing": {
       "agents": {
-        "found": 3,
-        "exported": 3,
+        "found": 4,
+        "exported": 4,
         "failed": 0
       },
       "dataStoreNodes": {
@@ -772,11 +679,11 @@
         "failed": 0
       }
     },
-    "totalNodes": 8,
+    "totalNodes": 9,
     "nodeTypes": {
       "start": 3,
       "end": 1,
-      "agent": 3,
+      "agent": 4,
       "dataStore": 1
     }
   }
