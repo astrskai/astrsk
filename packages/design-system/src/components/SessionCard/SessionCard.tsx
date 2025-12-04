@@ -236,7 +236,7 @@ export function SessionCard({
 
         {/* Session Title */}
         <div className='absolute bottom-0 left-0 w-full p-5'>
-          <h2 className='line-clamp-2 h-[3.75rem] text-xl md:text-2xl leading-tight font-bold break-words text-white'>
+          <h2 className='line-clamp-2 text-xl md:text-2xl leading-tight font-bold text-ellipsis text-white'>
             {title}
           </h2>
         </div>
