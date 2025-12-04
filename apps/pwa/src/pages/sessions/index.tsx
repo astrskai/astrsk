@@ -33,10 +33,13 @@ export function SessionsPage() {
 
   // Fetch sessions with character metadata prefetched
   // Uses Batch Prefetch pattern for optimal performance
+  // Filter to show only non-play sessions (is_play_session: false)
+  // Play sessions are shown in the left sidebar instead
   const { sessions, isSessionsLoading, areCharactersLoading } =
     useSessionsWithCharacterMetadata({
       keyword,
       sort: sortOption,
+      isPlaySession: false,
     });
 
   // Import dialog hook - manages file input and parsing
@@ -45,7 +48,6 @@ export function SessionsPage() {
     isOpenImportDialog,
     setIsOpenImportDialog,
     importingFile,
-    agentModels,
     handleFileSelect,
     triggerImport,
   } = useSessionImportDialog();
@@ -91,13 +93,12 @@ export function SessionsPage() {
         onSortChange={setSortOption}
       />
 
-      {/* Session Import Dialog - receives file and agent models from hook */}
+      {/* Session Import Dialog - receives file from hook, auto-imports when file is selected */}
       <SessionImportDialog
         open={isOpenImportDialog}
         onOpenChange={setIsOpenImportDialog}
         onImport={handleImport}
         file={importingFile}
-        agentModels={agentModels}
       />
       <HelpVideoDialog
         open={isOpenHelpDialog}
@@ -119,10 +120,12 @@ export function SessionsPage() {
             onButtonClick={handleCreateSession}
           />
         ) : (
-          <SessionsGrid
-            sessions={sessions}
-            areCharactersLoading={areCharactersLoading}
-          />
+          <>
+            <SessionsGrid
+              sessions={sessions}
+              areCharactersLoading={areCharactersLoading}
+            />
+          </>
         )}
       </div>
     </div>

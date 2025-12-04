@@ -74,22 +74,29 @@ export class ExportScenarioToCloud
 
       const scenarioData = dataResult.getValue();
 
-      // 3. Upload scenario record to cloud
-      const uploadResult = await uploadScenarioToCloud(scenarioData);
-      if (uploadResult.isFailure) {
-        return Result.fail<ShareLinkResult>(uploadResult.getError());
-      }
-
-      // 4. Upload scenario icon asset (if exists)
+      // 3. Upload scenario icon asset FIRST (before scenario record)
+      // Assets must exist before records that reference them via FK
       if (scenarioData.icon_asset_id) {
         const iconAsset = await this.loadAssetRepo.getAssetById(
           new UniqueEntityID(scenarioData.icon_asset_id)
         );
         if (iconAsset.isSuccess) {
-          await uploadAssetToSupabase(iconAsset.getValue(), {
-            scenarioId: scenarioData.id,
-          });
+          const assetUploadResult = await uploadAssetToSupabase(iconAsset.getValue());
+          if (assetUploadResult.isFailure) {
+            return Result.fail<ShareLinkResult>(
+              `Failed to upload scenario icon asset: ${assetUploadResult.getError()}`
+            );
+          }
+        } else {
+          // Asset not found locally - clear the reference so scenario can be uploaded
+          scenarioData.icon_asset_id = null;
         }
+      }
+
+      // 4. Upload scenario record to cloud (asset already exists)
+      const uploadResult = await uploadScenarioToCloud(scenarioData);
+      if (uploadResult.isFailure) {
+        return Result.fail<ShareLinkResult>(uploadResult.getError());
       }
 
       // 5. Create shared resource entry using the NEW card ID

@@ -1,5 +1,5 @@
 import { Download, Plus } from "lucide-react";
-import { SearchInput } from "@/shared/ui/forms";
+import { Button, SearchInput } from "@/shared/ui/forms";
 import type { SelectOption } from "@/shared/ui/forms";
 
 export interface ListPageHeaderProps {
@@ -97,22 +97,23 @@ export function ListPageHeader({
           </div>
           <div className="flex items-center gap-2">
             {/* Import - Icon only on mobile */}
-            <button
+            <Button
+              variant="secondary"
+              size="md"
+              icon={<Download size={14} />}
               onClick={onImportClick}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-sm text-zinc-300 transition-all hover:border-zinc-700 hover:bg-zinc-800 hover:text-white md:h-9 md:w-auto md:gap-2 md:px-4"
               title="Import"
             >
-              <Download size={14} />
               <span className="hidden md:inline">Import</span>
-            </button>
+            </Button>
             {/* Create (Primary Action) */}
-            <button
+            <Button
+              size="md"
+              icon={<Plus size={14} />}
               onClick={onCreateClick}
-              className="bg-brand-600 shadow-brand-500/20 hover:bg-brand-500 flex h-8 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-white shadow-lg transition-all active:scale-95 md:h-9 md:px-4"
             >
-              <Plus size={14} />
-              <span>{createLabel}</span>
-            </button>
+              {createLabel}
+            </Button>
           </div>
         </div>
 

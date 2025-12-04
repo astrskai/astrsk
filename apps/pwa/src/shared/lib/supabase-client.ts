@@ -66,3 +66,6 @@ export const DEFAULT_SHARE_EXPIRATION_DAYS = 1 / 24;
 
 // App source identifier for email-based users
 export const APP_SOURCE = "astrsk" as const;
+
+// Harpy Hub URL for share links
+export const HARPY_HUB_URL = import.meta.env.VITE_HARPY_HUB_URL || "https://harpy.chat";

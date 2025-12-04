@@ -3,7 +3,7 @@ import { cn } from "@/shared/lib";
 import { Loader2 } from "lucide-react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "secondary" | "ghost" | "destructive" | "outline";
+  variant?: "default" | "secondary" | "ghost" | "destructive" | "outline" | "accent" | "link";
   size?: "sm" | "md" | "lg";
   icon?: React.ReactNode;
   loading?: boolean;
@@ -42,7 +42,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-live={loading ? "polite" : undefined}
         className={cn(
           // Base styles
-          "inline-flex cursor-pointer items-center justify-center rounded-xl font-medium transition-colors focus:ring-1 focus:ring-brand-500/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+          "inline-flex cursor-pointer items-center justify-center rounded-lg font-medium transition-colors focus:ring-1 focus:ring-brand-500/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
           // Gap only when both icon and children exist
           !isIconOnly && "gap-2",
           // Size styles - different for icon-only vs with text
@@ -59,7 +59,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               },
           // Variant styles
           {
-            "bg-brand-600 text-white hover:bg-brand-500":
+            "border border-brand-600 bg-brand-600 text-white hover:bg-brand-500 hover:border-brand-500":
               variant === "default",
             "border border-neutral-600 bg-neutral-800 text-neutral-100 hover:bg-neutral-700":
               variant === "secondary",
@@ -69,6 +69,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               variant === "destructive",
             "border border-brand-500 bg-transparent text-brand-500 hover:bg-brand-500 hover:text-white":
               variant === "outline",
+            "border border-brand-400 bg-brand-500 text-white hover:bg-brand-400 hover:border-brand-300":
+              variant === "accent",
+            "bg-transparent text-brand-500 underline-offset-4 hover:underline":
+              variant === "link",
           },
           className,
         )}

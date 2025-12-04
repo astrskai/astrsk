@@ -22,6 +22,10 @@ export interface AccordionItemConfig {
    * Optional: Disable this specific item
    */
   disabled?: boolean;
+  /**
+   * Optional: Additional CSS class for this specific item
+   */
+  className?: string;
 }
 
 /**
@@ -158,6 +162,7 @@ const AccordionBase = ({
             "data-[state=open]:bg-neutral-900",
             "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
             itemClassName,
+            item.className, // Per-item className support
           )}
         >
           <AccordionPrimitive.Header className="flex">

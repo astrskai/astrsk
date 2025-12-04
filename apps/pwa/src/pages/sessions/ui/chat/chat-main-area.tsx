@@ -21,7 +21,8 @@ import {
 } from "@/entities/turn/api/turn-queries";
 import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
 import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
-import { fetchCharacterCard } from "@/entities/card/api/query-factory";
+import { fetchCard } from "@/entities/card/api/query-factory";
+import { CharacterCard } from "@/entities/card/domain/character-card";
 import {
   sessionQueries,
   useAddMessage,
@@ -29,7 +30,7 @@ import {
 } from "@/entities/session/api";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { AutoReply } from "@/shared/stores/session-store";
+import { AutoReply, useSessionUIStore } from "@/shared/stores/session-store";
 import { queryClient } from "@/shared/api/query-client";
 import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
 import { logger } from "@/shared/lib/logger";
@@ -55,6 +56,9 @@ export default function ChatMainArea({
 }: ChatMainAreaProps) {
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState<boolean>(false);
+  // Track skipped scenario dialogs per session (non-persisted)
+  const skipScenarioDialog = useSessionUIStore.use.skipScenarioDialog();
+  const hasSkippedScenarioDialog = useSessionUIStore.use.hasSkippedScenarioDialog();
   // Add scenario card modal
   const [scenarioCard] = useCard<ScenarioCard>(data?.plotCard?.id);
   const messageCount = data?.turnIds.length ?? 0;
@@ -92,6 +96,7 @@ export default function ChatMainArea({
     async (
       characterId: UniqueEntityID,
       regenerateMessageId?: UniqueEntityID,
+      triggerType?: string,
     ) => {
       let streamingMessage: Turn | null = null;
       let streamingContent = "";
@@ -145,14 +150,20 @@ export default function ChatMainArea({
           // Get message from database
           streamingMessage = await fetchTurn(regenerateMessageId);
         } else {
-          // Get character name
-          const character = await fetchCharacterCard(characterId);
+          // Get card (can be CharacterCard or PlotCard/ScenarioCard)
+          const card = await fetchCard(characterId);
+
+          // Get name from card - CharacterCard has 'name', other cards use 'title'
+          const cardName =
+            card instanceof CharacterCard
+              ? card.props.name
+              : card.props.title;
 
           // Create new empty message
           const messageOrError = Turn.create({
             sessionId: data.id,
             characterCardId: characterId,
-            characterName: character.props.name,
+            characterName: cardName,
             options: [],
           });
 
@@ -208,6 +219,7 @@ export default function ChatMainArea({
           characterCardId: characterId,
           regenerateMessageId: regenerateMessageId,
           stopSignalByUser: refStopGenerate.current.signal,
+          triggerType: triggerType,
         });
 
         // Stream response
@@ -656,6 +668,8 @@ export default function ChatMainArea({
   }, [data, scenarioCard]);
 
   useEffect(() => {
+    const sessionId = data?.id.toString() ?? "";
+
     // Check scenario count
     if (scenarioCardFirstMessageCount === 0) {
       setIsOpenSelectScenarioModal(false);
@@ -668,9 +682,15 @@ export default function ChatMainArea({
       return;
     }
 
+    // Check if user already skipped for this session
+    if (hasSkippedScenarioDialog(sessionId)) {
+      setIsOpenSelectScenarioModal(false);
+      return;
+    }
+
     // Show select scenario modal
     setIsOpenSelectScenarioModal(true);
-  }, [scenarioCardFirstMessageCount, messageCount]);
+  }, [scenarioCardFirstMessageCount, messageCount, data?.id, hasSkippedScenarioDialog]);
 
   return (
     <div className="mx-auto flex h-dvh max-w-5xl flex-1 flex-col items-center justify-end pt-12 md:justify-center">
@@ -687,6 +707,7 @@ export default function ChatMainArea({
 
       <ChatInput
         className="shrink-0 md:mb-4"
+        sessionId={data.id}
         aiCharacterIds={data.aiCharacterCardIds}
         userCharacterId={data.userCharacterCardId}
         autoReply={data.autoReply}
@@ -703,6 +724,7 @@ export default function ChatMainArea({
       <SelectScenarioDialog
         open={isOpenSelectScenarioModal}
         onSkip={() => {
+          skipScenarioDialog(data.id.toString());
           setIsOpenSelectScenarioModal(false);
         }}
         onAdd={handleAddScenario}

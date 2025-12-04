@@ -92,33 +92,14 @@ const SessionCard = ({
     >
       {/* Header Image Area */}
       <div className="relative h-48 overflow-hidden bg-zinc-800">
-        {/* Cover Image */}
-        {imageUrl ? (
-          <>
-            <img
-              src={imageUrl}
-              alt={title}
-              className="absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
-          </>
-        ) : (
-          <>
-            {/* Placeholder pattern */}
-            <div className="absolute inset-0 bg-zinc-800">
-              <div
-                className="absolute inset-0 opacity-20"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(#4f46e5 1px, transparent 1px)",
-                  backgroundSize: "16px 16px",
-                }}
-              />
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
-          </>
-        )}
+        {/* Cover Image - use placeholder if no cover image */}
+        <img
+          src={imageUrl || "/img/placeholder/scenario-placeholder.png"}
+          alt={title}
+          className="absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
 
         {/* Action Toolbar (Responsive) */}
         <CardActionToolbar actions={actions} />

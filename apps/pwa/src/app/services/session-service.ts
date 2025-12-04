@@ -24,6 +24,7 @@ import {
   CloneSession,
   DeleteMessage,
   DeleteSession,
+  GetSessionListItems,
   ListSession,
   SaveSession,
 } from "@/entities/session/usecases";
@@ -63,6 +64,7 @@ export class SessionService {
   public static getSession: GetSession;
   public static getModelsFromSessionFile: GetModelsFromSessionFile;
   public static importCharactersFromSessionFile: ImportCharactersFromSessionFile;
+  public static getSessionListItems: GetSessionListItems;
   public static listSession: ListSession;
   public static saveSession: SaveSession;
   public static searchSession: SearchSession;
@@ -141,6 +143,7 @@ export class SessionService {
     );
     this.importCharactersFromSessionFile =
       new ImportCharactersFromSessionFile();
+    this.getSessionListItems = new GetSessionListItems(this.sessionRepo);
     this.listSession = new ListSession(this.sessionRepo);
     this.saveSession = new SaveSession(this.sessionRepo);
     this.searchSession = new SearchSession(this.sessionRepo);

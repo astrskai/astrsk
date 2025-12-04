@@ -71,13 +71,91 @@ export class ExportSessionToCloud
 
       const bundle = bundleResult.getValue();
 
-      // 3. Upload session (with asset ID references set)
+      // 3. Upload assets FIRST (WITHOUT back-reference FKs to avoid circular dependency)
+      // Assets have FKs to session/character/scenario, AND session/character/scenario have FKs to assets
+      // Solution: Upload assets with null FKs first, then upload entities that reference them
+
+      // 3a. Upload session assets (background, cover) - no session_id FK yet
+      if (bundle.session.background_id) {
+        const backgroundAsset = await this.loadAssetRepo.getAssetById(
+          new UniqueEntityID(bundle.session.background_id)
+        );
+        if (backgroundAsset.isSuccess) {
+          const uploadResult = await uploadAssetToSupabase(backgroundAsset.getValue());
+          if (uploadResult.isFailure) {
+            return Result.fail<ShareLinkResult>(
+              `Failed to upload background asset: ${uploadResult.getError()}`
+            );
+          }
+        } else {
+          // Asset not found locally - clear the reference so session can be uploaded
+          bundle.session.background_id = null;
+        }
+      }
+      if (bundle.session.cover_id) {
+        const coverAsset = await this.loadAssetRepo.getAssetById(
+          new UniqueEntityID(bundle.session.cover_id)
+        );
+        if (coverAsset.isSuccess) {
+          const uploadResult = await uploadAssetToSupabase(coverAsset.getValue());
+          if (uploadResult.isFailure) {
+            return Result.fail<ShareLinkResult>(
+              `Failed to upload cover asset: ${uploadResult.getError()}`
+            );
+          }
+        } else {
+          // Asset not found locally - clear the reference so session can be uploaded
+          bundle.session.cover_id = null;
+        }
+      }
+
+      // 3b. Upload character icon assets - no character_id FK yet
+      for (const character of bundle.characters) {
+        if (character.icon_asset_id) {
+          const iconAsset = await this.loadAssetRepo.getAssetById(
+            new UniqueEntityID(character.icon_asset_id)
+          );
+          if (iconAsset.isSuccess) {
+            const uploadResult = await uploadAssetToSupabase(iconAsset.getValue());
+            if (uploadResult.isFailure) {
+              return Result.fail<ShareLinkResult>(
+                `Failed to upload character icon asset: ${uploadResult.getError()}`
+              );
+            }
+          } else {
+            // Asset not found locally - clear the reference so character can be uploaded
+            character.icon_asset_id = null;
+          }
+        }
+      }
+
+      // 3c. Upload scenario icon assets - no scenario_id FK yet
+      for (const scenario of bundle.scenarios) {
+        if (scenario.icon_asset_id) {
+          const iconAsset = await this.loadAssetRepo.getAssetById(
+            new UniqueEntityID(scenario.icon_asset_id)
+          );
+          if (iconAsset.isSuccess) {
+            const uploadResult = await uploadAssetToSupabase(iconAsset.getValue());
+            if (uploadResult.isFailure) {
+              return Result.fail<ShareLinkResult>(
+                `Failed to upload scenario icon asset: ${uploadResult.getError()}`
+              );
+            }
+          } else {
+            // Asset not found locally - clear the reference so scenario can be uploaded
+            scenario.icon_asset_id = null;
+          }
+        }
+      }
+
+      // 4. Upload session (assets already exist, background_id/cover_id FKs are valid)
       const sessionUploadResult = await uploadSessionToCloud(bundle.session);
       if (sessionUploadResult.isFailure) {
         return Result.fail<ShareLinkResult>(sessionUploadResult.getError());
       }
 
-      // 4. Upload all characters (with asset ID references set)
+      // 5. Upload all characters (icon assets already exist)
       for (const character of bundle.characters) {
         const uploadResult = await uploadCharacterToCloud(character);
         if (uploadResult.isFailure) {
@@ -87,67 +165,13 @@ export class ExportSessionToCloud
         }
       }
 
-      // 5. Upload all scenarios (with asset ID references set)
+      // 6. Upload all scenarios (icon assets already exist)
       for (const scenario of bundle.scenarios) {
         const uploadResult = await uploadScenarioToCloud(scenario);
         if (uploadResult.isFailure) {
           return Result.fail<ShareLinkResult>(
             `Failed to upload scenario ${scenario.id}: ${uploadResult.getError()}`
           );
-        }
-      }
-
-      // 6. Now upload the actual assets with correct FKs
-      // 6a. Upload session assets (background, cover)
-      // Note: background_id is now the asset ID directly (resolved in PrepareSessionCloudData)
-      if (bundle.session.background_id) {
-        const backgroundAsset = await this.loadAssetRepo.getAssetById(
-          new UniqueEntityID(bundle.session.background_id)
-        );
-        if (backgroundAsset.isSuccess) {
-          await uploadAssetToSupabase(backgroundAsset.getValue(), {
-            sessionId: bundle.session.id,
-          });
-        }
-      }
-      if (bundle.session.cover_id) {
-        const coverAsset = await this.loadAssetRepo.getAssetById(
-          new UniqueEntityID(bundle.session.cover_id)
-        );
-        if (coverAsset.isSuccess) {
-          await uploadAssetToSupabase(coverAsset.getValue(), {
-            sessionId: bundle.session.id,
-          });
-        }
-      }
-
-      // 6b. Upload character icon assets
-      for (const character of bundle.characters) {
-        if (character.icon_asset_id) {
-          const iconAsset = await this.loadAssetRepo.getAssetById(
-            new UniqueEntityID(character.icon_asset_id)
-          );
-          if (iconAsset.isSuccess) {
-            await uploadAssetToSupabase(iconAsset.getValue(), {
-              characterId: character.id,
-              sessionId: character.session_id,
-            });
-          }
-        }
-      }
-
-      // 6c. Upload scenario icon assets
-      for (const scenario of bundle.scenarios) {
-        if (scenario.icon_asset_id) {
-          const iconAsset = await this.loadAssetRepo.getAssetById(
-            new UniqueEntityID(scenario.icon_asset_id)
-          );
-          if (iconAsset.isSuccess) {
-            await uploadAssetToSupabase(iconAsset.getValue(), {
-              scenarioId: scenario.id,
-              sessionId: scenario.session_id,
-            });
-          }
         }
       }
 

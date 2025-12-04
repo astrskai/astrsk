@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, ilike, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, isNull, or } from "drizzle-orm";
 
 import { Result } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
@@ -592,7 +592,7 @@ export class DrizzleCardRepo
       let orderByClause;
       switch (query.sort) {
         case SearchCardsSort.Latest:
-          orderByClause = [characters.created_at];
+          orderByClause = [desc(characters.created_at)];
           break;
         case SearchCardsSort.Oldest:
           orderByClause = [asc(characters.created_at)];
@@ -601,10 +601,10 @@ export class DrizzleCardRepo
           orderByClause = [asc(characters.title)];
           break;
         case SearchCardsSort.TitleZtoA:
-          orderByClause = [characters.title];
+          orderByClause = [desc(characters.title)];
           break;
         default:
-          orderByClause = [characters.created_at];
+          orderByClause = [desc(characters.created_at)];
           break;
       }
 
@@ -651,7 +651,7 @@ export class DrizzleCardRepo
       let orderByClause;
       switch (query.sort) {
         case SearchCardsSort.Latest:
-          orderByClause = [scenarios.created_at];
+          orderByClause = [desc(scenarios.created_at)];
           break;
         case SearchCardsSort.Oldest:
           orderByClause = [asc(scenarios.created_at)];
@@ -660,10 +660,10 @@ export class DrizzleCardRepo
           orderByClause = [asc(scenarios.title)];
           break;
         case SearchCardsSort.TitleZtoA:
-          orderByClause = [scenarios.title];
+          orderByClause = [desc(scenarios.title)];
           break;
         default:
-          orderByClause = [scenarios.created_at];
+          orderByClause = [desc(scenarios.created_at)];
           break;
       }
 

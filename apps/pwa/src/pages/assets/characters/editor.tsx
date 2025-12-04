@@ -12,6 +12,8 @@ import {
   Plus,
   Copy,
   Pencil,
+  Globe,
+  AlertTriangle,
 } from "lucide-react";
 import { Route } from "@/routes/_layout/assets/characters/{-$characterId}";
 
@@ -20,6 +22,8 @@ import {
   useUpdateCharacterCard,
   useCreateCharacterCard,
 } from "@/entities/character/api";
+import { CardService } from "@/app/services/card-service";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 import { Loading } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
@@ -39,6 +43,12 @@ interface LorebookEntryFormData {
   content: string;
 }
 
+interface FirstMessageFormData {
+  id: string;
+  name: string;
+  description: string;
+}
+
 interface CharacterFormData {
   // CardProps
   tags: string[];
@@ -55,6 +65,10 @@ interface CharacterFormData {
 
   // Lorebook
   lorebookEntries: LorebookEntryFormData[];
+
+  // 1:1 Session Config
+  scenario?: string;
+  firstMessages: FirstMessageFormData[];
 }
 
 // Constants
@@ -290,6 +304,108 @@ const LorebookItemContent = ({
   );
 };
 
+const FirstMessageItemTitle = ({
+  name,
+  onDelete,
+  onCopy,
+}: {
+  name: string;
+  onDelete?: (e: MouseEvent | KeyboardEvent) => void;
+  onCopy?: (e: MouseEvent | KeyboardEvent) => void;
+}) => {
+  const handleDelete = (e: MouseEvent | KeyboardEvent) => {
+    e.stopPropagation();
+    onDelete?.(e);
+  };
+
+  const handleCopy = (e: MouseEvent | KeyboardEvent) => {
+    e.stopPropagation();
+    onCopy?.(e);
+  };
+
+  const handleCopyKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onCopy?.(e);
+    }
+  };
+
+  const handleDeleteKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      e.stopPropagation();
+      onDelete?.(e);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <div className="max-w-[200px] truncate sm:max-w-sm md:max-w-full">
+        {name}
+      </div>
+      <div className="flex flex-shrink-0 items-center gap-2">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleCopy}
+          onKeyDown={handleCopyKeyDown}
+          className="cursor-pointer text-neutral-500 hover:text-neutral-400"
+          aria-label="Copy first message"
+        >
+          <Copy className="h-4 w-4" />
+        </div>
+
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleDelete}
+          onKeyDown={handleDeleteKeyDown}
+          className="cursor-pointer text-neutral-500 hover:text-neutral-400"
+          aria-label="Delete first message"
+        >
+          <Trash2 className="h-4 w-4" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const FirstMessageItemContent = ({
+  index,
+  register,
+  errors,
+}: {
+  index: number;
+  register: ReturnType<typeof useForm<CharacterFormData>>["register"];
+  errors: ReturnType<typeof useForm<CharacterFormData>>["formState"]["errors"];
+}) => {
+  return (
+    <div className="space-y-4">
+      <Input
+        {...register(`firstMessages.${index}.name`, {
+          required: "First message name is required",
+        })}
+        label="Name"
+        labelPosition="inner"
+        error={errors?.firstMessages?.[index]?.name?.message}
+        isRequired
+      />
+
+      <Textarea
+        {...register(`firstMessages.${index}.description`, {
+          required: "First message content is required",
+        })}
+        label="Content"
+        labelPosition="inner"
+        autoResize
+        error={errors?.firstMessages?.[index]?.description?.message}
+        isRequired
+      />
+    </div>
+  );
+};
+
 const CharacterEditorPage = () => {
   const navigate = useNavigate();
   const { characterId } = Route.useParams();
@@ -336,6 +452,8 @@ const CharacterEditorPage = () => {
           conceptualOrigin: "",
           iconAssetId: undefined,
           lorebookEntries: [],
+          scenario: "",
+          firstMessages: [],
         }
       : undefined,
   });
@@ -349,6 +467,16 @@ const CharacterEditorPage = () => {
     keyName: "_rhfId", // Use custom key name to avoid conflict with our 'id' field
   });
 
+  const {
+    fields: firstMessageFields,
+    remove: removeFirstMessage,
+    prepend: prependFirstMessage,
+  } = useFieldArray({
+    control,
+    name: "firstMessages",
+    keyName: "_rhfId",
+  });
+
   // Mutations
   const updateCharacterMutation = useUpdateCharacterCard(characterId ?? "");
   const createCharacterMutation = useCreateCharacterCard();
@@ -356,6 +484,42 @@ const CharacterEditorPage = () => {
   // Combined pending state
   const isSaving =
     updateCharacterMutation.isPending || createCharacterMutation.isPending;
+
+  // Loading state for copy action
+  const [isCopyingAsGlobal, setIsCopyingAsGlobal] = useState(false);
+
+  // Check if character is session-local (has sessionId)
+  const isSessionLocal = !isCreateMode && character?.props.sessionId != null;
+
+  // Handler for "Copy as Global Resource"
+  const handleCopyAsGlobal = useCallback(async () => {
+    if (!character || !characterId) return;
+
+    setIsCopyingAsGlobal(true);
+    try {
+      const result = await CardService.cloneCard.execute({
+        cardId: new UniqueEntityID(characterId),
+        // sessionId is NOT passed, so the cloned card will be global
+      });
+
+      if (result.isFailure) {
+        toastError("Failed to copy as global", {
+          description: result.getError(),
+        });
+        return;
+      }
+
+      toastSuccess("Copied as global resource!", {
+        description: `"${character.props.name}" is now available in your library.`,
+      });
+    } catch (error) {
+      toastError("Failed to copy as global", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsCopyingAsGlobal(false);
+    }
+  }, [character, characterId]);
 
   // Helper function to sort tags by TAG_DEFAULT order, then alphabetically for custom tags
   const sortTags = useCallback((tags: string[]) => {
@@ -424,6 +588,14 @@ const CharacterEditorPage = () => {
             recallRange: entry.recallRange || 2,
             content: entry.content || "",
           })) || [],
+        // 1:1 Session Config
+        scenario: character.props.scenario || "",
+        firstMessages:
+          character.props.firstMessages?.map((fm, idx) => ({
+            id: crypto.randomUUID(),
+            name: fm.name || `First Message ${idx + 1}`,
+            description: fm.description || "",
+          })) || [],
       });
     }
   }, [character, reset, sortTags]);
@@ -457,7 +629,8 @@ const CharacterEditorPage = () => {
   }, [previewImage]);
 
   const handleGoBack = () => {
-    navigate({ to: "/assets/characters" });
+    // Use browser's back button to go to previous page
+    window.history.back();
   };
 
   const handleUploadImage = () => {
@@ -542,10 +715,45 @@ const CharacterEditorPage = () => {
     }
   };
 
+  const handleAddFirstMessage = () => {
+    const newId = crypto.randomUUID();
+
+    prependFirstMessage({
+      id: newId,
+      name: "New First Message",
+      description: "",
+    });
+
+    setOpenAccordionId(newId);
+  };
+
+  const handleCopyFirstMessage = (index: number) => {
+    const firstMessages = getValues("firstMessages");
+    const entryToCopy = firstMessages[index];
+
+    if (entryToCopy) {
+      const newId = crypto.randomUUID();
+      const copiedEntry = {
+        ...entryToCopy,
+        id: newId,
+        name: `${entryToCopy.name} (Copy)`,
+      };
+
+      prependFirstMessage(copiedEntry);
+      setOpenAccordionId(newId);
+    }
+  };
+
   const onSubmit = async (data: CharacterFormData) => {
     // Convert empty strings to undefined for optional fields
     const normalizeField = (value: string | undefined) =>
       value === "" ? undefined : value;
+
+    // Convert firstMessages form data to domain format
+    const firstMessagesForDB = data.firstMessages.map((fm) => ({
+      name: fm.name,
+      description: fm.description,
+    }));
 
     // Build common mutation payload
     const payload = {
@@ -559,6 +767,9 @@ const CharacterEditorPage = () => {
       conceptualOrigin: normalizeField(data.conceptualOrigin),
       imageFile: imageFile ?? undefined,
       lorebookEntries: data.lorebookEntries,
+      // 1:1 Session Config
+      scenario: normalizeField(data.scenario),
+      firstMessages: firstMessagesForDB.length > 0 ? firstMessagesForDB : undefined,
     };
 
     try {
@@ -595,8 +806,17 @@ const CharacterEditorPage = () => {
         conceptualOrigin: normalizeField(data.conceptualOrigin),
       });
 
-      // Navigate back to characters list page
-      navigate({ to: "/assets/characters" });
+      // Navigate to view mode (or characters list for new characters)
+      if (isCreateMode) {
+        navigate({ to: "/assets/characters" });
+      } else {
+        // Go back to view mode
+        navigate({
+          to: "/assets/characters/{-$characterId}",
+          params: { characterId: characterId! },
+          search: { mode: "view" },
+        });
+      }
     } catch (error) {
       toastError("Failed to save character", {
         description:
@@ -652,6 +872,20 @@ const CharacterEditorPage = () => {
               </span>
               <span className="hidden sm:inline">Unsaved changes</span>
             </span>
+          )}
+          {/* Copy as Global - only shown for session-local characters */}
+          {isSessionLocal && (
+            <Button
+              variant="secondary"
+              icon={<Globe className="h-4 w-4" />}
+              type="button"
+              onClick={handleCopyAsGlobal}
+              disabled={isCopyingAsGlobal}
+              loading={isCopyingAsGlobal}
+              title="Save as character"
+            >
+              <span className="hidden sm:inline">Save as character</span>
+            </Button>
           )}
           <Button
             icon={<Save className="h-4 w-4" />}
@@ -897,6 +1131,114 @@ const CharacterEditorPage = () => {
               })}
             />
           )}
+        </section>
+
+        {/* 1:1 Session Config Section */}
+        <section className="pt-6">
+          <div className="relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/50">
+            {/* Amber accent bar on the left */}
+            <div className="absolute top-0 bottom-0 left-0 w-1 bg-amber-900/60" />
+
+            <div className="space-y-6 p-6">
+              {/* Header */}
+              <div className="flex flex-col gap-2 border-b border-neutral-800 pb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-neutral-200">
+                    1:1 Session Config
+                  </h2>
+                  <p className="mt-0.5 text-xs text-neutral-500">
+                    Custom behavior for direct messages only
+                  </p>
+                </div>
+
+                {/* Context Warning Banner */}
+                <div className="mt-2 flex items-start gap-3 rounded-lg border border-neutral-800/50 bg-black/40 p-3 text-sm text-neutral-400">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+                  <div>
+                    <span className="font-medium text-amber-500">
+                      Context Warning:
+                    </span>{" "}
+                    This data is only used for 1:1 chats. It is overridden
+                    (ignored) if the character is part of a Group or specific
+                    Session.
+                  </div>
+                </div>
+              </div>
+
+              {/* Scenario Input */}
+              <Textarea
+                {...register("scenario")}
+                label="Scenario (1:1 Only)"
+                labelPosition="inner"
+                autoResize
+                placeholder="Describe the setting, situation, or immediate context for the user interaction..."
+                className="[&_label]:text-amber-500/80"
+              />
+
+              {/* First Messages Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="rounded bg-neutral-900 px-1 text-xs text-amber-500/80">
+                    First Messages (1:1 Only)
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleAddFirstMessage}
+                    className="text-amber-600 hover:text-amber-500"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add message
+                  </Button>
+                </div>
+
+                {firstMessageFields.length === 0 ? (
+                  <button
+                    type="button"
+                    onClick={handleAddFirstMessage}
+                    className="group flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-neutral-800 bg-neutral-950 p-8 transition-all hover:border-neutral-700 hover:bg-neutral-900"
+                  >
+                    <p className="text-sm font-medium text-neutral-500 group-hover:text-neutral-400">
+                      No first messages yet
+                    </p>
+                    <p className="mt-1 text-xs text-neutral-600 group-hover:text-neutral-500">
+                      Click to add a starting message for 1:1 chats
+                    </p>
+                  </button>
+                ) : (
+                  <AccordionBase
+                    type="single"
+                    collapsible
+                    value={openAccordionId}
+                    onValueChange={(value) =>
+                      setOpenAccordionId(value as string)
+                    }
+                    items={firstMessageFields.map((field, index) => {
+                      const entry = field as unknown as FirstMessageFormData;
+                      return {
+                        title: (
+                          <FirstMessageItemTitle
+                            name={entry.name}
+                            onDelete={() => removeFirstMessage(index)}
+                            onCopy={() => handleCopyFirstMessage(index)}
+                          />
+                        ),
+                        content: (
+                          <FirstMessageItemContent
+                            index={index}
+                            register={register}
+                            errors={errors}
+                          />
+                        ),
+                        value: entry.id,
+                      };
+                    })}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
         </section>
       </div>
 

@@ -6,3 +6,4 @@ export * from "./textarea";
 export * from "./file-upload-button";
 export * from "./select";
 export * from "./password-input";
+export * from "./field-display";

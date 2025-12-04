@@ -104,3 +104,33 @@ export function parseAiSdkErrorMessage(error: unknown): {
     level,
   };
 }
+
+/**
+ * Parse structured output errors from AI SDK
+ * These occur when the model fails to return valid JSON for structured output
+ */
+export function parseStructuredOutputError(
+  error: unknown,
+  modelName?: string,
+): string {
+  if (!error || typeof error !== "object") {
+    return "Structured output failed";
+  }
+
+  const err = error as { name?: string; message?: string; text?: string };
+  const model = modelName || "the model";
+
+  switch (err.name) {
+    case "AI_JSONParseError":
+      return `Model returned invalid JSON. "${model}" may not support structured output. Try a different model.`;
+
+    case "AI_NoObjectGeneratedError":
+      return `Model failed to generate structured output. "${model}" may not support JSON mode. Try a different model.`;
+
+    case "AI_TypeValidationError":
+      return `Model returned data that doesn't match the expected schema. Try adjusting the schema or using a different model.`;
+
+    default:
+      return err.message || "Structured output failed";
+  }
+}

@@ -1,19 +1,14 @@
-import { ArrowLeft, Pencil, ChartNoAxesColumnIncreasing } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { Button } from "@/shared/ui/forms";
 
 interface SessionHeaderProps {
   title: string;
-  isOpenDataSidebar: boolean;
   onSettingsClick: () => void;
-  onDataSidebarClick: () => void;
 }
 
 export default function SessionHeader({
   title,
-  isOpenDataSidebar,
   onSettingsClick,
-  onDataSidebarClick,
 }: SessionHeaderProps) {
   const navigate = useNavigate();
 
@@ -48,26 +43,7 @@ export default function SessionHeader({
         </button>
       </header>
 
-      <div className="absolute top-4 left-4 z-30 hidden flex-col items-start gap-4 md:flex">
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate({ to: "/sessions" })}
-            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-border-subtle bg-surface text-fg-default transition-colors hover:bg-surface-raised hover:text-fg-default"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div className="text-lg font-semibold text-fg-default">{title}</div>
-        </div>
-
-        <Button
-          variant="secondary"
-          onClick={onDataSidebarClick}
-          icon={<ChartNoAxesColumnIncreasing className="h-5 w-5" />}
-        >
-          {isOpenDataSidebar && "Session data"}
-        </Button>
-      </div>
+      {/* Desktop: No back button or title - sidebar has its own collapse toggle */}
 
       <button
         type="button"

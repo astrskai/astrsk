@@ -8,7 +8,7 @@
  * - Hub redirect login - authenticate via Hub and redirect back
  */
 
-import { getSupabaseAuthClient, APP_SOURCE } from "./supabase-client";
+import { getSupabaseAuthClient, APP_SOURCE, HARPY_HUB_URL } from "./supabase-client";
 import { logger } from "./logger";
 
 export interface SignInCredentials {
@@ -198,11 +198,10 @@ export async function signInWithOAuth(
  * After Hub login, Hub will redirect back with tokens
  */
 export function redirectToHubLogin() {
-  const hubUrl = import.meta.env.VITE_HARPY_HUB_URL || "https://hub.harpychat.com";
   const returnUrl = `${window.location.origin}/auth/hub-callback`;
 
   // Redirect to Hub login with return URL
-  window.location.href = `${hubUrl}/login?redirectTo=${encodeURIComponent(returnUrl)}&source=astrsk`;
+  window.location.href = `${HARPY_HUB_URL}/login?redirectTo=${encodeURIComponent(returnUrl)}&source=astrsk`;
 }
 
 /**

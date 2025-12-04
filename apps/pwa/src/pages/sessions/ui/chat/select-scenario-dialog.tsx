@@ -3,7 +3,6 @@ import { Button } from "@/shared/ui";
 import { DialogBase } from "@/shared/ui/dialogs/base";
 import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import SelectableScenarioItem from "./selectable-scenario-item";
-import { Loader2 } from "lucide-react";
 
 interface SelectScenarioDialogProps {
   open: boolean;
@@ -95,16 +94,13 @@ const SelectScenarioDialog = ({
         </span>
       </Button>
       <Button
+        variant="accent"
         disabled={selectedScenarioIndex === null || isAddingScenario}
         onClick={handleAddScenario}
-        className="bg-button-background-primary inline-flex h-10 min-w-20 flex-col items-center justify-center gap-2.5 rounded-[20px] px-4 py-2.5"
+        loading={isAddingScenario}
+        className="min-w-20 rounded-[20px]"
       >
-        <span className="inline-flex items-center justify-start gap-2">
-          {isAddingScenario && <Loader2 className="h-4 w-4 animate-spin" />}
-          <span className="text-button-foreground-primary justify-center text-sm leading-tight font-semibold">
-            Add
-          </span>
-        </span>
+        Add
       </Button>
     </div>
   );

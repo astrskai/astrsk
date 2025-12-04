@@ -399,18 +399,29 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
               break;
             case SchemaFieldType.Integer:
             case SchemaFieldType.Number:
-              value = {
-                type: field.type,
-                minimum: field.exclusiveMinimum ? undefined : field.minimum,
-                exclusiveMinimum: field.exclusiveMinimum
-                  ? field.minimum
-                  : undefined,
-                maximum: field.exclusiveMaximum ? undefined : field.maximum,
-                exclusiveMaximum: field.exclusiveMaximum
-                  ? field.maximum
-                  : undefined,
-                multipleOf: field.multipleOf,
-              };
+              // Note: min/max constraints are not supported by all providers (e.g., Anthropic)
+              // Instead, we add them to the description for the AI to interpret
+              {
+                const constraints: string[] = [];
+                if (field.minimum !== undefined) {
+                  constraints.push(field.exclusiveMinimum ? `> ${field.minimum}` : `>= ${field.minimum}`);
+                }
+                if (field.maximum !== undefined) {
+                  constraints.push(field.exclusiveMaximum ? `< ${field.maximum}` : `<= ${field.maximum}`);
+                }
+                if (field.multipleOf !== undefined) {
+                  constraints.push(`multiple of ${field.multipleOf}`);
+                }
+                const constraintDesc = constraints.length > 0
+                  ? `[${constraints.join(", ")}]`
+                  : undefined;
+
+                value = {
+                  type: field.type,
+                  // Add constraints to description since schema constraints aren't universally supported
+                  ...(constraintDesc && { description: constraintDesc }),
+                };
+              }
               break;
             case SchemaFieldType.Boolean:
               return [field.name, { type: "boolean" }];
@@ -430,9 +441,13 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
               throw new Error(`Unsupported schema field type: ${field.type}`);
           }
           if (field.description) {
+            // Merge field description with any existing description (e.g., constraints)
+            const existingDesc = (value as { description?: string }).description;
             value = {
               ...value,
-              description: field.description,
+              description: existingDesc
+                ? `${field.description} ${existingDesc}`
+                : field.description,
             };
           }
           return [

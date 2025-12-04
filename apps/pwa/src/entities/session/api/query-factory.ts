@@ -2,14 +2,31 @@ import { queryClient } from "@/shared/api/query-client";
 import { SessionService } from "@/app/services/session-service";
 import { Session } from "@/entities/session/domain/session";
 import { SessionDrizzleMapper } from "@/entities/session/mappers/session-drizzle-mapper";
-import { SearchSessionsQuery } from "@/entities/session/repos";
+import { SearchSessionsQuery, SessionListItem } from "@/entities/session/repos";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { queryOptions } from "@tanstack/react-query";
 
 export const sessionQueries = {
   all: () => ["sessions"] as const,
 
-  // List queries - not cached, stores data in detail cache
+  // Lightweight list items for sidebar - only fetches id, title, messageCount, updatedAt
+  listItems: () => [...sessionQueries.all(), "listItems"] as const,
+  listItem: (query: { isPlaySession?: boolean; pageSize?: number }) =>
+    queryOptions({
+      queryKey: [...sessionQueries.listItems(), query],
+      queryFn: async (): Promise<SessionListItem[]> => {
+        const result = await SessionService.getSessionListItems.execute(query);
+        if (result.isFailure) {
+          console.error(result.getError());
+          return [];
+        }
+        return result.getValue();
+      },
+      gcTime: 1000 * 30, // 30 seconds cache
+      staleTime: 1000 * 10, // 10 seconds stale time
+    }),
+
+  // Full list queries - not cached, stores data in detail cache
   lists: () => [...sessionQueries.all(), "list"] as const,
   list: (query: SearchSessionsQuery) =>
     queryOptions({

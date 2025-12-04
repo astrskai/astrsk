@@ -45,6 +45,7 @@ export interface SessionWithCharacterMetadata {
 export interface SessionListFilters {
   keyword?: string;
   sort?: string;
+  isPlaySession?: boolean;
 }
 
 /**
@@ -71,11 +72,13 @@ export function useSessionsWithCharacterMetadata(filters: SessionListFilters = {
     sessionQueries.list(filters)
   );
 
-  // 2. Extract unique character IDs from all sessions
+  // 2. Extract unique character IDs from all sessions (only enabled characters)
   const uniqueCharacterIds = Array.from(
     new Set(
       sessions.flatMap((session) =>
-        session.characterCards.map((card) => card.id.toString())
+        session.characterCards
+          .filter((card) => card.enabled)
+          .map((card) => card.id.toString())
       )
     )
   );
@@ -104,10 +107,11 @@ export function useSessionsWithCharacterMetadata(filters: SessionListFilters = {
     }
   }
 
-  // 5. Enrich sessions with character metadata (without mutating cached Session objects)
+  // 5. Enrich sessions with character metadata (only enabled characters)
   const enrichedSessions: SessionWithCharacterMetadata[] = sessions.map((session) => ({
     session,
     characterAvatars: session.characterCards
+      .filter((card) => card.enabled)
       .map((card) => characterMetadataMap.get(card.id.toString()))
       .filter((metadata): metadata is CharacterMetadata => metadata !== undefined),
   }));

@@ -118,7 +118,7 @@ export function CharactersGrid({ characters }: CharactersGridProps) {
   return (
     <>
       {/* Characters Grid - Uses auto-fill with minmax to ensure stable card sizes */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
+      <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
         {characters
           .filter((character) => character.id !== undefined)
           .map((character) => {
