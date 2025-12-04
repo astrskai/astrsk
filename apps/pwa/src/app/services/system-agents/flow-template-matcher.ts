@@ -14,6 +14,7 @@ import { logger } from "@/shared/lib";
 
 /**
  * Available flow templates
+ * TODO: Re-enable other templates when workflow builder is more stable
  */
 export const FLOW_TEMPLATES = [
   {
@@ -21,36 +22,37 @@ export const FLOW_TEMPLATES = [
     filename: "Simple_vf.json",
     description: "Basic roleplay flow - simple conversation with one AI agent. Good for casual chat and basic roleplay.",
   },
-  {
-    name: "NSFW",
-    filename: "NSFW_vf.json",
-    description: "Adult roleplay with state tracking (arousal, clothing, posture, location). For mature/explicit content.",
-  },
-  {
-    name: "Romance",
-    filename: "Romance_vf.json",
-    description: "Romance/dating simulation with affection level tracking. For relationship and dating scenarios.",
-  },
-  {
-    name: "Fantasy",
-    filename: "Fantasy_vf.json",
-    description: "Fantasy RPG with HP, MP, status effects, and combat mechanics. For adventure/battle scenarios.",
-  },
-  {
-    name: "Dice of Fate",
-    filename: "Dice of Fate_vf.json",
-    description: "Dice-based TTRPG with stat checks (STR, DEX, CON, INT, WIS, CHA), skill rolls, and trial tokens. For D&D-style gameplay.",
-  },
-  {
-    name: "DM of Attraction",
-    filename: "DM of attraction_vf.json",
-    description: "Dating app/texting simulation with attraction tracking and compatibility assessment. For social media DM scenarios.",
-  },
-  {
-    name: "End of the World",
-    filename: "End of the world_vf.json",
-    description: "Post-apocalyptic survival with resource tracking. For disaster/survival scenarios.",
-  },
+  // TODO: Re-enable when workflow builder is more stable
+  // {
+  //   name: "NSFW",
+  //   filename: "NSFW_vf.json",
+  //   description: "Adult roleplay with state tracking (arousal, clothing, posture, location). For mature/explicit content.",
+  // },
+  // {
+  //   name: "Romance",
+  //   filename: "Romance_vf.json",
+  //   description: "Romance/dating simulation with affection level tracking. For relationship and dating scenarios.",
+  // },
+  // {
+  //   name: "Fantasy",
+  //   filename: "Fantasy_vf.json",
+  //   description: "Fantasy RPG with HP, MP, status effects, and combat mechanics. For adventure/battle scenarios.",
+  // },
+  // {
+  //   name: "Dice of Fate",
+  //   filename: "Dice of Fate_vf.json",
+  //   description: "Dice-based TTRPG with stat checks (STR, DEX, CON, INT, WIS, CHA), skill rolls, and trial tokens. For D&D-style gameplay.",
+  // },
+  // {
+  //   name: "DM of Attraction",
+  //   filename: "DM of attraction_vf.json",
+  //   description: "Dating app/texting simulation with attraction tracking and compatibility assessment. For social media DM scenarios.",
+  // },
+  // {
+  //   name: "End of the World",
+  //   filename: "End of the world_vf.json",
+  //   description: "Post-apocalyptic survival with resource tracking. For disaster/survival scenarios.",
+  // },
 ] as const;
 
 export type FlowTemplateName = typeof FLOW_TEMPLATES[number]["name"];

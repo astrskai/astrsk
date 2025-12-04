@@ -342,34 +342,31 @@ export function buildFixerSystemPrompt(context: WorkflowBuilderContext, state: W
     edgeList += `\n- \`${edge.source}\`${branch} → \`${edge.target}\``;
   });
 
-  return `You are a workflow fixer and reviewer. Your job is to FIRST EVALUATE the workflow structure, then fix any issues.
+  return `You are a workflow fixer and reviewer. The complete flow state is provided above.
 ${schemaRef}
 ${nodeList}
 ${edgeList}
 
-## PHASE 1: EVALUATE THE FLOW (REQUIRED FIRST)
-Before fixing anything, you MUST first understand the current flow by querying:
-1. **Query edges**: Use \`query_current_state\` with include=["edges"] to understand the execution flow
-2. **Query agents**: Use \`query_current_state\` with include=["agents"] to review agent prompts and outputs
-3. **Query data store values**: Use \`query_current_state\` with include=["dataStoreNodes"] to check field mappings
+## PROCESS (Optimized)
+**You already have the complete flow state above. Start with validation immediately.**
 
-This evaluation helps you understand:
-- Which paths exist from Start to End
-- What each agent does (system/user prompts, output fields)
-- How data flows through the data store fields
-- What conditions are checked by If nodes
+1. **VALIDATE FIRST**: Run \`validate_workflow\` with run_all=true
+   - If 0 errors → Run \`mock_render_workflow\` → If 0 errors → DONE!
+   - If errors found → proceed to step 2
 
-## PHASE 2: VALIDATE AND FIX
-After evaluating the flow structure:
-1. Run \`validate_workflow\` with run_all=true to find ALL structural errors
-2. Run \`mock_render_workflow\` to test all templates with mock values (catches Jinja/JS errors)
-3. Fix errors using the available tools:
+2. **QUERY ONLY IF NEEDED**: Use \`query_current_state\` only when you need details not shown above:
+   - Agent prompt content: include=["agents"]
+   - DataStore field mappings: include=["dataStoreNodes"]
+   - If node conditions: include=["ifNodes"]
+
+3. **FIX ERRORS**: Use available tools:
    - \`add_edges\` / \`remove_edges\` - fix edge connections
    - \`upsert_prompt_messages\` - fix agent prompts
    - \`upsert_output_fields\` - fix agent output schemas
    - \`update_data_store_node_fields\` - fix datastore field mappings
    - \`update_if_node\` - fix if node conditions
-4. Re-run both validation tools until 0 errors
+
+4. **RE-VALIDATE**: Run both \`validate_workflow\` and \`mock_render_workflow\` until 0 errors
 
 ## Rules:
 - [T] = template node (cannot delete, can configure prompts/outputs)
@@ -382,23 +379,16 @@ After evaluating the flow structure:
 - All agent nodes must have incoming edges (be reachable)
 - Output field names must be snake_case (lowercase, underscores)
 
-**Start with PHASE 1 evaluation, then proceed to PHASE 2 fixing until validate_workflow returns 0 errors.**`;
+**Start with validate_workflow immediately. Skip queries if validation passes.**`;
 }
 
 export function buildFixerUserPrompt(): string {
-  return `Follow the 2-phase process:
+  return `The complete flow state is in the system prompt. Start validation immediately:
 
-PHASE 1 - EVALUATE FIRST:
-1. Call query_current_state with include=["edges"] to understand execution paths
-2. Call query_current_state with include=["agents"] to review agent prompts and output fields
-3. Call query_current_state with include=["dataStoreNodes"] to check data store field mappings
+1. Run validate_workflow with run_all=true
+2. If 0 errors → Run mock_render_workflow → If 0 errors → You're DONE!
+3. If errors → Query only what you need to understand the issue, then fix it
+4. Repeat validation until 0 errors
 
-PHASE 2 - VALIDATE AND FIX:
-1. Run validate_workflow with run_all=true (structural validation)
-2. Run mock_render_workflow (template rendering validation with mock values)
-3. Fix ALL errors from both tools
-4. Repeat both validations until 0 errors
-
-DO NOT skip Phase 1 - understanding the flow structure is required before making fixes.
-DO NOT skip mock_render_workflow - it catches Jinja syntax and JavaScript expression errors.`;
+DO NOT query first - validate first and query only if needed to fix errors.`;
 }

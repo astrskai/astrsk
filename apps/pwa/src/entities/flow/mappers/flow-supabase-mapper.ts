@@ -177,7 +177,7 @@ export class FlowSupabaseMapper {
       summary,
       version,
       conceptual_origin,
-      is_public: false,
+      is_public: true,
       owner_id: null,
       created_at: flow.props.createdAt.toISOString(),
       updated_at: flow.props.updatedAt?.toISOString() || new Date().toISOString(),

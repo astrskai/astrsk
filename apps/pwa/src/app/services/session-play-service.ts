@@ -508,9 +508,11 @@ const makeSettings = ({ parameters }: { parameters: Map<string, any> }) => {
 const makeProviderOptions = ({
   parameters,
   apiSource,
+  modelId,
 }: {
   parameters: Map<string, any>;
   apiSource: ApiSource;
+  modelId?: string;
 }): Record<string, JSONValue> => {
   const options: Record<string, JSONValue> = {};
   for (const tuple of parameters) {
@@ -542,6 +544,12 @@ const makeProviderOptions = ({
       options[nameByApiSource] = paramValue;
     }
   }
+
+  // GLM models require thinking to be disabled for tool calling
+  if (modelId && modelId.toLowerCase().includes("glm")) {
+    options.thinking = { type: "disabled" } as unknown as JSONValue;
+  }
+
   return options;
 };
 
@@ -1387,6 +1395,7 @@ async function generateTextOutput({
   const providerOptions = makeProviderOptions({
     parameters: parameters,
     apiSource: apiConnection.source,
+    modelId: parsedModelId,
   });
   // Get the provider name for providerOptions (handle different model types)
   const modelProvider = typeof model === "object" && "provider" in model && typeof model.provider === "string"
@@ -1575,6 +1584,7 @@ async function generateStructuredOutput({
   const providerOptions = makeProviderOptions({
     parameters: parameters,
     apiSource: apiConnection.source,
+    modelId: parsedModelId,
   });
   // Get the provider name for providerOptions (handle different model types)
   const modelProvider = typeof model === "object" && "provider" in model && typeof model.provider === "string"
