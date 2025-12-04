@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
-import { BaseCard, CardActionToolbar, type CardAction } from '../Card';
+import {
+  BaseCard,
+  CardActionToolbar,
+  CardBadges,
+  CardMetadataContainer,
+  CardMetadataItem,
+  type CardAction,
+  type CardBadge,
+} from '../Card';
 
 export interface CharacterAvatar {
   /** Character name */
@@ -14,7 +22,7 @@ export interface SessionCardProps {
   title: string;
   /** Cover image URL */
   imageUrl?: string | null;
-  /** Number of messages in the session */
+  /** Number of messages in the session (used in default metadata) */
   messageCount?: number;
   /** Action buttons displayed on the card */
   actions?: CardAction[];
@@ -28,26 +36,46 @@ export interface SessionCardProps {
   characterAvatars?: CharacterAvatar[];
   /** Whether characters are loading */
   areCharactersLoading?: boolean;
-  /** Whether to show the type indicator badge */
-  showTypeIndicator?: boolean;
-  /** Custom content for the type indicator badge (icon and/or text) */
-  typeIndicator?: React.ReactNode;
+  /**
+   * Badges to display on the card (e.g., type indicator, private, owner).
+   */
+  badges?: CardBadge[];
+  /**
+   * Custom render function for the metadata section.
+   * When provided, replaces the default messageCount display.
+   * Use CardMetadataContainer and CardMetadataItem for consistent styling.
+   */
+  renderMetadata?: () => React.ReactNode;
+  /** Tags to display on the card */
+  tags?: string[];
+  /** Session summary/description */
+  summary?: string;
 }
 
 /**
  * Character Avatar Component (Internal)
  */
 function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
+  const [imageError, setImageError] = useState(false);
+
+  // Reset error state when avatarUrl changes
+  useEffect(() => {
+    setImageError(false);
+  }, [avatarUrl]);
+
+  const shouldShowImage = avatarUrl && !imageError;
+
   return (
     <div
       className='flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-900 bg-zinc-700'
       title={name}
     >
-      {avatarUrl ? (
+      {shouldShowImage ? (
         <img
           src={avatarUrl}
           alt={name}
           className='h-full w-full object-cover'
+          onError={() => setImageError(true)}
         />
       ) : (
         <span className='text-[10px] text-zinc-500'>
@@ -107,6 +135,10 @@ function MessageIcon({ className }: { className?: string }) {
  * />
  * ```
  */
+// Re-export for convenience
+export const MetadataContainer = CardMetadataContainer;
+export const MetadataItem = CardMetadataItem;
+
 export function SessionCard({
   title,
   imageUrl,
@@ -117,9 +149,23 @@ export function SessionCard({
   onClick,
   characterAvatars = [],
   areCharactersLoading = false,
-  showTypeIndicator = false,
-  typeIndicator,
+  badges = [],
+  renderMetadata,
+  tags = [],
+  summary,
 }: SessionCardProps) {
+  const [imageError, setImageError] = useState(false);
+
+  // Reset error state when imageUrl changes
+  useEffect(() => {
+    setImageError(false);
+  }, [imageUrl]);
+
+  // Show image if URL exists and no error
+  const shouldShowImage = imageUrl && !imageError;
+  // Show initial fallback when image fails to load (only if imageUrl was provided)
+  const shouldShowInitial = imageUrl && imageError;
+
   return (
     <BaseCard
       className={cn(
@@ -133,15 +179,26 @@ export function SessionCard({
       {/* Header Image Area */}
       <div className='relative h-48 overflow-hidden bg-zinc-800'>
         {/* Cover Image */}
-        {imageUrl ? (
+        {shouldShowImage ? (
           <>
             <img
               src={imageUrl}
               alt={title}
               className='absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90'
               loading='lazy'
+              onError={() => setImageError(true)}
             />
             <div className='absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent' />
+          </>
+        ) : shouldShowInitial ? (
+          <>
+            {/* Initial fallback when image fails to load */}
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <span className='text-6xl font-bold text-zinc-600'>
+                {title.charAt(0).toUpperCase() || '?'}
+              </span>
+            </div>
+            <div className='absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent' />
           </>
         ) : (
           <>
@@ -163,12 +220,17 @@ export function SessionCard({
         {/* Action Toolbar (Responsive) */}
         <CardActionToolbar actions={actions} />
 
-        {/* Type Badge */}
-        {showTypeIndicator && (
-          <div className='absolute top-3 left-3 z-10'>
-            <div className='flex items-center gap-1.5 rounded border border-white/10 bg-black/50 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md'>
-              {typeIndicator || 'SESSION'}
-            </div>
+        {/* Left Badges */}
+        {badges.some((b) => (b.position ?? 'left') === 'left') && (
+          <div className='absolute top-3 left-3 z-10 max-w-[45%]'>
+            <CardBadges badges={badges} position='left' />
+          </div>
+        )}
+
+        {/* Right Badges */}
+        {badges.some((b) => b.position === 'right') && (
+          <div className='absolute top-3 right-3 z-10 max-w-[45%]'>
+            <CardBadges badges={badges} position='right' />
           </div>
         )}
 
@@ -183,49 +245,81 @@ export function SessionCard({
       {/* Session Details */}
       <div className='flex flex-grow flex-col justify-between p-5'>
         <div className='space-y-3'>
-          {/* Message Count */}
-          {messageCount !== undefined && (
-            <div className='flex items-center justify-between border-b border-zinc-800 pb-2 text-sm'>
-              {messageCount === 0 ? (
-                <span className='text-zinc-400'>New session</span>
-              ) : (
-                <div className='flex items-center gap-2'>
-                  <MessageIcon className='h-4 w-4 text-zinc-500' />
-                  <span className='font-semibold text-zinc-300'>
-                    {messageCount.toLocaleString()}
-                  </span>
-                  <span className='text-zinc-400'>
-                    {messageCount === 1 ? 'Message' : 'Messages'}
-                  </span>
-                </div>
+          {/* Tags */}
+          {tags.length > 0 && (
+            <div className='flex flex-wrap gap-2'>
+              {tags.slice(0, 3).map((tag, index) => (
+                <span
+                  key={`${tag}-${index}`}
+                  className='rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300'
+                >
+                  {tag}
+                </span>
+              ))}
+              {tags.length > 3 && (
+                <span className='rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300'>
+                  +{tags.length - 3}
+                </span>
               )}
             </div>
           )}
 
-          {/* Character Avatars */}
-          {areCharactersLoading ? (
-            <div className='flex -space-x-2 pt-1'>
-              <CharacterAvatarSkeleton />
-              <CharacterAvatarSkeleton />
-              <CharacterAvatarSkeleton />
-            </div>
+          {/* Summary */}
+          {summary && (
+            <p className='line-clamp-2 text-xs leading-relaxed text-zinc-400'>
+              {summary}
+            </p>
+          )}
+
+          {/* Metadata */}
+          {renderMetadata ? (
+            renderMetadata()
           ) : (
-            characterAvatars.length > 0 && (
-              <div className='flex -space-x-2 pt-1'>
-                {characterAvatars.slice(0, 3).map((avatar, idx) => (
-                  <CharacterAvatarImage
-                    key={`${avatar.name}-${idx}`}
-                    name={avatar.name}
-                    avatarUrl={avatar.avatarUrl}
-                  />
-                ))}
-                {characterAvatars.length > 3 && (
-                  <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-500'>
-                    +{characterAvatars.length - 3}
+            messageCount !== undefined && (
+              <div className='flex items-center justify-between text-sm'>
+                {messageCount === 0 ? (
+                  <span className='text-zinc-400'>New session</span>
+                ) : (
+                  <div className='flex items-center gap-2'>
+                    <MessageIcon className='h-4 w-4 text-zinc-500' />
+                    <span className='font-semibold text-zinc-300'>
+                      {messageCount.toLocaleString()}
+                    </span>
+                    <span className='text-zinc-400'>
+                      {messageCount === 1 ? 'Message' : 'Messages'}
+                    </span>
                   </div>
                 )}
               </div>
             )
+          )}
+
+          {/* Character Avatars */}
+          {(areCharactersLoading || characterAvatars.length > 0) && (
+            <div className='border-t border-zinc-800 pt-3'>
+              {areCharactersLoading ? (
+                <div className='flex -space-x-2'>
+                  <CharacterAvatarSkeleton />
+                  <CharacterAvatarSkeleton />
+                  <CharacterAvatarSkeleton />
+                </div>
+              ) : (
+                <div className='flex -space-x-2'>
+                  {characterAvatars.slice(0, 3).map((avatar, idx) => (
+                    <CharacterAvatarImage
+                      key={`${avatar.name}-${idx}`}
+                      name={avatar.name}
+                      avatarUrl={avatar.avatarUrl}
+                    />
+                  ))}
+                  {characterAvatars.length > 3 && (
+                    <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-500'>
+                      +{characterAvatars.length - 3}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -233,4 +327,4 @@ export function SessionCard({
   );
 }
 
-export type { CardAction };
+export type { CardAction, CardBadge };

@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
-import { BaseCard, CardActionToolbar, type CardAction } from '../Card';
+import {
+  BaseCard,
+  CardActionToolbar,
+  CardBadges,
+  CardMetadataContainer,
+  CardMetadataItem,
+  type CardAction,
+  type CardBadge,
+} from '../Card';
 
 export interface CharacterCardProps {
   /** Character name */
@@ -11,9 +19,9 @@ export interface CharacterCardProps {
   summary?: string;
   /** Character tags */
   tags: string[];
-  /** Token count for the character */
+  /** Token count for the character (used in default metadata) */
   tokenCount?: number;
-  /** Last updated timestamp */
+  /** Last updated timestamp (used in default metadata) */
   updatedAt?: string;
   /** Action buttons displayed on the card */
   actions?: CardAction[];
@@ -23,33 +31,26 @@ export interface CharacterCardProps {
   isDisabled?: boolean;
   /** Click handler for the card */
   onClick?: () => void;
-  /** Whether to show the type indicator badge */
-  showTypeIndicator?: boolean;
-  /** Custom content for the type indicator badge (icon and/or text) */
-  typeIndicator?: React.ReactNode;
+  /**
+   * Badges to display on the card (e.g., type indicator, private, owner).
+   */
+  badges?: CardBadge[];
   /** Placeholder image URL when imageUrl is not provided */
   placeholderImageUrl?: string;
+  /**
+   * Custom render function for the metadata section.
+   * When provided, replaces the default tokenCount/updatedAt display.
+   * Use CardMetadataContainer and CardMetadataItem for consistent styling.
+   */
+  renderMetadata?: () => React.ReactNode;
+  /** Text to display when summary is empty. Defaults to "No summary". Set to empty string to hide. */
+  emptySummaryText?: string;
 }
 
-/**
- * CharacterCard Component
- *
- * A card component for displaying character information including
- * image, name, tags, summary, and metadata.
- *
- * @example
- * ```tsx
- * <CharacterCard
- *   name="Alice"
- *   imageUrl="/characters/alice.png"
- *   summary="A curious girl who fell into Wonderland"
- *   tags={["fantasy", "adventure"]}
- *   tokenCount={1500}
- *   updatedAt="2 days ago"
- *   onClick={() => console.log('clicked')}
- * />
- * ```
- */
+// Re-export for backward compatibility
+export const MetadataContainer = CardMetadataContainer;
+export const MetadataItem = CardMetadataItem;
+
 export function CharacterCard({
   name,
   imageUrl,
@@ -61,11 +62,23 @@ export function CharacterCard({
   actions = [],
   isDisabled = false,
   onClick,
-  showTypeIndicator = false,
-  typeIndicator,
+  badges = [],
   placeholderImageUrl,
+  renderMetadata,
+  emptySummaryText = 'No summary',
 }: CharacterCardProps) {
-  const displayImageUrl = imageUrl || placeholderImageUrl;
+  const [imageError, setImageError] = useState(false);
+
+  // Reset error state when imageUrl changes
+  useEffect(() => {
+    setImageError(false);
+  }, [imageUrl, placeholderImageUrl]);
+
+  // Show image if URL exists and no error
+  const shouldShowImage = (imageUrl || placeholderImageUrl) && !imageError;
+  // Show initial fallback when no image URL or image fails to load
+  const shouldShowInitial = !shouldShowImage;
+
   return (
     <BaseCard
       className={cn('min-h-[380px]', className)}
@@ -74,25 +87,38 @@ export function CharacterCard({
     >
       {/* Image Area - Portrait ratio */}
       <div className="relative h-64 overflow-hidden bg-zinc-800">
-        {displayImageUrl && (
+        {shouldShowImage && (
           <img
-            src={displayImageUrl}
+            src={imageUrl || placeholderImageUrl}
             alt={name}
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
+            onError={() => setImageError(true)}
           />
+        )}
+        {shouldShowInitial && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-6xl font-bold text-zinc-600">
+              {name.charAt(0).toUpperCase() || '?'}
+            </span>
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-90" />
 
         {/* Action Toolbar (Responsive) */}
         <CardActionToolbar actions={actions} />
 
-        {/* Type Badge */}
-        {showTypeIndicator && (
-          <div className="absolute top-3 left-3 z-10">
-            <div className="flex items-center gap-1.5 rounded border border-white/10 bg-black/50 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
-              {typeIndicator || 'CHARACTER'}
-            </div>
+        {/* Left Badges */}
+        {badges.some((b) => (b.position ?? 'left') === 'left') && (
+          <div className="absolute top-3 left-3 z-10 max-w-[45%]">
+            <CardBadges badges={badges} position="left" />
+          </div>
+        )}
+
+        {/* Right Badges */}
+        {badges.some((b) => b.position === 'right') && (
+          <div className="absolute top-3 right-3 z-10 max-w-[45%]">
+            <CardBadges badges={badges} position="right" />
           </div>
         )}
       </div>
@@ -126,22 +152,24 @@ export function CharacterCard({
           )}
         </div>
 
-        <p className="mb-4 line-clamp-3 flex-grow text-xs leading-relaxed break-words text-zinc-400">
-          {summary || 'No summary'}
-        </p>
+        {(summary || emptySummaryText) && (
+          <p className="mb-4 line-clamp-3 flex-grow text-xs leading-relaxed break-words text-zinc-400">
+            {summary || emptySummaryText}
+          </p>
+        )}
 
-        {/* Stats */}
-        <div className="mt-auto flex items-center justify-between border-t border-zinc-800 pt-3 text-xs text-zinc-500">
-          <div className="flex items-center gap-1">{tokenCount} Tokens</div>
-          {updatedAt && (
-            <div className="flex items-center gap-1">
-              {updatedAt}
-            </div>
-          )}
-        </div>
+        {/* Metadata */}
+        {renderMetadata ? (
+          renderMetadata()
+        ) : (
+          <CardMetadataContainer>
+            <CardMetadataItem>{tokenCount} Tokens</CardMetadataItem>
+            {updatedAt && <CardMetadataItem>{updatedAt}</CardMetadataItem>}
+          </CardMetadataContainer>
+        )}
       </div>
     </BaseCard>
   );
 }
 
-export type { CardAction };
+export type { CardAction, CardBadge };

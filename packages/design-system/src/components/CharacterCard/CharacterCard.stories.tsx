@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Copy, Download, Edit, Trash2 } from 'lucide-react';
-import { CharacterCard } from './CharacterCard';
+import { Copy, Download, Edit, Trash2, Heart, MessageSquare, Clock, Layers, Lock, User } from 'lucide-react';
+import { CharacterCard, MetadataContainer, MetadataItem } from './CharacterCard';
+import { CharacterCardSkeleton } from './CharacterCardSkeleton';
 
 const meta = {
   title: 'Content/CharacterCard',
@@ -38,9 +39,9 @@ const meta = {
       control: 'boolean',
       description: 'Whether the card is disabled',
     },
-    showTypeIndicator: {
-      control: 'boolean',
-      description: 'Whether to show the CHARACTER badge',
+    badges: {
+      control: 'object',
+      description: 'Badges to display on the card',
     },
     placeholderImageUrl: {
       control: 'text',
@@ -84,11 +85,59 @@ export const Default: Story = {
   },
 };
 
-// With type indicator badge
-export const WithTypeIndicator: Story = {
+// With badges
+export const WithBadges: Story = {
   args: {
     ...Default.args,
-    showTypeIndicator: true,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} /> },
+    ],
+  },
+};
+
+// With multiple badges
+export const WithMultipleBadges: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} /> },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} /> },
+    ],
+  },
+};
+
+// With all badge variants
+export const WithAllBadgeVariants: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} /> },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} /> },
+      { label: 'Mine', variant: 'owner', icon: <User size={12} /> },
+    ],
+  },
+};
+
+// With badges on both sides (left and right)
+export const WithBadgesLeftAndRight: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
+  },
+};
+
+// With multiple badges on each side
+export const WithMultipleBadgesEachSide: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Mine', variant: 'owner', icon: <User size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
   },
 };
 
@@ -112,6 +161,18 @@ export const WithPlaceholder: Story = {
     tokenCount: 0,
     updatedAt: 'Just now',
     placeholderImageUrl: SAMPLE_PLACEHOLDER,
+  },
+};
+
+// Image load error (shows initial fallback)
+export const ImageError: Story = {
+  args: {
+    name: 'Alice Wonderland',
+    imageUrl: 'https://invalid-url-that-will-404.com/image.png',
+    summary: 'This character has an invalid image URL, showing the initial fallback.',
+    tags: ['Error', 'Fallback'],
+    tokenCount: 1000,
+    updatedAt: 'Just now',
   },
 };
 
@@ -228,7 +289,7 @@ export const GridLayout: Story = {
         tags={['Kids', 'Comedy']}
         tokenCount={890}
         updatedAt="1 week ago"
-        showTypeIndicator
+        badges={[{ label: 'CHARACTER', icon: <Layers size={12} /> }]}
       />
       <CharacterCard
         name="Charlie Detective"
@@ -240,6 +301,63 @@ export const GridLayout: Story = {
       />
     </>
   ),
+};
+
+// Custom metadata with renderMetadata
+export const CustomMetadata: Story = {
+  args: {
+    name: 'Popular Character',
+    imageUrl: SAMPLE_IMAGE,
+    summary: 'A character with custom metadata using renderMetadata prop.',
+    tags: ['Popular', 'Trending'],
+    renderMetadata: () => (
+      <MetadataContainer>
+        <MetadataItem icon={<Heart className="size-3" />}>2.5k likes</MetadataItem>
+        <MetadataItem icon={<MessageSquare className="size-3" />}>128 chats</MetadataItem>
+      </MetadataContainer>
+    ),
+  },
+};
+
+// Custom metadata with icons
+export const MetadataWithIcons: Story = {
+  args: {
+    name: 'Active Character',
+    imageUrl: SAMPLE_IMAGE_2,
+    summary: 'Demonstrating metadata items with icons for better visual clarity.',
+    tags: ['Active'],
+    renderMetadata: () => (
+      <MetadataContainer>
+        <MetadataItem icon={<Clock className="size-3" />}>Last active: 2h ago</MetadataItem>
+      </MetadataContainer>
+    ),
+  },
+};
+
+// Fully custom metadata layout
+export const FullyCustomMetadata: Story = {
+  args: {
+    name: 'Custom Layout Character',
+    imageUrl: SAMPLE_IMAGE_3,
+    summary: 'When you need complete control over metadata layout.',
+    tags: ['Custom'],
+    renderMetadata: () => (
+      <div className="mt-auto grid grid-cols-3 gap-2 border-t border-zinc-800 pt-3 text-xs text-zinc-500">
+        <div className="text-center">
+          <div className="font-semibold text-white">1.2k</div>
+          <div>Likes</div>
+        </div>
+        <div className="text-center">
+          <div className="font-semibold text-white">89</div>
+          <div>Chats</div>
+        </div>
+        <div className="text-center">
+          <div className="font-semibold text-white">4.8</div>
+          <div>Rating</div>
+        </div>
+      </div>
+    ),
+  },
 };
 
 // All states overview
@@ -301,7 +419,7 @@ export const AllStates: Story = {
             tags={['Fantasy']}
             tokenCount={500}
             updatedAt="5 hours ago"
-            showTypeIndicator
+            badges={[{ label: 'CHARACTER', icon: <Layers size={12} /> }]}
           />
         </div>
       </div>
@@ -326,6 +444,48 @@ export const AllStates: Story = {
           />
         </div>
       </div>
+    </>
+  ),
+};
+
+// Skeleton loading state
+export const Skeleton: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '280px' }}>
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => <CharacterCardSkeleton />,
+};
+
+// Skeleton in grid layout
+export const SkeletonGrid: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 280px)',
+          gap: '24px',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => (
+    <>
+      <CharacterCardSkeleton />
+      <CharacterCardSkeleton />
+      <CharacterCardSkeleton />
     </>
   ),
 };
