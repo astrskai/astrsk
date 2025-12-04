@@ -93,7 +93,9 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
       },
     });
     if (cardOrError.isFailure) {
-      throw new Error(cardOrError.getError());
+      // Skip missing card gracefully
+      console.warn(`[EXPORT] Skipping missing card: ${cardId.toString()}`);
+      return;
     }
     const cardFile = cardOrError.getValue();
 
@@ -117,21 +119,27 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
     // Get background
     const backgroundOrError = await this.getBackground.execute(backgroundId);
     if (backgroundOrError.isFailure) {
-      throw new Error(backgroundOrError.getError());
+      // Skip missing background gracefully
+      console.warn(`[EXPORT] Skipping missing background: ${backgroundId.toString()}`);
+      return;
     }
     const background = backgroundOrError.getValue();
 
     // Get background asset
     const assetOrError = await this.getAsset.execute(background.assetId);
     if (assetOrError.isFailure) {
-      throw new Error(assetOrError.getError());
+      // Skip missing asset gracefully
+      console.warn(`[EXPORT] Skipping missing background asset: ${background.assetId.toString()}`);
+      return;
     }
     const asset = assetOrError.getValue();
 
     // Get asset file
     const assetFile = await file(asset.filePath).getOriginFile();
     if (!assetFile) {
-      throw new Error("Background image file not found");
+      // Skip missing file gracefully
+      console.warn(`[EXPORT] Skipping missing background file: ${asset.filePath}`);
+      return;
     }
 
     // Add background to zip
@@ -149,14 +157,18 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
     // Get cover asset directly (coverId is already an asset ID)
     const assetOrError = await this.getAsset.execute(coverId);
     if (assetOrError.isFailure) {
-      throw new Error(assetOrError.getError());
+      // Skip missing cover asset gracefully
+      console.warn(`[EXPORT] Skipping missing cover asset: ${coverId.toString()}`);
+      return;
     }
     const asset = assetOrError.getValue();
 
     // Get asset file
     const assetFile = await file(asset.filePath).getOriginFile();
     if (!assetFile) {
-      throw new Error("Cover image file not found");
+      // Skip missing file gracefully
+      console.warn(`[EXPORT] Skipping missing cover file: ${asset.filePath}`);
+      return;
     }
 
     // Add cover to zip

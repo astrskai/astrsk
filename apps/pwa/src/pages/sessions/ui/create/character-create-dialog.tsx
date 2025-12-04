@@ -114,27 +114,25 @@ const LorebookItemTitle = ({
       </div>
       <div className="flex flex-shrink-0 items-center gap-2">
         {onCopy && (
-          <div
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             onClick={handleCopy}
             onKeyDown={handleCopyKeyDown}
             className="cursor-pointer text-neutral-500 hover:text-neutral-400"
             aria-label="Copy lorebook entry"
           >
             <Copy className="h-4 w-4" />
-          </div>
+          </button>
         )}
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           onClick={handleDelete}
           onKeyDown={handleDeleteKeyDown}
           className="cursor-pointer text-neutral-500 hover:text-neutral-400"
           aria-label="Delete lorebook entry"
         >
           <Trash2 className="h-4 w-4" />
-        </div>
+        </button>
       </div>
     </div>
   );
@@ -529,13 +527,15 @@ export function CharacterCreateDialog({
               <div className="rounded-xl border border-dashed border-neutral-700 bg-neutral-900/50 p-6 text-center">
                 <BookOpen size={28} className="mx-auto mb-2 text-neutral-600" />
                 <p className="text-xs text-neutral-500">No lorebook entries yet</p>
-                <button
+                <Button
                   type="button"
+                  variant="link"
+                  size="sm"
                   onClick={handleAddLorebook}
-                  className="mt-2 text-xs font-bold text-brand-400 hover:text-brand-300"
+                  className="mt-2"
                 >
                   Add your first entry
-                </button>
+                </Button>
               </div>
             ) : (
               <AccordionBase

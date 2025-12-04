@@ -41,13 +41,14 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { useQuery } from "@tanstack/react-query";
 import { useFlow } from "@/shared/hooks/use-flow";
 import { Loading, PopoverBase, DropdownMenuBase, Switch } from "@/shared/ui";
+import { Button } from "@/shared/ui/forms";
 import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
 import { DialogBase } from "@/shared/ui/dialogs/base";
 import { useCard } from "@/shared/hooks/use-card";
 import { UniqueEntityID } from "@/shared/domain";
 import MessageStyling from "./settings/message-styling";
 import BackgroundGrid from "./settings/background-grid";
-import { AutoReply } from "@/shared/stores/session-store";
+import { AutoReply, useSessionUIStore } from "@/shared/stores/session-store";
 
 interface SessionSettingsSidebarProps {
   session: Session;
@@ -136,6 +137,7 @@ const SessionSettingsSidebar = ({
   const saveSessionMutation = useSaveSession();
   const deleteSessionMutation = useDeleteSession();
   const cloneSessionMutation = useCloneSession();
+  const skipScenarioDialog = useSessionUIStore.use.skipScenarioDialog();
   const [isBackgroundDialogOpen, setIsBackgroundDialogOpen] =
     useState<boolean>(false);
   const [isBackgroundPopoverOpen, setIsBackgroundPopoverOpen] =
@@ -446,6 +448,9 @@ const SessionSettingsSidebar = ({
       clonedSession.update({ isPlaySession: false });
       await saveSessionMutation.mutateAsync({ session: clonedSession });
 
+      // Skip the first message dialog for the new session (user already saw it)
+      skipScenarioDialog(clonedSession.id.toString());
+
       toastSuccess("Saved as preset successfully");
 
       // Navigate to the cloned session
@@ -454,11 +459,11 @@ const SessionSettingsSidebar = ({
         params: { sessionId: clonedSession.id.toString() },
       });
     } catch (error) {
-      toastError("Failed to save as preset", {
+      toastError("Failed to save as session", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [session.id, cloneSessionMutation, saveSessionMutation, navigate]);
+  }, [session.id, cloneSessionMutation, saveSessionMutation, skipScenarioDialog, navigate]);
 
   const coverImageInputId = useId();
 
@@ -532,7 +537,7 @@ const SessionSettingsSidebar = ({
   return (
     <aside
       className={cn(
-        "bg-surface fixed top-0 right-0 z-30 h-dvh max-w-dvw overflow-y-auto md:w-96",
+        "bg-surface fixed top-0 right-0 z-30 flex h-dvh max-w-dvw flex-col md:w-96",
         "transition-transform duration-300 ease-in-out",
         "shadow-[-8px_0_24px_-4px_rgba(0,0,0,0.5)]",
         isOpen ? "translate-x-0" : "translate-x-full",
@@ -609,7 +614,7 @@ const SessionSettingsSidebar = ({
           }
           items={[
             {
-              label: "Save as preset",
+              label: "Save as session",
               icon: <Save className="h-4 w-4" />,
               onClick: handleSaveAsPreset,
             },
@@ -635,7 +640,7 @@ const SessionSettingsSidebar = ({
 
       </div>
 
-      <div className="space-y-4 p-4 [&>section]:flex [&>section]:flex-col [&>section]:gap-2">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4 [&>section]:flex [&>section]:flex-col [&>section]:gap-2">
         <section>
           <h3 className="font-semibold">AI Characters</h3>
           <div className="space-y-2">
@@ -653,6 +658,7 @@ const SessionSettingsSidebar = ({
                       navigate({
                         to: "/assets/characters/{-$characterId}",
                         params: { characterId: card.id.toString() },
+                        search: { mode: "edit" },
                       });
                     }}
                     onToggleActive={() => handleToggleCharacterActive(card.id)}
@@ -713,6 +719,7 @@ const SessionSettingsSidebar = ({
                           characterId:
                             session.userCharacterCardId?.toString() ?? "",
                         },
+                        search: { mode: "edit" },
                       });
                     }}
                     onToggleActive={() => handleToggleCharacterActive(session.userCharacterCardId!)}
@@ -949,16 +956,33 @@ const SessionSettingsSidebar = ({
           />
         </section>
 
-        <section className="pt-4">
-          <button
+        {/* Save as session - Mobile only (inside sections) */}
+        <section className="md:hidden!">
+          <Button
             type="button"
+            variant="default"
+            size="lg"
+            className="w-full"
             onClick={handleSaveAsPreset}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-600"
           >
             <Save className="h-5 w-5" />
-            Save as preset
-          </button>
+            Save as session
+          </Button>
         </section>
+      </div>
+
+      {/* Save as session - Desktop only (footer) */}
+      <div className="mt-auto hidden p-4 pt-0 md:block">
+        <Button
+          type="button"
+          variant="default"
+          size="lg"
+          className="w-full"
+          onClick={handleSaveAsPreset}
+        >
+          <Save className="h-5 w-5" />
+          Save as session
+        </Button>
       </div>
     </aside>
   );

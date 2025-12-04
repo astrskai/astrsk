@@ -629,7 +629,8 @@ const CharacterEditorPage = () => {
   }, [previewImage]);
 
   const handleGoBack = () => {
-    navigate({ to: "/assets/characters" });
+    // Use browser's back button to go to previous page
+    window.history.back();
   };
 
   const handleUploadImage = () => {
@@ -881,9 +882,9 @@ const CharacterEditorPage = () => {
               onClick={handleCopyAsGlobal}
               disabled={isCopyingAsGlobal}
               loading={isCopyingAsGlobal}
-              title="Copy as Global Resource"
+              title="Save as character"
             >
-              <span className="hidden sm:inline">Copy as Global</span>
+              <span className="hidden sm:inline">Save as character</span>
             </Button>
           )}
           <Button

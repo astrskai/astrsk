@@ -53,6 +53,7 @@ const ChatMessage = ({
   const [editedContent, setEditedContent] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isShowDataStore, setIsShowDataStore] = useState<boolean>(false);
+  const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
 
   const [card] = useCard<Card>(message?.characterCardId);
   const [cardImageUrl] = useAsset(card?.props.iconAssetId);
@@ -87,6 +88,11 @@ const ChatMessage = ({
 
   const handleShowDataStore = useCallback(() => {
     setIsShowDataStore((prev) => !prev);
+  }, []);
+
+  // Toggle actions visibility on mobile tap
+  const handleMessageClick = useCallback(() => {
+    setIsActionsExpanded((prev) => !prev);
   }, []);
 
   // Select option
@@ -204,6 +210,7 @@ const ChatMessage = ({
                   : (translation ?? content ?? "")
               }
               className="w-full"
+              onClick={handleMessageClick}
             >
               {isEditing && !isStreaming && (
                 <TextareaAutosize
@@ -252,6 +259,7 @@ const ChatMessage = ({
                   ? chatStyles?.user?.chatBubble?.backgroundColor || "#f9fafb"
                   : chatStyles?.ai?.chatBubble?.backgroundColor || "#1f2937",
               }}
+              onClick={handleMessageClick}
             >
               {!isStreaming ? (
                 isEditing ? (
@@ -352,6 +360,7 @@ const ChatMessage = ({
                 sortedDataStoreFields={sortedDataStoreFields}
                 selectedOptionIndex={message.selectedOptionIndex}
                 totalOptions={message.options.length}
+                isExpanded={isActionsExpanded}
                 onEdit={handleEdit}
                 onEditDone={handleEditDone}
                 onEditCancel={handleEditCancel}

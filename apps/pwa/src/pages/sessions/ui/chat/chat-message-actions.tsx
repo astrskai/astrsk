@@ -21,6 +21,7 @@ interface ChatMessageActionsProps {
   sortedDataStoreFields?: DataStoreSavedField[];
   selectedOptionIndex: number;
   totalOptions: number;
+  isExpanded?: boolean;
   onEdit: () => void;
   onEditDone: () => void;
   onEditCancel: () => void;
@@ -42,6 +43,7 @@ const ChatMessageActions = ({
   sortedDataStoreFields,
   selectedOptionIndex,
   totalOptions,
+  isExpanded = false,
   onEdit,
   onEditDone,
   onEditCancel,
@@ -50,8 +52,8 @@ const ChatMessageActions = ({
   onSelectOption,
   onRegenerate,
 }: ChatMessageActionsProps) => {
-  // Show edit mode buttons always, other buttons on hover
-  const shouldAlwaysShow = isEditing;
+  // Show edit mode buttons always, or when expanded (mobile tap), other buttons on hover
+  const shouldAlwaysShow = isEditing || isExpanded;
 
   const buttonVariants = isUser
     ? "hover:bg-fg-muted/80"

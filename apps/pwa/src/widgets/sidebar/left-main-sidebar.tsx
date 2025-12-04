@@ -8,6 +8,7 @@ import {
   X,
   LogOut,
   LogIn,
+  Trash2,
 } from "lucide-react";
 import { IconSessions, AstrskLogo } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib";
@@ -16,12 +17,13 @@ import { useAuth } from "@/shared/hooks/use-auth";
 import { useQuery } from "convex/react";
 import { useQuery as useTanstackQuery } from "@tanstack/react-query";
 import { api } from "@/convex";
-import { sessionQueries } from "@/entities/session/api/query-factory";
+import { sessionQueries, useDeleteSession } from "@/entities/session/api";
+import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 // --- Navigation Data ---
 const NAVIGATION_CATEGORIES = [
   {
-    title: "", // No section title
+    title: "Playable assets", // No section title
     items: [
       {
         icon: IconSessions,
@@ -115,7 +117,7 @@ const NavItem = ({
   );
 };
 
-// --- Play Session NavItem Component (with count/date badge) ---
+// --- Play Session NavItem Component (with count/date badge and delete button) ---
 const PlaySessionNavItem = ({
   label,
   path,
@@ -124,6 +126,7 @@ const PlaySessionNavItem = ({
   onClick,
   count,
   updatedAt,
+  onDelete,
 }: {
   label: string;
   path: string;
@@ -132,6 +135,7 @@ const PlaySessionNavItem = ({
   onClick?: () => void;
   count?: number;
   updatedAt?: Date;
+  onDelete?: () => void;
 }) => {
   // Don't render anything when collapsed (no icon to show)
   if (isCollapsed) {
@@ -155,6 +159,12 @@ const PlaySessionNavItem = ({
     return dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete?.();
+  };
+
   return (
     <Link
       to={path}
@@ -170,23 +180,42 @@ const PlaySessionNavItem = ({
       {/* Title only, no icon */}
       <span className="min-w-0 flex-1 truncate">{label}</span>
 
-      {/* Badge: shows count by default, date on hover */}
-      {(count !== undefined || updatedAt) && (
-        <span
-          className={cn(
-            "ml-2 flex h-5 min-w-[20px] flex-shrink-0 items-center justify-center rounded px-1 text-[10px]",
-            active
-              ? "bg-zinc-700 text-zinc-200"
-              : "bg-zinc-800 text-zinc-500",
-          )}
-        >
-          {/* Count shown by default, date on hover */}
-          <span className="group-hover:hidden">{count ?? 0}</span>
-          <span className="hidden group-hover:inline">
-            {updatedAt ? formatDate(updatedAt) : count ?? 0}
+      {/* Right side: Delete button + Badge */}
+      <div className="flex items-center gap-1">
+        {/* Delete button: always visible on mobile, hover on desktop */}
+        {onDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className={cn(
+              "flex h-5 w-5 items-center justify-center rounded text-zinc-500 transition-colors hover:bg-zinc-700 hover:text-red-400",
+              // Always visible on mobile (max-md), hidden on desktop until hover
+              "md:opacity-0 md:group-hover:opacity-100",
+            )}
+            aria-label="Delete session"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
+
+        {/* Badge: shows count by default, date on hover */}
+        {(count !== undefined || updatedAt) && (
+          <span
+            className={cn(
+              "flex h-5 min-w-[20px] flex-shrink-0 items-center justify-center rounded px-1 text-[10px]",
+              active
+                ? "bg-zinc-700 text-zinc-200"
+                : "bg-zinc-800 text-zinc-500",
+            )}
+          >
+            {/* Count shown by default, date on hover */}
+            <span className="group-hover:hidden">{count ?? 0}</span>
+            <span className="hidden group-hover:inline">
+              {updatedAt ? formatDate(updatedAt) : count ?? 0}
+            </span>
           </span>
-        </span>
-      )}
+        )}
+      </div>
     </Link>
   );
 };
@@ -248,10 +277,21 @@ const PlaySessionsSection = ({
   isActivePath: (path: string) => boolean;
   onItemClick?: () => void;
 }) => {
+  const navigate = useNavigate();
+  const deleteSessionMutation = useDeleteSession();
+
   // Query play sessions using lightweight listItem query (only id, title, messageCount, updatedAt)
   const { data: playSessions = [] } = useTanstackQuery(
     sessionQueries.listItem({ isPlaySession: true }),
   );
+
+  const handleDelete = (sessionId: string) => {
+    // If currently viewing this session, navigate away first
+    if (isActivePath(`/sessions/${sessionId}`)) {
+      navigate({ to: "/sessions" });
+    }
+    deleteSessionMutation.mutate({ sessionId: new UniqueEntityID(sessionId) });
+  };
 
   // Don't show section when collapsed or if there are no play sessions
   if (isCollapsed || playSessions.length === 0) {
@@ -280,6 +320,7 @@ const PlaySessionsSection = ({
           onClick={onItemClick}
           count={session.messageCount}
           updatedAt={session.updatedAt}
+          onDelete={() => handleDelete(session.id)}
         />
       ))}
     </div>

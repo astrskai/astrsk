@@ -221,12 +221,12 @@ export function useFlowActions(
 
           const shareLink = shareResult.getValue();
 
-          // Copy share URL to clipboard
-          await navigator.clipboard.writeText(shareLink.shareUrl);
-
           toastSuccess("Successfully exported to cloud!", {
-            description: `Share link copied to clipboard. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
+            description: `Opening share page. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
           });
+
+          // Open the share URL in a new tab
+          window.open(shareLink.shareUrl, "_blank");
         } else {
           // Export flow to file (JSON download) with all nodes (agents, dataStore, if nodes)
           const result = await FlowService.exportFlowWithNodes.execute({

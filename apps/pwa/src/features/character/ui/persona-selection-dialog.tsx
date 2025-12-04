@@ -1,14 +1,15 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { UserIcon } from "lucide-react";
 import { DialogBase } from "@/shared/ui/dialogs/base";
 import { Button, Input, Textarea, SearchInput } from "@/shared/ui/forms";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui/tabs";
+import { Avatar } from "@/shared/ui/avatar";
 import { toastError } from "@/shared/ui/toast";
 import { useCreateCharacterCard } from "@/entities/character/api";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
+import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { cn } from "@/shared/lib";
 
@@ -55,29 +56,23 @@ const PersonaCard = ({
   const [imageUrl] = useAsset(card.props.iconAssetId);
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onSelect}
       className={cn(
-        "flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all duration-200",
+        "flex w-full cursor-pointer items-center gap-4 rounded-xl border-2 p-4 text-left transition-all duration-200",
         isSelected
           ? "border-brand-500 bg-brand-900/50 shadow-lg"
           : "border-neutral-700 hover:border-brand-500 hover:bg-neutral-800/50",
       )}
     >
       {/* Avatar */}
-      <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-neutral-700">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={card.props.name || "Persona"}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <UserIcon className="h-6 w-6 text-neutral-400" />
-          </div>
-        )}
-      </div>
+      <Avatar
+        src={imageUrl}
+        alt={card.props.name || "Persona"}
+        size={48}
+        className="flex-shrink-0"
+      />
 
       {/* Info */}
       <div className="min-w-0 flex-1">
@@ -94,7 +89,7 @@ const PersonaCard = ({
 
       {/* Selected indicator */}
       {isSelected && <span className="text-brand-400">✓</span>}
-    </div>
+    </button>
   );
 };
 
@@ -108,24 +103,28 @@ interface NoPersonaCardProps {
 
 const NoPersonaCard = ({ isSelected, onSelect }: NoPersonaCardProps) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={onSelect}
       className={cn(
-        "flex cursor-pointer items-center gap-4 rounded-xl border-2 p-4 transition-all duration-200",
+        "flex w-full cursor-pointer items-center gap-4 rounded-xl border-2 p-4 text-left transition-all duration-200",
         isSelected
           ? "border-brand-500 bg-brand-900/50 shadow-lg"
           : "border-neutral-700 hover:border-brand-500 hover:bg-neutral-800/50",
       )}
     >
-      {/* Avatar */}
-      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-neutral-700">
-        <span className="text-2xl">❓</span>
-      </div>
+      {/* Avatar placeholder */}
+      <Avatar
+        src={null}
+        alt="No Persona"
+        size={48}
+        className="flex-shrink-0"
+      />
 
       {/* Info */}
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-lg font-semibold text-white">
-          No Persona
+          No persona
           <span className="ml-2 text-sm text-neutral-500">(Default)</span>
         </h3>
         <p className="truncate text-sm text-neutral-400">
@@ -135,7 +134,7 @@ const NoPersonaCard = ({ isSelected, onSelect }: NoPersonaCardProps) => {
 
       {/* Selected indicator */}
       {isSelected && <span className="text-brand-400">✓</span>}
-    </div>
+    </button>
   );
 };
 
@@ -167,10 +166,18 @@ export function PersonaSelectionDialog({
 
   const createCharacterMutation = useCreateCharacterCard();
 
-  // Fetch character cards
+  // Fetch character cards (global only, session_id IS NULL)
   const { data: characterCards } = useQuery({
     ...cardQueries.list({ type: [CardType.Character] }),
     enabled: open,
+  });
+
+  // Fetch suggested persona card directly (may be a session-specific card not in global list)
+  const { data: suggestedCard } = useQuery({
+    ...cardQueries.detail<CharacterCard>(
+      suggestedPersonaId ? new UniqueEntityID(suggestedPersonaId) : undefined,
+    ),
+    enabled: open && !!suggestedPersonaId,
   });
 
   // Reset state when dialog opens
@@ -178,28 +185,31 @@ export function PersonaSelectionDialog({
   useEffect(() => {
     if (open) {
       setActiveTab("select");
-      // Pre-select suggested persona if provided, otherwise null (no persona)
-      setSelectedCharacterId(suggestedPersonaId || null);
+      // Pre-select suggested persona if provided and loaded, otherwise null (no persona)
+      // Use suggestedCard.id if available to ensure the ID matches what's rendered
+      const preSelectedId = suggestedCard
+        ? suggestedCard.id.toString()
+        : suggestedPersonaId || null;
+      setSelectedCharacterId(preSelectedId);
       setSearchTerm("");
       setNewPersonaName("");
       setNewPersonaDescription("");
       setIsSubmitting(false);
     }
-  }, [open, suggestedPersonaId]);
+  }, [open, suggestedPersonaId, suggestedCard]);
 
   // Filter characters by search term and separate suggested persona
   const { suggestedPersona, otherCharacters } = useMemo(() => {
-    if (!characterCards) return { suggestedPersona: null, otherCharacters: [] };
+    // Use suggestedCard from direct query (works for session-specific cards too)
+    let suggested: CharacterCard | null = suggestedCard || null;
 
-    let suggested: CharacterCard | null = null;
+    // Filter out the suggested card from the list (to avoid showing it twice)
     let others: CharacterCard[] = [];
-
-    // Separate suggested persona from others
-    for (const card of characterCards as CharacterCard[]) {
-      if (suggestedPersonaId && card.id.toString() === suggestedPersonaId) {
-        suggested = card;
-      } else {
-        others.push(card);
+    if (characterCards) {
+      for (const card of characterCards as CharacterCard[]) {
+        if (!suggestedPersonaId || card.id.toString() !== suggestedPersonaId) {
+          others.push(card);
+        }
       }
     }
 
@@ -223,7 +233,7 @@ export function PersonaSelectionDialog({
     }
 
     return { suggestedPersona: suggested, otherCharacters: others };
-  }, [characterCards, searchTerm, suggestedPersonaId]);
+  }, [characterCards, searchTerm, suggestedPersonaId, suggestedCard]);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -263,7 +273,8 @@ export function PersonaSelectionDialog({
         const createdCharacter = await createCharacterMutation.mutateAsync({
           name: newPersonaName.trim(),
           description: newPersonaDescription.trim(),
-          tags: ["Persona", "User"],
+          tags: ["Persona"],
+          version: "v1.0",
         });
 
         onConfirm({
@@ -301,7 +312,7 @@ export function PersonaSelectionDialog({
     <DialogBase
       open={open}
       onOpenChange={onOpenChange}
-      title="Choose Your Persona"
+      title="Choose your persona"
       description="Select a character to represent you in this session, or create a new one."
       size="lg"
       isShowCloseButton={false}
@@ -315,8 +326,8 @@ export function PersonaSelectionDialog({
             }
           >
             <TabsList variant="mobile" className="w-full">
-              <TabsTrigger value="select">Select Existing</TabsTrigger>
-              <TabsTrigger value="create">Create New</TabsTrigger>
+              <TabsTrigger value="select">Select existing</TabsTrigger>
+              <TabsTrigger value="create">Create new</TabsTrigger>
             </TabsList>
 
             {/* Select Tab Content */}
@@ -381,7 +392,7 @@ export function PersonaSelectionDialog({
             <TabsContent value="create" className="space-y-4">
               <div className="space-y-4 rounded-xl border border-neutral-700 bg-neutral-900/50 p-4">
                 <h3 className="border-b border-neutral-700 pb-2 text-lg font-bold text-white">
-                  New Persona
+                  New persona
                 </h3>
 
                 <Input

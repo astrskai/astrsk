@@ -188,17 +188,26 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
           jsonData.spec = "chara_card_v2";
         }
 
-        // Save image to icon asset
-        const id = new UniqueEntityID();
-        jsonData.id = id.toString();
-        const iconAssetOrError = await this.saveFileToAsset.execute({
-          file: file,
-        });
-        if (iconAssetOrError.isFailure) {
-          return Result.fail(iconAssetOrError.getError());
+        // Check if this is a placeholder image (no original image was uploaded)
+        const isPlaceholderImage = jsonData.data?.extensions?.isPlaceholderImage === true;
+        console.log("[ImportCard] isPlaceholderImage:", isPlaceholderImage, "extensions:", jsonData.data?.extensions);
+
+        // Only save image as asset if it's not a placeholder
+        if (!isPlaceholderImage) {
+          const id = new UniqueEntityID();
+          jsonData.id = id.toString();
+          const iconAssetOrError = await this.saveFileToAsset.execute({
+            file: file,
+          });
+          if (iconAssetOrError.isFailure) {
+            return Result.fail(iconAssetOrError.getError());
+          }
+          const iconAsset = iconAssetOrError.getValue();
+          jsonData.data.iconAssetId = iconAsset.id;
+        } else {
+          // Placeholder image - don't save the asset, card will have no icon
+          jsonData.data.iconAssetId = undefined;
         }
-        const iconAsset = iconAssetOrError.getValue();
-        jsonData.data.iconAssetId = iconAsset.id;
       } else {
         // Handle JSON file
         const fileText = await readFileToString(file);

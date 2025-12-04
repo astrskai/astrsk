@@ -125,27 +125,25 @@ const AccordionItemTitle = ({
       </div>
       <div className="flex flex-shrink-0 items-center gap-2">
         {onCopy && (
-          <div
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             onClick={handleCopy}
             onKeyDown={handleCopyKeyDown}
             className="cursor-pointer text-neutral-500 hover:text-neutral-400"
             aria-label="Copy item"
           >
             <Copy className="h-4 w-4" />
-          </div>
+          </button>
         )}
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           onClick={handleDelete}
           onKeyDown={handleDeleteKeyDown}
           className="cursor-pointer text-neutral-500 hover:text-neutral-400"
           aria-label="Delete item"
         >
           <Trash2 className="h-4 w-4" />
-        </div>
+        </button>
       </div>
     </div>
   );
@@ -515,8 +513,8 @@ export function ScenarioStep({
             </div>
             <div>
               <h2 className="text-sm font-bold text-fg-default">AI Assistant</h2>
-              <p className="font-mono text-[10px] text-fg-muted">
-                GENERATE SCENARIO
+              <p className="font-mono text-xs text-fg-muted">
+                Generate scenario
               </p>
             </div>
           </div>
@@ -629,7 +627,7 @@ export function ScenarioStep({
                 Scenario Builder
               </h1>
               <p className="mt-1 font-mono text-xs text-fg-muted">
-                DEFINE WORLD AND CONTEXT
+                Define world and context
               </p>
             </div>
           </div>
@@ -638,8 +636,8 @@ export function ScenarioStep({
           <div className="flex-1 space-y-6 overflow-y-auto p-4 md:p-6">
             {/* Mobile: AI Generation Prompt */}
             <section className="space-y-3 md:hidden">
-              <label className="text-[10px] font-bold uppercase text-fg-muted">
-                AI Generation Prompt
+              <label className="text-xs font-bold text-fg-muted">
+                AI generation prompt
               </label>
               <div className="relative">
                 <textarea
@@ -674,8 +672,8 @@ export function ScenarioStep({
             {/* Scenario Description */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold uppercase text-fg-muted">
-                  Scenario Description
+                <label className="text-xs font-bold text-fg-muted">
+                  Scenario description
                 </label>
                 <span
                   className={cn(
@@ -712,8 +710,8 @@ This sets the stage for your story."
             {/* First Messages Section */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold uppercase text-fg-muted">
-                  First Messages
+                <label className="text-xs font-bold text-fg-muted">
+                  First messages
                 </label>
                 <Button
                   type="button"
@@ -753,7 +751,7 @@ This sets the stage for your story."
             {/* Lorebook Section */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold uppercase text-fg-muted">
+                <label className="text-xs font-bold text-fg-muted">
                   Lorebook
                 </label>
                 <Button

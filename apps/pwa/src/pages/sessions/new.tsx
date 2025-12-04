@@ -101,7 +101,7 @@ function Stepper({
                 </div>
                 <span
                   className={cn(
-                    "text-[10px] font-bold uppercase tracking-widest",
+                    "text-xs font-bold",
                     isActive && "text-fg-default",
                     isCompleted && "text-fg-muted",
                     !isActive && !isCompleted && "text-fg-subtle",
@@ -870,7 +870,7 @@ Ground Rules:`;
 
             {/* Mobile: Step title with number */}
             <div className="flex flex-col items-center md:hidden">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-fg-muted">
+              <span className="text-xs font-medium text-fg-muted">
                 Step {currentStepIndex + 1} of {STEPS.length}
               </span>
               <h1 className="text-sm font-semibold text-fg-default">

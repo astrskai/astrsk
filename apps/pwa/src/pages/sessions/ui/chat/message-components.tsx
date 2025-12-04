@@ -974,16 +974,16 @@ const SortableDataSchemaFieldItem = ({
                 ) : (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="text-fg-muted/50 hover:text-fg-default opacity-0 group-hover:opacity-100 transition-all"
+                    className="text-fg-muted/50 hover:text-fg-default transition-all md:opacity-0 md:group-hover:opacity-100"
                   >
                     <Pencil size={12} />
                   </button>
                 ))}
-              {/* Expand button - always show for string type or when content is clamped */}
+              {/* Expand button - always show on mobile, hover on desktop */}
               {(type === "string" || isClamped) && !isEditing && (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="text-fg-muted/50 hover:text-fg-default opacity-0 group-hover:opacity-100 transition-all"
+                  className="text-fg-muted/50 hover:text-fg-default transition-all md:opacity-0 md:group-hover:opacity-100"
                   title="View full text"
                 >
                   <Maximize2 size={12} />

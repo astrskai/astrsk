@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, ilike, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, inArray, sql, type SQL } from "drizzle-orm";
 import type { PgColumn } from "drizzle-orm/pg-core";
 
 import { Result } from "@/shared/core";
@@ -8,6 +8,11 @@ import { formatFail } from "@/shared/lib";
 import { Drizzle } from "@/db/drizzle";
 import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";
 import { sessions } from "@/db/schema/sessions";
+import { characters } from "@/db/schema/characters";
+import { scenarios } from "@/db/schema/scenarios";
+import { backgrounds } from "@/db/schema/backgrounds";
+import { generatedImages } from "@/db/schema/generated-images";
+import { assets } from "@/db/schema/assets";
 import { Transaction } from "@/db/transaction";
 import { Session } from "@/entities/session/domain";
 import { SessionDrizzleMapper } from "@/entities/session/mappers/session-drizzle-mapper";
@@ -174,15 +179,56 @@ export class DrizzleSessionRepo
   ): Promise<Result<void>> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
-      // Delete session by id
-      await db.delete(sessions).where(eq(sessions.id, id.toString()));
+      const sessionId = id.toString();
 
-      // Update local sync metadata
-      // await this.updateLocalSyncMetadata.execute({
-      //   tableName: TableName.Sessions,
-      //   entityId: id,
-      //   updatedAt: null,
-      // });
+      // Collect all asset IDs from session-local resources before cascade delete
+      const assetIds: string[] = [];
+
+      // Get asset IDs from session-local characters
+      const characterAssets = await db
+        .select({ iconAssetId: characters.icon_asset_id })
+        .from(characters)
+        .where(eq(characters.session_id, sessionId));
+      characterAssets.forEach((c) => {
+        if (c.iconAssetId) assetIds.push(c.iconAssetId);
+      });
+
+      // Get asset IDs from session-local scenarios
+      const scenarioAssets = await db
+        .select({ iconAssetId: scenarios.icon_asset_id })
+        .from(scenarios)
+        .where(eq(scenarios.session_id, sessionId));
+      scenarioAssets.forEach((s) => {
+        if (s.iconAssetId) assetIds.push(s.iconAssetId);
+      });
+
+      // Get asset IDs from session backgrounds
+      const backgroundAssets = await db
+        .select({ assetId: backgrounds.asset_id })
+        .from(backgrounds)
+        .where(eq(backgrounds.session_id, sessionId));
+      backgroundAssets.forEach((b) => {
+        if (b.assetId) assetIds.push(b.assetId);
+      });
+
+      // Get asset IDs from session-generated images
+      const sessionGeneratedImages = await db
+        .select({
+          assetId: generatedImages.asset_id,
+          thumbnailAssetId: generatedImages.thumbnail_asset_id,
+        })
+        .from(generatedImages)
+        .where(eq(generatedImages.is_session_generated, true));
+      // Note: We can't filter by session_id since generated_images doesn't have it
+      // This gets ALL session-generated images - may need refinement
+
+      // Delete session by id (CASCADE will delete characters, scenarios, flows, backgrounds)
+      await db.delete(sessions).where(eq(sessions.id, sessionId));
+
+      // Delete collected assets (after cascade delete removed the resources)
+      if (assetIds.length > 0) {
+        await db.delete(assets).where(inArray(assets.id, assetIds));
+      }
 
       // Return result
       return Result.ok();

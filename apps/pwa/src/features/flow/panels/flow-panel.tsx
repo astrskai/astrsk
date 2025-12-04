@@ -1613,7 +1613,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
   // Preview session selector
   const { data: sessions = [], isLoading: isLoadingSessions } = useQuery({
     ...sessionQueries.list({}),
-    enabled: !!flow,
+    enabled: !!flow && !isSessionLocal, // Only fetch sessions if not session-local
   });
   const previewSessionId = useAgentStore.use.previewSessionId();
   const setPreviewSessionId = useAgentStore.use.setPreviewSessionId();
@@ -1627,6 +1627,13 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
     },
     [setPreviewSessionId],
   );
+
+  // Auto-set previewSessionId for session-local flows
+  useEffect(() => {
+    if (isSessionLocal && flow?.props.sessionId) {
+      setPreviewSessionId(flow.props.sessionId.toString());
+    }
+  }, [isSessionLocal, flow?.props.sessionId, setPreviewSessionId]);
 
   if (!flow) {
     return (
@@ -1702,78 +1709,82 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
             )}
           </div>
 
-          {/* Select preview session */}
-          <div className="flex flex-row items-center gap-2">
-            <TooltipProvider>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <HelpCircle className="text-fg-subtle min-h-4 min-w-4 cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent variant="button" side="bottom">
-                  <p className="max-w-xs text-xs">
-                    Select a session to see how its data appears within the
-                    flow. This feature applies to Preview and Variable tabs.
-                    Data will be based on the last message of the session.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <Select
-              value={previewSessionId || "none"}
-              onValueChange={handleSessionChange}
-            >
-              <SelectTrigger className="bg-canvas outline-border-muted min-h-8 w-[180px] rounded-md px-4 py-2 outline-1 outline-offset-[-1px]">
-                <SelectValue placeholder="Select session" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {isLoadingSessions ? (
-                  <SelectItem value="loading" disabled>
-                    Loading sessions...
-                  </SelectItem>
-                ) : (
-                  sessions
-                    .filter((session: Session) =>
-                      session.flowId?.equals(flow.id),
-                    )
-                    .map((session: Session) => (
-                      <SelectItem
-                        key={session.id.toString()}
-                        value={session.id.toString()}
-                      >
-                        {session.props.title ||
-                          `Session ${session.id.toString().slice(0, 8)}`}
-                      </SelectItem>
-                    ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Select preview session - only shown for global flows */}
+          {!isSessionLocal && (
+            <div className="flex flex-row items-center gap-2">
+              <TooltipProvider>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="text-fg-subtle min-h-4 min-w-4 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent variant="button" side="bottom">
+                    <p className="max-w-xs text-xs">
+                      Select a session to see how its data appears within the
+                      flow. This feature applies to Preview and Variable tabs.
+                      Data will be based on the last message of the session.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Select
+                value={previewSessionId || "none"}
+                onValueChange={handleSessionChange}
+              >
+                <SelectTrigger className="bg-canvas outline-border-muted min-h-8 w-[180px] rounded-md px-4 py-2 outline-1 outline-offset-[-1px]">
+                  <SelectValue placeholder="Select session" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {isLoadingSessions ? (
+                    <SelectItem value="loading" disabled>
+                      Loading sessions...
+                    </SelectItem>
+                  ) : (
+                    sessions
+                      .filter((session: Session) =>
+                        session.flowId?.equals(flow.id),
+                      )
+                      .map((session: Session) => (
+                        <SelectItem
+                          key={session.id.toString()}
+                          value={session.id.toString()}
+                        >
+                          {session.props.title ||
+                            `Session ${session.id.toString().slice(0, 8)}`}
+                        </SelectItem>
+                      ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-          {/* Copy as Global and Download buttons */}
+          {/* Save as workflow and Download buttons */}
           <div className="flex flex-row items-center gap-2">
-            {/* Copy as Global - only shown for session-local flows */}
+            {/* Save as workflow - only shown for session-local flows */}
             {isSessionLocal && (
               <ButtonPill
                 size="default"
                 icon={<Globe className="h-4 w-4" />}
                 onClick={handleCopyAsGlobal}
                 disabled={isCopyingAsGlobal}
-                title="Copy as Global Resource"
+                title="Save as workflow"
               >
-                {isCopyingAsGlobal ? "Copying..." : "Copy as Global"}
+                {isCopyingAsGlobal ? "Saving..." : "Save as workflow"}
               </ButtonPill>
             )}
-            {/* Download */}
-            <ButtonPill
-              size="default"
-              icon={<Download className="h-4 w-4" />}
-              onClick={handleDownload}
-              disabled={isDownloading}
-              title="Download as JSON"
-            >
-              {isDownloading ? "Downloading..." : "Download"}
-            </ButtonPill>
+            {/* Download - only shown for global flows */}
+            {!isSessionLocal && (
+              <ButtonPill
+                size="default"
+                icon={<Download className="h-4 w-4" />}
+                onClick={handleDownload}
+                disabled={isDownloading}
+                title="Download as JSON"
+              >
+                {isDownloading ? "Downloading..." : "Download"}
+              </ButtonPill>
+            )}
           </div>
         </div>
 

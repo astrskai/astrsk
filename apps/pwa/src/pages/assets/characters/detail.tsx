@@ -425,9 +425,9 @@ const CharacterDetailPage = () => {
               onClick={handleCopyAsGlobal}
               disabled={isCopyingAsGlobal}
               loading={isCopyingAsGlobal}
-              title="Copy as Global Resource"
+              title="Save as character"
             >
-              <span className="hidden sm:inline">Copy as Global</span>
+              <span className="hidden sm:inline">Save as character</span>
             </Button>
           )}
           {/* Edit button */}
@@ -463,15 +463,19 @@ const CharacterDetailPage = () => {
         {/* Image and Metadata section - matches editor */}
         <section className="flex w-full flex-col items-center justify-center gap-4">
           {/* Image */}
-          {displayImage && (
-            <div className="relative max-w-[200px]">
-              <img
-                src={displayImage}
-                alt={character.props.title ?? ""}
-                className="h-full w-full rounded-lg object-cover"
-              />
-            </div>
-          )}
+          <div className="relative max-w-[200px]">
+            <img
+              src={displayImage}
+              alt={character.props.title ?? ""}
+              className="h-full w-full rounded-lg object-cover"
+            />
+            {/* Show "No image selected" overlay when using placeholder */}
+            {!imageUrl && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40">
+                <p className="text-sm text-neutral-300">No image selected</p>
+              </div>
+            )}
+          </div>
 
           <div className="w-full space-y-4">
             <h2 className="text-base font-semibold text-neutral-100">

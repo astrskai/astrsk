@@ -12,8 +12,6 @@ import {
   Plus,
   Copy,
   Pencil,
-  Download,
-  Globe,
 } from "lucide-react";
 import { Route } from "@/routes/_layout/assets/scenarios/{-$scenarioId}";
 
@@ -22,9 +20,6 @@ import {
   useUpdatePlotCard,
   useCreatePlotCard,
 } from "@/entities/scenario/api";
-import { CardService } from "@/app/services/card-service";
-import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-import { downloadFile } from "@/shared/lib";
 
 import { Loading } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
@@ -470,74 +465,6 @@ const ScenarioEditorPage = () => {
   // Combined pending state
   const isSaving = updatePlotMutation.isPending || createPlotMutation.isPending;
 
-  // Loading states for copy/download actions
-  const [isCopyingAsGlobal, setIsCopyingAsGlobal] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  // Check if scenario is session-local (has sessionId)
-  const isSessionLocal = !isCreateMode && scenario?.props.sessionId != null;
-
-  // Handler for "Copy as Global Resource"
-  const handleCopyAsGlobal = useCallback(async () => {
-    if (!scenario || !scenarioId) return;
-
-    setIsCopyingAsGlobal(true);
-    try {
-      const result = await CardService.cloneCard.execute({
-        cardId: new UniqueEntityID(scenarioId),
-        // sessionId is NOT passed, so the cloned card will be global
-      });
-
-      if (result.isFailure) {
-        toastError("Failed to copy as global", {
-          description: result.getError(),
-        });
-        return;
-      }
-
-      toastSuccess("Copied as global resource!", {
-        description: `"${scenario.props.title}" is now available in your library.`,
-      });
-    } catch (error) {
-      toastError("Failed to copy as global", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    } finally {
-      setIsCopyingAsGlobal(false);
-    }
-  }, [scenario, scenarioId]);
-
-  // Handler for "Download"
-  const handleDownload = useCallback(async () => {
-    if (!scenario || !scenarioId) return;
-
-    setIsDownloading(true);
-    try {
-      const result = await CardService.exportCardToFile.execute({
-        cardId: new UniqueEntityID(scenarioId),
-        options: { format: "png" },
-      });
-
-      if (result.isFailure) {
-        toastError("Failed to download", {
-          description: result.getError(),
-        });
-        return;
-      }
-
-      downloadFile(result.getValue());
-      toastSuccess("Downloaded!", {
-        description: `"${scenario.props.title}" exported as PNG.`,
-      });
-    } catch (error) {
-      toastError("Failed to download", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    } finally {
-      setIsDownloading(false);
-    }
-  }, [scenario, scenarioId]);
-
   // Helper function to sort tags by TAG_DEFAULT order, then alphabetically for custom tags
   const sortTags = useCallback((tags: string[]) => {
     return [...tags].sort((a, b) => {
@@ -637,7 +564,8 @@ const ScenarioEditorPage = () => {
   }, [previewImage]);
 
   const handleGoBack = () => {
-    navigate({ to: "/assets/scenarios" });
+    // Use browser's back button to go to previous page (usually session)
+    window.history.back();
   };
 
   const handleUploadImage = () => {
@@ -862,34 +790,6 @@ const ScenarioEditorPage = () => {
               </span>
               <span className="hidden sm:inline">Unsaved changes</span>
             </span>
-          )}
-          {/* Copy as Global - only shown for session-local scenarios */}
-          {isSessionLocal && (
-            <Button
-              variant="secondary"
-              icon={<Globe className="h-4 w-4" />}
-              type="button"
-              onClick={handleCopyAsGlobal}
-              disabled={isCopyingAsGlobal}
-              loading={isCopyingAsGlobal}
-              title="Copy as Global Resource"
-            >
-              <span className="hidden sm:inline">Copy as Global</span>
-            </Button>
-          )}
-          {/* Download - shown for existing scenarios (not create mode) */}
-          {!isCreateMode && (
-            <Button
-              variant="secondary"
-              icon={<Download className="h-4 w-4" />}
-              type="button"
-              onClick={handleDownload}
-              disabled={isDownloading}
-              loading={isDownloading}
-              title="Download as PNG"
-            >
-              <span className="hidden sm:inline">Download</span>
-            </Button>
           )}
           <Button
             icon={<Save className="h-4 w-4" />}

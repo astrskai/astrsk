@@ -148,8 +148,8 @@ function HudPreview({ dataStores }: { dataStores: HudDataStore[] }) {
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="mb-6 text-center">
-          <h3 className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest text-fg-muted">
-            <Smartphone size={16} /> Player View
+          <h3 className="flex items-center justify-center gap-2 text-sm font-bold text-fg-muted">
+            <Smartphone size={16} /> Player view
           </h3>
           <p className="mt-1 text-[10px] text-fg-subtle">
             This is how the HUD appears in-session
@@ -170,8 +170,8 @@ function HudPreview({ dataStores }: { dataStores: HudDataStore[] }) {
 
           {/* Content Area */}
           <div className="min-h-[400px] space-y-3 bg-surface/50 p-4">
-            <div className="mb-2 ml-1 text-[10px] font-bold uppercase text-fg-muted">
-              Current State
+            <div className="mb-2 ml-1 text-xs font-bold text-fg-muted">
+              Current state
             </div>
 
             {dataStores.length === 0 ? (
@@ -185,7 +185,7 @@ function HudPreview({ dataStores }: { dataStores: HudDataStore[] }) {
                   className="group relative overflow-hidden rounded-lg border border-border-subtle bg-surface-raised p-3 transition-colors hover:border-brand-400/30"
                 >
                   <div className="mb-1.5 flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase text-fg-default">
+                    <span className="text-xs font-bold text-fg-default">
                       {store.name}
                     </span>
                     {store.type === "integer" && store.min !== undefined && store.max !== undefined && (
@@ -672,7 +672,7 @@ export function HudStep({
                   Data Protocol
                 </h1>
                 <p className="mt-1 font-mono text-xs text-fg-muted">
-                  DEFINE VARIABLES FOR AI TO TRACK
+                  Define variables for AI to track
                 </p>
               </div>
               <Button
@@ -799,9 +799,9 @@ export function HudStep({
                         >
                           {store.name}
                         </h4>
-                        <p className="font-mono text-[10px] uppercase text-fg-muted">
+                        <p className="font-mono text-xs text-fg-muted">
                           {store.type} •{" "}
-                          {store.initial === "" ? "EMPTY" : String(store.initial)}
+                          {store.initial === "" ? "empty" : String(store.initial)}
                         </p>
                       </div>
                     </div>
@@ -838,7 +838,7 @@ export function HudStep({
                     <div className="mt-2 space-y-4 border-t border-border-subtle px-4 pt-3 pb-4">
                       <div className="grid grid-cols-2 gap-3 pt-3">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase text-fg-muted">
+                          <label className="text-xs font-bold text-fg-muted">
                             Name
                           </label>
                           <input
@@ -854,7 +854,7 @@ export function HudStep({
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase text-fg-muted">
+                          <label className="text-xs font-bold text-fg-muted">
                             Type
                           </label>
                           <select
@@ -880,7 +880,7 @@ export function HudStep({
 
                       {/* Description - moved up */}
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase text-fg-muted">
+                        <label className="text-xs font-bold text-fg-muted">
                           Description
                         </label>
                         <textarea
@@ -898,7 +898,7 @@ export function HudStep({
                       {/* Values - moved down */}
                       <div className="space-y-3 rounded-lg border border-border-subtle bg-canvas/40 p-3">
                         <div className="flex items-center justify-between">
-                          <label className="block text-[10px] font-bold uppercase text-fg-muted">
+                          <label className="block text-xs font-bold text-fg-muted">
                             Values
                           </label>
                           {store.type === "integer" && store.min === undefined && store.max === undefined && (

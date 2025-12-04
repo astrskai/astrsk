@@ -357,7 +357,7 @@ export const useDeleteSession = () => {
 };
 
 /**
- * Hook for cloning a session (Save as preset)
+ * Hook for cloning a session (Save as session)
  * Clones the session without history and sets is_play_session to false
  */
 export const useCloneSession = () => {

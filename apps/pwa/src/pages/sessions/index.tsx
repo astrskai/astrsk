@@ -48,7 +48,6 @@ export function SessionsPage() {
     isOpenImportDialog,
     setIsOpenImportDialog,
     importingFile,
-    agentModels,
     handleFileSelect,
     triggerImport,
   } = useSessionImportDialog();
@@ -94,13 +93,12 @@ export function SessionsPage() {
         onSortChange={setSortOption}
       />
 
-      {/* Session Import Dialog - receives file and agent models from hook */}
+      {/* Session Import Dialog - receives file from hook, auto-imports when file is selected */}
       <SessionImportDialog
         open={isOpenImportDialog}
         onOpenChange={setIsOpenImportDialog}
         onImport={handleImport}
         file={importingFile}
-        agentModels={agentModels}
       />
       <HelpVideoDialog
         open={isOpenHelpDialog}
@@ -122,10 +120,12 @@ export function SessionsPage() {
             onButtonClick={handleCreateSession}
           />
         ) : (
-          <SessionsGrid
-            sessions={sessions}
-            areCharactersLoading={areCharactersLoading}
-          />
+          <>
+            <SessionsGrid
+              sessions={sessions}
+              areCharactersLoading={areCharactersLoading}
+            />
+          </>
         )}
       </div>
     </div>

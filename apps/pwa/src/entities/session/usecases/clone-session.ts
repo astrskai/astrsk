@@ -49,32 +49,7 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
     // Generate new session ID first
     const newSessionId = new UniqueEntityID();
 
-    // Clone flow first (no foreign key to session)
-    let clonedFlowId: string | null = null;
-    if (originalSession.props.flowId) {
-      if (!this.cloneFlow) {
-        return formatFail(
-          "Cannot clone resources",
-          "CloneFlow dependency not provided",
-        );
-      }
-
-      const clonedFlowResult = await this.cloneFlow.execute({
-        flowId: originalSession.props.flowId,
-        shouldRename: false, // Don't rename for export
-      });
-
-      if (clonedFlowResult.isFailure) {
-        return formatFail(
-          "Failed to clone flow",
-          clonedFlowResult.getError(),
-        );
-      }
-
-      clonedFlowId = clonedFlowResult.getValue().id.toString();
-    }
-
-    // Clone cover asset (no foreign key to session)
+    // Clone cover asset first (no foreign key to session)
     let clonedCoverId: string | null = null;
     if (originalSession.props.coverId) {
       if (!this.cloneAsset) {
@@ -98,7 +73,8 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
       clonedCoverId = clonedCoverResult.getValue().id.toString();
     }
 
-    // Create session first with empty cards (needed for foreign key constraint on cards)
+    // Create session FIRST with empty cards and no flow (needed for foreign key constraints)
+    // Flow has a foreign key to session, so session must exist before cloning flow
     const insertSession = SessionDrizzleMapper.toPersistence(originalSession);
     const clonedSession = SessionDrizzleMapper.toDomain({
       ...insertSession,
@@ -114,7 +90,7 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
       cover_id: clonedCoverId,
       translation: insertSession.translation ?? null,
       chat_styles: insertSession.chat_styles ?? null,
-      flow_id: clonedFlowId,
+      flow_id: null, // Will update after cloning flow
       auto_reply: insertSession.auto_reply ?? AutoReply.Random,
       data_schema_order: insertSession.data_schema_order ?? [],
       widget_layout: insertSession.widget_layout ?? null,
@@ -124,7 +100,7 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
       updated_at: new Date(),
     });
 
-    // Save session FIRST (so it exists for foreign key constraint on cards)
+    // Save session FIRST (so it exists for foreign key constraints on flow and cards)
     const saveClonedSessionResult =
       await this.saveSessionRepo.saveSession(clonedSession);
     if (saveClonedSessionResult.isFailure) {
@@ -132,6 +108,43 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
         "Failed to save cloned session",
         saveClonedSessionResult.getError(),
       );
+    }
+
+    // NOW clone flow (session exists in DB, foreign key constraint will pass)
+    let clonedFlowId: string | null = null;
+    if (originalSession.props.flowId) {
+      if (!this.cloneFlow) {
+        return formatFail(
+          "Cannot clone resources",
+          "CloneFlow dependency not provided",
+        );
+      }
+
+      const clonedFlowResult = await this.cloneFlow.execute({
+        flowId: originalSession.props.flowId,
+        sessionId: newSessionId, // Create session-local copy (hidden from global workflows list)
+        shouldRename: false, // Don't rename for export
+      });
+
+      if (clonedFlowResult.isFailure) {
+        return formatFail(
+          "Failed to clone flow",
+          clonedFlowResult.getError(),
+        );
+      }
+
+      clonedFlowId = clonedFlowResult.getValue().id.toString();
+
+      // Update session with cloned flow ID
+      clonedSession.update({ flowId: new UniqueEntityID(clonedFlowId) });
+
+      const updateFlowResult = await this.saveSessionRepo.saveSession(clonedSession);
+      if (updateFlowResult.isFailure) {
+        return formatFail(
+          "Failed to update session with flow",
+          updateFlowResult.getError(),
+        );
+      }
     }
 
     // Now clone all cards with session reference (session exists in DB now)

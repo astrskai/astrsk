@@ -1,17 +1,14 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
 import { PNGMetadata } from "@/shared/lib/png-metadata";
+import { renderCharacterCardImage } from "@/shared/lib/render-character-card-image";
+import { renderScenarioCardImage } from "@/shared/lib/render-scenario-card-image";
 
 import { Asset } from "@/entities/asset/domain/asset";
 import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
 import { Card, CharacterCard, PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { LoadCardRepo } from "@/entities/card/repos";
 import { LoadGeneratedImageRepo } from "@/entities/generated-image/repos/load-generated-image-repo";
-//TODO: replace them with electron path
-import {
-  character_card_placeholder,
-  plot_card_placeholder,
-} from "@/shared/assets/placeholders";
 
 export interface ExportOptions {
   format: "json" | "png";
@@ -264,6 +261,8 @@ export class ExportCardToFile
       conceptualOrigin: card.props.conceptualOrigin,
       createdAt: card.props.createdAt.toISOString(),
       updatedAt: card.props.updatedAt?.toISOString(),
+      // Marker indicating if the embedded image is a generated placeholder
+      isPlaceholderImage: !card.props.iconAssetId,
     };
   }
 
@@ -286,19 +285,38 @@ export class ExportCardToFile
   }
 
   private async getPlaceholderAsset(card: Card): Promise<Asset> {
-    let svgContent;
+    let placeholderBlob: Blob;
+
     if (card instanceof CharacterCard) {
-      svgContent = character_card_placeholder;
+      // Render dynamic character card image with card data
+      placeholderBlob = await renderCharacterCardImage({
+        name: card.props.name || card.props.title || "Character",
+        summary: card.props.cardSummary,
+        tags: card.props.tags,
+        tokenCount: card.props.tokenCount,
+      });
     } else if (card instanceof PlotCard || card instanceof ScenarioCard) {
-      svgContent = plot_card_placeholder;
+      // Get first messages count based on card type
+      const firstMessages =
+        card instanceof PlotCard
+          ? card.props.scenarios?.length ?? 0
+          : card.props.firstMessages?.length ?? 0;
+
+      // Render dynamic scenario card image with card data
+      placeholderBlob = await renderScenarioCardImage({
+        title: card.props.title || "Scenario",
+        summary: card.props.cardSummary,
+        tags: card.props.tags,
+        tokenCount: card.props.tokenCount,
+        firstMessages,
+      });
+    } else {
+      throw new Error("Unsupported card type for placeholder");
     }
-    const placeholderBlob = new Blob([svgContent!], {
-      type: "image/svg+xml",
-    });
 
     // Create file with correct MIME type
-    const placeholderFile = new File([placeholderBlob], "placeholder.svg", {
-      type: "image/svg+xml",
+    const placeholderFile = new File([placeholderBlob], "placeholder.png", {
+      type: "image/png",
     });
 
     // Set icon asset

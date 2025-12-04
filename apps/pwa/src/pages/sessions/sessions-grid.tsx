@@ -12,7 +12,7 @@ import type {
 import { sessionQueries, SessionListItem } from "@/entities/session/api";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { DialogConfirm } from "@/shared/ui/dialogs";
-import { Checkbox, Label, Loading } from "@/shared/ui";
+import { Loading } from "@/shared/ui";
 
 import SessionCard from "@/features/session/ui/session-card";
 import type { CardAction } from "@/features/common/ui";
@@ -163,17 +163,13 @@ export function SessionsGrid({
     loadingStates,
     deleteDialogState,
     exportDialogState,
-    copyDialogState,
     handleExportClick,
     handleExportConfirm,
     handleCopyClick,
-    handleCopyConfirm,
-    toggleIncludeChatHistory,
     handleDeleteClick,
     handleDeleteConfirm,
     closeDeleteDialog,
     closeExportDialog,
-    closeCopyDialog,
   } = useSessionActions({
     onCopySuccess: (sessionId) => triggerAnimation(sessionId),
   });
@@ -186,8 +182,8 @@ export function SessionsGrid({
   }, [newlyCreatedSessionId, triggerAnimation]);
 
   /**
-   * Handle session click - if session has userCharacterCardId, show persona dialog
-   * Otherwise, clone and play directly
+   * Handle session click - always show persona selection dialog
+   * If session has userCharacterCardId, use it as suggested persona
    */
   const handleSessionClick = (sessionId: string) => {
     const item = sessions.find((s) => s.session.id.toString() === sessionId);
@@ -195,15 +191,10 @@ export function SessionsGrid({
 
     const userCharacterCardId = item.session.props.userCharacterCardId;
 
-    if (userCharacterCardId) {
-      // Session has a user character - show persona selection dialog
-      setPendingSessionId(sessionId);
-      setSuggestedPersonaId(userCharacterCardId.toString());
-      setIsPersonaDialogOpen(true);
-    } else {
-      // No user character - clone and play directly
-      cloneAndPlaySession(sessionId, null);
-    }
+    // Always show persona selection dialog
+    setPendingSessionId(sessionId);
+    setSuggestedPersonaId(userCharacterCardId?.toString());
+    setIsPersonaDialogOpen(true);
   };
 
   /**
@@ -313,7 +304,7 @@ export function SessionsGrid({
   return (
     <>
       {/* Sessions Grid - Uses auto-fill with minmax to ensure stable card sizes */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
+      <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
         {sessions.map(({ session, characterAvatars }) => {
           const sessionId = session.id.toString();
           const loading = loadingStates[sessionId] || {};
@@ -354,39 +345,8 @@ export function SessionsGrid({
       <SessionExportDialog
         open={exportDialogState.isOpen}
         onOpenChange={closeExportDialog}
-        agents={exportDialogState.agents}
-        onExport={async (modelTierSelections, includeHistory) => {
-          const { sessionId, title } = exportDialogState;
-          if (sessionId) {
-            await handleExportConfirm(
-              sessionId,
-              title,
-              modelTierSelections,
-              includeHistory,
-            );
-          }
-        }}
-      />
-
-      {/* Copy Confirmation Dialog */}
-      <DialogConfirm
-        open={copyDialogState.isOpen}
-        onOpenChange={closeCopyDialog}
-        title="Copy session"
-        description="Do you want to include chat history?"
-        content={
-          <Label className="flex flex-row items-center gap-2">
-            <Checkbox
-              checked={copyDialogState.includeChatHistory}
-              onCheckedChange={toggleIncludeChatHistory}
-            />
-            <span className="text-sm font-normal">
-              Include chat messages in the duplicated session
-            </span>
-          </Label>
-        }
-        confirmLabel="Copy"
-        onConfirm={handleCopyConfirm}
+        exportType={exportDialogState.exportType}
+        onExport={handleExportConfirm}
       />
 
       {/* Delete Confirmation Dialog */}

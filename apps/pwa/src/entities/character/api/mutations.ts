@@ -10,6 +10,7 @@ import { AssetService } from "@/app/services/asset-service";
 import { Lorebook, CardType, Entry } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { cardKeys } from "@/entities/card/api/query-factory";
+import { characterKeys } from "@/entities/character/api/query-factory";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 /**
@@ -115,6 +116,8 @@ function createLorebookFromEntries(entries: LorebookEntryData[]): Lorebook {
 
 /**
  * Hook for creating a new character card
+ *
+ * Features optimistic updates to immediately show the new card in lists
  */
 export const useCreateCharacterCard = () => {
   const queryClient = useQueryClient();
@@ -169,7 +172,32 @@ export const useCreateCharacterCard = () => {
       return card;
     },
 
-    onSuccess: () => {
+    onSuccess: (newCard) => {
+      // Optimistically add the new card to character list caches
+      const characterListQueries = queryClient.getQueriesData<CharacterCard[]>({
+        queryKey: characterKeys.lists(),
+      });
+
+      for (const [queryKey, existingData] of characterListQueries) {
+        if (existingData && Array.isArray(existingData)) {
+          // Add new card at the beginning of the list
+          queryClient.setQueryData(queryKey, [newCard, ...existingData]);
+        }
+      }
+
+      // Also add to generic card list caches
+      const cardListQueries = queryClient.getQueriesData<CharacterCard[]>({
+        queryKey: cardKeys.lists(),
+      });
+
+      for (const [queryKey, existingData] of cardListQueries) {
+        if (existingData && Array.isArray(existingData)) {
+          queryClient.setQueryData(queryKey, [newCard, ...existingData]);
+        }
+      }
+
+      // Invalidate both query types to ensure data consistency with server
+      queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
       queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
     },
   });
