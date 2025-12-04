@@ -126,6 +126,7 @@ export interface AgentCloudData {
   model_id: string | null;
   model_name: string | null;
   model_tier: string;
+  use_default_model?: boolean; // true = use tier-based default, false = use specific model
   prompt_messages: string;
   text_prompt: string;
   enabled_parameters: any;

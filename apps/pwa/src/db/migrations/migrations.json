@@ -219,5 +219,14 @@
     "bps": true,
     "folderMillis": 1764774684656,
     "hash": "3fd574b9b75eb8f1cdafb8977aa28a981ef591bcbae67b574e8e168c248ba450"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"sessions\" ALTER COLUMN \"auto_reply\" SET DEFAULT 'random';",
+      "\nALTER TABLE \"agents\" ADD COLUMN \"use_default_model\" boolean DEFAULT true NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1764861020716,
+    "hash": "94253f6c596b4f83f21aa3ee273edfe19a4061683db24ac0278483a5f4fa18fb"
   }
 ]

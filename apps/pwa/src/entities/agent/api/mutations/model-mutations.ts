@@ -33,13 +33,16 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
       modelName?: string;
       modelTier?: ModelTier;
     }) => {
+      // Determine if using default model based on whether modelTier is provided
+      const useDefaultModel = modelTier !== undefined;
+
       console.log(`[ModelMutation] Updating agent model:`, {
         agentId,
         apiSource,
         modelId,
         modelName,
         modelTier,
-        modelTierIsUndefined: modelTier === undefined,
+        useDefaultModel,
       });
 
       // Get agent
@@ -47,30 +50,31 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
       if (agentResult.isFailure) throw new Error("Agent not found");
       const agent = agentResult.getValue();
 
-      // Update agent - when modelTier is set, clear specific model fields
-      const updatePayload = modelTier !== undefined ? {
+      // Update agent - when useDefaultModel is true, use tier-based defaults
+      const updatePayload = useDefaultModel ? {
         // Tier-based selection: clear specific model, set tier
         apiSource: undefined,
         modelId: undefined,
         modelName,
         modelTier,
+        useDefaultModel: true,
       } : {
-        // Specific model selection: set model fields, clear tier
+        // Specific model selection: set model fields
         ...(apiSource !== undefined && { apiSource }),
         ...(modelId !== undefined && { modelId }),
         ...(modelName !== undefined && { modelName }),
-        modelTier: undefined,
+        useDefaultModel: false,
       };
 
       console.log(`[ModelMutation] Update payload:`, updatePayload);
-      console.log(`[ModelMutation] Agent BEFORE update - modelTier:`, agent.props.modelTier);
+      console.log(`[ModelMutation] Agent BEFORE update - useDefaultModel:`, agent.props.useDefaultModel);
 
       const updatedAgent = agent.update(updatePayload);
       if (updatedAgent.isFailure) {
         throw new Error(updatedAgent.getError());
       }
 
-      console.log(`[ModelMutation] Agent AFTER update - modelTier:`, updatedAgent.getValue().props.modelTier);
+      console.log(`[ModelMutation] Agent AFTER update - useDefaultModel:`, updatedAgent.getValue().props.useDefaultModel);
 
       // Save agent
       const saveResult = await AgentService.saveAgent.execute(updatedAgent.getValue());
@@ -109,27 +113,29 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
       );
       
       // Optimistically update the model query (not the full agent)
+      const useDefaultModel = updates.modelTier !== undefined;
       queryClient.setQueryData(
         agentKeys.model(agentId),
         (old: any) => {
           if (!old) return old;
-          // When modelTier is set, clear specific model fields
-          if (updates.modelTier !== undefined) {
+          // When using default model (tier-based), clear specific model fields
+          if (useDefaultModel) {
             return {
               ...old,
               apiSource: undefined,
               modelId: undefined,
               modelName: updates.modelName,
               modelTier: updates.modelTier,
+              useDefaultModel: true,
             };
           }
-          // When specific model is selected, clear modelTier
+          // When specific model is selected
           return {
             ...old,
             ...(updates.apiSource !== undefined && { apiSource: updates.apiSource }),
             ...(updates.modelId !== undefined && { modelId: updates.modelId }),
             ...(updates.modelName !== undefined && { modelName: updates.modelName }),
-            modelTier: undefined,
+            useDefaultModel: false,
           };
         }
       );

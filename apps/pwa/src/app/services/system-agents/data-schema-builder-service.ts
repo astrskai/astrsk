@@ -56,9 +56,16 @@ Create GENERAL, REUSABLE trackable variables (data stores) for the scenario. The
    - Too many (>8): Overwhelming for players and AI to manage
 
 ## Data Store Types - MIX QUANTITATIVE AND QUALITATIVE:
-- **integer** - Quantitative metrics (e.g., health: 0-100, trust_level: 0-10)
+- **integer** - Quantitative metrics (e.g., health: 0-10, trust_level: 0-10, energy: 0-10)
 - **boolean** - Binary states (e.g., has_weapon, is_injured, door_locked)
 - **string** - Qualitative/categorical states (e.g., current_mood: "calm/anxious/angry", location: "forest/cave/village", weather: "sunny/rainy/stormy")
+
+## IMPORTANT: Conservative Ranges for Gradual Progression
+For numeric fields, use SMALL RANGES to ensure gradual, realistic changes:
+- **Prefer 0-10 over 0-100** - Smaller ranges prevent dramatic swings
+- Values change by small increments (1-3 points per interaction)
+- Example: Use "trust: 0-10" instead of "trust: 0-100"
+- This creates more immersive, believable progression
 
 ## IMPORTANT: Balance Both Types
 - Don't create only numeric trackers! Include qualitative states too.

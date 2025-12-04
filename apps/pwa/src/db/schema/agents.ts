@@ -28,6 +28,7 @@ export const agents = pgTable(TableName.Agents, {
   model_id: varchar(),
   model_name: varchar(),
   model_tier: varchar().$type<ModelTier>().default(ModelTier.Light),
+  use_default_model: boolean().notNull().default(true), // true = use tier-based default, false = use specific model
   prompt_messages: text().notNull(),
   text_prompt: text().notNull().default(""),
   enabled_parameters: jsonb()
