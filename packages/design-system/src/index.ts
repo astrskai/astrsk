@@ -33,6 +33,7 @@ export {
   type SessionCardProps,
   type SessionCardSkeletonProps,
   type CharacterAvatar,
+  type CardBadge,
 } from './components/SessionCard';
 
 // Navigation Components
