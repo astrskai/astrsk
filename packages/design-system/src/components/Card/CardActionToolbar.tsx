@@ -29,7 +29,7 @@ export function CardActionToolbar({
   const handleActionClick =
     (action: CardAction) => (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!action.disabled) {
+      if (!action.disabled && !action.loading) {
         action.onClick(e);
       }
     };
