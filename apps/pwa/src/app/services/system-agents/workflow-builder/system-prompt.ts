@@ -79,9 +79,21 @@ Configure the template agents for this scenario. The flow structure is already c
 
 ### Data Management Agent (data_management_agent)
 - **Purpose**: Analyze conversation and update game state
-- **DO**: Define structured output fields matching the datastore schema
-- **DO**: Map its outputs to datastore node fields
-- Output fields should match what needs to be tracked (e.g., mood, health, location)
+- **DO**: Define structured output fields as DELTA values (not absolute values)
+- **DO**: Map its outputs to datastore node fields using formulas
+- **IMPORTANT**: Use conservative delta ranges to avoid aggressive state changes
+
+**Delta Value Pattern (REQUIRED)**:
+For numeric fields with ranges (e.g., health 0-10), output a small DELTA value with +/- range:
+- Output field: \`health_delta\` with range -1 to +1 (NOT health with 0-10)
+- DataStore mapping formula: \`{{health}}+{{data_management_agent.health_delta}}\`
+- Positive delta = increase, Negative delta = decrease
+- This ensures gradual, realistic changes instead of dramatic swings
+
+**Conservative Delta Ranges**:
+- For fields with range 0-10: use delta range -1 to +1 or -2 to +2
+- For fields with range 0-100: use delta range -3 to +3
+- Always use small increments to maintain immersion
 
 ## Variables Available in Prompts
 - Data Store: \`{{field_name}}\` - current value of tracked field
@@ -102,10 +114,15 @@ You do NOT need to add any history-related prompts or instructions - the system 
 
 2. **Data Management Agent** (data_management_agent):
    - Use \`upsert_prompt_messages\` to explain what state changes to track
-   - Use \`upsert_output_fields\` to define output fields for each datastore field
-   - Use \`update_data_store_node_fields\` to map outputs to datastore
+   - Use \`upsert_output_fields\` to define DELTA output fields (e.g., \`mood_delta\` not \`mood\`)
+   - For numeric fields: use conservative ranges (-1 to +1 for 0-10 fields, -3 to +3 for 0-100 fields)
+   - Use \`update_data_store_node_fields\` to map with formulas: \`{{field}}+{{data_management_agent.field_delta}}\`
 
-Ensure ALL ${context.dataStoreSchema.length} schema fields are updated via data_management_agent.`;
+**Example for health field (0-10)**:
+- Output field: \`health_delta\` (integer, min: -1, max: 1)
+- DataStore mapping: \`{{health}}+{{data_management_agent.health_delta}}\`
+
+Ensure ALL ${context.dataStoreSchema.length} schema fields are updated via data_management_agent using delta values.`;
 }
 
 export function buildUserPrompt(fieldCount: number): string {
@@ -118,10 +135,11 @@ export function buildUserPrompt(fieldCount: number): string {
 
 2. **Data Management Agent** (data_management_agent):
    - Use \`upsert_prompt_messages\` to describe what to analyze
-   - Use \`upsert_output_fields\` to define ${fieldCount} output fields matching the datastore schema
-   - Use \`update_data_store_node_fields\` to map outputs to datastore
+   - Use \`upsert_output_fields\` to define ${fieldCount} DIFF output fields (e.g., \`health_diff\` not \`health\`)
+   - Use conservative diff ranges: 0-1 for fields with 0-10 range, 0-3 for 0-100 range
+   - Use \`update_data_store_node_fields\` with formulas: \`{{field}}-{{data_management_agent.field_diff}}\`
 
-All ${fieldCount} schema fields must be updated via data_management_agent's structured output.`;
+All ${fieldCount} schema fields must be updated via data_management_agent using diff values for gradual changes.`;
 }
 
 // Fixer stage is not needed for simplified workflow builder

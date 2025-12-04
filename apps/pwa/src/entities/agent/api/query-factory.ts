@@ -299,6 +299,7 @@ export const agentQueries = {
           modelId: agent.props.modelId,
           apiSource: agent.props.apiSource,
           modelTier: agent.props.modelTier,
+          useDefaultModel: agent.props.useDefaultModel,
         };
       },
       staleTime: 1000 * 60, // 1 minute
