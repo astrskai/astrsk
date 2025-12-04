@@ -536,8 +536,16 @@ export async function generateWorkflow({
 }): Promise<{ state: WorkflowState; text: string }> {
   const overallStartTime = performance.now();
 
-  // Create mutable state for tracking
-  const state = { ...initialState };
+  // Create mutable state for tracking - deep clone Maps to avoid mutating initialState
+  const state: WorkflowState = {
+    ...initialState,
+    nodes: [...initialState.nodes],
+    edges: [...initialState.edges],
+    agents: new Map(initialState.agents),
+    ifNodes: new Map(initialState.ifNodes),
+    dataStoreNodes: new Map(initialState.dataStoreNodes),
+    dataStoreSchema: [...initialState.dataStoreSchema],
+  };
 
   const sendProgress = (
     phase: WorkflowBuilderProgress["phase"],

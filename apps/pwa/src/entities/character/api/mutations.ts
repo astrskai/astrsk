@@ -329,6 +329,7 @@ export const useUpdateCharacterCard = (cardId: string) => {
 
       // Handle 1:1 Session Config fields (scenario and firstMessages)
       // These are updated together via load/update/save pattern
+      // Build payload conditionally to avoid overwriting existing values with undefined
       if (data.scenario !== undefined || data.firstMessages !== undefined) {
         const scenario = data.scenario;
         const firstMessages = data.firstMessages;
@@ -343,10 +344,15 @@ export const useUpdateCharacterCard = (cardId: string) => {
           if (!(card instanceof CharacterCard)) {
             return { isFailure: true, getError: () => "Not a character card" };
           }
-          card.update({
-            scenario,
-            firstMessages,
-          });
+          // Build update payload conditionally to avoid overwriting existing values
+          const updatePayload: { scenario?: string; firstMessages?: FirstMessageData[] } = {};
+          if (scenario !== undefined) updatePayload.scenario = scenario;
+          if (firstMessages !== undefined) updatePayload.firstMessages = firstMessages;
+
+          const updateResult = card.update(updatePayload);
+          if (updateResult.isFailure) {
+            return updateResult;
+          }
           return CardService.saveCard.execute(card);
         });
       }

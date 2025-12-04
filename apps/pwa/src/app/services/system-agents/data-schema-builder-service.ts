@@ -17,7 +17,7 @@ import { logger } from "@/shared/lib";
 import { sanitizeFileName } from "@/shared/lib/file-utils";
 
 // Types for data schema - matches HudDataStore from hud-step.tsx
-export type DataStoreType = "integer" | "boolean" | "string";
+export type DataStoreType = "integer" | "number" | "boolean" | "string";
 
 export interface DataSchemaEntry {
   id: string;

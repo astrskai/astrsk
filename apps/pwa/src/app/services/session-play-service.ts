@@ -2951,7 +2951,19 @@ function executeJavaScriptCode(
       /\bglobal\b/,
       /\bwindow\b/,
       /\bdocument\b/,
+      /\bconstructor\b/,
+      /\b__proto__\b/,
+      /\bprototype\b/,
+      /\bthis\b/,
+      /\bProxy\b/,
+      /\bReflect\b/,
     ];
+
+    // Check for Unicode escapes and bracket notation (bypass attempts)
+    if (/\\u[0-9a-fA-F]{4}/.test(code) || /\[['"`]/.test(code)) {
+      logger.warn(`JavaScript code contains suspicious patterns: ${code}`);
+      return code;
+    }
 
     if (dangerousPatterns.some((pattern) => pattern.test(code))) {
       logger.warn(

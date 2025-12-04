@@ -1774,7 +1774,14 @@ export function createWorkflowTools(
               /\beval\b/, /\bFunction\b/, /\bsetTimeout\b/, /\bsetInterval\b/,
               /\bimport\b/, /\brequire\b/, /\bprocess\b/, /\bglobal\b/,
               /\bwindow\b/, /\bdocument\b/,
+              /\bconstructor\b/, /\b__proto__\b/, /\bprototype\b/,
+              /\bthis\b/, /\bProxy\b/, /\bReflect\b/,
             ];
+
+            // Check for Unicode escapes and bracket notation (bypass attempts)
+            if (/\\u[0-9a-fA-F]{4}/.test(code) || /\[['"`]/.test(code)) {
+              throw new Error(`Suspicious pattern detected in code: ${code.substring(0, 50)}`);
+            }
 
             if (dangerousPatterns.some((pattern) => pattern.test(code))) {
               throw new Error(`Dangerous pattern detected in code: ${code.substring(0, 50)}`);

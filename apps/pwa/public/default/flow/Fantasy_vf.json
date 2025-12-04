@@ -100,12 +100,12 @@
         "dataStoreFields": [
           {
             "id": "019a2e91-3fa3-7eeb-9d6f-7ca5c478a941",
-            "logic": "{{hp-results_tally.hp_diff}}",
+            "logic": "{{hp}}-{{results_tally.hp_diff}}",
             "schemaFieldId": "019a2ae9-32ea-7333-ab7d-88985327b33d"
           },
           {
             "id": "019a2e93-6783-7eeb-9d6f-87a36cf8420f",
-            "logic": "{{mp-results_tally.mp_diff}}",
+            "logic": "{{mp}}-{{results_tally.mp_diff}}",
             "schemaFieldId": "019a2aea-62e5-7333-ab7d-9dd99fb3acbb"
           },
           {

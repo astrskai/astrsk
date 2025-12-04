@@ -41,7 +41,7 @@ const INPUT_FOCUS_STYLES = "outline-none focus:ring-2 focus:ring-brand-500/20 fo
  * Data Store Type
  * Represents a trackable variable in the HUD
  */
-export type DataStoreType = "integer" | "boolean" | "string";
+export type DataStoreType = "integer" | "number" | "boolean" | "string";
 
 export interface HudDataStore {
   id: string;
@@ -126,6 +126,8 @@ function generateContentHash(context: HudStepProps["sessionContext"]): string {
 function TypeIcon({ type, className }: { type: DataStoreType; className?: string }) {
   switch (type) {
     case "integer":
+      return <Hash size={14} className={className} />;
+    case "number":
       return <Hash size={14} className={className} />;
     case "boolean":
       return <ToggleLeft size={14} className={className} />;
@@ -299,8 +301,10 @@ export function HudStep({
     (field: { id: string; name: string; type: string; initialValue?: string }): HudDataStore => {
       // Map type from template (could be "string", "number", "integer", "boolean")
       let type: DataStoreType = "string";
-      if (field.type === "number" || field.type === "integer") {
+      if (field.type === "integer") {
         type = "integer";
+      } else if (field.type === "number") {
+        type = "number";
       } else if (field.type === "boolean") {
         type = "boolean";
       }
@@ -309,6 +313,8 @@ export function HudStep({
       let initial: number | boolean | string = "";
       if (type === "integer") {
         initial = parseInt(field.initialValue || "0", 10) || 0;
+      } else if (type === "number") {
+        initial = parseFloat(field.initialValue || "0") || 0;
       } else if (type === "boolean") {
         initial = field.initialValue === "true";
       } else {
