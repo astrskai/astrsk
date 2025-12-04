@@ -121,6 +121,8 @@ export class TriggerSystemExtension implements IExtension {
           characterCardId: plotCardId,
           iconSrc: "/default/card/GM_ Dice of Fate.png", // GM image
           onClick: () => {
+            // Don't trigger during inference
+            if (context.disabled) return;
             // Execute scenario flow from scenario start node
             // Pass trigger type from extension's trigger types array
             context.generateCharacterMessage?.(
