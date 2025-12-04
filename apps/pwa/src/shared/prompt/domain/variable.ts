@@ -10,15 +10,16 @@ export const VariableGroup = {
   Filters: "filters",
 } as const;
 
-export type VariableGroup = (typeof VariableGroup)[keyof typeof VariableGroup];
+export type VariableGroup = (typeof VariableGroup)[keyof typeof VariableGroup] | string;
 
-export const VariableGroupLabel = {
+// Core variable group labels (extensions can add more)
+const VARIABLE_GROUP_LABELS: Record<string, { displayName: string; description: string }> = {
   [VariableGroup.Character]: {
     displayName: "Character",
     description: "The character currently being referenced or taking action in a roleplaying sequence."
   },
   [VariableGroup.User]: {
-    displayName: "User", 
+    displayName: "User",
     description: "The character controlled by the user in a roleplay."
   },
   [VariableGroup.Cast]: {
@@ -41,7 +42,10 @@ export const VariableGroupLabel = {
     displayName: "Filters",
     description: "Filters to transform variables."
   }
-} as const;
+};
+
+// Export for backward compatibility
+export const VariableGroupLabel = VARIABLE_GROUP_LABELS;
 
 export interface Variable {
   group: VariableGroup;
@@ -199,6 +203,13 @@ export const variableList: Variable[] = [
   },
   {
     group: VariableGroup.Session,
+    variable: "history_count",
+    description:
+      "The total number of messages (turns) in the current session. Useful for If Node conditions to run agents at intervals (e.g., every 5 messages using history_count % 5 == 0).",
+    dataType: "integer",
+  },
+  {
+    group: VariableGroup.Session,
     variable: "history",
     description:
       "A list of all the turns in a roleplay session, each detailing the actions and narrative progression.\nA [turn] A single step or action in the roleplay session.",
@@ -267,6 +278,7 @@ export const variableList: Variable[] = [
 ];
 
 // Map of known object types and their fields
+// Extensions can add more via registerObjectType()
 const OBJECT_TYPE_FIELDS: Record<string, string[]> = {
   'Character': ['id', 'name', 'description', 'example_dialog', 'entries'],
   'HistoryItem': ['char_id', 'char_name', 'content', 'variables'],
@@ -303,6 +315,38 @@ export class VariableLibrary {
 
   static initialize() {
     this.setVariableList(variableList);
+  }
+
+  /**
+   * Add variables from extensions or other sources
+   * This allows extensions to contribute their own variables to the library
+   */
+  static addVariables(newVariables: Variable[]): void {
+    const combined = [...this.variableList, ...newVariables];
+    this.setVariableList(combined);
+  }
+
+  /**
+   * Register a variable group with label and description
+   * This allows extensions to define their own variable groups
+   * Example: registerVariableGroup('scenario', { displayName: 'Scenario', description: '...' })
+   */
+  static registerVariableGroup(
+    groupId: string,
+    label: { displayName: string; description: string }
+  ): void {
+    VARIABLE_GROUP_LABELS[groupId] = label;
+  }
+
+  /**
+   * Register an object type with its fields
+   * This allows extensions to define custom object types for variable expansion
+   * Example: registerObjectType('Scenario', ['id', 'title', 'description', 'entries'])
+   */
+  static registerObjectType(typeName: string, fields: string[]): void {
+    OBJECT_TYPE_FIELDS[typeName] = fields;
+    // Re-process variable list to update expanded paths
+    this.setVariableList(this.variableList);
   }
 
   static searchVariables(keyword: string): Result<Variable[]> {

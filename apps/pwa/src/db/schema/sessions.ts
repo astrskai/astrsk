@@ -1,4 +1,4 @@
-import { jsonb, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 import { AutoReply } from "@/shared/stores/session-store";
@@ -28,6 +28,8 @@ export const sessions = pgTable(TableName.Sessions, {
   auto_reply: varchar().$type<AutoReply>().notNull().default(AutoReply.Off),
   data_schema_order: jsonb().$type<string[]>().notNull().default([]),
   widget_layout: jsonb().$type<Array<{ i: string; x: number; y: number; w: number; h: number }>>(),
+  is_play_session: boolean().notNull().default(false),
+  config: jsonb().$type<Record<string, unknown>>().notNull().default({}),
   ...timestamps,
 });
 

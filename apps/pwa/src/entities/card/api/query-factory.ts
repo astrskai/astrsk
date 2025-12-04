@@ -277,17 +277,17 @@ export async function fetchCard(id: UniqueEntityID): Promise<Card> {
 
 export async function fetchScenarioCard(
   id: UniqueEntityID,
-): Promise<PlotCard | ScenarioCard> {
+): Promise<ScenarioCard> {
   const card = await fetchCard(id);
-  if (!(card instanceof PlotCard || card instanceof ScenarioCard)) {
-    throw new Error(`Card is not a PlotCard or ScenarioCard: ${id.toString()}`);
+  if (!(card instanceof ScenarioCard)) {
+    throw new Error(`Card is not a ScenarioCard: ${id.toString()}`);
   }
   return card;
 }
 
 export async function fetchScenarioCardOptional(
   id: UniqueEntityID,
-): Promise<PlotCard | ScenarioCard | null> {
+): Promise<ScenarioCard | null> {
   try {
     return await fetchScenarioCard(id);
   } catch {

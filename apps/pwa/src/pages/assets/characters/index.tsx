@@ -122,7 +122,9 @@ export function CharactersPage() {
             onButtonClick={handleCreateCharacter}
           />
         ) : (
-          <CharactersGrid characters={characters} />
+          <>
+            <CharactersGrid characters={characters} />
+          </>
         )}
       </div>
     </div>

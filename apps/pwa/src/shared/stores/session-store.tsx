@@ -9,6 +9,69 @@ import { createSelectors } from "@/shared/lib/zustand-utils";
 
 import { LocalPersistStorage } from "@/shared/stores/local-persist-storage";
 
+// TTL for skipped scenario dialogs (24 hours in milliseconds)
+const SKIPPED_DIALOG_TTL_MS = 24 * 60 * 60 * 1000;
+
+// Semi-persisted state for tracking skipped scenario dialogs per session
+// Values are persisted to localStorage and auto-cleaned after 24 hours
+interface SessionUIState {
+  // Map of sessionId -> timestamp (when it was skipped)
+  skippedScenarioDialogs: Record<string, number>;
+  skipScenarioDialog: (sessionId: string) => void;
+  hasSkippedScenarioDialog: (sessionId: string) => boolean;
+  cleanupExpiredEntries: () => void;
+}
+
+const useSessionUIStoreBase = create<SessionUIState>()(
+  persist(
+    immer((set, get) => ({
+      skippedScenarioDialogs: {},
+      skipScenarioDialog: (sessionId: string) =>
+        set((state) => {
+          state.skippedScenarioDialogs[sessionId] = Date.now();
+        }),
+      hasSkippedScenarioDialog: (sessionId: string) => {
+        const entry = get().skippedScenarioDialogs[sessionId];
+        if (!entry) return false;
+        // Check if entry is still valid (within TTL)
+        const isValid = Date.now() - entry < SKIPPED_DIALOG_TTL_MS;
+        if (!isValid) {
+          // Clean up expired entry
+          get().cleanupExpiredEntries();
+        }
+        return isValid;
+      },
+      cleanupExpiredEntries: () =>
+        set((state) => {
+          const now = Date.now();
+          const entries = Object.entries(state.skippedScenarioDialogs);
+          for (const [sessionId, timestamp] of entries) {
+            if (now - timestamp >= SKIPPED_DIALOG_TTL_MS) {
+              delete state.skippedScenarioDialogs[sessionId];
+            }
+          }
+        }),
+    })),
+    {
+      name: "session-ui-store",
+      storage: new LocalPersistStorage<SessionUIState>(),
+      // Only persist the skipped dialogs data
+      partialize: (state) =>
+        ({
+          skippedScenarioDialogs: state.skippedScenarioDialogs,
+        }) as SessionUIState,
+      // Clean up expired entries on rehydration
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.cleanupExpiredEntries();
+        }
+      },
+    },
+  ),
+);
+
+export const useSessionUIStore = createSelectors(useSessionUIStoreBase);
+
 export const RightSidebarDetail = {
   LLM: "llm",
   Display: "display",
@@ -47,6 +110,12 @@ interface SessionState {
   // Create session
   createSessionName: string;
   setCreateSessionName: (name: string) => void;
+
+  // Panel visibility per session (keyed by sessionId)
+  settingsPanelOpen: Record<string, boolean>;
+  dataPanelOpen: Record<string, boolean>;
+  setSettingsPanelOpen: (sessionId: string, open: boolean) => void;
+  setDataPanelOpen: (sessionId: string, open: boolean) => void;
 }
 
 const useSessionStoreBase = create<SessionState>()(
@@ -87,6 +156,18 @@ const useSessionStoreBase = create<SessionState>()(
       setCreateSessionName: (name) =>
         set((state) => {
           state.createSessionName = name;
+        }),
+
+      // Panel visibility per session
+      settingsPanelOpen: {},
+      dataPanelOpen: {},
+      setSettingsPanelOpen: (sessionId: string, open: boolean) =>
+        set((state) => {
+          state.settingsPanelOpen[sessionId] = open;
+        }),
+      setDataPanelOpen: (sessionId: string, open: boolean) =>
+        set((state) => {
+          state.dataPanelOpen[sessionId] = open;
         }),
     })),
     {

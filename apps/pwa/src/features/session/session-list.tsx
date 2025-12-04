@@ -559,13 +559,13 @@ const SessionListItemMobile = ({
                     cardId={card.id}
                   />
                 ))} */}
-              {session.characterCards.length > 3 && (
+              {session.characterCards.filter((c) => c.enabled).length > 3 && (
                 <div
                   className="bg-surface-overlay outline-surface-raised inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"
                   style={{ zIndex: 0 }}
                 >
                   <div className="text-text-placeholder justify-start text-[10px] leading-none font-medium">
-                    +{session.characterCards.length - 3}
+                    +{session.characterCards.filter((c) => c.enabled).length - 3}
                   </div>
                 </div>
               )}

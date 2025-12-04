@@ -23,6 +23,13 @@ export interface Character {
   entries: string[];
 }
 
+export interface Scenario {
+  id: string;
+  name: string;
+  description: string;
+  entries: string[];
+}
+
 export type RenderContext = {
   // Characters
   char?: Character;
@@ -32,6 +39,9 @@ export type RenderContext = {
     active?: Character;
     inactive?: Character[];
   };
+
+  // Scenario (extensions can add more top-level properties)
+  scenario?: Scenario;
 
   // Session
   session: {
@@ -45,6 +55,9 @@ export type RenderContext = {
 
   // History
   history?: HistoryItem[];
+
+  // History count - total number of turns in session (efficient: uses turnIds.length)
+  history_count?: number;
 
   // Toggle
   toggle?: {

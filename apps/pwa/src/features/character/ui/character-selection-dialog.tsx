@@ -364,7 +364,7 @@ export function CharacterSelectionDialog({
 
               {/* Character Preview List */}
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-2 gap-4">
                   {filteredCharacterCards.map(
                     (card: CharacterCard, index: number) => {
                       const cardId = card.id.toString();

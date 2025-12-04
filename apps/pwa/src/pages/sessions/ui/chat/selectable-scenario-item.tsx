@@ -1,8 +1,4 @@
-import React from "react";
-import Markdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
-import rehypeSanitize from "rehype-sanitize";
-import { cn } from "@/shared/lib";
+import { ScenarioMessageBox } from "./scenario-message-box";
 
 interface SelectableScenarioItemProps {
   name: string;
@@ -18,25 +14,12 @@ const SelectableScenarioItem = ({
   onClick,
 }: SelectableScenarioItemProps) => {
   return (
-    <div
-      className={cn(
-        "bg-hover flex cursor-pointer flex-col items-start justify-start gap-2 self-stretch rounded border-2 p-4",
-        active ? "border-accent-primary" : "border-transparent",
-      )}
+    <ScenarioMessageBox
+      name={name}
+      content={contents}
+      active={active}
       onClick={onClick}
-    >
-      <div className="text-fg-muted justify-start self-stretch text-base font-normal break-words">
-        {name}
-      </div>
-      {contents && (
-        <Markdown
-          rehypePlugins={[rehypeRaw, rehypeSanitize]}
-          className="markdown text-fg-muted overflow-wrap-anywhere justify-start self-stretch text-sm font-normal break-words opacity-70"
-        >
-          {contents}
-        </Markdown>
-      )}
-    </div>
+    />
   );
 };
 

@@ -139,7 +139,7 @@ export class SessionSupabaseMapper {
       widget_layout,
       tags,
       summary,
-      is_public: false,
+      is_public: true,
       owner_id: null,
       created_at: session.props.createdAt.toISOString(),
       updated_at: session.props.updatedAt?.toISOString() || new Date().toISOString(),

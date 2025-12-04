@@ -141,6 +141,20 @@
       "when": 1763694696450,
       "tag": "20251121031136_flimsy_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1764767677742,
+      "tag": "20251203131437_careful_apocalypse",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1764774684656,
+      "tag": "20251203151124_clumsy_whirlwind",
+      "breakpoints": true
     }
   ]
 }

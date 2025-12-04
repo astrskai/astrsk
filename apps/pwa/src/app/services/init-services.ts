@@ -9,6 +9,7 @@ import { TurnService } from "@/app/services/turn-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { VibeSessionService } from "@/app/services/vibe-session-service";
+import { initializeExtensions } from "@/features/extensions/bootstrap";
 
 export async function initServices(
   onProgress?: (service: string, status: "start" | "success" | "error", error?: string) => void,
@@ -114,6 +115,12 @@ export async function initServices(
       DataStoreNodeService.dataStoreNodeRepo,
       IfNodeService.ifNodeRepo,
     );
+    onProgress?.(currentService, "success");
+
+    // Extensions - Initialize last, after all services are ready
+    currentService = "extensions";
+    onProgress?.(currentService, "start");
+    await initializeExtensions();
     onProgress?.(currentService, "success");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

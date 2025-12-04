@@ -8,12 +8,16 @@
 // Query factory
 export { sessionQueries, fetchSession } from "./query-factory";
 
+// Types
+export type { SessionListItem } from "@/entities/session/repos";
+
 // Mutation hooks
 export {
   useSaveSession,
   useAddMessage,
   useDeleteMessage,
   useDeleteSession,
+  useCloneSession,
 } from "./mutations";
 
 // Custom query hooks

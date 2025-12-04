@@ -57,6 +57,8 @@ export class SessionDrizzleMapper {
         autoReply: row.auto_reply,
         dataSchemaOrder: row.data_schema_order || [],
         widgetLayout: row.widget_layout || undefined,
+        isPlaySession: row.is_play_session ?? false,
+        config: row.config ?? {},
         createdAt: new Date(row.created_at),
         updatedAt: new Date(row.updated_at),
       },
@@ -98,6 +100,8 @@ export class SessionDrizzleMapper {
       auto_reply: domain.props.autoReply,
       data_schema_order: domain.props.dataSchemaOrder || [],
       widget_layout: domain.props.widgetLayout || null,
+      is_play_session: domain.props.isPlaySession ?? false,
+      config: domain.props.config ?? {},
       created_at: domain.props.createdAt,
       updated_at: domain.props.updatedAt,
     };

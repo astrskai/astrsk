@@ -218,7 +218,7 @@ export default function BackgroundGrid({
       {/* Combined grid: No Background → User added (deletable) → Default backgrounds */}
       <div className="custom-scrollbar max-h-96 overflow-y-auto">
         <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-          {/* No background option */}
+          {/* No background option - shows the default galaxy gradient */}
           <button
             type="button"
             onClick={() => onSelect(undefined)}
@@ -228,8 +228,17 @@ export default function BackgroundGrid({
               !currentBackgroundId ? "border-brand-500" : "border-border-muted",
             )}
           >
-            <div className="flex h-full w-full items-center justify-center bg-surface">
-              <p className="text-xs text-fg-subtle">No background</p>
+            <div
+              className="flex h-full w-full items-center justify-center"
+              style={{
+                background:
+                  "radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 50%), " +
+                  "radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), " +
+                  "radial-gradient(ellipse at 50% 50%, rgba(79, 70, 229, 0.06) 0%, transparent 70%), " +
+                  "linear-gradient(to bottom, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%)",
+              }}
+            >
+              <p className="text-xs text-fg-subtle">Default</p>
             </div>
           </button>
 

@@ -9,8 +9,10 @@ import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
 import { AutoReply } from "@/shared/stores/session-store";
 import ChatStatsButton from "./chat-stats-button";
+import { useExtensionUI } from "@/shared/hooks/use-extension-ui";
 
 interface ChatInputProps {
+  sessionId: UniqueEntityID;
   aiCharacterIds: UniqueEntityID[];
   userCharacterId?: UniqueEntityID;
   streamingMessageId?: UniqueEntityID | null;
@@ -20,11 +22,16 @@ interface ChatInputProps {
   onAutoReply: () => void;
   onSendMessage?: (messageContent: string) => void;
   onStopGenerate?: () => void;
-  generateCharacterMessage?: (characterId: UniqueEntityID) => void;
+  generateCharacterMessage?: (
+    characterId: UniqueEntityID,
+    regenerateMessageId?: UniqueEntityID,
+    triggerType?: string,
+  ) => void;
   className?: string;
 }
 
 export default function ChatInput({
+  sessionId,
   aiCharacterIds,
   userCharacterId,
   streamingMessageId,
@@ -39,6 +46,14 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [isOpenGuide, setIsOpenGuide] = useState<boolean>(false);
   const [messageContent, setMessageContent] = useState<string>("");
+
+  // Get extension UI components for the session input buttons slot
+  const extensionButtons = useExtensionUI("session-input-buttons", {
+    sessionId,
+    disabled: !!streamingMessageId,
+    generateCharacterMessage,
+    onCharacterButtonClicked: () => setIsOpenGuide(false),
+  });
   // const shouldShowTooltip =
   // !disabled && (isOpenGuide || !sessionOnboardingSteps.inferenceButton);
 
@@ -67,11 +82,17 @@ export default function ChatInput({
     >
       <div className="flex flex-row items-start justify-between gap-1">
         <div className="flex flex-row gap-4 overflow-x-auto">
+          {/* Extension buttons (e.g., scenario trigger) */}
+          {extensionButtons.map((button) => (
+            <div key={button.id}>{button.render()}</div>
+          ))}
+
           {userCharacterId && (
             <ChatCharacterButton
               characterId={userCharacterId}
               onClick={() => {
-                generateCharacterMessage?.(userCharacterId);
+                // Pass "user" trigger type to use user start node in flow
+                generateCharacterMessage?.(userCharacterId, undefined, "user");
                 onCharacterButtonClicked();
               }}
               isUser

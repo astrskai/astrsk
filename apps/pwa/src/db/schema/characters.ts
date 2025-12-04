@@ -6,6 +6,12 @@ import { timestamps } from "@/db/types/timestamps";
 import { LorebookJSON } from "@/entities/card/domain/lorebook";
 import { sessions } from "@/db/schema/sessions";
 
+// Type for first messages stored in character (for 1:1 sessions)
+export interface CharacterFirstMessage {
+  name: string;
+  description: string;
+}
+
 export const characters = pgTable(TableName.Characters, {
   id: uuid().primaryKey(),
 
@@ -25,6 +31,10 @@ export const characters = pgTable(TableName.Characters, {
   description: text(),
   example_dialogue: text(),
   lorebook: jsonb().$type<LorebookJSON>(),
+
+  // 1:1 Session specific fields
+  scenario: text(), // Scenario context for 1:1 sessions
+  first_messages: jsonb().$type<CharacterFirstMessage[]>(), // First messages for 1:1 sessions
 
   // Session-local resource support
   // NULL = global resource (shows in lists)

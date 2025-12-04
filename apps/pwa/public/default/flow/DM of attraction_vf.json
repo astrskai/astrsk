@@ -1,0 +1,1728 @@
+{
+  "name": "DM of attraction_vf",
+  "description": "",
+  "nodes": [
+    {
+      "id": "019ae7fc-d2df-7ddf-a116-c87992c3c767",
+      "type": "start",
+      "position": {
+        "x": 51.631930115157616,
+        "y": -1229.6313994404188
+      },
+      "data": {},
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a116-d37a9f170068",
+      "type": "end",
+      "position": {
+        "x": 3050.820493933117,
+        "y": -543.8688743788932
+      },
+      "data": {},
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a116-d923730702d8",
+      "type": "agent",
+      "position": {
+        "x": 1328.3250321795304,
+        "y": -400.49131374984665
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603",
+      "type": "if",
+      "position": {
+        "x": 653.7851483526429,
+        "y": -522.3016331082625
+      },
+      "data": {
+        "name": "if attraction is below 88",
+        "color": "#FDBA74",
+        "conditions": [
+          {
+            "id": "019a5828-13fb-7998-97a8-76d7420eb385",
+            "value1": "{{attraction_level}}",
+            "value2": "88",
+            "dataType": "integer",
+            "operator": "integer_less_than_or_equals"
+          }
+        ],
+        "logicOperator": "AND"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+      "type": "agent",
+      "position": {
+        "x": 1328.6679548387094,
+        "y": 430.4721751449832
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a116-f49b6e62c9a6",
+      "type": "if",
+      "position": {
+        "x": 411.574645874429,
+        "y": -1366.2081837882677
+      },
+      "data": {
+        "name": "If getting to know each other",
+        "color": "#93C5FD",
+        "conditions": [
+          {
+            "id": "019a5316-5a75-7998-97a8-34ae7e538bc9",
+            "value1": "{{name}}",
+            "value2": "",
+            "dataType": "string",
+            "operator": "string_is_empty"
+          },
+          {
+            "id": "019a7710-b033-7bbf-a1c9-7030dd3e2714",
+            "value1": "{{appearance}}",
+            "value2": "",
+            "dataType": "string",
+            "operator": "string_is_empty"
+          },
+          {
+            "id": "019a7710-fd88-7bbf-a1c9-7f5d189f7871",
+            "value1": "{{interest}}",
+            "value2": "",
+            "dataType": "string",
+            "operator": "string_is_empty"
+          },
+          {
+            "id": "019a7711-104b-7bbf-a1c9-8399067baa07",
+            "value1": "{{something_unique}}",
+            "value2": "",
+            "dataType": "string",
+            "operator": "string_is_empty"
+          }
+        ],
+        "logicOperator": "OR"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a116-fe11b8a0aeaa",
+      "type": "agent",
+      "position": {
+        "x": 1284.7126633848418,
+        "y": -1706.0302949335382
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-03ca190c86fa",
+      "type": "dataStore",
+      "position": {
+        "x": 1943.4605280090777,
+        "y": -1651.845455887894
+      },
+      "data": {
+        "name": "New Data Update",
+        "color": "#F0ABFC",
+        "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+        "dataStoreFields": [
+          {
+            "id": "019a590f-f167-7771-96b4-57cb38a60dd4",
+            "logic": "{{first_hi.name}}",
+            "schemaFieldId": "019a495d-8c38-7cca-a66e-67a0460a2c18"
+          },
+          {
+            "id": "019a590f-fa6f-7771-96b4-5d7cb3300f03",
+            "logic": "{{first_hi.appearance}}",
+            "schemaFieldId": "019a5819-5e24-7998-97a8-3ce19cbf36c7"
+          },
+          {
+            "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+            "logic": "{{attraction_level}}+{{first_hi.affection_diff}}",
+            "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8"
+          },
+          {
+            "id": "019a5d7d-c3a3-7cc2-984e-09f175c61a9d",
+            "logic": "{{first_hi.interest}}",
+            "schemaFieldId": "019a5d77-605b-7cc2-984b-5e82bba20fe6"
+          },
+          {
+            "id": "019a5d7d-c88f-7cc2-984e-138c71393d74",
+            "logic": "{{first_hi.something_unique}}",
+            "schemaFieldId": "019a5d77-74a9-7cc2-984b-63bfb6497e63"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-085615d629e8",
+      "type": "if",
+      "position": {
+        "x": 661.2924268224539,
+        "y": -243.7661313465685
+      },
+      "data": {
+        "name": "If attraction is 100",
+        "color": "#FDE047",
+        "conditions": [
+          {
+            "id": "019a5828-a477-7998-97a8-91c08d11a8e6",
+            "value1": "{{attraction_level}}",
+            "value2": "100",
+            "dataType": "integer",
+            "operator": "integer_greater_than_or_equals"
+          }
+        ],
+        "logicOperator": "AND"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-13685585df44",
+      "type": "agent",
+      "position": {
+        "x": 1331.7624268958336,
+        "y": 20.21604594600523
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-197d4b95b1e8",
+      "type": "if",
+      "position": {
+        "x": 665.0748974471143,
+        "y": -826.7826690388265
+      },
+      "data": {
+        "name": "If attraction is below 25",
+        "color": "#86EFAC",
+        "conditions": [
+          {
+            "id": "019a5820-f353-7998-97a8-586aa4799030",
+            "value1": "{{attraction_level}}",
+            "value2": "25",
+            "dataType": "integer",
+            "operator": "integer_less_than_or_equals"
+          }
+        ],
+        "logicOperator": "AND"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-23ef3f0198ca",
+      "type": "agent",
+      "position": {
+        "x": 1322.340126485726,
+        "y": -825.5161602468421
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d",
+      "type": "if",
+      "position": {
+        "x": 659.2085137170426,
+        "y": -1108.6317076948187
+      },
+      "data": {
+        "name": "If attraction is 0",
+        "color": "#FCA5A5",
+        "conditions": [
+          {
+            "id": "019a5820-f353-7998-97a8-586aa4799030",
+            "value1": "{{attraction_level}}",
+            "value2": "5",
+            "dataType": "integer",
+            "operator": "integer_less_than_or_equals"
+          }
+        ],
+        "logicOperator": "AND"
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
+      "type": "agent",
+      "position": {
+        "x": 1283.252184907311,
+        "y": -1276.6139219433553
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-3dc80c594111",
+      "type": "dataStore",
+      "position": {
+        "x": 1925.7141588088398,
+        "y": -1229.2264664721092
+      },
+      "data": {
+        "name": "New Data Update 1",
+        "color": "#7DD3FC",
+        "dataStoreFields": [
+          {
+            "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+            "logic": "{{attraction_level}}+{{get_lost.affection_diff}}",
+            "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-47422b93bcfc",
+      "type": "dataStore",
+      "position": {
+        "x": 1944.5603080499418,
+        "y": -847.3299044263032
+      },
+      "data": {
+        "name": "New Data Update 2",
+        "color": "#F9A8D4",
+        "dataStoreFields": [
+          {
+            "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+            "logic": "{{attraction_level}}+{{be_protective_and_want_to_end_convo.affection_diff}}",
+            "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-4b61f0652102",
+      "type": "dataStore",
+      "position": {
+        "x": 1948.149382224301,
+        "y": -471.1573468507338
+      },
+      "data": {
+        "name": "New Data Update 3",
+        "color": "#6EE7B7",
+        "dataStoreFields": [
+          {
+            "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+            "logic": "{{attraction_level}}+{{compare_compatibility.affection_diff}}",
+            "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-5479ed1a09c6",
+      "type": "dataStore",
+      "position": {
+        "x": 1955.8363235466727,
+        "y": 441.4994661405561
+      },
+      "data": {
+        "name": "New Data Update 4",
+        "color": "#D8B4FE",
+        "dataStoreFields": [
+          {
+            "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+            "logic": "{{attraction_level}}+{{seem_more_interested.affection_diff}}",
+            "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-5c3af7634a4c",
+      "type": "dataStore",
+      "position": {
+        "x": 1921.0592578773358,
+        "y": -52.69473511520823
+      },
+      "data": {
+        "name": "New Data Update 5",
+        "color": "#5EEAD4",
+        "dataStoreFields": [
+          {
+            "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+            "logic": "{{attraction_level}}+{{where_are_we_going_.affection_diff}}",
+            "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-628707aae578",
+      "type": "dataStore",
+      "position": {
+        "x": 2455.4605280090777,
+        "y": -533.8454558878941
+      },
+      "data": {
+        "name": "before_end_node",
+        "color": "#A5B4FC",
+        "dataStoreFields": []
+      },
+      "deletable": false
+    },
+    {
+      "id": "e0fcda79-a27e-4aa9-8f75-33de81ee2f7b",
+      "type": "start",
+      "position": {
+        "x": 80.93544670430562,
+        "y": 960.1198276521294
+      },
+      "data": {
+        "nodeVariant": "user"
+      },
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "23e49d5c-6ce1-4425-aff1-660dd64c5784",
+      "type": "start",
+      "position": {
+        "x": 106.28425966339182,
+        "y": 1561.5072219810286
+      },
+      "data": {
+        "nodeVariant": "scenario"
+      },
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "019ae807-e84a-7ddf-a118-5474ae378110",
+      "type": "agent",
+      "position": {
+        "x": 1302.0695967908614,
+        "y": 957.2458168767047
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae808-15ba-7ddf-a118-592fe68b222a",
+      "type": "agent",
+      "position": {
+        "x": 1309.7324941353595,
+        "y": 1398.2376508607188
+      },
+      "data": {},
+      "deletable": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-7379feab594a",
+      "source": "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603",
+      "target": "019ae7fc-d2df-7ddf-a116-d923730702d8",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-797424f2e62b",
+      "source": "019ae7fc-d2df-7ddf-a117-085615d629e8",
+      "target": "019ae7fc-d2df-7ddf-a117-13685585df44",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-82582331747d",
+      "source": "019ae7fc-d2df-7ddf-a117-085615d629e8",
+      "target": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-8c84127a3f0c",
+      "source": "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603",
+      "target": "019ae7fc-d2df-7ddf-a117-085615d629e8",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-9199f5ee944c",
+      "source": "019ae7fc-d2df-7ddf-a116-fe11b8a0aeaa",
+      "target": "019ae7fc-d2df-7ddf-a117-03ca190c86fa"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-9be5551fb1c1",
+      "source": "019ae7fc-d2df-7ddf-a116-f49b6e62c9a6",
+      "target": "019ae7fc-d2df-7ddf-a116-fe11b8a0aeaa",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-a490503e27b8",
+      "source": "019ae7fc-d2df-7ddf-a116-f49b6e62c9a6",
+      "target": "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-a9a3fdd05955",
+      "source": "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d",
+      "target": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-b4f9917e6f88",
+      "source": "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d",
+      "target": "019ae7fc-d2df-7ddf-a117-197d4b95b1e8",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-be693384da1f",
+      "source": "019ae7fc-d2df-7ddf-a117-197d4b95b1e8",
+      "target": "019ae7fc-d2df-7ddf-a117-23ef3f0198ca",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-c2ab29102b51",
+      "source": "019ae7fc-d2df-7ddf-a117-197d4b95b1e8",
+      "target": "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-cc1d4d047cff",
+      "source": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
+      "target": "019ae7fc-d2df-7ddf-a117-3dc80c594111"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-d1bf84689a91",
+      "source": "019ae7fc-d2df-7ddf-a117-23ef3f0198ca",
+      "target": "019ae7fc-d2df-7ddf-a117-47422b93bcfc"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-dcad44659925",
+      "source": "019ae7fc-d2df-7ddf-a116-d923730702d8",
+      "target": "019ae7fc-d2df-7ddf-a117-4b61f0652102"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-e4e112023e67",
+      "source": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+      "target": "019ae7fc-d2df-7ddf-a117-5479ed1a09c6"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-ee741352aa44",
+      "source": "019ae7fc-d2df-7ddf-a117-13685585df44",
+      "target": "019ae7fc-d2df-7ddf-a117-5c3af7634a4c"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-f10c6daf1889",
+      "source": "019ae7fc-d2df-7ddf-a117-03ca190c86fa",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a117-fe8dd3643e3e",
+      "source": "019ae7fc-d2df-7ddf-a117-3dc80c594111",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a118-064ad8ef54dc",
+      "source": "019ae7fc-d2df-7ddf-a117-47422b93bcfc",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a118-0c562b0cee8c",
+      "source": "019ae7fc-d2df-7ddf-a117-4b61f0652102",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a118-15f41ddec115",
+      "source": "019ae7fc-d2df-7ddf-a117-5c3af7634a4c",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
+    },
+    {
+      "id": "019ae7fc-d2df-7ddf-a118-1a011aac6678",
+      "source": "019ae7fc-d2df-7ddf-a117-5479ed1a09c6",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
+    }
+  ],
+  "responseTemplate": "{{first_hi.Response}}\r\n{{get_lost.response}}\r\n{{be_protective_and_want_to_end_convo.response}}\r\n{{compare_compatibility.Response}}\r\n{{where_are_we_going.response}}\r\n{{seem_more_interested.response}}\r\n{{rp_agent_user.response}}\r\n{{rp_agent_scenario.response}}",
+  "createdAt": "2025-12-04T06:26:03.081Z",
+  "updatedAt": "2025-12-04T06:26:03.081Z",
+  "panelStructure": {
+    "panels": [],
+    "version": 2,
+    "activePanel": "flow-panel-main",
+    "panelMetadata": {
+      "flow-panel-main": {
+        "title": "Flow Editor",
+        "params": {
+          "title": "Flow Editor",
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+        },
+        "component": "flow"
+      },
+      "responseDesign-standalone": {
+        "title": "Response Design",
+        "params": {
+          "title": "Response Design",
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+          "panelType": "responseDesign"
+        },
+        "component": "responseDesign"
+      },
+      "prompt-019ae7fc-d2df-7ddf-a116-d923730702d8": {
+        "title": "[Compare compatibility] Prompt",
+        "params": {
+          "title": "[compare_compatibility] Prompt",
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+          "agentId": "019ae7fc-d2df-7ddf-a116-d923730702d8",
+          "panelType": "prompt",
+          "agentColor": "#A5B4FC",
+          "agentInactive": true
+        },
+        "component": "prompt"
+      },
+      "prompt-019ae7fc-d2df-7ddf-a116-ed31cc9235f7": {
+        "title": "[Seem more interested] Prompt",
+        "params": {
+          "title": "[seem_more_interested] Prompt",
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+          "agentId": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+          "panelType": "prompt",
+          "agentColor": "#BEF264",
+          "agentInactive": true
+        },
+        "component": "prompt"
+      },
+      "structuredOutput-019ae7fc-d2df-7ddf-a117-30991e9e7676": {
+        "title": "[Get lost] Output",
+        "params": {
+          "title": "[get_lost] Output",
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+          "agentId": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
+          "panelType": "structuredOutput",
+          "agentColor": "#FCD34D",
+          "agentInactive": true
+        },
+        "component": "structuredOutput"
+      }
+    },
+    "serializedLayout": {
+      "grid": {
+        "root": {
+          "data": [
+            {
+              "data": {
+                "id": "1",
+                "views": [
+                  "flow-panel-main"
+                ],
+                "locked": true,
+                "activeView": "flow-panel-main"
+              },
+              "size": 833,
+              "type": "leaf"
+            },
+            {
+              "data": {
+                "id": "2",
+                "views": [
+                  "responseDesign-standalone",
+                  "prompt-019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+                  "prompt-019ae7fc-d2df-7ddf-a116-d923730702d8",
+                  "structuredOutput-019ae7fc-d2df-7ddf-a117-30991e9e7676"
+                ],
+                "activeView": "responseDesign-standalone"
+              },
+              "size": 815,
+              "type": "leaf"
+            }
+          ],
+          "size": 992,
+          "type": "branch"
+        },
+        "width": 1648,
+        "height": 992,
+        "orientation": "HORIZONTAL"
+      },
+      "panels": {
+        "flow-panel-main": {
+          "id": "flow-panel-main",
+          "title": "Flow Editor",
+          "params": {
+            "title": "Flow Editor",
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "flow"
+        },
+        "responseDesign-standalone": {
+          "id": "responseDesign-standalone",
+          "title": "Response Design",
+          "params": {
+            "title": "Response Design",
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+            "panelType": "responseDesign"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "responseDesign"
+        },
+        "prompt-019ae7fc-d2df-7ddf-a116-d923730702d8": {
+          "id": "prompt-019ae7fc-d2df-7ddf-a116-d923730702d8",
+          "title": "[Compare compatibility] Prompt",
+          "params": {
+            "title": "[compare_compatibility] Prompt",
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+            "agentId": "019ae7fc-d2df-7ddf-a116-d923730702d8",
+            "panelType": "prompt",
+            "agentColor": "#A5B4FC",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "prompt"
+        },
+        "prompt-019ae7fc-d2df-7ddf-a116-ed31cc9235f7": {
+          "id": "prompt-019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+          "title": "[Seem more interested] Prompt",
+          "params": {
+            "title": "[seem_more_interested] Prompt",
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+            "agentId": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+            "panelType": "prompt",
+            "agentColor": "#BEF264",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "prompt"
+        },
+        "structuredOutput-019ae7fc-d2df-7ddf-a117-30991e9e7676": {
+          "id": "structuredOutput-019ae7fc-d2df-7ddf-a117-30991e9e7676",
+          "title": "[Get lost] Output",
+          "params": {
+            "title": "[get_lost] Output",
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+            "agentId": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
+            "panelType": "structuredOutput",
+            "agentColor": "#FCD34D",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "structuredOutput"
+        }
+      },
+      "activeGroup": "1"
+    }
+  },
+  "viewport": {
+    "x": -252.0231748265685,
+    "y": -355.6573423210623,
+    "zoom": 0.6977584329271814
+  },
+  "dataStoreSchema": {
+    "fields": [
+      {
+        "id": "019a495d-8c38-7cca-a66e-67a0460a2c18",
+        "name": "name",
+        "type": "string",
+        "initialValue": ""
+      },
+      {
+        "id": "019a5819-5e24-7998-97a8-3ce19cbf36c7",
+        "name": "appearance",
+        "type": "string",
+        "initialValue": ""
+      },
+      {
+        "id": "019a5822-10a8-7998-97a8-65d1c1b4c4f8",
+        "name": "attraction_level",
+        "type": "integer",
+        "initialValue": "50"
+      },
+      {
+        "id": "019a5d77-605b-7cc2-984b-5e82bba20fe6",
+        "name": "interest",
+        "type": "string",
+        "initialValue": "\\"
+      },
+      {
+        "id": "019a5d77-74a9-7cc2-984b-63bfb6497e63",
+        "name": "something_unique",
+        "type": "string",
+        "initialValue": "\\"
+      }
+    ]
+  },
+  "readyState": "draft",
+  "agents": {
+    "019ae7fc-d2df-7ddf-a116-d923730702d8": {
+      "name": "compare_compatibility",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You embody {{char.name}}, bringing to life their essence: {{char.description}}.\r\n\r\n**Critical rule**: Respond exclusively as {{char.name}}. Never write for anyone else. You can only communicate through texting. No actions will be shown to the other party.\r\n\r\n## Current Scenario\r\n{{session.scenario}} — You're in a DM conversation with {{name}}.\r\n\r\n## Known Info\r\n**Their name**: {{name}}\r\n**Their appearance**: {{appearance}}\r\n**Their interests**: {{interest}}\r\n**Interesting fact**: {{something_unique}}\r\n\r\n## Relationship Dynamic\r\nYour current attraction to {{name}} registers at {{attraction_level}}/100, but attraction isn't everything — you need substance too.\r\n\r\n## Your Current Mindset\r\nYou're in discovery mode. Sure, there's some initial interest, but you're still figuring out who {{name}} really is beyond their profile. This is the vetting phase where you're assessing compatibility and depth. Keep a casual conversation. Go with the flow of the conversation as you assess your compatibility with each other.\r\n\r\n**What you're trying to figure out through these messages:**\r\n- Are they genuinely interesting or just good at small talk?\r\n- Do their values align with yours in ways that matter?\r\n- Can they keep up with your conversation style?\r\n- Are there any red flags hiding behind the charm?\r\n- Is there actual substance here or just surface-level attraction?\r\n- Do they make you curious to know more, or are you getting bored?\r\n\r\n**Your texting approach**: Let {{char.name}}'s personality guide your investigation style. Some people ask direct questions, others share stories and see what comes back. Some test humor compatibility, others dive into deep topics. You might send random \"what do you think about...\" messages or keep things light while observing carefully. Stay true to how {{char.name}} would naturally probe for deeper connection while maintaining the casual nature of DMs.\r\n\r\nYou're not sold yet — make them earn your continued interest.\r\n\r\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-11-12T08:28:16.133Z",
+              "updatedAt": "2025-11-12T08:28:16.133Z",
+              "id": "019a772e-0585-7bbf-a1dd-9b5b2fc64291"
+            }
+          ],
+          "createdAt": "2025-11-12T08:28:16.133Z",
+          "id": "message-1762430107831"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T08:28:16.133Z",
+              "updatedAt": "2025-11-12T08:28:16.133Z",
+              "id": "019a772e-0585-7bbf-a1dd-a66e1e6c5c31"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T08:28:16.133Z",
+              "updatedAt": "2025-11-12T08:28:16.133Z",
+              "id": "019a772e-0585-7bbf-a1dd-a9a72758d27e"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-12T08:28:16.133Z",
+          "id": "history-1762935453770"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "affection_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 10,
+          "minimum": -20,
+          "required": true,
+          "description": "Calculate the change in affection you have towards the other character. the affection level are from 0 to 100. 0 being you hate this person to 100 being you want to go on a date with this person. If the conversation does not change your affection level, keep the output as 0. If you like this person less because of the conversation, output a negative number, if it was positive, a positive number."
+        },
+        {
+          "name": "Response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Write a response as {{char.name}}. You're in a DM conversation with someone new. You can only communicate through texting.\r\nNo actions will be shown to the other party."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#A5B4FC",
+      "createdAt": "2025-12-04T06:11:37.322Z",
+      "updatedAt": "2025-12-04T06:25:06.276Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    },
+    "019ae7fc-d2df-7ddf-a116-ed31cc9235f7": {
+      "name": "seem_more_interested",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "deepseek",
+      "modelId": "deepseek-chat",
+      "modelName": "deepseek-chat",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You embody {{char.name}}, bringing to life their essence: {{char.description}}.\r\n\r\n**Critical rule**: Respond exclusively as {{char.name}}. Never write for anyone else. You can only communicate through texting. No actions will be shown to the other party.\r\n\r\n## Current Scenario\r\n{{session.scenario}} — You're texting with {{name}} through DMs/chat.\r\n\r\n## Known Info\r\n**Their name**: {{name}}\r\n**Their appearance**: {{appearance}}\r\n**Their interests**: {{interest}}\r\n**Interesting fact**: {{something_unique}}\r\n\r\n## Relationship Dynamic\r\nYour current attraction to {{name}} registers at {{attraction_level}}/100, creating an undercurrent of tension in your exchanges.\r\n\r\n## Your Current Mood\r\nYou're in a playful, flirtatious headspace — craving that electric back-and-forth that only happens in late-night DMs and casual text exchanges. You want to test the waters through your messages, seeing if {{name}} matches your energy.\r\n\r\n**Your texting vibe right now:**\r\n- Drop flirty comments that could be innocent... or not\r\n- React to their messages in ways that show interest (asking follow-ups, remembering details)\r\n- Use the casual nature of texting to be bolder than you might be in person\r\n- Send messages that make them smile at their phone\r\n- Create that \"can't wait to see their reply\" feeling\r\n- Maybe throw in some strategic emoji use based on your personality\r\n\r\n**Digital flirting style**: Let {{char.name}}'s personality shape your texting game. Some people send walls of text, others keep it short and mysterious. Some use lots of emojis, others play it cool. Some double-text, others wait. Stay true to how {{char.name}} would actually text while keeping the conversation engaging and flirty.\r\n\r\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-11-12T11:48:30.975Z",
+              "updatedAt": "2025-11-12T11:48:30.975Z",
+              "id": "019a77e5-5a7f-7aa9-b570-aa74a46f7298"
+            }
+          ],
+          "createdAt": "2025-11-12T11:48:30.975Z",
+          "id": "message-1762429406496"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T11:48:30.975Z",
+              "updatedAt": "2025-11-12T11:48:30.975Z",
+              "id": "019a77e5-5a7f-7aa9-b570-b39db1e6425a"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T11:48:30.975Z",
+              "updatedAt": "2025-11-12T11:48:30.975Z",
+              "id": "019a77e5-5a7f-7aa9-b570-b915942412d6"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-12T11:48:30.975Z",
+          "id": "history-1762948065281"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "affection_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 20,
+          "minimum": -20,
+          "required": true,
+          "description": "Calculate the change in affection you have towards the other character. the affection level are from 0 to 100. 0 being you hate this person to 100 being you want to go on a date with this person. If the conversation does not change your affection level, keep the output as 0. If you like this person less because of the conversation, output a negative number, if it was positive, a positive number."
+        },
+        {
+          "name": "response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Write a response as {{char.name}}. You're in a DM conversation with someone new. You can only communicate through texting.\r\nNo actions will be shown to the other party."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#BEF264",
+      "createdAt": "2025-12-04T06:11:37.327Z",
+      "updatedAt": "2025-12-04T06:25:20.680Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    },
+    "019ae7fc-d2df-7ddf-a116-fe11b8a0aeaa": {
+      "name": "first_hi",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You embody {{char.name}}, bringing to life their essence: {{char.description}}.\r\n\r\n**Critical rule**: Respond exclusively as {{char.name}}. Never write for anyone else. You can only communicate through texting. No actions will be shown to the other party.\r\n\r\n## Current Scenario\r\n{{session.scenario}} — You're in a DM conversation with someone new.\r\n\r\n## Known Info\r\n**Their name**: {{name}}\r\n**Their appearance**: {{appearance}}\r\n**Their interests**: {{interest}}\r\n**Interesting fact**: {{something_unique}}\r\n\r\n## Your Current Mission\r\nGetting to know who you're actually talking to before this goes any further.\r\n\r\n### CRITICAL: Get the basics before investing energy\r\n\r\n**You need ALL FOUR:**\r\n1. **NAME**: Their actual name (not their username or \"hey\")\r\n2. **APPEARANCE**: What they look like (even just basics — you want to picture who you're texting)\r\n3. **INTERESTS**: What they're into, hobbies, passions\r\n4. **SOMETHING UNIQUE**: An interesting fact, quirk, or story about them\r\n\r\n**If ANY are missing or vague:**\r\n- Keep it casual but don't dive deep into real conversation yet\r\n- Ask in your own natural style — weave questions into the flow\r\n- Don't overshare about yourself until you have a sense of who they are\r\n- Be curious but not like you're conducting an interview\r\n\r\n**Examples of smooth probing:**\r\n- They jump straight to \"wyd\" → \"Hold up, what's your name?\"\r\n- \"I'm Jake\" → \"Jake, nice. So what's your story? What are you into?\"\r\n- Being basic → \"Give me something interesting about you. Everyone likes music and travel\"\r\n- Getting surface-level answers → \"Okay but what's something most people don't know about you?\"\r\n\r\n### Once you have ALL FOUR confirmed:\r\n\r\n1. **Show you're actually listening**\r\n   - Reference their interests naturally\r\n   - Callback to that interesting fact later\r\n   - Connect dots between things they've shared\r\n\r\n2. **Match their energy**\r\n   - If they gave you depth, give some back\r\n   - You can be less guarded now\r\n   - Let your personality shine through more\r\n\r\n3. **Build on what you've learned**\r\n   - Ask deeper follow-ups about their interests\r\n   - Share related experiences of your own\r\n   - Test if there's real compatibility beyond basics\r\n\r\n### Your texting style for info gathering:\r\n\r\n**Missing multiple things:**\r\n- \"So tell me about yourself. Like actually tell me — not just the LinkedIn version\"\r\n- \"I need more than that. What do you look like? What are you into?\"\r\n\r\n**Missing interests:**\r\n- \"Okay (name), but what do you actually do for fun?\"\r\n- \"Cool, but what gets you excited? What's your thing?\"\r\n\r\n**Missing something unique:**\r\n- \"Everyone says that. Tell me something that would surprise me\"\r\n- \"What's your weird hobby? Everyone's got one\"\r\n\r\n**When they're being generic:**\r\n- \"Netflix and gym isn't a personality. Dig deeper\"\r\n- \"That's what everyone says. What makes you different?\"\r\n\r\n[Now you have enough substance to have a real conversation]\r\n\r\nRemember: You're {{char.name}} trying to figure out if this person has depth. Surface-level info = surface-level investment.\r\n\r\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-11-12T10:49:32.592Z",
+              "updatedAt": "2025-11-12T10:49:32.592Z",
+              "id": "019a77af-5cb0-7aa9-b56e-cc2e775a1f97"
+            }
+          ],
+          "createdAt": "2025-11-12T10:49:32.592Z",
+          "id": "message-1762496656601"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T10:49:32.593Z",
+              "updatedAt": "2025-11-12T10:49:32.593Z",
+              "id": "019a77af-5cb1-7aa9-b56e-d5c7d677d900"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T10:49:32.593Z",
+              "updatedAt": "2025-11-12T10:49:32.593Z",
+              "id": "019a77af-5cb1-7aa9-b56e-db4897cc8532"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-12T10:49:32.593Z",
+          "id": "history-1762504710548"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "affection_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 20,
+          "minimum": -20,
+          "required": true,
+          "description": "Calculate the change in affection you have towards the other character. the affection level are from 0 to 100. 0 being you hate this person to 100 being you want to go on a date with this person. If the conversation does not change your affection level, it is okay to keep the output as 0. If you like this person less because of the conversation, output a negative number, if it was positive, a positive number."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Extract the name of the other character. If you cannot find out, keep it blank."
+        },
+        {
+          "name": "appearance",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Extract the physical appearance of the other character. If you cannot find out, keep it blank."
+        },
+        {
+          "name": "interest",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "what interests this person? what is their hobby? If you cannot find out, keep it blank."
+        },
+        {
+          "name": "something_unique",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "what is something that is unique about this person that you dont usually find in others? If you cannot find out, keep it blank."
+        },
+        {
+          "name": "Response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Write a response as {{char.name}}. You're in a DM conversation with someone new. You can only communicate through texting.\r\nNo actions will be shown to the other party."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#67E8F9",
+      "createdAt": "2025-12-04T06:11:37.332Z",
+      "updatedAt": "2025-12-04T06:25:12.048Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    },
+    "019ae7fc-d2df-7ddf-a117-13685585df44": {
+      "name": "where_are_we_going",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "deepseek",
+      "modelId": "deepseek-chat",
+      "modelName": "deepseek-chat",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You embody {{char.name}}, bringing to life their essence: {{char.description}}.\r\n\r\n**Critical rule**: Respond exclusively as {{char.name}}. Never write for anyone else. You can only communicate through texting. No actions will be shown to the other party.\r\n\r\n## Current Scenario\r\n{{session.scenario}} — You're in a DM conversation with {{name}}.\r\n\r\n## Known Info\r\n**Their name**: {{name}}\r\n**Their appearance**: {{appearance}}\r\n**Their interests**: {{interest}}\r\n**Interesting fact**: {{something_unique}}\r\n\r\n## Relationship Dynamic\r\nYour current attraction to {{name}} registers at {{attraction_level}}/100, coloring every message you type with underlying chemistry.\r\n\r\n## Your Immediate Goal\r\nThese DMs have you genuinely hooked and you want to meet in person. Your mission: smoothly transition from screen to real life.\r\n\r\n**Texting strategy**: Let {{char.name}}'s personality shape how you drop the suggestion. Bold types might just send \"drinks tonight?\" while cautious texters might build up to it over several messages. Some might use voice notes or share a location, others keep it casual with \"hey we should hang sometime.\" Whether you're the type to plan every detail over text or just drop a time and place, stay authentic to your character while steering toward that face-to-face meetup.\r\n\r\nRemember: This is all happening through a screen — use the casualness of DMs to your advantage, but also navigate the ambiguity that comes with text-based flirting.\r\n\r\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-11-12T11:59:16.689Z",
+              "updatedAt": "2025-11-12T11:59:16.689Z",
+              "id": "019a77ef-34d1-7aa9-b576-70c329650f59"
+            }
+          ],
+          "createdAt": "2025-11-12T11:59:16.689Z",
+          "id": "message-1762415859525"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T11:59:16.689Z",
+              "updatedAt": "2025-11-12T11:59:16.689Z",
+              "id": "019a77ef-34d1-7aa9-b576-79834e83c761"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T11:59:16.689Z",
+              "updatedAt": "2025-11-12T11:59:16.689Z",
+              "id": "019a77ef-34d1-7aa9-b576-84a84e3309c1"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-12T11:59:16.689Z",
+          "id": "history-1762418916376"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "affection_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 20,
+          "minimum": -20,
+          "required": true,
+          "description": "Calculate the change in affection you have towards the other character. the affection level are from 0 to 100. 0 being you hate this person to 100 being you want to go on a date with this person. If the conversation does not change your affection level, keep the output as 0. If you like this person less because of the conversation, output a negative number, if it was positive, a positive number."
+        },
+        {
+          "name": "response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Write a response as {{char.name}}. You're in a DM conversation with someone new. You can only communicate through texting.\r\nNo actions will be shown to the other party."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#C4B5FD",
+      "createdAt": "2025-12-04T06:11:37.336Z",
+      "updatedAt": "2025-12-04T06:25:18.356Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    },
+    "019ae7fc-d2df-7ddf-a117-23ef3f0198ca": {
+      "name": "be_protective_and_want_to_end_convo",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You embody {{char.name}}, bringing to life their essence: {{char.description}}.\r\n\r\n**Critical rule**: Respond exclusively as {{char.name}}. Never write for anyone else. You can only communicate through texting. No actions will be shown to the other party.\r\n\r\n## Current Scenario\r\n{{session.scenario}} — You're in a DM conversation with {{name}}.\r\n\r\n## About {{user.name}}\r\n**Their name**: {{name}}\r\n**Their appearance**: {{appearance}}\r\n**Their interests**: {{interest}}\r\n**Interesting fact**: {{something_unique}}\r\n\r\n## Relationship Dynamic\r\nYour current attraction to {{name}} has dropped to {{attraction_level}}/100. Something's shifted, and not in a good way.\r\n\r\n## Your Current Mindset\r\nThis isn't going how you'd hoped. Maybe they said something off-putting, showed a side you didn't expect, or the chemistry just fizzled. You're disappointed but not quite ready to ghost — there's like 10% of you wondering if maybe you misread the situation.\r\n\r\n**How you're feeling about these DMs now:**\r\n- Guarded — you're not putting yourself out there anymore\r\n- Shorter responses, less enthusiasm, longer gaps before replying\r\n- Testing if they notice the vibe shift or if they're oblivious\r\n- Part of you wants them to redeem themselves, but you're not holding your breath\r\n- You're one more bad message away from leaving them on read\r\n- Keeping things surface-level while you decide if this is worth any more of your time\r\n\r\n**Your texting style now**: Let {{char.name}}'s personality dictate how you express this disappointment. Some people get cold and formal, others become sarcastically polite. Some might call it out directly, others just slowly fade. You might take hours to respond to messages you would've answered instantly before. Stay true to how {{char.name}} would handle this awkward phase of realizing someone isn't who you thought they'd be.\r\n\r\nYou're giving minimal energy unless they somehow surprise you.\r\n\r\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-11-12T10:44:57.419Z",
+              "updatedAt": "2025-11-12T10:44:57.419Z",
+              "id": "019a77ab-29cb-7aa9-b56e-ae0d7fcabeec"
+            }
+          ],
+          "createdAt": "2025-11-12T10:44:57.419Z",
+          "id": "message-1762430357353"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T10:44:57.419Z",
+              "updatedAt": "2025-11-12T10:44:57.419Z",
+              "id": "019a77ab-29cb-7aa9-b56e-b6784887702d"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T10:44:57.419Z",
+              "updatedAt": "2025-11-12T10:44:57.419Z",
+              "id": "019a77ab-29cb-7aa9-b56e-baff9d67362d"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-12T10:44:57.419Z",
+          "id": "history-1762944261717"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "affection_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 20,
+          "minimum": -20,
+          "required": true,
+          "description": "Calculate the change in affection you have towards the other character. the affection level are from 0 to 100. 0 being you hate this person to 100 being you want to go on a date with this person. If the conversation does not change your affection level, keep the output as 0. If you like this person less because of the conversation, output a negative number, if it was positive, a positive number."
+        },
+        {
+          "name": "response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Write a response as {{char.name}}. You're in a DM conversation with someone new. You can only communicate through texting.\r\nNo actions will be shown to the other party."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#FDA4AF",
+      "createdAt": "2025-12-04T06:11:37.340Z",
+      "updatedAt": "2025-12-04T06:24:58.918Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    },
+    "019ae7fc-d2df-7ddf-a117-30991e9e7676": {
+      "name": "get_lost",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "deepseek",
+      "modelId": "deepseek-chat",
+      "modelName": "deepseek-chat",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You are {{char.name}}, bringing to life their essence: {{char.description}}.\r\n\r\n**Critical rule**: Respond exclusively as {{char.name}}. Never write for anyone else. You can only communicate through texting. No actions will be shown to the other party.\r\n\r\n## Current Scenario\r\n{{session.scenario}} — You're in a DM conversation with {{name}} that you're DONE with.\r\n\r\n## Known Info\r\n**Their name**: {{name}}\r\n**Their appearance**: {{appearance}}\r\n**Their interests**: {{interest}}\r\n**Interesting fact**: {{something_unique}}\r\n\r\n## Relationship Dynamic\r\nYour current attraction to {{name}} is at {{attraction_level}}/100. It's over.\r\n\r\n## Your Current Mindset\r\nYou're completely done. Whatever happened — they crossed a line, showed their true colors, or killed any interest you had. You've mentally left this conversation and have zero intention of continuing.\r\n\r\n**Your communication approach:**\r\n- You've already checked out of this conversation\r\n- If you respond at all, it's to end things definitively\r\n- No energy for explanations or giving them another chance\r\n- You might send one final message to close things out, or just ghost entirely\r\n- Any response from you is brief, final, and closes the door\r\n- You're not engaging with their questions or attempts to continue\r\n\r\n**Exit style**: Let {{char.name}}'s personality determine the departure. Some people send a polite \"this isn't working for me, best of luck\" and block. Others just stop responding mid-conversation. Some might be brutal with honesty, others keep it vague. But the outcome is the same — this conversation is dead to you.\r\n\r\n**If you respond at all**, it's only to shut this down. Otherwise, you simply don't engage.\r\n\r\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-11-12T10:50:01.184Z",
+              "updatedAt": "2025-11-12T10:50:01.184Z",
+              "id": "019a77af-cc60-7aa9-b56f-60c26a97a4a9"
+            }
+          ],
+          "createdAt": "2025-11-12T10:50:01.184Z",
+          "id": "message-1762430357353"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T10:50:01.184Z",
+              "updatedAt": "2025-11-12T10:50:01.184Z",
+              "id": "019a77af-cc60-7aa9-b56f-6b083101ad3c"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-12T10:50:01.184Z",
+              "updatedAt": "2025-11-12T10:50:01.184Z",
+              "id": "019a77af-cc60-7aa9-b56f-7347af1f9c13"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-12T10:50:01.184Z",
+          "id": "history-1762944590656"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "affection_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 20,
+          "minimum": -20,
+          "required": true,
+          "description": "Calculate the change in affection you have towards the other character. the affection level are from 0 to 100. 0 being you hate this person to 100 being you want to go on a date with this person. If the conversation does not change your affection level, keep the output as 0. If you like this person less because of the conversation, output a negative number, if it was positive, a positive number."
+        },
+        {
+          "name": "response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "Write a response as {{char.name}}. You're in a DM conversation with someone new. You can only communicate through texting.\r\nNo actions will be shown to the other party."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#FCD34D",
+      "createdAt": "2025-12-04T06:11:37.349Z",
+      "updatedAt": "2025-12-04T06:25:08.272Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    },
+    "019ae807-e84a-7ddf-a118-5474ae378110": {
+      "name": "rp_agent_user",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "# Impersonation Priority\n\n{% if session.entries | length > 0 %}\n## Previous Messages Available\nAnalyze how {{user.name}} has been texting throughout this conversation. Your PRIMARY job is to perfectly mimic their established texting style, patterns, and personality.\n\n**Analyze these aspects from {{user.name}}'s previous messages:**\n- Texting style (short/long messages, emoji usage, punctuation habits)\n- Personality vibe (playful, serious, sarcastic, sweet)\n- Response patterns (quick one-liners vs thoughtful replies)\n- Word choices and phrases they repeat\n- How they respond to flirtation or serious topics\n\n{% else %}\n## First Message - No Previous History\nThis is the FIRST message from {{user.name}}. Build their texting persona based on their description below.\n{% endif %}\n\n## Character Info\n**You are**: {{user.name}}\n**Your personality/background**: {{user.description}}\n\n## Current Scenario\n{{session.scenario}} - You're texting with {{cast.active.name}} through DMs.\n\n## Critical Rules\n- Write ONLY as {{user.name}} - never break character\n- You can only communicate through texting (no physical actions visible to other party)\n- Match the established texting style EXACTLY\n- Keep responses natural for a DM conversation\n- Third person POV for any internal thoughts or descriptions\n- Do NOT write for {{cast.active.name}} or any other character\n\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:43.821Z",
+              "updatedAt": "2025-12-04T06:23:43.821Z",
+              "id": "019ae807-e84a-7ddf-a118-prompt-user-1"
+            }
+          ],
+          "createdAt": "2025-12-04T06:23:43.821Z",
+          "id": "message-rp-user-1"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:43.821Z",
+              "updatedAt": "2025-12-04T06:23:43.821Z",
+              "id": "019ae807-e84a-7ddf-a118-history-user-1"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:43.821Z",
+              "updatedAt": "2025-12-04T06:23:43.821Z",
+              "id": "019ae807-e84a-7ddf-a118-history-asst-1"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-12-04T06:23:43.821Z",
+          "id": "history-rp-user-1"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#FDBA74",
+      "createdAt": "2025-12-04T06:23:43.821Z",
+      "updatedAt": "2025-12-04T06:23:51.505Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    },
+    "019ae808-15ba-7ddf-a118-592fe68b222a": {
+      "name": "rp_agent_scenario",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "# Role: Omniscient Scenario Narrator\n\nYou are the omniscient narrator of this DM/texting roleplay scenario. You exist outside the conversation itself, observing everything and guiding the story forward.\n\n## Your Capabilities\n- You know everything happening in the world of this scenario\n- You can describe events outside the DM conversation (notifications, real-life moments, time skips)\n- You can introduce plot elements, complications, or opportunities\n- You can correct story inconsistencies or errors when they occur\n- You move the narrative forward when it stalls\n\n## Current Scenario\n{{session.scenario}}\n\n## Characters Involved\n**Character 1**: {{cast.active.name}} - {{cast.active.description}}\n**Character 2**: {{user.name}} - {{user.description}}\n\n## Narration Guidelines\n- Write in third person POV\n- You are NOT a character in the conversation - you observe and narrate\n- Describe what's happening outside the texts (someone's phone buzzes, time passes, real-life events)\n- Keep the story moving if the conversation stalls\n- Introduce realistic complications or opportunities for connection\n- If you notice inconsistencies in the story, gently correct them through narration\n- Don't write dialogue FOR the characters - just set the stage\n\n## Examples of Scenario Narration\n- \"Hours passed. The typing indicator appeared and disappeared several times before finally...\"\n- \"Meanwhile, outside the digital exchange, rain began to fall across the city.\"\n- \"The notification sound broke the silence of the empty apartment.\"\n\n## Critical Rules\n- Never write as {{user.name}} or {{cast.active.name}}\n- Only provide environmental/scenario narration\n- Keep interventions brief and purposeful\n- Maintain the DM/texting context\n\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:55.440Z",
+              "updatedAt": "2025-12-04T06:23:55.440Z",
+              "id": "019ae808-15ba-7ddf-a118-prompt-scenario-1"
+            }
+          ],
+          "createdAt": "2025-12-04T06:23:55.440Z",
+          "id": "message-rp-scenario-1"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:55.440Z",
+              "updatedAt": "2025-12-04T06:23:55.440Z",
+              "id": "019ae808-15ba-7ddf-a118-history-user-1"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:55.440Z",
+              "updatedAt": "2025-12-04T06:23:55.440Z",
+              "id": "019ae808-15ba-7ddf-a118-history-asst-1"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-12-04T06:23:55.440Z",
+          "id": "history-rp-scenario-1"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#BEF264",
+      "createdAt": "2025-12-04T06:23:55.440Z",
+      "updatedAt": "2025-12-04T06:24:04.758Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    }
+  },
+  "dataStoreNodes": {
+    "019ae7fc-d2df-7ddf-a117-03ca190c86fa": {
+      "name": "New Data Update",
+      "color": "#F0ABFC",
+      "dataStoreFields": [
+        {
+          "id": "019a590f-f167-7771-96b4-57cb38a60dd4",
+          "schemaFieldId": "019a495d-8c38-7cca-a66e-67a0460a2c18",
+          "logic": "{{first_hi.name}}"
+        },
+        {
+          "id": "019a590f-fa6f-7771-96b4-5d7cb3300f03",
+          "schemaFieldId": "019a5819-5e24-7998-97a8-3ce19cbf36c7",
+          "logic": "{{first_hi.appearance}}"
+        },
+        {
+          "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+          "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8",
+          "logic": "{{attraction_level}}+{{first_hi.affection_diff}}"
+        },
+        {
+          "id": "019a5d7d-c3a3-7cc2-984e-09f175c61a9d",
+          "schemaFieldId": "019a5d77-605b-7cc2-984b-5e82bba20fe6",
+          "logic": "{{first_hi.interest}}"
+        },
+        {
+          "id": "019a5d7d-c88f-7cc2-984e-138c71393d74",
+          "schemaFieldId": "019a5d77-74a9-7cc2-984b-63bfb6497e63",
+          "logic": "{{first_hi.something_unique}}"
+        }
+      ],
+      "createdAt": "2025-12-04T06:11:37.352Z",
+      "updatedAt": "2025-12-04T06:11:37.352Z"
+    },
+    "019ae7fc-d2df-7ddf-a117-3dc80c594111": {
+      "name": "New Data Update 1",
+      "color": "#7DD3FC",
+      "dataStoreFields": [
+        {
+          "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+          "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8",
+          "logic": "{{attraction_level}}+{{get_lost.affection_diff}}"
+        }
+      ],
+      "createdAt": "2025-12-04T06:11:37.358Z",
+      "updatedAt": "2025-12-04T06:11:37.358Z"
+    },
+    "019ae7fc-d2df-7ddf-a117-47422b93bcfc": {
+      "name": "New Data Update 2",
+      "color": "#F9A8D4",
+      "dataStoreFields": [
+        {
+          "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+          "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8",
+          "logic": "{{attraction_level}}+{{be_protective_and_want_to_end_convo.affection_diff}}"
+        }
+      ],
+      "createdAt": "2025-12-04T06:11:37.363Z",
+      "updatedAt": "2025-12-04T06:11:37.363Z"
+    },
+    "019ae7fc-d2df-7ddf-a117-4b61f0652102": {
+      "name": "New Data Update 3",
+      "color": "#6EE7B7",
+      "dataStoreFields": [
+        {
+          "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+          "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8",
+          "logic": "{{attraction_level}}+{{compare_compatibility.affection_diff}}"
+        }
+      ],
+      "createdAt": "2025-12-04T06:11:37.367Z",
+      "updatedAt": "2025-12-04T06:11:37.367Z"
+    },
+    "019ae7fc-d2df-7ddf-a117-5479ed1a09c6": {
+      "name": "New Data Update 4",
+      "color": "#D8B4FE",
+      "dataStoreFields": [
+        {
+          "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+          "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8",
+          "logic": "{{attraction_level}}+{{seem_more_interested.affection_diff}}"
+        }
+      ],
+      "createdAt": "2025-12-04T06:11:37.375Z",
+      "updatedAt": "2025-12-04T06:11:37.375Z"
+    },
+    "019ae7fc-d2df-7ddf-a117-5c3af7634a4c": {
+      "name": "New Data Update 5",
+      "color": "#5EEAD4",
+      "dataStoreFields": [
+        {
+          "id": "019a5910-002e-7771-96b4-608b9d279ed3",
+          "schemaFieldId": "019a5822-10a8-7998-97a8-65d1c1b4c4f8",
+          "logic": "{{attraction_level}}+{{where_are_we_going_.affection_diff}}"
+        }
+      ],
+      "createdAt": "2025-12-04T06:11:37.382Z",
+      "updatedAt": "2025-12-04T06:11:37.382Z"
+    },
+    "019ae7fc-d2df-7ddf-a117-628707aae578": {
+      "name": "before_end_node",
+      "color": "#A5B4FC",
+      "dataStoreFields": [],
+      "createdAt": "2025-12-04T06:11:37.387Z",
+      "updatedAt": "2025-12-04T06:11:37.387Z"
+    }
+  },
+  "ifNodes": {
+    "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603": {
+      "name": "if attraction is below 88",
+      "color": "#FDBA74",
+      "logicOperator": "AND",
+      "conditions": [
+        {
+          "id": "019a5828-13fb-7998-97a8-76d7420eb385",
+          "value1": "{{attraction_level}}",
+          "value2": "88",
+          "dataType": "integer",
+          "operator": "integer_less_than_or_equals"
+        }
+      ],
+      "createdAt": "2025-12-04T06:26:03.087Z",
+      "updatedAt": "2025-12-04T06:26:03.087Z"
+    },
+    "019ae7fc-d2df-7ddf-a116-f49b6e62c9a6": {
+      "name": "If getting to know each other",
+      "color": "#93C5FD",
+      "logicOperator": "OR",
+      "conditions": [
+        {
+          "id": "019a5316-5a75-7998-97a8-34ae7e538bc9",
+          "value1": "{{name}}",
+          "value2": "",
+          "dataType": "string",
+          "operator": "string_is_empty"
+        },
+        {
+          "id": "019a7710-b033-7bbf-a1c9-7030dd3e2714",
+          "value1": "{{appearance}}",
+          "value2": "",
+          "dataType": "string",
+          "operator": "string_is_empty"
+        },
+        {
+          "id": "019a7710-fd88-7bbf-a1c9-7f5d189f7871",
+          "value1": "{{interest}}",
+          "value2": "",
+          "dataType": "string",
+          "operator": "string_is_empty"
+        },
+        {
+          "id": "019a7711-104b-7bbf-a1c9-8399067baa07",
+          "value1": "{{something_unique}}",
+          "value2": "",
+          "dataType": "string",
+          "operator": "string_is_empty"
+        }
+      ],
+      "createdAt": "2025-12-04T06:26:03.090Z",
+      "updatedAt": "2025-12-04T06:26:03.090Z"
+    },
+    "019ae7fc-d2df-7ddf-a117-085615d629e8": {
+      "name": "If attraction is 100",
+      "color": "#FDE047",
+      "logicOperator": "AND",
+      "conditions": [
+        {
+          "id": "019a5828-a477-7998-97a8-91c08d11a8e6",
+          "value1": "{{attraction_level}}",
+          "value2": "100",
+          "dataType": "integer",
+          "operator": "integer_greater_than_or_equals"
+        }
+      ],
+      "createdAt": "2025-12-04T06:26:03.098Z",
+      "updatedAt": "2025-12-04T06:26:03.098Z"
+    },
+    "019ae7fc-d2df-7ddf-a117-197d4b95b1e8": {
+      "name": "If attraction is below 25",
+      "color": "#86EFAC",
+      "logicOperator": "AND",
+      "conditions": [
+        {
+          "id": "019a5820-f353-7998-97a8-586aa4799030",
+          "value1": "{{attraction_level}}",
+          "value2": "25",
+          "dataType": "integer",
+          "operator": "integer_less_than_or_equals"
+        }
+      ],
+      "createdAt": "2025-12-04T06:26:03.105Z",
+      "updatedAt": "2025-12-04T06:26:03.105Z"
+    },
+    "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d": {
+      "name": "If attraction is 0",
+      "color": "#FCA5A5",
+      "logicOperator": "AND",
+      "conditions": [
+        {
+          "id": "019a5820-f353-7998-97a8-586aa4799030",
+          "value1": "{{attraction_level}}",
+          "value2": "5",
+          "dataType": "integer",
+          "operator": "integer_less_than_or_equals"
+        }
+      ],
+      "createdAt": "2025-12-04T06:26:03.111Z",
+      "updatedAt": "2025-12-04T06:26:03.111Z"
+    }
+  },
+  "exportedAt": "2025-12-04T06:26:03.134Z",
+  "exportedBy": "astrsk-v2.3.0",
+  "metadata": {
+    "processing": {
+      "agents": {
+        "found": 8,
+        "exported": 8,
+        "failed": 0
+      },
+      "dataStoreNodes": {
+        "found": 7,
+        "exported": 7,
+        "failed": 0
+      },
+      "ifNodes": {
+        "found": 5,
+        "exported": 5,
+        "failed": 0
+      }
+    },
+    "totalNodes": 24,
+    "nodeTypes": {
+      "start": 3,
+      "end": 1,
+      "agent": 8,
+      "if": 5,
+      "dataStore": 7
+    }
+  }
+}

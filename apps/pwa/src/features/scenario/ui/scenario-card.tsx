@@ -20,7 +20,7 @@ interface ScenarioCardProps {
   showTypeIndicator?: boolean;
 }
 
-const PLACEHOLDER_IMAGE_URL = "/img/placeholder/scenario-placeholder.png";
+const PLACEHOLDER_IMAGE_URL = "/default/card/GM_ Dice of Fate.png";
 
 const ScenarioCard = ({
   title,

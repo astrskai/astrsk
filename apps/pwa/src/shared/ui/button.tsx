@@ -23,6 +23,8 @@ const buttonVariants = cva(
         ghost_white:
           "text-fg-default hover:text-fg-subtle disabled:opacity-50",
         link: "text-primary underline-offset-4 hover:underline",
+        accent:
+          "bg-brand-500 text-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] hover:bg-brand-400 disabled:opacity-50",
       },
       size: {
         default: "h-8 rounded-full px-4 py-2 text-sm leading-tight",

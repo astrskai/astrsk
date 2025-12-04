@@ -29,6 +29,7 @@ import { useScrollToTop } from "@/shared/hooks/use-scroll-to-top";
 import { AccordionBase } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import { toastSuccess, toastError } from "@/shared/ui/toast";
+import { TAG_DEFAULT } from "@/entities/card/domain";
 
 interface LorebookEntryFormData {
   id: string;
@@ -64,21 +65,6 @@ interface ScenarioFormData {
   lorebookEntries: LorebookEntryFormData[];
 }
 
-// Constants
-const TAG_DEFAULT: readonly string[] = [
-  "Female",
-  "Male",
-  "Villain",
-  "Fictional",
-  "OC",
-  "LGBTQA+",
-  "Platonic",
-  "Angst",
-  "Dead Dove",
-  "Fluff",
-  "Historical",
-  "Royalty",
-];
 
 const FirstMessageItemTitle = ({
   name,
@@ -578,7 +564,8 @@ const ScenarioEditorPage = () => {
   }, [previewImage]);
 
   const handleGoBack = () => {
-    navigate({ to: "/assets/scenarios" });
+    // Use browser's back button to go to previous page (usually session)
+    window.history.back();
   };
 
   const handleUploadImage = () => {

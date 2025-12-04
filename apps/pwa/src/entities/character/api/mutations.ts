@@ -10,6 +10,7 @@ import { AssetService } from "@/app/services/asset-service";
 import { Lorebook, CardType, Entry } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { cardKeys } from "@/entities/card/api/query-factory";
+import { characterKeys } from "@/entities/character/api/query-factory";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 
 /**
@@ -22,6 +23,14 @@ export interface LorebookEntryData {
   keys: string[];
   recallRange: number;
   content: string;
+}
+
+/**
+ * First message data structure for 1:1 session config
+ */
+export interface FirstMessageData {
+  name: string;
+  description: string;
 }
 
 /**
@@ -38,6 +47,9 @@ export interface CreateCharacterData {
   conceptualOrigin?: string;
   imageFile?: File;
   lorebookEntries?: LorebookEntryData[];
+  // 1:1 Session Config
+  scenario?: string;
+  firstMessages?: FirstMessageData[];
 }
 
 /**
@@ -57,6 +69,9 @@ export interface UpdateCharacterData {
   iconAssetId?: string;
   imageFile?: File;
   lorebookEntries?: LorebookEntryData[];
+  // 1:1 Session Config
+  scenario?: string;
+  firstMessages?: FirstMessageData[];
 }
 
 /**
@@ -101,6 +116,8 @@ function createLorebookFromEntries(entries: LorebookEntryData[]): Lorebook {
 
 /**
  * Hook for creating a new character card
+ *
+ * Features optimistic updates to immediately show the new card in lists
  */
 export const useCreateCharacterCard = () => {
   const queryClient = useQueryClient();
@@ -134,6 +151,9 @@ export const useCreateCharacterCard = () => {
         version: data.version,
         conceptualOrigin: data.conceptualOrigin,
         lorebook,
+        // 1:1 Session Config
+        scenario: data.scenario,
+        firstMessages: data.firstMessages,
       });
 
       if (cardResult.isFailure) {
@@ -152,7 +172,32 @@ export const useCreateCharacterCard = () => {
       return card;
     },
 
-    onSuccess: () => {
+    onSuccess: (newCard) => {
+      // Optimistically add the new card to character list caches
+      const characterListQueries = queryClient.getQueriesData<CharacterCard[]>({
+        queryKey: characterKeys.lists(),
+      });
+
+      for (const [queryKey, existingData] of characterListQueries) {
+        if (existingData && Array.isArray(existingData)) {
+          // Add new card at the beginning of the list
+          queryClient.setQueryData(queryKey, [newCard, ...existingData]);
+        }
+      }
+
+      // Also add to generic card list caches
+      const cardListQueries = queryClient.getQueriesData<CharacterCard[]>({
+        queryKey: cardKeys.lists(),
+      });
+
+      for (const [queryKey, existingData] of cardListQueries) {
+        if (existingData && Array.isArray(existingData)) {
+          queryClient.setQueryData(queryKey, [newCard, ...existingData]);
+        }
+      }
+
+      // Invalidate both query types to ensure data consistency with server
+      queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
       queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
     },
   });
@@ -280,6 +325,36 @@ export const useUpdateCharacterCard = (cardId: string) => {
             lorebook: lorebookResult.getValue(),
           }),
         );
+      }
+
+      // Handle 1:1 Session Config fields (scenario and firstMessages)
+      // These are updated together via load/update/save pattern
+      // Build payload conditionally to avoid overwriting existing values with undefined
+      if (data.scenario !== undefined || data.firstMessages !== undefined) {
+        const scenario = data.scenario;
+        const firstMessages = data.firstMessages;
+        operations.push(async () => {
+          const loadResult = await CardService.getCard.execute(
+            new UniqueEntityID(cardId),
+          );
+          if (loadResult.isFailure) {
+            return loadResult;
+          }
+          const card = loadResult.getValue();
+          if (!(card instanceof CharacterCard)) {
+            return { isFailure: true, getError: () => "Not a character card" };
+          }
+          // Build update payload conditionally to avoid overwriting existing values
+          const updatePayload: { scenario?: string; firstMessages?: FirstMessageData[] } = {};
+          if (scenario !== undefined) updatePayload.scenario = scenario;
+          if (firstMessages !== undefined) updatePayload.firstMessages = firstMessages;
+
+          const updateResult = card.update(updatePayload);
+          if (updateResult.isFailure) {
+            return updateResult;
+          }
+          return CardService.saveCard.execute(card);
+        });
       }
 
       // Execute all operations only after validation passes

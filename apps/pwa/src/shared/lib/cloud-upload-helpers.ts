@@ -2,6 +2,7 @@ import { Result } from "@/shared/core";
 import {
   supabaseClient,
   DEFAULT_SHARE_EXPIRATION_DAYS,
+  HARPY_HUB_URL,
 } from "./supabase-client";
 import { uploadAssetToSupabase } from "./supabase-asset-uploader";
 import { Asset } from "@/entities/asset/domain/asset";
@@ -416,9 +417,8 @@ export async function createSharedResource(
       return Result.fail(`Failed to create share link: ${shareError.message}`);
     }
 
-    // Generate share URL
-    // TODO: Replace with actual harpy.chat domain
-    const shareUrl = `https://harpy.chat/shared/${resourceType}/${resourceId}`;
+    // Generate share URL using centralized hub URL
+    const shareUrl = `${HARPY_HUB_URL}/shared/${resourceType}/${resourceId}`;
 
     return Result.ok({
       shareUrl,

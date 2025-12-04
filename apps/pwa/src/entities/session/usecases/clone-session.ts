@@ -46,77 +46,10 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
     }
     const originalSession = originalSessionResult.getValue();
 
-    // Clone all cards and track ID mapping
-    const newCardIds: CardListItem[] = [];
-    const cardIdMapping = new Map<string, UniqueEntityID>(); // old ID -> new ID
+    // Generate new session ID first
+    const newSessionId = new UniqueEntityID();
 
-    for (const card of originalSession.props.allCards) {
-      if (!this.cloneCard) {
-        return formatFail(
-          "Cannot clone resources",
-          "CloneCard dependency not provided",
-        );
-      }
-
-      const clonedCardResult = await this.cloneCard.execute({
-        cardId: card.id,
-      });
-
-      if (clonedCardResult.isFailure) {
-        return formatFail(
-          `Failed to clone card ${card.id.toString()}`,
-          clonedCardResult.getError(),
-        );
-      }
-
-      const clonedCard = clonedCardResult.getValue();
-      cardIdMapping.set(card.id.toString(), clonedCard.id);
-
-      newCardIds.push({
-        id: clonedCard.id,
-        type: card.type,
-        enabled: card.enabled,
-      });
-    }
-    const clonedCardIds = newCardIds;
-
-    // Update user_character_card_id to the cloned card ID
-    let clonedUserCharacterCardId: string | null = null;
-    if (originalSession.props.userCharacterCardId) {
-      const newUserCardId = cardIdMapping.get(
-        originalSession.props.userCharacterCardId.toString()
-      );
-      if (newUserCardId) {
-        clonedUserCharacterCardId = newUserCardId.toString();
-      }
-    }
-
-    // Clone flow
-    let clonedFlowId: string | null = null;
-    if (originalSession.props.flowId) {
-      if (!this.cloneFlow) {
-        return formatFail(
-          "Cannot clone resources",
-          "CloneFlow dependency not provided",
-        );
-      }
-
-      const clonedFlowResult = await this.cloneFlow.execute({
-        flowId: originalSession.props.flowId,
-        shouldRename: false, // Don't rename for export
-      });
-
-      if (clonedFlowResult.isFailure) {
-        return formatFail(
-          "Failed to clone flow",
-          clonedFlowResult.getError(),
-        );
-      }
-
-      clonedFlowId = clonedFlowResult.getValue().id.toString();
-    }
-
-    // Clone cover asset
+    // Clone cover asset first (no foreign key to session)
     let clonedCoverId: string | null = null;
     if (originalSession.props.coverId) {
       if (!this.cloneAsset) {
@@ -140,10 +73,8 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
       clonedCoverId = clonedCoverResult.getValue().id.toString();
     }
 
-    // Generate new session ID
-    const newSessionId = new UniqueEntityID();
-
-    // Clone the session using mapper (without background first)
+    // Create session FIRST with empty cards and no flow (needed for foreign key constraints)
+    // Flow has a foreign key to session, so session must exist before cloning flow
     const insertSession = SessionDrizzleMapper.toPersistence(originalSession);
     const clonedSession = SessionDrizzleMapper.toDomain({
       ...insertSession,
@@ -152,32 +83,126 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
       name: insertSession.name ?? null,
       tags: insertSession.tags || [],
       summary: insertSession.summary ?? null,
-      all_cards: clonedCardIds.map((card) => ({
-        id: card.id.toString(),
-        type: card.type,
-        enabled: card.enabled,
-      })),
-      user_character_card_id: clonedUserCharacterCardId, // Use cloned card ID
+      all_cards: [], // Start with empty cards, will update after cloning
+      user_character_card_id: null, // Will update after cloning cards
       turn_ids: [],
       background_id: null, // Temporarily null, will update after cloning background
       cover_id: clonedCoverId,
       translation: insertSession.translation ?? null,
       chat_styles: insertSession.chat_styles ?? null,
-      flow_id: clonedFlowId,
+      flow_id: null, // Will update after cloning flow
       auto_reply: insertSession.auto_reply ?? AutoReply.Random,
       data_schema_order: insertSession.data_schema_order ?? [],
       widget_layout: insertSession.widget_layout ?? null,
+      is_play_session: insertSession.is_play_session ?? false,
+      config: insertSession.config ?? {},
       created_at: new Date(),
       updated_at: new Date(),
     });
 
-    // Save cloned session FIRST (so it exists for foreign key constraint)
+    // Save session FIRST (so it exists for foreign key constraints on flow and cards)
     const saveClonedSessionResult =
       await this.saveSessionRepo.saveSession(clonedSession);
     if (saveClonedSessionResult.isFailure) {
       return formatFail(
         "Failed to save cloned session",
         saveClonedSessionResult.getError(),
+      );
+    }
+
+    // NOW clone flow (session exists in DB, foreign key constraint will pass)
+    let clonedFlowId: string | null = null;
+    if (originalSession.props.flowId) {
+      if (!this.cloneFlow) {
+        return formatFail(
+          "Cannot clone resources",
+          "CloneFlow dependency not provided",
+        );
+      }
+
+      const clonedFlowResult = await this.cloneFlow.execute({
+        flowId: originalSession.props.flowId,
+        sessionId: newSessionId, // Create session-local copy (hidden from global workflows list)
+        shouldRename: false, // Don't rename for export
+      });
+
+      if (clonedFlowResult.isFailure) {
+        return formatFail(
+          "Failed to clone flow",
+          clonedFlowResult.getError(),
+        );
+      }
+
+      clonedFlowId = clonedFlowResult.getValue().id.toString();
+
+      // Update session with cloned flow ID
+      clonedSession.update({ flowId: new UniqueEntityID(clonedFlowId) });
+
+      const updateFlowResult = await this.saveSessionRepo.saveSession(clonedSession);
+      if (updateFlowResult.isFailure) {
+        return formatFail(
+          "Failed to update session with flow",
+          updateFlowResult.getError(),
+        );
+      }
+    }
+
+    // Now clone all cards with session reference (session exists in DB now)
+    const clonedCardIds: CardListItem[] = [];
+    const cardIdMapping = new Map<string, UniqueEntityID>(); // old ID -> new ID
+
+    for (const card of originalSession.props.allCards) {
+      if (!this.cloneCard) {
+        return formatFail(
+          "Cannot clone resources",
+          "CloneCard dependency not provided",
+        );
+      }
+
+      const clonedCardResult = await this.cloneCard.execute({
+        cardId: card.id,
+        sessionId: newSessionId, // Create session-local copy (hidden from global lists)
+      });
+
+      if (clonedCardResult.isFailure) {
+        return formatFail(
+          `Failed to clone card ${card.id.toString()}`,
+          clonedCardResult.getError(),
+        );
+      }
+
+      const clonedCard = clonedCardResult.getValue();
+      cardIdMapping.set(card.id.toString(), clonedCard.id);
+
+      clonedCardIds.push({
+        id: clonedCard.id,
+        type: card.type,
+        enabled: card.enabled,
+      });
+    }
+
+    // Update user_character_card_id to the cloned card ID
+    let clonedUserCharacterCardId: UniqueEntityID | undefined = undefined;
+    if (originalSession.props.userCharacterCardId) {
+      const newUserCardId = cardIdMapping.get(
+        originalSession.props.userCharacterCardId.toString()
+      );
+      if (newUserCardId) {
+        clonedUserCharacterCardId = newUserCardId;
+      }
+    }
+
+    // Update session with cloned cards
+    clonedSession.update({
+      allCards: clonedCardIds,
+      userCharacterCardId: clonedUserCharacterCardId,
+    });
+
+    const updateCardsResult = await this.saveSessionRepo.saveSession(clonedSession);
+    if (updateCardsResult.isFailure) {
+      return formatFail(
+        "Failed to update session with cloned cards",
+        updateCardsResult.getError(),
       );
     }
 

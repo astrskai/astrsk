@@ -5,6 +5,7 @@ interface ChatBubbleProps {
   direction?: "left" | "right";
   className?: string;
   style?: React.CSSProperties;
+  onClick?: () => void;
 }
 
 export function ChatBubble({
@@ -12,6 +13,7 @@ export function ChatBubble({
   direction,
   className,
   style,
+  onClick,
 }: ChatBubbleProps) {
   return (
     <div
@@ -25,6 +27,7 @@ export function ChatBubble({
         className,
       )}
       style={style}
+      onClick={onClick}
     >
       {children}
     </div>
