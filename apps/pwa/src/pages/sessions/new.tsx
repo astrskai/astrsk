@@ -40,7 +40,7 @@ import {
   type WorkflowState,
   ModelTier,
 } from "@/app/services/system-agents/workflow-builder";
-import type { TemplateSelectionResult } from "@/app/services/system-agents/flow-template-matcher";
+import type { TemplateSelectionResult } from "./ui/create/hud-step";
 import { Sparkles, Loader2 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 
@@ -528,7 +528,7 @@ Ground Rules:`;
         allCards: [], // Will be populated after cloning cards
         userCharacterCardId: undefined, // Will be set after cloning player character
         turnIds: [],
-        autoReply: AutoReply.Off,
+        autoReply: AutoReply.Random,
         chatStyles: defaultChatStyles,
         isPlaySession: true, // Play sessions appear in sidebar
         createdAt: new Date(),
