@@ -102,9 +102,16 @@ const isUserSubscribed = (): boolean => {
 
 // Helper function to get global default model from user settings
 // Falls back from Heavy → Light if Heavy model's provider is disconnected
+// Returns null if modelTier is undefined (agent has specific model configured)
 const getGlobalDefaultModel = (
   modelTier?: ModelTier,
 ): DefaultModelSelection | null => {
+  // If no modelTier specified, agent has a specific model configured
+  // Return null so PRIORITY 2 (agent's saved model) is used instead
+  if (modelTier === undefined) {
+    return null;
+  }
+
   const modelStore = useModelStore.getState();
 
   if (modelTier === ModelTier.Heavy) {
@@ -130,10 +137,12 @@ const getGlobalDefaultModel = (
     return null;
   }
 
-  // For Light tier or unspecified, just return lite model if available
-  const liteModel = modelStore.defaultLiteModel;
-  if (isDefaultModelAvailable(liteModel)) {
-    return liteModel;
+  // For Light tier, return lite model if available
+  if (modelTier === ModelTier.Light) {
+    const liteModel = modelStore.defaultLiteModel;
+    if (isDefaultModelAvailable(liteModel)) {
+      return liteModel;
+    }
   }
 
   return null;
@@ -146,6 +155,35 @@ const getFallbackModel = (modelTier?: ModelTier): string | null => {
     return MODEL_TIER_MAPPING[ModelTier.Light];
   }
   return MODEL_TIER_MAPPING[modelTier] || null;
+};
+
+// Helper to get lite model fallback connection and model ID
+const getLiteModelFallback = async (): Promise<{
+  apiConnection: ApiConnection;
+  modelId: string;
+  modelName: string;
+} | null> => {
+  const modelStore = useModelStore.getState();
+  const liteModel = modelStore.defaultLiteModel;
+
+  if (!liteModel) {
+    return null;
+  }
+
+  const apiConnections = await fetchApiConnections();
+  const connection = apiConnections.find(
+    (c) => c.id.toString() === liteModel.apiConnectionId
+  );
+
+  if (!connection) {
+    return null;
+  }
+
+  return {
+    apiConnection: connection,
+    modelId: liteModel.modelId,
+    modelName: liteModel.modelName,
+  };
 };
 
 const makeContext = async ({
@@ -1821,9 +1859,20 @@ async function* executeAgentNode({
     let apiModelId = agent.props.modelId;
     let actualModelName = agent.props.modelName; // Track the actual model name being used
 
+    // Log agent's model configuration for debugging
+    console.log(`[ModelSelection] Agent "${agent.props.name}" model config:`, {
+      modelTier: agent.props.modelTier,
+      modelTierIsUndefined: agent.props.modelTier === undefined,
+      apiSource: agent.props.apiSource,
+      modelId: agent.props.modelId,
+      modelName: agent.props.modelName,
+    });
+
     // PRIORITY 1: Always try to use the current global default model based on agent's modelTier
     // This ensures users can change models in settings and have them apply immediately
     const globalDefault = getGlobalDefaultModel(agent.props.modelTier);
+
+    console.log(`[ModelSelection] getGlobalDefaultModel returned:`, globalDefault);
 
     if (globalDefault) {
       // Find the API connection for the global default model
@@ -1847,6 +1896,7 @@ async function* executeAgentNode({
 
     // PRIORITY 2: Fall back to agent's saved model configuration if global default not available
     if (!apiConnection && agent.props.apiSource && agent.props.modelId) {
+      console.log(`[ModelSelection] PRIORITY 2: Using agent's saved model config`);
       apiSource = agent.props.apiSource;
       apiModelId = agent.props.modelId;
       actualModelName = agent.props.modelName;
@@ -1963,24 +2013,68 @@ async function* executeAgentNode({
     };
     yield result;
     const isStructuredOutput = agent.props.enabledStructuredOutput;
+
     if (isStructuredOutput) {
-      // Generate structured output
-      const streamResult = await generateStructuredOutput({
-        apiConnection: apiConnection,
-        modelId: apiModelId,
-        messages: transformedMessages,
-        parameters: agent.parameters,
-        schema: {
-          typeDef: agent.getSchemaTypeDef({
-            apiSource: apiConnection.source,
-          }),
-          name: agent.props.schemaName,
-          description: agent.props.schemaDescription,
-        },
-        streaming: agent.props.outputStreaming,
-        stopSignalByUser: stopSignalByUser,
-        creditLog: creditLog,
-      });
+      // Generate structured output with fallback to lite model on failure
+      let streamResult;
+      let usedModelName = actualModelName;
+      try {
+        streamResult = await generateStructuredOutput({
+          apiConnection: apiConnection,
+          modelId: apiModelId,
+          messages: transformedMessages,
+          parameters: agent.parameters,
+          schema: {
+            typeDef: agent.getSchemaTypeDef({
+              apiSource: apiConnection.source,
+            }),
+            name: agent.props.schemaName,
+            description: agent.props.schemaDescription,
+          },
+          streaming: agent.props.outputStreaming,
+          stopSignalByUser: stopSignalByUser,
+          creditLog: creditLog,
+        });
+      } catch (primaryError) {
+        // Don't retry if aborted
+        if ((primaryError as Error).name === "AbortError") {
+          throw primaryError;
+        }
+
+        logger.warn("[InferenceFallback] Primary model failed, trying lite model fallback", {
+          error: primaryError instanceof Error ? primaryError.message : "Unknown error",
+          primaryModel: actualModelName,
+        });
+
+        // Try fallback to lite model
+        const fallback = await getLiteModelFallback();
+        if (fallback && fallback.modelId !== apiModelId) {
+          logger.info("[InferenceFallback] Retrying with lite model", {
+            fallbackModel: fallback.modelName,
+          });
+
+          streamResult = await generateStructuredOutput({
+            apiConnection: fallback.apiConnection,
+            modelId: fallback.modelId,
+            messages: transformedMessages,
+            parameters: agent.parameters,
+            schema: {
+              typeDef: agent.getSchemaTypeDef({
+                apiSource: fallback.apiConnection.source,
+              }),
+              name: agent.props.schemaName,
+              description: agent.props.schemaDescription,
+            },
+            streaming: agent.props.outputStreaming,
+            stopSignalByUser: stopSignalByUser,
+            creditLog: creditLog,
+          });
+          usedModelName = fallback.modelName;
+          result.modelName = usedModelName;
+        } else {
+          throw primaryError;
+        }
+      }
 
       // Stream structured output
       for await (const partialObject of streamResult.partialObjectStream) {
@@ -2007,11 +2101,11 @@ async function* executeAgentNode({
             } else if (delayedPromise.status?.type === 'rejected') {
               // Capture parse error for display after flow execution
               const error = delayedPromise.status.error;
-              const errorMessage = parseStructuredOutputError(error, actualModelName);
+              const errorMessage = parseStructuredOutputError(error, usedModelName);
 
               logger.error(`[StructuredOutput] ${errorMessage}`, {
                 agent: agent.props.name,
-                model: actualModelName,
+                model: usedModelName,
               });
 
               // Add error to metadata so it can be displayed
@@ -2056,16 +2150,50 @@ async function* executeAgentNode({
         // Don't throw, just continue without metadata
       }
     } else {
-      // Generate text output
-      const streamResult = await generateTextOutput({
-        apiConnection: apiConnection,
-        modelId: apiModelId,
-        messages: transformedMessages,
-        parameters: agent.parameters,
-        streaming: agent.props.outputStreaming,
-        stopSignalByUser: stopSignalByUser,
-        creditLog: creditLog,
-      });
+      // Generate text output with fallback to lite model on failure
+      let streamResult;
+      try {
+        streamResult = await generateTextOutput({
+          apiConnection: apiConnection,
+          modelId: apiModelId,
+          messages: transformedMessages,
+          parameters: agent.parameters,
+          streaming: agent.props.outputStreaming,
+          stopSignalByUser: stopSignalByUser,
+          creditLog: creditLog,
+        });
+      } catch (primaryError) {
+        // Don't retry if aborted
+        if ((primaryError as Error).name === "AbortError") {
+          throw primaryError;
+        }
+
+        logger.warn("[InferenceFallback] Primary model failed, trying lite model fallback", {
+          error: primaryError instanceof Error ? primaryError.message : "Unknown error",
+          primaryModel: actualModelName,
+        });
+
+        // Try fallback to lite model
+        const fallback = await getLiteModelFallback();
+        if (fallback && fallback.modelId !== apiModelId) {
+          logger.info("[InferenceFallback] Retrying with lite model", {
+            fallbackModel: fallback.modelName,
+          });
+
+          streamResult = await generateTextOutput({
+            apiConnection: fallback.apiConnection,
+            modelId: fallback.modelId,
+            messages: transformedMessages,
+            parameters: agent.parameters,
+            streaming: agent.props.outputStreaming,
+            stopSignalByUser: stopSignalByUser,
+            creditLog: creditLog,
+          });
+          result.modelName = fallback.modelName;
+        } else {
+          throw primaryError;
+        }
+      }
 
       // Stream text output
       let response = "";

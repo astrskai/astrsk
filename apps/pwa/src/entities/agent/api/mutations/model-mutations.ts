@@ -33,33 +33,49 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
       modelName?: string;
       modelTier?: ModelTier;
     }) => {
+      console.log(`[ModelMutation] Updating agent model:`, {
+        agentId,
+        apiSource,
+        modelId,
+        modelName,
+        modelTier,
+        modelTierIsUndefined: modelTier === undefined,
+      });
+
       // Get agent
       const agentResult = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
       if (agentResult.isFailure) throw new Error("Agent not found");
       const agent = agentResult.getValue();
 
       // Update agent - when modelTier is set, clear specific model fields
-      const updatedAgent = agent.update({
-        ...(modelTier !== undefined ? {
-          // Tier-based selection: clear specific model, set tier
-          apiSource: undefined,
-          modelId: undefined,
-          modelName,
-          modelTier,
-        } : {
-          // Specific model selection: set model fields, clear tier
-          ...(apiSource !== undefined && { apiSource }),
-          ...(modelId !== undefined && { modelId }),
-          ...(modelName !== undefined && { modelName }),
-          modelTier: undefined,
-        }),
-      });
+      const updatePayload = modelTier !== undefined ? {
+        // Tier-based selection: clear specific model, set tier
+        apiSource: undefined,
+        modelId: undefined,
+        modelName,
+        modelTier,
+      } : {
+        // Specific model selection: set model fields, clear tier
+        ...(apiSource !== undefined && { apiSource }),
+        ...(modelId !== undefined && { modelId }),
+        ...(modelName !== undefined && { modelName }),
+        modelTier: undefined,
+      };
+
+      console.log(`[ModelMutation] Update payload:`, updatePayload);
+      console.log(`[ModelMutation] Agent BEFORE update - modelTier:`, agent.props.modelTier);
+
+      const updatedAgent = agent.update(updatePayload);
       if (updatedAgent.isFailure) {
         throw new Error(updatedAgent.getError());
       }
-      
+
+      console.log(`[ModelMutation] Agent AFTER update - modelTier:`, updatedAgent.getValue().props.modelTier);
+
       // Save agent
       const saveResult = await AgentService.saveAgent.execute(updatedAgent.getValue());
+
+      console.log(`[ModelMutation] Agent saved successfully`);
       if (saveResult.isFailure) {
         throw new Error(saveResult.getError());
       }
@@ -153,17 +169,23 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
     },
     
     onSettled: async () => {
+      // Remove cached data to force refetch (invalidate only marks as stale)
+      queryClient.removeQueries({
+        queryKey: agentKeys.detail(agentId),
+        exact: true,
+      });
+
       await Promise.all([
         // Invalidate the specific model query that was optimistically updated
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: agentKeys.model(agentId)
         }),
-        // Invalidate the full agent detail to refresh all agent data
-        queryClient.invalidateQueries({ 
+        // Refetch the full agent detail to get fresh data
+        queryClient.refetchQueries({
           queryKey: agentKeys.detail(agentId)
         }),
         // Invalidate flow validation since model changes affect flow validation
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: flowKeys.validation(flowId)
         })
       ]);

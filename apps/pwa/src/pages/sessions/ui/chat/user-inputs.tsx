@@ -63,7 +63,10 @@ export const UserInputCharacterButton = ({
 
   return (
     <div
-      className="group relative flex cursor-pointer flex-col items-center gap-[4px]"
+      className={cn(
+        "group relative flex flex-col items-center gap-[4px]",
+        isDisabled ? "pointer-events-none cursor-default opacity-50" : "cursor-pointer",
+      )}
       onClick={onClick}
     >
       {isSubscribeBadge && <SubscribeBadge />}
@@ -381,9 +384,11 @@ const UserInputs = ({
   }, [setSessionOnboardingStep, setIsGroupButtonDonNotShowAgain]);
 
   // Extension UI components for session input buttons
+  // Pass isInferencing so extension buttons can disable during generation
+  const isInferencing = !!streamingMessageId;
   const extensionButtons = useExtensionUI("session-input-buttons", {
     sessionId,
-    disabled,
+    disabled: disabled || isInferencing,
     onCharacterButtonClicked,
     generateCharacterMessage,
   });

@@ -263,6 +263,12 @@ const PromptItem = ({
 
     // Pass the full model information to the parent
     if (modelName) {
+      console.log(`[ModelSelection UI] Specific model selected:`, {
+        apiSource,
+        modelId: finalModelId,
+        modelName,
+        modelTier: undefined, // Not passed for specific model selection
+      });
       modelChanged(modelName, true, {
         apiSource: apiSource,
         modelId: finalModelId,
