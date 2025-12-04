@@ -39,7 +39,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/astrskai/astrsk.git",
+    "url": "git+https://github.com/astrskai/astrsk.git",
     "directory": "packages/design-system"
   },
   "homepage": "https://astrskai.github.io/astrsk/design-system/",
