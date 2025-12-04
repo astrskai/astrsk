@@ -135,11 +135,11 @@ export function buildUserPrompt(fieldCount: number): string {
 
 2. **Data Management Agent** (data_management_agent):
    - Use \`upsert_prompt_messages\` to describe what to analyze
-   - Use \`upsert_output_fields\` to define ${fieldCount} DIFF output fields (e.g., \`health_diff\` not \`health\`)
-   - Use conservative diff ranges: 0-1 for fields with 0-10 range, 0-3 for 0-100 range
-   - Use \`update_data_store_node_fields\` with formulas: \`{{field}}-{{data_management_agent.field_diff}}\`
+   - Use \`upsert_output_fields\` to define ${fieldCount} DELTA output fields (e.g., \`health_delta\` not \`health\`)
+   - Use conservative delta ranges: -1 to +1 for 0-10 fields, -3 to +3 for 0-100 fields
+   - Use \`update_data_store_node_fields\` with formulas: \`{{field}}+{{data_management_agent.field_delta}}\`
 
-All ${fieldCount} schema fields must be updated via data_management_agent using diff values for gradual changes.`;
+All ${fieldCount} schema fields must be updated via data_management_agent using delta values for gradual changes.`;
 }
 
 // Fixer stage is not needed for simplified workflow builder
