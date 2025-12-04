@@ -73,22 +73,29 @@ export class ExportCharacterToCloud
 
       const characterData = dataResult.getValue();
 
-      // 3. Upload character record to cloud
-      const uploadResult = await uploadCharacterToCloud(characterData);
-      if (uploadResult.isFailure) {
-        return Result.fail<ShareLinkResult>(uploadResult.getError());
-      }
-
-      // 4. Upload character icon asset (if exists)
+      // 3. Upload character icon asset FIRST (before character record)
+      // Assets must exist before records that reference them via FK
       if (characterData.icon_asset_id) {
         const iconAsset = await this.loadAssetRepo.getAssetById(
           new UniqueEntityID(characterData.icon_asset_id)
         );
         if (iconAsset.isSuccess) {
-          await uploadAssetToSupabase(iconAsset.getValue(), {
-            characterId: characterData.id,
-          });
+          const assetUploadResult = await uploadAssetToSupabase(iconAsset.getValue());
+          if (assetUploadResult.isFailure) {
+            return Result.fail<ShareLinkResult>(
+              `Failed to upload character icon asset: ${assetUploadResult.getError()}`
+            );
+          }
+        } else {
+          // Asset not found locally - clear the reference so character can be uploaded
+          characterData.icon_asset_id = null;
         }
+      }
+
+      // 4. Upload character record to cloud (asset already exists)
+      const uploadResult = await uploadCharacterToCloud(characterData);
+      if (uploadResult.isFailure) {
+        return Result.fail<ShareLinkResult>(uploadResult.getError());
       }
 
       // 5. Create shared resource entry using the NEW card ID

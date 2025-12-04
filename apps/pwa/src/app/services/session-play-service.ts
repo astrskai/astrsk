@@ -370,6 +370,7 @@ const makeContext = async ({
   }
 
   // Set `{{session.plot_entries}}` and `{{scenario}}`
+  // Note: scenario.name is always "Narrator" for consistency in history/prompts
   if (plotCard && plotCard.props.lorebook) {
     // Scan lorebook
     try {
@@ -384,7 +385,7 @@ const makeContext = async ({
       // Set scenario variables for template rendering
       context.scenario = {
         id: plotCard.id.toString(),
-        name: plotCard.props.name ?? plotCard.props.title ?? "",
+        name: "Narrator",
         description: plotCard.props.description || "",
         entries: activatedEntries,
       };
@@ -395,7 +396,7 @@ const makeContext = async ({
     // Set scenario variables even without lorebook
     context.scenario = {
       id: plotCard.id.toString(),
-      name: plotCard.props.name ?? plotCard.props.title ?? "",
+      name: "Narrator",
       description: plotCard.props.description || "",
       entries: [],
     };

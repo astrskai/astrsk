@@ -314,10 +314,10 @@ export class ImportFlowWithNodes
       const newNodes = flowData.nodes.map((node: any) => {
         const newId = nodeIdMap.get(node.id) || node.id;
 
-        // For dataStore nodes, update the flowId in data if present
-        let nodeData = {};
-        if (node.type === "dataStore" && node.data && node.data.flowId) {
-          nodeData = { flowId: newFlowId };
+        // Preserve existing node data, but update flowId for dataStore nodes
+        let nodeData = node.data || {};
+        if (node.type === "dataStore" && node.data?.flowId) {
+          nodeData = { ...node.data, flowId: newFlowId };
         }
 
         return {

@@ -237,14 +237,16 @@ const SessionContent = ({
           // Get message from database
           streamingMessage = await fetchTurn(regenerateMessageId);
         } else {
-          // Get character name
+          // Get character name - use "Narrator" for scenario triggers
           const character = await fetchCharacterCard(characterCardId);
+          const characterName =
+            triggerType === "scenario" ? "Narrator" : character.props.name;
 
           // Create new empty message
           const messageOrError = Turn.create({
             sessionId: session.id,
             characterCardId: characterCardId,
-            characterName: character.props.name,
+            characterName: characterName,
             options: [],
           });
           if (messageOrError.isFailure) {

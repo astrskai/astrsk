@@ -158,14 +158,14 @@ export class TriggerSystemExtension implements IExtension {
 
       const nodesToAdd: any[] = [];
 
+      // Check if flow needs user start node (added first for level consistency)
+      if (!hasUserNodes(nodes)) {
+        nodesToAdd.push(createUserStartNode());
+      }
+
       // Check if flow needs scenario start node
       if (!hasScenarioNodes(nodes)) {
         nodesToAdd.push(createScenarioStartNode());
-      }
-
-      // Check if flow needs user start node
-      if (!hasUserNodes(nodes)) {
-        nodesToAdd.push(createUserStartNode());
       }
 
       // If no nodes to add, return early

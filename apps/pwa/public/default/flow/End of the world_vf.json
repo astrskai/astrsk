@@ -3,29 +3,29 @@
   "description": "",
   "nodes": [
     {
-      "id": "019adf17-ee8c-7008-9d10-91fe4c6e5eb4",
+      "id": "019ae7f2-befa-7bbf-9cbf-852db8c7c25f",
       "type": "start",
       "position": {
-        "x": -267.4738323014104,
-        "y": -107.98352160351072
+        "x": -535.78092814414,
+        "y": -121.81128176509603
       },
       "data": {},
       "deletable": false,
       "zIndex": 1000
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-990fd6d19a7e",
+      "id": "019ae7f2-befa-7bbf-9cbf-8bca56ae2107",
       "type": "end",
       "position": {
-        "x": 2027.6986870156998,
-        "y": -155.68067483065562
+        "x": 2382.8254724741596,
+        "y": 415.7434832790162
       },
       "data": {},
       "deletable": false,
       "zIndex": 1000
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-a6b26c3966c3",
+      "id": "019ae7f2-befa-7bbf-9cbf-97bad7d5641a",
       "type": "agent",
       "position": {
         "x": -67.06244023447427,
@@ -35,7 +35,7 @@
       "deletable": false
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-a9575bd5f240",
+      "id": "019ae7f2-befa-7bbf-9cbf-9b148634a8c0",
       "type": "agent",
       "position": {
         "x": 680.6370127796962,
@@ -45,7 +45,7 @@
       "deletable": false
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-b5df518f30b0",
+      "id": "019ae7f2-befa-7bbf-9cbf-a4c04681d6d9",
       "type": "if",
       "position": {
         "x": 292.7877224388435,
@@ -57,18 +57,27 @@
         "conditions": [
           {
             "id": "019aa049-4b24-7ffa-bf2c-b213965e6500",
-            "value1": "{{realistic.is_realistic}}",
+            "value1": "{{realistic_character.is_realistic}}",
             "value2": "",
             "dataType": "boolean",
             "operator": "boolean_is_true"
           }
         ],
-        "logicOperator": "AND"
+        "logicOperator": "AND",
+        "draftConditions": [
+          {
+            "id": "019aa049-4b24-7ffa-bf2c-b213965e6500",
+            "value1": "{{realistic_character.is_realistic}}",
+            "value2": "",
+            "dataType": "boolean",
+            "operator": "boolean_is_true"
+          }
+        ]
       },
       "deletable": false
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-bbec534172a0",
+      "id": "019ae7f2-befa-7bbf-9cbf-aa85149a1815",
       "type": "agent",
       "position": {
         "x": 688.2460279490707,
@@ -78,11 +87,11 @@
       "deletable": false
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-c6b5e9070840",
+      "id": "019ae7f2-befa-7bbf-9cbf-b77d9290b564",
       "type": "dataStore",
       "position": {
-        "x": 1037.409105834181,
-        "y": -430.56924013030255
+        "x": 1273.6601582416395,
+        "y": 64.43296491389654
       },
       "data": {
         "name": "New Data Update",
@@ -95,7 +104,7 @@
           },
           {
             "id": "019a9b5f-6fe7-7ffa-bf17-a501e3dd67b1",
-            "logic": "{{hydration}}+{{response.hydration_diff}}",
+            "logic": "{{hydration}}+{{hydration.hydration_diff}}",
             "schemaFieldId": "019a9b2c-0305-7ffa-bf17-73c4ba27b265"
           },
           {
@@ -123,11 +132,113 @@
       "deletable": false
     },
     {
-      "id": "019adf4c-c86f-7006-8c23-aeec2710e691",
+      "id": "019ae7f2-befa-7bbf-9cbf-bce95766ba95",
       "type": "dataStore",
       "position": {
-        "x": 1478.0424235253058,
-        "y": -162.44396466915626
+        "x": 1633.6681167778381,
+        "y": 401.9335494153283
+      },
+      "data": {
+        "name": "before_end_node",
+        "color": "#FCD34D",
+        "dataStoreFields": []
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7f2-befa-7bbf-9cbf-c60f71a21bb5",
+      "type": "start",
+      "position": {
+        "x": -511.9317030163632,
+        "y": 595.3079841017283
+      },
+      "data": {
+        "nodeVariant": "user"
+      },
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "019ae7f2-befa-7bbf-9cbf-cee30be93312",
+      "type": "start",
+      "position": {
+        "x": -512.5116632350625,
+        "y": 1158.8730991314362
+      },
+      "data": {
+        "nodeVariant": "scenario"
+      },
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "019ae7f2-befa-7bbf-9cbf-d09b0edae883",
+      "type": "agent",
+      "position": {
+        "x": 698.1001430617205,
+        "y": 420.4290719839365
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae7f2-befb-7bbf-9cbf-de37c52676fb",
+      "type": "agent",
+      "position": {
+        "x": 700.488224183213,
+        "y": 845.1321228325038
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae7f2-ccdf-7bbf-9cc0-55fa19617d73",
+      "type": "agent",
+      "position": {
+        "x": -169.41363839338922,
+        "y": 1024.2785929521874
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae7f3-2f3f-7bbf-9cc0-5c963a6702ca",
+      "type": "if",
+      "position": {
+        "x": 231.42354165757848,
+        "y": 1117.7570953137938
+      },
+      "data": {
+        "name": "New Condition 1",
+        "color": "#C4B5FD",
+        "conditions": [
+          {
+            "id": "019aa049-4b24-7ffa-bf2c-b213965e6500",
+            "value1": "{{realistic_character.is_realistic}}",
+            "value2": "",
+            "dataType": "boolean",
+            "operator": "boolean_is_true"
+          }
+        ],
+        "logicOperator": "AND",
+        "draftConditions": [
+          {
+            "id": "019aa049-4b24-7ffa-bf2c-b213965e6500",
+            "value1": "{{realistic_character.is_realistic}}",
+            "value2": "",
+            "dataType": "boolean",
+            "operator": "boolean_is_true"
+          }
+        ]
+      },
+      "deletable": false
+    },
+    {
+      "id": "019ae7f3-6851-7bbf-9cc0-63c48ca5e0bc",
+      "type": "agent",
+      "position": {
+        "x": 696.9078124125057,
+        "y": 1278.0501439129773
       },
       "data": {},
       "deletable": false
@@ -135,55 +246,98 @@
   ],
   "edges": [
     {
-      "id": "019adf17-ee8c-7008-9d10-d3a6e48f2564",
-      "source": "019adf17-ee8c-7008-9d10-a6b26c3966c3",
-      "target": "019adf17-ee8c-7008-9d10-b5df518f30b0"
+      "id": "019ae7f2-befb-7bbf-9cbf-ec718c1f2b96",
+      "source": "019ae7f2-befa-7bbf-9cbf-97bad7d5641a",
+      "target": "019ae7f2-befa-7bbf-9cbf-a4c04681d6d9"
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-dfa35eea5797",
-      "source": "019adf17-ee8c-7008-9d10-b5df518f30b0",
-      "target": "019adf17-ee8c-7008-9d10-a9575bd5f240",
+      "id": "019ae7f2-befb-7bbf-9cbf-f602bc146e13",
+      "source": "019ae7f2-befa-7bbf-9cbf-a4c04681d6d9",
+      "target": "019ae7f2-befa-7bbf-9cbf-9b148634a8c0",
       "sourceHandle": "true",
       "label": "True"
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-e39a40782067",
-      "source": "019adf17-ee8c-7008-9d10-b5df518f30b0",
-      "target": "019adf17-ee8c-7008-9d10-bbec534172a0",
+      "id": "019ae7f2-befb-7bbf-9cbf-fa6e0b552819",
+      "source": "019ae7f2-befa-7bbf-9cbf-a4c04681d6d9",
+      "target": "019ae7f2-befa-7bbf-9cbf-aa85149a1815",
       "sourceHandle": "false",
       "label": "False"
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-ef930ddbe453",
-      "source": "019adf17-ee8c-7008-9d10-a9575bd5f240",
-      "target": "019adf17-ee8c-7008-9d10-c6b5e9070840"
+      "id": "019ae7f2-befb-7bbf-9cc0-03ba16f57547",
+      "source": "019ae7f2-befa-7bbf-9cbf-9b148634a8c0",
+      "target": "019ae7f2-befa-7bbf-9cbf-b77d9290b564"
     },
     {
-      "id": "019adf17-ee8c-7008-9d10-bbec534172a0-019adf4c-c86f-7006-8c23-aeec2710e691",
-      "source": "019adf17-ee8c-7008-9d10-bbec534172a0",
-      "target": "019adf4c-c86f-7006-8c23-aeec2710e691"
+      "id": "019ae7f2-befb-7bbf-9cc0-0eb966f72934",
+      "source": "019ae7f2-befa-7bbf-9cbf-aa85149a1815",
+      "target": "019ae7f2-befa-7bbf-9cbf-bce95766ba95"
     },
     {
-      "id": "xy-edge__019adf17-ee8c-7008-9d10-c6b5e9070840-019adf4c-c86f-7006-8c23-aeec2710e691",
-      "source": "019adf17-ee8c-7008-9d10-c6b5e9070840",
-      "target": "019adf4c-c86f-7006-8c23-aeec2710e691"
+      "id": "019ae7f2-befb-7bbf-9cc0-10e2675a9ee2",
+      "source": "019ae7f2-befa-7bbf-9cbf-b77d9290b564",
+      "target": "019ae7f2-befa-7bbf-9cbf-bce95766ba95"
+    },
+    {
+      "id": "019ae7f2-befb-7bbf-9cc0-1bad35ce390b",
+      "source": "019ae7f2-befa-7bbf-9cbf-d09b0edae883",
+      "target": "019ae7f2-befa-7bbf-9cbf-b77d9290b564"
+    },
+    {
+      "id": "019ae7f2-befb-7bbf-9cc0-231f8b5a97ee",
+      "source": "019ae7f2-befb-7bbf-9cbf-de37c52676fb",
+      "target": "019ae7f2-befa-7bbf-9cbf-b77d9290b564"
+    },
+    {
+      "id": "xy-edge__019ae7f2-ccdf-7bbf-9cc0-55fa19617d73-019ae7f3-2f3f-7bbf-9cc0-5c963a6702ca",
+      "source": "019ae7f2-ccdf-7bbf-9cc0-55fa19617d73",
+      "target": "019ae7f3-2f3f-7bbf-9cc0-5c963a6702ca"
+    },
+    {
+      "id": "xy-edge__019ae7f3-2f3f-7bbf-9cc0-5c963a6702catrue-019ae7f2-befb-7bbf-9cbf-de37c52676fb",
+      "source": "019ae7f3-2f3f-7bbf-9cc0-5c963a6702ca",
+      "target": "019ae7f2-befb-7bbf-9cbf-de37c52676fb",
+      "sourceHandle": "true",
+      "label": "True"
+    },
+    {
+      "id": "xy-edge__019ae7f3-2f3f-7bbf-9cc0-5c963a6702cafalse-019ae7f3-6851-7bbf-9cc0-63c48ca5e0bc",
+      "source": "019ae7f3-2f3f-7bbf-9cc0-5c963a6702ca",
+      "target": "019ae7f3-6851-7bbf-9cc0-63c48ca5e0bc",
+      "sourceHandle": "false",
+      "label": "False"
+    },
+    {
+      "id": "xy-edge__019ae7f3-6851-7bbf-9cc0-63c48ca5e0bc-019ae7f2-befa-7bbf-9cbf-bce95766ba95",
+      "source": "019ae7f3-6851-7bbf-9cc0-63c48ca5e0bc",
+      "target": "019ae7f2-befa-7bbf-9cbf-bce95766ba95"
     }
   ],
-  "responseTemplate": "{{response.response}}\r\n{{correction.response}}",
-  "createdAt": "2025-12-02T13:42:47.857Z",
-  "updatedAt": "2025-12-02T13:42:47.857Z",
+  "responseTemplate": "{{rp_response_character.response}}{{correction_character.response}}{{rp_response_user.response}}{{rp_response_scenario.response}}{{correction_scenario.response}}",
+  "createdAt": "2025-12-04T06:11:05.861Z",
+  "updatedAt": "2025-12-04T06:11:05.861Z",
   "panelStructure": {
     "panels": [],
     "version": 2,
-    "activePanel": "flow-panel-main",
+    "activePanel": "responseDesign-standalone",
     "panelMetadata": {
       "flow-panel-main": {
         "title": "Flow Editor",
         "params": {
           "title": "Flow Editor",
-          "flowId": "019adf17-ee8c-7008-9d10-cd5ad7a7acba"
+          "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec"
         },
         "component": "flow"
+      },
+      "responseDesign-standalone": {
+        "title": "Response Design",
+        "params": {
+          "title": "Response Design",
+          "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec",
+          "panelType": "responseDesign"
+        },
+        "component": "responseDesign"
       }
     },
     "serializedLayout": {
@@ -199,15 +353,26 @@
                 "locked": true,
                 "activeView": "flow-panel-main"
               },
-              "size": 2480,
+              "size": 1236,
+              "type": "leaf"
+            },
+            {
+              "data": {
+                "id": "2",
+                "views": [
+                  "responseDesign-standalone"
+                ],
+                "activeView": "responseDesign-standalone"
+              },
+              "size": 412,
               "type": "leaf"
             }
           ],
-          "size": 1328,
+          "size": 992,
           "type": "branch"
         },
-        "width": 2480,
-        "height": 1328,
+        "width": 1648,
+        "height": 992,
         "orientation": "HORIZONTAL"
       },
       "panels": {
@@ -216,19 +381,30 @@
           "title": "Flow Editor",
           "params": {
             "title": "Flow Editor",
-            "flowId": "019adf17-ee8c-7008-9d10-cd5ad7a7acba"
+            "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec"
           },
           "tabComponent": "colored",
           "contentComponent": "flow"
+        },
+        "responseDesign-standalone": {
+          "id": "responseDesign-standalone",
+          "title": "Response Design",
+          "params": {
+            "title": "Response Design",
+            "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec",
+            "panelType": "responseDesign"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "responseDesign"
         }
       },
-      "activeGroup": "1"
+      "activeGroup": "2"
     }
   },
   "viewport": {
-    "x": 432.0610862360129,
-    "y": 661.7752696865068,
-    "zoom": 1.1031400107338911
+    "x": -742.8892655521361,
+    "y": 207.8353548068705,
+    "zoom": 0.8876536964768532
   },
   "dataStoreSchema": {
     "fields": [
@@ -272,8 +448,8 @@
   },
   "readyState": "draft",
   "agents": {
-    "019adf17-ee8c-7008-9d10-a6b26c3966c3": {
-      "name": "Realistic",
+    "019ae7f2-befa-7bbf-9cbf-97bad7d5641a": {
+      "name": "realistic_character",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "anthropic",
@@ -349,13 +525,13 @@
       ],
       "tokenCount": 0,
       "color": "#A5B4FC",
-      "createdAt": "2025-12-02T12:44:38.935Z",
-      "updatedAt": "2025-12-02T12:44:38.935Z",
+      "createdAt": "2025-12-04T06:00:36.873Z",
+      "updatedAt": "2025-12-04T06:02:39.775Z",
       "modelTier": "light",
-      "flowId": "019adf17-ee8c-7008-9d10-cd5ad7a7acba"
+      "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec"
     },
-    "019adf17-ee8c-7008-9d10-a9575bd5f240": {
-      "name": "Response",
+    "019ae7f2-befa-7bbf-9cbf-9b148634a8c0": {
+      "name": "rp_response_character",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "anthropic",
@@ -389,7 +565,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-20T08:13:04.277Z",
               "updatedAt": "2025-11-20T08:13:04.277Z",
@@ -399,7 +575,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-20T08:13:04.277Z",
               "updatedAt": "2025-11-20T08:13:04.277Z",
@@ -498,13 +674,13 @@
       ],
       "tokenCount": 0,
       "color": "#FDBA74",
-      "createdAt": "2025-12-02T12:44:38.944Z",
-      "updatedAt": "2025-12-02T12:44:38.944Z",
+      "createdAt": "2025-12-04T06:00:36.879Z",
+      "updatedAt": "2025-12-04T06:00:36.879Z",
       "modelTier": "light",
-      "flowId": "019adf17-ee8c-7008-9d10-cd5ad7a7acba"
+      "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec"
     },
-    "019adf17-ee8c-7008-9d10-bbec534172a0": {
-      "name": "Correction",
+    "019ae7f2-befa-7bbf-9cbf-aa85149a1815": {
+      "name": "correction_character",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "anthropic",
@@ -538,7 +714,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-24T09:10:51.199Z",
               "updatedAt": "2025-11-24T09:10:51.199Z",
@@ -548,7 +724,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-24T09:10:51.199Z",
               "updatedAt": "2025-11-24T09:10:51.199Z",
@@ -600,14 +776,496 @@
       ],
       "tokenCount": 0,
       "color": "#FCA5A5",
-      "createdAt": "2025-12-02T12:44:38.948Z",
-      "updatedAt": "2025-12-02T12:44:38.948Z",
+      "createdAt": "2025-12-04T06:00:36.883Z",
+      "updatedAt": "2025-12-04T06:06:25.176Z",
       "modelTier": "light",
-      "flowId": "019adf17-ee8c-7008-9d10-cd5ad7a7acba"
+      "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec"
+    },
+    "019ae7f2-befa-7bbf-9cbf-d09b0edae883": {
+      "name": "rp_response_user",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You are impersonating {{user.name}} (the user's character) in a survival roleplay scenario. Your job is to write dialogue and actions AS {{user.name}}, capturing their voice, personality, and mannerisms.\n\n#Impersonation Priority\n1. **If previous messages from {{user.name}} exist**: Study them closely and mimic exactly how they spoke - their vocabulary, tone, sentence structure, and mannerisms.\n2. **If NO previous messages exist**: Use {{user.name}}'s character description to imagine how they would naturally speak and act. Stay true to their personality, background, and traits as described.\n\n## Character You Are Impersonating\n- Name: {{user.name}}\n- Description: {{user.description}}\n\n## Scenario\n{{session.scenario}}\n\n## {{user.name}}'s Current Status\n- Health: {{health}}\n- Hydration: {{hydration}}\n- Energy: {{energy}}\n- Immune System: {{immune_system}}\n- Injury Status: {{injury_status}}\n- Disease Contracted: {{disease_contracted}}\n\n## Additional Information\n{% for entry in session.entries %}\n{{entry}}\n{% endfor %}\n\n## Previous Summary\n{{previous_summary}}\n\n## Past Messages",
+              "type": "plain",
+              "createdAt": "2025-11-20T08:13:04.277Z",
+              "updatedAt": "2025-11-20T08:13:04.277Z",
+              "id": "019aa052-fb95-7ffa-bf30-8a1e83f0a930"
+            }
+          ],
+          "createdAt": "2025-11-20T08:13:04.277Z",
+          "id": "message-1763625045310"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-20T08:13:04.277Z",
+              "updatedAt": "2025-11-20T08:13:04.277Z",
+              "id": "019aa052-fb95-7ffa-bf30-95345d6690d6"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-20T08:13:04.277Z",
+              "updatedAt": "2025-11-20T08:13:04.277Z",
+              "id": "019aa052-fb95-7ffa-bf30-9a8561cf9369"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-20T08:13:04.277Z",
+          "id": "history-1763626208965"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Critical Rules",
+              "template": "#Critical Impersonation Rules\n- You ARE {{user.name}}. Write EXACTLY like they would.\n- If previous messages exist: Copy their exact style, not generic AI writing.\n- If NO previous messages exist: Base your style on their character description - imagine how this person would naturally talk.\n- Match their emotional tone, energy level, and personality.\n- DO NOT add AI-like flourishes, explanations, or overly descriptive prose.\n- Keep it natural and human-like, as {{user.name}} would actually respond.\n- **CRITICAL: NEVER write dialogue or actions for other characters or the Game Master.**\n- Write in third person POV, from {{user.name}}'s perspective.\n- React to survival situations as {{user.name}} would - show their fear, determination, exhaustion, or hope.",
+              "type": "plain",
+              "createdAt": "2025-11-20T08:13:04.277Z",
+              "updatedAt": "2025-11-20T08:13:04.277Z",
+              "id": "019aa052-fb95-7ffa-bf30-a6960c058b22"
+            }
+          ],
+          "createdAt": "2025-11-20T08:13:04.277Z",
+          "id": "message-1763626363629"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "what is your response as the game master."
+        },
+        {
+          "name": "health_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 10,
+          "minimum": -20,
+          "required": true,
+          "description": "how did {{user.name}}'s health change? negative number means {{user.name}} took damage of some sort, positive number means {{user.name}} gained heatlh. when health is 0, {{user.name}} dies. Max health value is 100."
+        },
+        {
+          "name": "hydration_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 10,
+          "minimum": -15,
+          "required": true,
+          "description": "how did {{user.name}}'s hydration rate change? negative number means {{user.name}} became more thirsty, positive number means {{user.name}} hydrated. when hydration is 0, {{user.name}} dies. Max hydration value is 100."
+        },
+        {
+          "name": "energy_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 10,
+          "minimum": -10,
+          "required": true,
+          "description": "how did {{user.name}}'s energy change? negative number means {{user.name}} became more tired, positive number means {{user.name}} became more energetic. Min energy is 0, max is 100."
+        },
+        {
+          "name": "immune_system_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 15,
+          "minimum": -8,
+          "required": true,
+          "description": "how did {{user.name}}'s Immunity change? negative number means {{user.name}} became more susceptible to disease, positive number means {{user.name}} became more immune. Min Immunity is 0, max is 100."
+        },
+        {
+          "name": "injury_status",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "is {{user.name}} injured? if yes, where? If there aren't any injuries, say 'none'."
+        },
+        {
+          "name": "disease_contracted",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "did {{user.name}} contract any disease? if yes, what? If there aren't any disease contracted, say 'none'"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#67E8F9",
+      "createdAt": "2025-12-04T06:00:36.888Z",
+      "updatedAt": "2025-12-04T06:00:36.888Z",
+      "modelTier": "light",
+      "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec"
+    },
+    "019ae7f2-befb-7bbf-9cbf-de37c52676fb": {
+      "name": "rp_response_scenario",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "You are the SCENARIO NARRATOR / WORLD ENVIRONMENT in a survival roleplay. You are omniscient - you know everything about the world, survival conditions, and all events.\n\nYour job is to:\n1. Describe the world/environment and what's happening around {{user.name}}\n2. Move the story forward when it stalls or needs direction\n3. Introduce events, NPCs, environmental hazards, or changes to keep things interesting\n4. CORRECT inconsistencies or errors in the story (you know the truth)\n5. Provide world reactions to {{user.name}}'s actions\n6. Track and describe weather conditions, time of day, temperature, and seasonal changes\n\nYou set the atmosphere, describe sensory details, and ensure the world feels alive, dynamic, and unforgiving. Nature doesn't care about fairness - bad decisions lead to bad outcomes.\n\n## Scenario\n{{session.scenario}}\n\n## {{user.name}}'s Current Status\n- Health: {{health}}\n- Hydration: {{hydration}}\n- Energy: {{energy}}\n- Immune System: {{immune_system}}\n- Injury Status: {{injury_status}}\n- Disease Contracted: {{disease_contracted}}\n\n## World Information & Rules\n{% for entry in session.entries %}\n{{entry}}\n{% endfor %}\n\n## Previous Summary\n{{previous_summary}}\n\n## Past Messages",
+              "type": "plain",
+              "createdAt": "2025-11-20T08:13:04.277Z",
+              "updatedAt": "2025-11-20T08:13:04.277Z",
+              "id": "019aa052-fb95-7ffa-bf30-8a1e83f0a930"
+            }
+          ],
+          "createdAt": "2025-11-20T08:13:04.277Z",
+          "id": "message-1763625045310"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-20T08:13:04.277Z",
+              "updatedAt": "2025-11-20T08:13:04.277Z",
+              "id": "019aa052-fb95-7ffa-bf30-95345d6690d6"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-20T08:13:04.277Z",
+              "updatedAt": "2025-11-20T08:13:04.277Z",
+              "id": "019aa052-fb95-7ffa-bf30-9a8561cf9369"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-20T08:13:04.277Z",
+          "id": "history-1763626208965"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Critical Rules",
+              "template": "#Critical Scenario Rules\n- You are the WORLD/ENVIRONMENT narrator, not a character.\n- You know EVERYTHING - use this to keep the story consistent and accurate.\n- If something is wrong or off in the story, correct it through natural narration.\n- Move the story forward when needed - introduce events, describe consequences.\n- **CRITICAL: NEVER write dialogue or actions for {{user.name}}.**\n- You may control minor NPCs, wildlife, and environmental elements.\n- Keep responses focused and purposeful - don't over-narrate.\n- Support {{user.name}}'s story, don't overshadow it.\n- Write in third person omniscient POV.\n- Reflect {{user.name}}'s physical state through environmental descriptions: trembling hands from cold, labored breathing from exhaustion, etc.",
+              "type": "plain",
+              "createdAt": "2025-11-20T08:13:04.277Z",
+              "updatedAt": "2025-11-20T08:13:04.277Z",
+              "id": "019aa052-fb95-7ffa-bf30-a6960c058b22"
+            }
+          ],
+          "createdAt": "2025-11-20T08:13:04.277Z",
+          "id": "message-1763626363629"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "response",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "what is your response as the game master."
+        },
+        {
+          "name": "health_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 10,
+          "minimum": -20,
+          "required": true,
+          "description": "how did {{user.name}}'s health change? negative number means {{user.name}} took damage of some sort, positive number means {{user.name}} gained heatlh. when health is 0, {{user.name}} dies. Max health value is 100."
+        },
+        {
+          "name": "hydration_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 10,
+          "minimum": -15,
+          "required": true,
+          "description": "how did {{user.name}}'s hydration rate change? negative number means {{user.name}} became more thirsty, positive number means {{user.name}} hydrated. when hydration is 0, {{user.name}} dies. Max hydration value is 100."
+        },
+        {
+          "name": "energy_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 10,
+          "minimum": -10,
+          "required": true,
+          "description": "how did {{user.name}}'s energy change? negative number means {{user.name}} became more tired, positive number means {{user.name}} became more energetic. Min energy is 0, max is 100."
+        },
+        {
+          "name": "immune_system_diff",
+          "type": "integer",
+          "array": false,
+          "maximum": 15,
+          "minimum": -8,
+          "required": true,
+          "description": "how did {{user.name}}'s Immunity change? negative number means {{user.name}} became more susceptible to disease, positive number means {{user.name}} became more immune. Min Immunity is 0, max is 100."
+        },
+        {
+          "name": "injury_status",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "is {{user.name}} injured? if yes, where? If there aren't any injuries, say 'none'."
+        },
+        {
+          "name": "disease_contracted",
+          "type": "string",
+          "array": false,
+          "required": true,
+          "description": "did {{user.name}} contract any disease? if yes, what? If there aren't any disease contracted, say 'none'"
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#F0ABFC",
+      "createdAt": "2025-12-04T06:00:36.892Z",
+      "updatedAt": "2025-12-04T06:00:36.892Z",
+      "modelTier": "light",
+      "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec"
+    },
+    "019ae7f2-ccdf-7bbf-9cc0-55fa19617d73": {
+      "name": "realistic_scenario",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "Based on the last message that {{user.name}} has sent, evaluate whether the message is realistic and plausible based on the situation.\r\n\r\n## situation\r\nScenario: {{session.scenario}}\r\n\r\n## {{user.name}}'s current status\r\nhealth: {{health}}\r\nthirst: {{thirst}}\r\nenergy: {{energy}}\r\nimmune system status: {{immune_system}}\r\ninjury status: {{injury_status}}\r\ndisease contracted: {{disease_contracted}}\r\n\r\n## past messages\r\n",
+              "type": "plain",
+              "createdAt": "2025-11-20T07:59:08.448Z",
+              "updatedAt": "2025-11-20T07:59:08.448Z",
+              "id": "019aa046-3aa0-7ffa-bf2c-94755a41bd35"
+            }
+          ],
+          "createdAt": "2025-11-20T07:59:08.448Z",
+          "id": "message-1763625118970"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-20T07:59:08.448Z",
+              "updatedAt": "2025-11-20T07:59:08.448Z",
+              "id": "019aa046-3aa0-7ffa-bf2c-9d1f48868d1d"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-20T07:59:08.448Z",
+              "updatedAt": "2025-11-20T07:59:08.448Z",
+              "id": "019aa046-3aa0-7ffa-bf2c-a560315f74f3"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-20T07:59:08.448Z",
+          "id": "history-1763625450374"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": true,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "is_realistic",
+          "type": "boolean",
+          "array": false,
+          "required": true,
+          "description": "Determine whether the last message is plausible. True if plausible. False is not plausible."
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#FDE047",
+      "createdAt": "2025-12-04T06:00:40.484Z",
+      "updatedAt": "2025-12-04T06:01:00.130Z",
+      "modelTier": "light",
+      "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec"
+    },
+    "019ae7f3-6851-7bbf-9cc0-63c48ca5e0bc": {
+      "name": "correction_scenario",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "Tell {{user.name}} that the last message was not a plausible move.\r\nClearly and concisely state the reason for it being not plausible based on below information, in less than 30 words.\r\n\r\n## Past message\r\n",
+              "type": "plain",
+              "createdAt": "2025-11-24T09:10:51.199Z",
+              "updatedAt": "2025-11-24T09:10:51.199Z",
+              "id": "019ab521-523f-722e-b1da-89880aba744b"
+            }
+          ],
+          "createdAt": "2025-11-24T09:10:51.199Z",
+          "id": "message-1763627645839"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-24T09:10:51.199Z",
+              "updatedAt": "2025-11-24T09:10:51.199Z",
+              "id": "019ab521-523f-722e-b1da-92009a703e17"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-11-24T09:10:51.199Z",
+              "updatedAt": "2025-11-24T09:10:51.199Z",
+              "id": "019ab521-523f-722e-b1da-9d28f30ef1ef"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-11-24T09:10:51.199Z",
+          "id": "history-1763627732928"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 3",
+              "template": "## Scenario\r\nScenario: {{session.scenario}}\r\n\r\n## {{user.name}}'s current status\r\nhealth: {{health}}\r\nthirst: {{thirst}}\r\nenergy: {{energy}}\r\nimmune system status: {{immune_system}}\r\ninjury status: {{injury_status}}\r\ndisease contracted: {{disease_contracted}}",
+              "type": "plain",
+              "createdAt": "2025-11-24T09:10:51.199Z",
+              "updatedAt": "2025-11-24T09:10:51.199Z",
+              "id": "019ab521-523f-722e-b1da-a46dbf15c675"
+            }
+          ],
+          "createdAt": "2025-11-24T09:10:51.199Z",
+          "id": "message-1763627733388"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {
+        "max_tokens": true
+      },
+      "parameterValues": {
+        "max_tokens": 100
+      },
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [
+        {
+          "name": "field_1",
+          "type": "string",
+          "array": false,
+          "required": true
+        }
+      ],
+      "tokenCount": 0,
+      "color": "#86EFAC",
+      "createdAt": "2025-12-04T06:01:20.277Z",
+      "updatedAt": "2025-12-04T06:06:18.362Z",
+      "modelTier": "light",
+      "flowId": "019ae7f2-befb-7bbf-9cbf-e16afcd450ec"
     }
   },
   "dataStoreNodes": {
-    "019adf17-ee8c-7008-9d10-c6b5e9070840": {
+    "019ae7f2-befa-7bbf-9cbf-b77d9290b564": {
       "name": "New Data Update",
       "color": "#93C5FD",
       "dataStoreFields": [
@@ -642,42 +1300,58 @@
           "logic": "{{response.disease_contracted}}"
         }
       ],
-      "createdAt": "2025-12-02T12:44:38.951Z",
-      "updatedAt": "2025-12-02T12:44:38.951Z"
+      "createdAt": "2025-12-04T06:00:36.899Z",
+      "updatedAt": "2025-12-04T06:00:36.899Z"
     },
-    "019adf4c-c86f-7006-8c23-aeec2710e691": {
+    "019ae7f2-befa-7bbf-9cbf-bce95766ba95": {
       "name": "before_end_node",
       "color": "#FCD34D",
       "dataStoreFields": [],
-      "createdAt": "2025-12-02T13:42:22.604Z",
-      "updatedAt": "2025-12-02T13:42:39.158Z"
+      "createdAt": "2025-12-04T06:00:36.906Z",
+      "updatedAt": "2025-12-04T06:00:36.906Z"
     }
   },
   "ifNodes": {
-    "019adf17-ee8c-7008-9d10-b5df518f30b0": {
+    "019ae7f2-befa-7bbf-9cbf-a4c04681d6d9": {
       "name": "New Condition",
       "color": "#BEF264",
       "logicOperator": "AND",
       "conditions": [
         {
           "id": "019aa049-4b24-7ffa-bf2c-b213965e6500",
-          "value1": "{{realistic.is_realistic}}",
+          "value1": "{{realistic_character.is_realistic}}",
           "value2": "",
           "dataType": "boolean",
           "operator": "boolean_is_true"
         }
       ],
-      "createdAt": "2025-12-02T13:42:47.867Z",
-      "updatedAt": "2025-12-02T13:42:47.867Z"
+      "createdAt": "2025-12-04T06:11:05.870Z",
+      "updatedAt": "2025-12-04T06:11:05.870Z"
+    },
+    "019ae7f3-2f3f-7bbf-9cc0-5c963a6702ca": {
+      "name": "New Condition 1",
+      "color": "#C4B5FD",
+      "logicOperator": "AND",
+      "conditions": [
+        {
+          "id": "019aa049-4b24-7ffa-bf2c-b213965e6500",
+          "value1": "{{realistic_scenario.is_realistic}}",
+          "value2": "",
+          "dataType": "boolean",
+          "operator": "boolean_is_true"
+        }
+      ],
+      "createdAt": "2025-12-04T06:11:05.894Z",
+      "updatedAt": "2025-12-04T06:11:05.894Z"
     }
   },
-  "exportedAt": "2025-12-02T13:42:47.877Z",
+  "exportedAt": "2025-12-04T06:11:05.897Z",
   "exportedBy": "astrsk-v2.3.0",
   "metadata": {
     "processing": {
       "agents": {
-        "found": 3,
-        "exported": 3,
+        "found": 7,
+        "exported": 7,
         "failed": 0
       },
       "dataStoreNodes": {
@@ -686,17 +1360,17 @@
         "failed": 0
       },
       "ifNodes": {
-        "found": 1,
-        "exported": 1,
+        "found": 2,
+        "exported": 2,
         "failed": 0
       }
     },
-    "totalNodes": 8,
+    "totalNodes": 15,
     "nodeTypes": {
-      "start": 1,
+      "start": 3,
       "end": 1,
-      "agent": 3,
-      "if": 1,
+      "agent": 7,
+      "if": 2,
       "dataStore": 2
     }
   }

@@ -35,15 +35,15 @@ export interface TriggerNode {
 export type ScenarioNode = TriggerNode;
 
 /**
- * Create scenario start node
+ * Create user start node
  */
-export function createScenarioStartNode(): TriggerNode {
+export function createUserStartNode(): TriggerNode {
   return {
     id: generateUUID(),
     type: NodeType.START,
     position: { x: 0, y: 300 }, // Below regular start node
     data: {
-      nodeVariant: SCENARIO_VARIANT,
+      nodeVariant: USER_VARIANT,
     },
     deletable: false,
     zIndex: 1000,
@@ -51,15 +51,15 @@ export function createScenarioStartNode(): TriggerNode {
 }
 
 /**
- * Create user start node
+ * Create scenario start node
  */
-export function createUserStartNode(): TriggerNode {
+export function createScenarioStartNode(): TriggerNode {
   return {
     id: generateUUID(),
     type: NodeType.START,
-    position: { x: 0, y: 600 }, // Below scenario start node
+    position: { x: 0, y: 600 }, // Below user start node
     data: {
-      nodeVariant: USER_VARIANT,
+      nodeVariant: SCENARIO_VARIANT,
     },
     deletable: false,
     zIndex: 1000,

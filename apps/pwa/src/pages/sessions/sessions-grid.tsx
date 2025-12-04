@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Session } from "@/entities/session/domain/session";
+import { CardType } from "@/entities/card/domain";
 import { IconHarpyLogo } from "@/shared/assets/icons";
 import type {
   SessionWithCharacterMetadata,
@@ -224,6 +225,9 @@ export function SessionsGrid({
 
         // Handle persona selection
         let userCharacterCardId: UniqueEntityID | undefined;
+        let updatedAllCards = clonedSession.props.allCards;
+        const originalUserCardId = clonedSession.props.userCharacterCardId;
+
         if (personaResult?.type === "existing" && personaResult.characterId) {
           // Clone the persona card into the session
           const personaCloneResult = await CardService.cloneCard.execute({
@@ -235,7 +239,24 @@ export function SessionsGrid({
             throw new Error("Could not copy persona for session.");
           }
 
-          userCharacterCardId = personaCloneResult.getValue().id;
+          const clonedPersona = personaCloneResult.getValue();
+          userCharacterCardId = clonedPersona.id;
+
+          // Remove the original user character from allCards and add the new persona
+          // This replaces the user character instead of converting it to AI
+          updatedAllCards = clonedSession.props.allCards.filter(
+            (card) => !originalUserCardId || !card.id.equals(originalUserCardId)
+          );
+          updatedAllCards.push({
+            id: clonedPersona.id,
+            type: CardType.Character,
+            enabled: true,
+          });
+        } else if (originalUserCardId) {
+          // No persona selected - remove the original user character from allCards
+          updatedAllCards = clonedSession.props.allCards.filter(
+            (card) => !card.id.equals(originalUserCardId)
+          );
         }
 
         // Set isPlaySession: true, fix title, and update userCharacterCardId
@@ -244,6 +265,7 @@ export function SessionsGrid({
           isPlaySession: true,
           title: originalTitle, // Use original title, not "Copy of..."
           userCharacterCardId,
+          allCards: updatedAllCards,
         });
 
         // Save the updated session

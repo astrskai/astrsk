@@ -1,43 +1,43 @@
 {
-  "name": "Dice of Fate",
+  "name": "Dice of Fate_vf",
   "description": "",
   "nodes": [
     {
-      "id": "019adf4e-a5c0-7006-8c25-d184686f252e",
+      "id": "019ae80e-35cc-788c-8a30-6fa161cdf4de",
       "type": "start",
       "position": {
-        "x": -339.6809773703256,
-        "y": -215.2303276730642
+        "x": -503.6809773703256,
+        "y": -235.2303276730642
       },
       "data": {},
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c25-d9a17d320abb",
+      "id": "019ae80e-35cc-788c-8a30-70194ef7e748",
       "type": "end",
       "position": {
-        "x": 4311.322649192604,
-        "y": -166.52774641205013
+        "x": 4622.758110119988,
+        "y": -315.0027917378958
       },
       "data": {},
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c25-e517960b4447",
+      "id": "019ae80e-35cc-788c-8a30-7a3569c2072d",
       "type": "agent",
       "position": {
-        "x": 292.6101037209358,
-        "y": -16.445290267927078
+        "x": 265.32138905564807,
+        "y": 1298.8707565989437
       },
       "data": {},
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c25-e98c9741a904",
+      "id": "019ae80e-35cc-788c-8a30-83b0f8ea7dce",
       "type": "dataStore",
       "position": {
-        "x": 662.7529990824828,
-        "y": 44.237208426415776
+        "x": 672.0103183742029,
+        "y": 1405.6417267650004
       },
       "data": {
         "name": "Update Summary",
@@ -53,11 +53,11 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c25-f00ee444eb8a",
+      "id": "019ae80e-35cc-788c-8a30-8b43c54c187a",
       "type": "if",
       "position": {
-        "x": -129.25352589585094,
-        "y": -278.0553884504377
+        "x": -172.9154693603114,
+        "y": 1241.9260184060913
       },
       "data": {
         "name": "Check user name and look",
@@ -83,21 +83,21 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c25-fa535a3a7631",
+      "id": "019ae80e-35cc-788c-8a30-9381ee4e33ea",
       "type": "agent",
       "position": {
-        "x": 294.3616404982199,
-        "y": -605.8964964209579
+        "x": 264.27535280012967,
+        "y": 810.4733552122149
       },
       "data": {},
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-051258cecc9b",
+      "id": "019ae80e-35cc-788c-8a30-9ddddac2d183",
       "type": "dataStore",
       "position": {
-        "x": 655.7589069939232,
-        "y": -546.2458130448837
+        "x": 681.2165350461535,
+        "y": 866.0739613981614
       },
       "data": {
         "name": "Update user data",
@@ -118,17 +118,17 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-0af4be586096",
+      "id": "019ae80e-35cc-788c-8a30-a702c28bc85c",
       "type": "agent",
       "position": {
-        "x": 2022.1380161852662,
-        "y": 609.376605326241
+        "x": 2029.0810056540563,
+        "y": 877.8388647861234
       },
       "data": {},
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-1546e4dd6c85",
+      "id": "019ae80e-35cc-788c-8a30-af1605bface3",
       "type": "if",
       "position": {
         "x": 2405.353060698738,
@@ -151,7 +151,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-1bd2b75d8ed3",
+      "id": "019ae80e-35cc-788c-8a30-b03c39b633b6",
       "type": "agent",
       "position": {
         "x": 2803.0732486365955,
@@ -161,7 +161,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-25017557e89e",
+      "id": "019ae80e-35cc-788c-8a30-bbaaa8e5a1fa",
       "type": "agent",
       "position": {
         "x": 2807.336203678825,
@@ -171,21 +171,21 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-2e181ae5146b",
+      "id": "019ae80e-35cc-788c-8a30-c3f8919661d1",
       "type": "agent",
       "position": {
-        "x": 1077.0368535747762,
-        "y": -24.339731304956295
+        "x": 1093.2371623352865,
+        "y": 1047.1949767116432
       },
       "data": {},
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-379e8f005b84",
+      "id": "019ae80e-35cc-788c-8a30-ccbd9f531d84",
       "type": "if",
       "position": {
-        "x": 1498.7550581756027,
-        "y": 78.31499570407208
+        "x": 1461.7257810087224,
+        "y": 1038.7618722200307
       },
       "data": {
         "name": "Check OOC",
@@ -204,21 +204,21 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-3f3a385f886a",
+      "id": "019ae80e-35cc-788c-8a30-d5ecf13d7aa7",
       "type": "agent",
       "position": {
-        "x": 1980.8089133331648,
-        "y": -15.662601175244246
+        "x": 2061.8104571357153,
+        "y": 329.17254244132886
       },
       "data": {},
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-44ab49698f96",
+      "id": "019ae80e-35cc-788c-8a30-dab0eb23528e",
       "type": "dataStore",
       "position": {
         "x": 2401.435283595497,
-        "y": 3.8909910498691076
+        "y": 293.1822189161217
       },
       "data": {
         "name": "Update by OOC",
@@ -264,7 +264,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-4d48055e9838",
+      "id": "019ae80e-35cc-788c-8a30-e76dafe5885b",
       "type": "dataStore",
       "position": {
         "x": 3183.347340535503,
@@ -284,11 +284,61 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
+      "id": "019ae80e-35cc-788c-8a30-e9ee6dd75306",
       "type": "dataStore",
       "position": {
-        "x": 3723.9629865440766,
-        "y": -165.32043110209355
+        "x": 3686.9337093771965,
+        "y": -294.9229011861747
+      },
+      "data": {
+        "name": "before_end_node",
+        "color": "#FCA5A5",
+        "dataStoreFields": []
+      },
+      "deletable": false
+    },
+    {
+      "id": "b6f03aff-008d-4e0a-9bd7-4d83dab4777e",
+      "type": "start",
+      "position": {
+        "x": -493.75,
+        "y": 548
+      },
+      "data": {
+        "nodeVariant": "user"
+      },
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "42332b90-69ab-4cbe-ab96-f1431420d4e7",
+      "type": "start",
+      "position": {
+        "x": -524,
+        "y": 1303
+      },
+      "data": {
+        "nodeVariant": "scenario"
+      },
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "019ae81f-bb7e-788c-9a0c-0b7c193d9863",
+      "type": "agent",
+      "position": {
+        "x": 268.9736742087394,
+        "y": -145.44774964620035
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae81f-f9cd-788c-9a0c-12a9f39f7f1e",
+      "type": "agent",
+      "position": {
+        "x": 266.85080998509665,
+        "y": -627.1280484847007
       },
       "data": {},
       "deletable": false
@@ -296,106 +346,121 @@
   ],
   "edges": [
     {
-      "id": "019adf4e-a5c0-7006-8c26-5acd0e2fdc2e",
-      "source": "019adf4e-a5c0-7006-8c25-e517960b4447",
-      "target": "019adf4e-a5c0-7006-8c25-e98c9741a904"
+      "id": "019ae80e-35cc-788c-8a30-f9fab31baeca",
+      "source": "019ae80e-35cc-788c-8a30-7a3569c2072d",
+      "target": "019ae80e-35cc-788c-8a30-83b0f8ea7dce"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-61f4fdabcb87",
-      "source": "019adf4e-a5c0-7006-8c25-fa535a3a7631",
-      "target": "019adf4e-a5c0-7006-8c26-051258cecc9b"
+      "id": "019ae80e-35cc-788c-8a31-077ca20bae3d",
+      "source": "019ae80e-35cc-788c-8a30-9381ee4e33ea",
+      "target": "019ae80e-35cc-788c-8a30-9ddddac2d183"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-68427451eb4f",
-      "source": "019adf4e-a5c0-7006-8c26-0af4be586096",
-      "target": "019adf4e-a5c0-7006-8c26-1546e4dd6c85"
+      "id": "019ae80e-35cc-788c-8a31-0db34e7db9b3",
+      "source": "019ae80e-35cc-788c-8a30-a702c28bc85c",
+      "target": "019ae80e-35cc-788c-8a30-af1605bface3"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-769cafdec257",
-      "source": "019adf4e-a5c0-7006-8c25-e98c9741a904",
-      "target": "019adf4e-a5c0-7006-8c26-2e181ae5146b"
+      "id": "019ae80e-35cc-788c-8a31-10b312d63fef",
+      "source": "019ae80e-35cc-788c-8a30-83b0f8ea7dce",
+      "target": "019ae80e-35cc-788c-8a30-c3f8919661d1"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-7ed6b076cf51",
-      "source": "019adf4e-a5c0-7006-8c26-2e181ae5146b",
-      "target": "019adf4e-a5c0-7006-8c26-379e8f005b84"
+      "id": "019ae80e-35cc-788c-8a31-1950532f3734",
+      "source": "019ae80e-35cc-788c-8a30-c3f8919661d1",
+      "target": "019ae80e-35cc-788c-8a30-ccbd9f531d84"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-81d61371ad8d",
-      "source": "019adf4e-a5c0-7006-8c26-3f3a385f886a",
-      "target": "019adf4e-a5c0-7006-8c26-44ab49698f96"
+      "id": "019ae80e-35cc-788c-8a31-208808b22794",
+      "source": "019ae80e-35cc-788c-8a30-d5ecf13d7aa7",
+      "target": "019ae80e-35cc-788c-8a30-dab0eb23528e"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-8c9c41e69afb",
-      "source": "019adf4e-a5c0-7006-8c26-25017557e89e",
-      "target": "019adf4e-a5c0-7006-8c26-4d48055e9838"
+      "id": "019ae80e-35cc-788c-8a31-2e401d30275e",
+      "source": "019ae80e-35cc-788c-8a30-bbaaa8e5a1fa",
+      "target": "019ae80e-35cc-788c-8a30-e76dafe5885b"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-970d1d859a65",
-      "source": "019adf4e-a5c0-7006-8c25-f00ee444eb8a",
-      "target": "019adf4e-a5c0-7006-8c25-fa535a3a7631",
+      "id": "019ae80e-35cc-788c-8a31-31bec93ea190",
+      "source": "019ae80e-35cc-788c-8a30-8b43c54c187a",
+      "target": "019ae80e-35cc-788c-8a30-9381ee4e33ea",
       "sourceHandle": "true",
       "label": "True"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-9a34ef9708a9",
-      "source": "019adf4e-a5c0-7006-8c25-f00ee444eb8a",
-      "target": "019adf4e-a5c0-7006-8c25-e517960b4447",
+      "id": "019ae80e-35cc-788c-8a31-3c1045809c9c",
+      "source": "019ae80e-35cc-788c-8a30-8b43c54c187a",
+      "target": "019ae80e-35cc-788c-8a30-7a3569c2072d",
       "sourceHandle": "false",
       "label": "False"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-a51cc466dd6d",
-      "source": "019adf4e-a5c0-7006-8c26-379e8f005b84",
-      "target": "019adf4e-a5c0-7006-8c26-3f3a385f886a",
+      "id": "019ae80e-35cc-788c-8a31-43e386068f8f",
+      "source": "019ae80e-35cc-788c-8a30-ccbd9f531d84",
+      "target": "019ae80e-35cc-788c-8a30-d5ecf13d7aa7",
       "sourceHandle": "true",
       "label": "True"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-ae61a74dae1f",
-      "source": "019adf4e-a5c0-7006-8c26-379e8f005b84",
-      "target": "019adf4e-a5c0-7006-8c26-0af4be586096",
+      "id": "019ae80e-35cc-788c-8a31-4e0ce23401e7",
+      "source": "019ae80e-35cc-788c-8a30-ccbd9f531d84",
+      "target": "019ae80e-35cc-788c-8a30-a702c28bc85c",
       "sourceHandle": "false",
       "label": "False"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-b5c7f8dd95de",
-      "source": "019adf4e-a5c0-7006-8c26-1546e4dd6c85",
-      "target": "019adf4e-a5c0-7006-8c26-25017557e89e",
+      "id": "019ae80e-35cc-788c-8a31-5224e5e29ac5",
+      "source": "019ae80e-35cc-788c-8a30-af1605bface3",
+      "target": "019ae80e-35cc-788c-8a30-bbaaa8e5a1fa",
       "sourceHandle": "true",
       "label": "True"
     },
     {
-      "id": "019adf4e-a5c0-7006-8c26-b9cb00b3f55a",
-      "source": "019adf4e-a5c0-7006-8c26-1546e4dd6c85",
-      "target": "019adf4e-a5c0-7006-8c26-1bd2b75d8ed3",
+      "id": "019ae80e-35cc-788c-8a31-5b8ff9ad8cfe",
+      "source": "019ae80e-35cc-788c-8a30-af1605bface3",
+      "target": "019ae80e-35cc-788c-8a30-b03c39b633b6",
       "sourceHandle": "false",
       "label": "False"
     },
     {
-      "id": "xy-edge__019adf4e-a5c0-7006-8c26-051258cecc9b-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
-      "source": "019adf4e-a5c0-7006-8c26-051258cecc9b",
-      "target": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+      "id": "019ae80e-35cc-788c-8a31-606e9212e4d2",
+      "source": "019ae80e-35cc-788c-8a30-9ddddac2d183",
+      "target": "019ae80e-35cc-788c-8a30-e9ee6dd75306"
     },
     {
-      "id": "xy-edge__019adf4e-a5c0-7006-8c26-44ab49698f96-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
-      "source": "019adf4e-a5c0-7006-8c26-44ab49698f96",
-      "target": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+      "id": "019ae80e-35cc-788c-8a31-6f83e33200a1",
+      "source": "019ae80e-35cc-788c-8a30-dab0eb23528e",
+      "target": "019ae80e-35cc-788c-8a30-e9ee6dd75306"
     },
     {
-      "id": "xy-edge__019adf4e-a5c0-7006-8c26-4d48055e9838-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
-      "source": "019adf4e-a5c0-7006-8c26-4d48055e9838",
-      "target": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+      "id": "019ae80e-35cc-788c-8a31-76269c7483b1",
+      "source": "019ae80e-35cc-788c-8a30-e76dafe5885b",
+      "target": "019ae80e-35cc-788c-8a30-e9ee6dd75306"
     },
     {
-      "id": "xy-edge__019adf4e-a5c0-7006-8c26-1bd2b75d8ed3-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
-      "source": "019adf4e-a5c0-7006-8c26-1bd2b75d8ed3",
-      "target": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
+      "id": "019ae80e-35cc-788c-8a31-7ab26844272a",
+      "source": "019ae80e-35cc-788c-8a30-b03c39b633b6",
+      "target": "019ae80e-35cc-788c-8a30-e9ee6dd75306"
+    },
+    {
+      "id": "xy-edge__019ae81f-f9cd-788c-9a0c-12a9f39f7f1e-019ae80e-35cc-788c-8a30-e9ee6dd75306",
+      "source": "019ae81f-f9cd-788c-9a0c-12a9f39f7f1e",
+      "target": "019ae80e-35cc-788c-8a30-e9ee6dd75306"
+    },
+    {
+      "id": "xy-edge__019ae81f-bb7e-788c-9a0c-0b7c193d9863-019ae80e-35cc-788c-8a30-e9ee6dd75306",
+      "source": "019ae81f-bb7e-788c-9a0c-0b7c193d9863",
+      "target": "019ae80e-35cc-788c-8a30-e9ee6dd75306"
+    },
+    {
+      "id": "xy-edge__42332b90-69ab-4cbe-ab96-f1431420d4e7-019ae80e-35cc-788c-8a30-8b43c54c187a",
+      "source": "42332b90-69ab-4cbe-ab96-f1431420d4e7",
+      "target": "019ae80e-35cc-788c-8a30-8b43c54c187a"
     }
   ],
-  "responseTemplate": "{%- if get_user_data -%}\n{{get_user_data.gm_response}}\n{%- elif process_ooc -%}\n{{process_ooc.gm_response}}\n{%- elif roll_dice -%}\n{{roll_dice.narration}}\n{%- elif narrate -%}\n{{narrate.response}}\n{%- endif -%}",
-  "createdAt": "2025-12-02T13:45:08.964Z",
-  "updatedAt": "2025-12-02T13:45:08.964Z",
+  "responseTemplate": "{{get_user_data.gm_response}}\n{{process_ooc.gm_response}}\n{{roll_dice.narration}}\n{{narrate.response}}\n{{rp_agent_user.response}}\n{{rp_agent_character.response}}",
+  "createdAt": "2025-12-04T06:52:53.593Z",
+  "updatedAt": "2025-12-04T06:52:53.593Z",
   "panelStructure": {
     "panels": [],
     "version": 2,
@@ -405,21 +470,9 @@
         "title": "Flow Editor",
         "params": {
           "title": "Flow Editor",
-          "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+          "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
         },
         "component": "flow"
-      },
-      "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2": {
-        "title": "[Data Update] Data update",
-        "params": {
-          "title": "[before_end_node] Data update",
-          "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed",
-          "nodeId": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
-          "agentId": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
-          "panelType": "dataStore",
-          "agentColor": "#FCA5A5"
-        },
-        "component": "dataStore"
       }
     },
     "serializedLayout": {
@@ -435,26 +488,15 @@
                 "locked": true,
                 "activeView": "flow-panel-main"
               },
-              "size": 1860,
-              "type": "leaf"
-            },
-            {
-              "data": {
-                "id": "2",
-                "views": [
-                  "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
-                ],
-                "activeView": "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2"
-              },
-              "size": 620,
+              "size": 1648,
               "type": "leaf"
             }
           ],
-          "size": 1328,
+          "size": 992,
           "type": "branch"
         },
-        "width": 2480,
-        "height": 1328,
+        "width": 1648,
+        "height": 992,
         "orientation": "HORIZONTAL"
       },
       "panels": {
@@ -463,33 +505,19 @@
           "title": "Flow Editor",
           "params": {
             "title": "Flow Editor",
-            "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+            "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
           },
           "tabComponent": "colored",
           "contentComponent": "flow"
-        },
-        "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2": {
-          "id": "dataStore-019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
-          "title": "[Data Update] Data update",
-          "params": {
-            "title": "[before_end_node] Data update",
-            "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed",
-            "nodeId": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
-            "agentId": "019adf4e-bfcc-7006-8c26-fcdb4985ccf2",
-            "panelType": "dataStore",
-            "agentColor": "#FCA5A5"
-          },
-          "tabComponent": "colored",
-          "contentComponent": "dataStore"
         }
       },
       "activeGroup": "1"
     }
   },
   "viewport": {
-    "x": -870.3698649803669,
-    "y": 551.5525338262892,
-    "zoom": 0.5288201194257555
+    "x": 81.55082011217928,
+    "y": -181.61202075471806,
+    "zoom": 0.5239567124816681
   },
   "dataStoreSchema": {
     "fields": [
@@ -557,7 +585,7 @@
   },
   "readyState": "draft",
   "agents": {
-    "019adf4e-a5c0-7006-8c25-e517960b4447": {
+    "019ae80e-35cc-788c-8a30-7a3569c2072d": {
       "name": "Summary",
       "description": "",
       "targetApiType": "chat",
@@ -640,12 +668,12 @@
       ],
       "tokenCount": 0,
       "color": "#A5B4FC",
-      "createdAt": "2025-12-02T13:44:24.779Z",
-      "updatedAt": "2025-12-02T13:44:24.779Z",
+      "createdAt": "2025-12-04T06:30:36.760Z",
+      "updatedAt": "2025-12-04T06:30:36.760Z",
       "modelTier": "light",
-      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+      "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
     },
-    "019adf4e-a5c0-7006-8c25-fa535a3a7631": {
+    "019ae80e-35cc-788c-8a30-9381ee4e33ea": {
       "name": "Get user data",
       "description": "",
       "targetApiType": "chat",
@@ -680,7 +708,7 @@
           "userPromptBlocks": [
             {
               "name": "History",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-19T04:49:36.417Z",
               "updatedAt": "2025-09-19T04:49:36.417Z",
@@ -690,7 +718,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-19T04:49:36.417Z",
               "updatedAt": "2025-09-19T04:49:36.417Z",
@@ -736,12 +764,12 @@
       ],
       "tokenCount": 0,
       "color": "#67E8F9",
-      "createdAt": "2025-12-02T13:44:24.785Z",
-      "updatedAt": "2025-12-02T13:44:24.785Z",
+      "createdAt": "2025-12-04T06:30:36.767Z",
+      "updatedAt": "2025-12-04T06:30:36.767Z",
       "modelTier": "heavy",
-      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+      "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
     },
-    "019adf4e-a5c0-7006-8c26-0af4be586096": {
+    "019ae80e-35cc-788c-8a30-a702c28bc85c": {
       "name": "Judge dice",
       "description": "",
       "targetApiType": "chat",
@@ -776,7 +804,7 @@
           "userPromptBlocks": [
             {
               "name": "Last user message",
-              "template": "# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User Input\n{{turn.content}}",
+              "template": "# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-23T01:47:26.006Z",
               "updatedAt": "2025-09-23T01:47:26.006Z",
@@ -786,7 +814,7 @@
           "assistantPromptBlocks": [
             {
               "name": "Last user message",
-              "template": "# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User Input\n{{turn.content}}",
+              "template": "# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-23T01:47:26.006Z",
               "updatedAt": "2025-09-23T01:47:26.006Z",
@@ -843,12 +871,12 @@
       ],
       "tokenCount": 0,
       "color": "#C4B5FD",
-      "createdAt": "2025-12-02T13:44:24.789Z",
-      "updatedAt": "2025-12-02T13:44:24.789Z",
+      "createdAt": "2025-12-04T06:30:36.771Z",
+      "updatedAt": "2025-12-04T06:30:36.771Z",
       "modelTier": "light",
-      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+      "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
     },
-    "019adf4e-a5c0-7006-8c26-1bd2b75d8ed3": {
+    "019ae80e-35cc-788c-8a30-b03c39b633b6": {
       "name": "Narrate",
       "description": "",
       "targetApiType": "chat",
@@ -883,7 +911,7 @@
           "userPromptBlocks": [
             {
               "name": "Session context and user input",
-              "template": "# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User's action\n{{turn.content}}",
+              "template": "# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-23T01:47:53.703Z",
               "updatedAt": "2025-09-23T01:47:53.703Z",
@@ -893,7 +921,7 @@
           "assistantPromptBlocks": [
             {
               "name": "Session context and user input",
-              "template": "# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User's action\n{{turn.content}}",
+              "template": "# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-23T01:47:53.703Z",
               "updatedAt": "2025-09-23T01:47:53.703Z",
@@ -917,12 +945,12 @@
       "schemaFields": [],
       "tokenCount": 0,
       "color": "#FDA4AF",
-      "createdAt": "2025-12-02T13:44:24.792Z",
-      "updatedAt": "2025-12-02T13:44:24.792Z",
+      "createdAt": "2025-12-04T06:30:36.776Z",
+      "updatedAt": "2025-12-04T06:30:36.776Z",
       "modelTier": "heavy",
-      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+      "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
     },
-    "019adf4e-a5c0-7006-8c26-25017557e89e": {
+    "019ae80e-35cc-788c-8a30-bbaaa8e5a1fa": {
       "name": "Roll dice",
       "description": "",
       "targetApiType": "chat",
@@ -957,7 +985,7 @@
           "userPromptBlocks": [
             {
               "name": "Summary & User Input & Roll",
-              "template": "# Dice to roll\n{{judge_dice.target_stat}} {% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha}}\n{%- endif %}\n\n# Roll result\n{% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str | roll}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex | roll}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con | roll}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int | roll}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis | roll}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha | roll}}\n{%- endif %}\n\n# Target number\n{{judge_dice.target_value}}\n\n# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User's last action\n{{turn.content}}",
+              "template": "# Dice to roll\n{{judge_dice.target_stat}} {% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha}}\n{%- endif %}\n\n# Roll result\n{% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str | roll}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex | roll}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con | roll}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int | roll}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis | roll}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha | roll}}\n{%- endif %}\n\n# Target number\n{{judge_dice.target_value}}\n\n# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-10-16T08:56:38.936Z",
               "updatedAt": "2025-10-16T08:56:38.936Z",
@@ -967,7 +995,7 @@
           "assistantPromptBlocks": [
             {
               "name": "Summary & User Input & Roll",
-              "template": "# Dice to roll\n{{judge_dice.target_stat}} {% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha}}\n{%- endif %}\n\n# Roll result\n{% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str | roll}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex | roll}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con | roll}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int | roll}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis | roll}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha | roll}}\n{%- endif %}\n\n# Target number\n{{judge_dice.target_value}}\n\n# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User's last action\n{{turn.content}}",
+              "template": "# Dice to roll\n{{judge_dice.target_stat}} {% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha}}\n{%- endif %}\n\n# Roll result\n{% if  judge_dice.target_stat == 'STR' -%}\n{{dice_str | roll}}\n{% elif judge_dice.target_stat == 'DEX' -%}\n{{dice_dex | roll}}\n{% elif judge_dice.target_stat == 'CON' -%}\n{{dice_con | roll}}\n{% elif judge_dice.target_stat == 'INT' -%}\n{{dice_int | roll}}\n{% elif judge_dice.target_stat == 'WIS' -%}\n{{dice_wis | roll}}\n{% elif judge_dice.target_stat == 'CHA' -%}\n{{dice_cha | roll}}\n{%- endif %}\n\n# Target number\n{{judge_dice.target_value}}\n\n# Session context\n{{previous_summary}}\n{% if session.plot_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.plot_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-10-16T08:56:38.936Z",
               "updatedAt": "2025-10-16T08:56:38.936Z",
@@ -1009,12 +1037,12 @@
       ],
       "tokenCount": 0,
       "color": "#7DD3FC",
-      "createdAt": "2025-12-02T13:44:24.800Z",
-      "updatedAt": "2025-12-02T13:44:24.800Z",
+      "createdAt": "2025-12-04T06:30:36.781Z",
+      "updatedAt": "2025-12-04T06:30:36.781Z",
       "modelTier": "heavy",
-      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+      "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
     },
-    "019adf4e-a5c0-7006-8c26-2e181ae5146b": {
+    "019ae80e-35cc-788c-8a30-c3f8919661d1": {
       "name": "Judge OOC",
       "description": "",
       "targetApiType": "chat",
@@ -1049,7 +1077,7 @@
           "userPromptBlocks": [
             {
               "name": "Last user message",
-              "template": "# User Input\n{{turn.content}}",
+              "template": "# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-03T04:48:34.662Z",
               "updatedAt": "2025-09-03T04:48:34.662Z",
@@ -1059,7 +1087,7 @@
           "assistantPromptBlocks": [
             {
               "name": "Last user message",
-              "template": "# User Input\n{{turn.content}}",
+              "template": "# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-03T04:48:34.662Z",
               "updatedAt": "2025-09-03T04:48:34.662Z",
@@ -1091,12 +1119,12 @@
       ],
       "tokenCount": 0,
       "color": "#F9A8D4",
-      "createdAt": "2025-12-02T13:44:24.804Z",
-      "updatedAt": "2025-12-02T13:44:24.804Z",
+      "createdAt": "2025-12-04T06:30:36.791Z",
+      "updatedAt": "2025-12-04T06:30:36.791Z",
       "modelTier": "light",
-      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+      "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
     },
-    "019adf4e-a5c0-7006-8c26-3f3a385f886a": {
+    "019ae80e-35cc-788c-8a30-d5ecf13d7aa7": {
       "name": "Process OOC",
       "description": "",
       "targetApiType": "chat",
@@ -1131,7 +1159,7 @@
           "userPromptBlocks": [
             {
               "name": "Last user message",
-              "template": "# User Information\n- Name: {{user_name}}\n- Look: {{user_look}}\n\n# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n- Trial tokens: {{trial_tokens}}\n\n# Session context\n{{previous_summary}}\n{% if session.char_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.char_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User Input\n{{turn.content}}",
+              "template": "# User Information\n- Name: {{user_name}}\n- Look: {{user_look}}\n\n# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n- Trial tokens: {{trial_tokens}}\n\n# Session context\n{{previous_summary}}\n{% if session.char_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.char_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-23T01:50:57.972Z",
               "updatedAt": "2025-09-23T01:50:57.972Z",
@@ -1141,7 +1169,7 @@
           "assistantPromptBlocks": [
             {
               "name": "Last user message",
-              "template": "# User Information\n- Name: {{user_name}}\n- Look: {{user_look}}\n\n# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n- Trial tokens: {{trial_tokens}}\n\n# Session context\n{{previous_summary}}\n{% if session.char_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.char_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# User Input\n{{turn.content}}",
+              "template": "# User Information\n- Name: {{user_name}}\n- Look: {{user_look}}\n\n# User Stat Dice\n- STR: {{dice_str}}\n- DEX: {{dice_dex}}\n- CON: {{dice_con}}\n- INT: {{dice_int}}\n- WIS: {{dice_wis}}\n- CHA: {{dice_cha}}\n- Trial tokens: {{trial_tokens}}\n\n# Session context\n{{previous_summary}}\n{% if session.char_entries %}\n# Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.char_entries %}\n{{entry}}\n{% endfor %}\n{% endif %}\n# Last Message\n{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-09-23T01:50:57.972Z",
               "updatedAt": "2025-09-23T01:50:57.972Z",
@@ -1222,14 +1250,196 @@
       ],
       "tokenCount": 0,
       "color": "#D8B4FE",
-      "createdAt": "2025-12-02T13:44:24.807Z",
-      "updatedAt": "2025-12-02T13:44:24.807Z",
+      "createdAt": "2025-12-04T06:30:36.797Z",
+      "updatedAt": "2025-12-04T06:30:36.797Z",
       "modelTier": "light",
-      "flowId": "019adf4e-a5c0-7006-8c26-577ed1bf79ed"
+      "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
+    },
+    "019ae81f-bb7e-788c-9a0c-0b7c193d9863": {
+      "name": "rp_agent_user",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "# Role: Impersonating {{user.name}} in Dice of Fate RPG\n\nYou are impersonating {{user.name}} (the player's character) in the Dice of Fate RPG scenario. The Game Master handles the world, dice mechanics, and NPCs. Your ONLY job is to write dialogue and actions AS {{user.name}}.\n\n## Impersonation Priority\n\n{% if session.entries | length > 0 %}\n### Previous Messages Available\nAnalyze how {{user.name}} has spoken and acted throughout this adventure. Your PRIMARY job is to perfectly mimic their established personality, speech patterns, and decision-making style.\n\n**Study these aspects from {{user.name}}'s previous actions:**\n- How they speak (formal/casual, confident/hesitant, verbose/terse)\n- Their personality (brave, cautious, reckless, calculating)\n- How they approach challenges (direct combat, diplomacy, stealth, magic)\n- Their emotional responses to success and failure\n- Catchphrases or speaking habits they've developed\n\n{% else %}\n### First Response - No Previous History\nThis is the FIRST action from {{user.name}}. Build their persona based on:\n- Their name and description\n- The scenario context\n- What would make an interesting RPG character\n{% endif %}\n\n## Character Info\n**You are**: {{user.name}}\n**Your appearance**: {{user_look}}\n**Your stats**: STR {{dice_str}} | DEX {{dice_dex}} | CON {{dice_con}} | INT {{dice_int}} | WIS {{dice_wis}} | CHA {{dice_cha}}\n\n## Scenario\n{{session.scenario}}\n\n## Current Story Context\n{{previous_summary}}\n\n## Critical Rules\n- Write ONLY as {{user.name}} - never as the GM, NPCs, or environment\n- Match the established personality and speech style EXACTLY\n- React naturally to dice outcomes (celebrate successes, deal with failures)\n- Stay in character - your stats affect how confident you'd be in certain actions\n- Third person POV for actions, first person for dialogue\n- Keep responses natural for an RPG adventure\n- Do NOT narrate world events or NPC reactions - the GM handles that\n\n## Recent History",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:49:45.181Z",
+              "updatedAt": "2025-12-04T06:49:45.181Z",
+              "id": "019ae81f-bb7e-788c-9a0c-prompt-user-1"
+            }
+          ],
+          "createdAt": "2025-12-04T06:49:45.181Z",
+          "id": "message-rp-user-dof-1"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:49:45.181Z",
+              "updatedAt": "2025-12-04T06:49:45.181Z",
+              "id": "019ae81f-bb7e-788c-9a0c-history-user-1"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:49:45.181Z",
+              "updatedAt": "2025-12-04T06:49:45.181Z",
+              "id": "019ae81f-bb7e-788c-9a0c-history-asst-1"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-12-04T06:49:45.181Z",
+          "id": "history-rp-user-dof-1"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Critical Rules",
+              "template": "# Critical Impersonation Rules\n- You ARE {{user.name}}. Write EXACTLY like they would.\n- If previous messages exist: Copy their exact style, not generic AI writing.\n- If NO previous messages exist: Base your style on their stats and the scenario.\n- React authentically to what just happened in the story.\n- DO NOT add AI-like flourishes, explanations, or overly descriptive prose.\n- Keep it natural and human-like, as {{user.name}} would actually respond.\n- **CRITICAL: NEVER write for the Game Master, NPCs, or describe dice mechanics.**\n- Write in third person POV for actions, dialogue in quotes.",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:49:45.181Z",
+              "updatedAt": "2025-12-04T06:49:45.181Z",
+              "id": "019ae81f-bb7e-788c-9a0c-rules-1"
+            }
+          ],
+          "createdAt": "2025-12-04T06:49:45.181Z",
+          "id": "message-rp-user-dof-rules"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#93C5FD",
+      "createdAt": "2025-12-04T06:49:45.181Z",
+      "updatedAt": "2025-12-04T06:49:59.659Z",
+      "modelTier": "light",
+      "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
+    },
+    "019ae81f-f9cd-788c-9a0c-12a9f39f7f1e": {
+      "name": "rp_agent_character",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "# Role: Playing {{cast.active.name}} in Dice of Fate RPG\n\nYou are playing {{cast.active.name}}, an NPC/companion character in this Dice of Fate RPG scenario. The Game Master handles world narration, dice mechanics, and story progression. Your ONLY job is to write dialogue and actions AS {{cast.active.name}}.\n\n## Character You Are Playing\n**Name**: {{cast.active.name}}\n**Description**: {{cast.active.description}}\n\n## The Player's Character\n**Name**: {{user.name}}\n**Appearance**: {{user_look}}\n**Stats**: STR {{dice_str}} | DEX {{dice_dex}} | CON {{dice_con}} | INT {{dice_int}} | WIS {{dice_wis}} | CHA {{dice_cha}}\n\n## Scenario\n{{session.scenario}}\n\n## Current Story Context\n{{previous_summary}}\n\n## Your Role\n- React to what's happening in the story as {{cast.active.name}}\n- Interact with {{user.name}} based on your character's personality and relationship\n- Provide dialogue, actions, and emotional responses true to your character\n- You can offer suggestions, warnings, or assistance based on your knowledge\n- You can have your own goals and motivations that align with your description\n\n## Critical Rules\n- Write ONLY as {{cast.active.name}} - never as the GM, {{user.name}}, or environment\n- Stay true to your character's personality and motivations\n- React naturally to story events and dice outcomes\n- Third person POV for actions, dialogue in quotes\n- Keep responses natural and in-character\n- Do NOT narrate world events or describe what {{user.name}} does - only your own actions\n\n## Recent History",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:50:01.148Z",
+              "updatedAt": "2025-12-04T06:50:01.148Z",
+              "id": "019ae81f-f9cd-788c-9a0c-prompt-char-1"
+            }
+          ],
+          "createdAt": "2025-12-04T06:50:01.148Z",
+          "id": "message-rp-char-dof-1"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:50:01.148Z",
+              "updatedAt": "2025-12-04T06:50:01.148Z",
+              "id": "019ae81f-f9cd-788c-9a0c-history-user-1"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:50:01.148Z",
+              "updatedAt": "2025-12-04T06:50:01.148Z",
+              "id": "019ae81f-f9cd-788c-9a0c-history-asst-1"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-12-04T06:50:01.148Z",
+          "id": "history-rp-char-dof-1"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Critical Rules",
+              "template": "# Critical Character Rules\n- You ARE {{cast.active.name}}. Write EXACTLY like they would based on their description.\n- React authentically to what just happened in the story.\n- Your personality, goals, and motivations come from your character description.\n- DO NOT add AI-like flourishes, explanations, or break character.\n- Keep it natural and in-character.\n- **CRITICAL: NEVER write for the Game Master, {{user.name}}, or describe world events.**\n- Write in third person POV for actions, dialogue in quotes.",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:50:01.148Z",
+              "updatedAt": "2025-12-04T06:50:01.148Z",
+              "id": "019ae81f-f9cd-788c-9a0c-rules-1"
+            }
+          ],
+          "createdAt": "2025-12-04T06:50:01.148Z",
+          "id": "message-rp-char-dof-rules"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#FCD34D",
+      "createdAt": "2025-12-04T06:50:01.148Z",
+      "updatedAt": "2025-12-04T06:50:07.877Z",
+      "modelTier": "light",
+      "flowId": "019ae80e-35cc-788c-8a30-f53140b7b90b"
     }
   },
   "dataStoreNodes": {
-    "019adf4e-a5c0-7006-8c25-e98c9741a904": {
+    "019ae80e-35cc-788c-8a30-83b0f8ea7dce": {
       "name": "Update Summary",
       "color": "#FDBA74",
       "dataStoreFields": [
@@ -1239,10 +1449,10 @@
           "logic": "{{summary.new_summary}}"
         }
       ],
-      "createdAt": "2025-12-02T13:44:24.809Z",
-      "updatedAt": "2025-12-02T13:44:24.809Z"
+      "createdAt": "2025-12-04T06:30:36.802Z",
+      "updatedAt": "2025-12-04T06:30:36.802Z"
     },
-    "019adf4e-a5c0-7006-8c26-051258cecc9b": {
+    "019ae80e-35cc-788c-8a30-9ddddac2d183": {
       "name": "Update user data",
       "color": "#F0ABFC",
       "dataStoreFields": [
@@ -1257,10 +1467,10 @@
           "logic": "{{get_user_data.user_look}}"
         }
       ],
-      "createdAt": "2025-12-02T13:44:24.815Z",
-      "updatedAt": "2025-12-02T13:44:24.815Z"
+      "createdAt": "2025-12-04T06:30:36.809Z",
+      "updatedAt": "2025-12-04T06:30:36.809Z"
     },
-    "019adf4e-a5c0-7006-8c26-44ab49698f96": {
+    "019ae80e-35cc-788c-8a30-dab0eb23528e": {
       "name": "Update by OOC",
       "color": "#5EEAD4",
       "dataStoreFields": [
@@ -1300,10 +1510,10 @@
           "logic": "{{process_ooc.new_trial_tokens}}"
         }
       ],
-      "createdAt": "2025-12-02T13:44:24.822Z",
-      "updatedAt": "2025-12-02T13:44:24.822Z"
+      "createdAt": "2025-12-04T06:30:36.823Z",
+      "updatedAt": "2025-12-04T06:30:36.823Z"
     },
-    "019adf4e-a5c0-7006-8c26-4d48055e9838": {
+    "019ae80e-35cc-788c-8a30-e76dafe5885b": {
       "name": "Update trial tokens",
       "color": "#A5B4FC",
       "dataStoreFields": [
@@ -1313,19 +1523,19 @@
           "logic": "{{trial_tokens}} + {{roll_dice.gained_trial_tokens}}"
         }
       ],
-      "createdAt": "2025-12-02T13:44:24.826Z",
-      "updatedAt": "2025-12-02T13:44:24.826Z"
+      "createdAt": "2025-12-04T06:30:36.829Z",
+      "updatedAt": "2025-12-04T06:30:36.829Z"
     },
-    "019adf4e-bfcc-7006-8c26-fcdb4985ccf2": {
+    "019ae80e-35cc-788c-8a30-e9ee6dd75306": {
       "name": "before_end_node",
       "color": "#FCA5A5",
       "dataStoreFields": [],
-      "createdAt": "2025-12-02T13:44:31.502Z",
-      "updatedAt": "2025-12-02T13:44:53.291Z"
+      "createdAt": "2025-12-04T06:30:36.836Z",
+      "updatedAt": "2025-12-04T06:30:36.836Z"
     }
   },
   "ifNodes": {
-    "019adf4e-a5c0-7006-8c25-f00ee444eb8a": {
+    "019ae80e-35cc-788c-8a30-8b43c54c187a": {
       "name": "Check user name and look",
       "color": "#BEF264",
       "logicOperator": "OR",
@@ -1345,10 +1555,10 @@
           "operator": "string_equals"
         }
       ],
-      "createdAt": "2025-12-02T13:45:08.972Z",
-      "updatedAt": "2025-12-02T13:45:08.972Z"
+      "createdAt": "2025-12-04T06:52:53.602Z",
+      "updatedAt": "2025-12-04T06:52:53.602Z"
     },
-    "019adf4e-a5c0-7006-8c26-1546e4dd6c85": {
+    "019ae80e-35cc-788c-8a30-af1605bface3": {
       "name": "Check dice roll",
       "color": "#86EFAC",
       "logicOperator": "AND",
@@ -1361,10 +1571,10 @@
           "operator": "boolean_is_true"
         }
       ],
-      "createdAt": "2025-12-02T13:45:08.984Z",
-      "updatedAt": "2025-12-02T13:45:08.984Z"
+      "createdAt": "2025-12-04T06:52:53.617Z",
+      "updatedAt": "2025-12-04T06:52:53.617Z"
     },
-    "019adf4e-a5c0-7006-8c26-379e8f005b84": {
+    "019ae80e-35cc-788c-8a30-ccbd9f531d84": {
       "name": "Check OOC",
       "color": "#6EE7B7",
       "logicOperator": "AND",
@@ -1377,17 +1587,17 @@
           "operator": "boolean_is_true"
         }
       ],
-      "createdAt": "2025-12-02T13:45:08.999Z",
-      "updatedAt": "2025-12-02T13:45:08.999Z"
+      "createdAt": "2025-12-04T06:52:53.628Z",
+      "updatedAt": "2025-12-04T06:52:53.628Z"
     }
   },
-  "exportedAt": "2025-12-02T13:45:09.008Z",
+  "exportedAt": "2025-12-04T06:52:53.648Z",
   "exportedBy": "astrsk-v2.3.0",
   "metadata": {
     "processing": {
       "agents": {
-        "found": 7,
-        "exported": 7,
+        "found": 9,
+        "exported": 9,
         "failed": 0
       },
       "dataStoreNodes": {
@@ -1401,11 +1611,11 @@
         "failed": 0
       }
     },
-    "totalNodes": 17,
+    "totalNodes": 21,
     "nodeTypes": {
-      "start": 1,
+      "start": 3,
       "end": 1,
-      "agent": 7,
+      "agent": 9,
       "dataStore": 5,
       "if": 3
     }

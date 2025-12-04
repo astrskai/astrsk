@@ -3,29 +3,29 @@
   "description": "",
   "nodes": [
     {
-      "id": "019adf4e-1fca-7006-8c25-0b84946d0db4",
+      "id": "019ae7da-7552-733a-9700-503f669f6b0b",
       "type": "start",
       "position": {
-        "x": 186.52199663856533,
-        "y": 238.92161608076094
+        "x": 230.10963483983122,
+        "y": 32.81204064577879
       },
       "data": {},
       "deletable": false,
       "zIndex": 1000
     },
     {
-      "id": "019adf4e-1fca-7006-8c25-16f16bd9a09d",
+      "id": "019ae7da-7552-733a-9700-5a52b9308eb2",
       "type": "end",
       "position": {
-        "x": 3339.681269605057,
-        "y": 219.9755383276664
+        "x": 3525.0502588327454,
+        "y": 258.8641374663423
       },
       "data": {},
       "deletable": false,
       "zIndex": 1000
     },
     {
-      "id": "019adf4e-1fca-7006-8c25-1e49daf0b251",
+      "id": "019ae7da-7552-733a-9700-60f43eb53af5",
       "type": "agent",
       "position": {
         "x": 782.0528920856339,
@@ -35,40 +35,17 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-1fca-7006-8c25-21c3879a7960",
-      "type": "if",
-      "position": {
-        "x": 384.851628802734,
-        "y": 167.34965537422963
-      },
-      "data": {
-        "name": "Is battle?",
-        "color": "#FDBA74",
-        "conditions": [
-          {
-            "id": "019a2b00-8c10-7333-ab7d-c298e61ac233",
-            "value1": "{{cast.active.id}}",
-            "value2": "{{user.id}}",
-            "dataType": "string",
-            "operator": "string_not_equals"
-          }
-        ],
-        "logicOperator": "AND"
-      },
-      "deletable": false
-    },
-    {
-      "id": "019adf4e-1fca-7006-8c25-2f48a8fd493a",
+      "id": "019ae7da-7552-733a-9700-7451df30d270",
       "type": "agent",
       "position": {
-        "x": 1209.9165498173952,
-        "y": 706.5643134494894
+        "x": 809.3639786890335,
+        "y": 785.637798364797
       },
       "data": {},
       "deletable": false
     },
     {
-      "id": "019adf4e-1fca-7006-8c25-3234993e18bf",
+      "id": "019ae7da-7552-733a-9700-7bbd12591a84",
       "type": "agent",
       "position": {
         "x": 1960.043987473423,
@@ -78,7 +55,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-1fca-7006-8c25-3b3534696922",
+      "id": "019ae7da-7552-733a-9700-803e1bcd4baa",
       "type": "agent",
       "position": {
         "x": 1181.8957336188691,
@@ -88,7 +65,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-1fca-7006-8c25-464d7fd1d08b",
+      "id": "019ae7da-7552-733a-9700-89254170b262",
       "type": "dataStore",
       "position": {
         "x": 1567.7175403769104,
@@ -100,12 +77,12 @@
         "dataStoreFields": [
           {
             "id": "019a2e91-3fa3-7eeb-9d6f-7ca5c478a941",
-            "logic": "{{hp}}-{{results_tally.hp_diff}}",
+            "logic": "{{hp-results_tally.hp_diff}}",
             "schemaFieldId": "019a2ae9-32ea-7333-ab7d-88985327b33d"
           },
           {
             "id": "019a2e93-6783-7eeb-9d6f-87a36cf8420f",
-            "logic": "{{mp}}-{{results_tally.mp_diff}}",
+            "logic": "{{mp-results_tally.mp_diff}}",
             "schemaFieldId": "019a2aea-62e5-7333-ab7d-9dd99fb3acbb"
           },
           {
@@ -123,17 +100,17 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-1fca-7006-8c25-4cec0c734207",
+      "id": "019ae7da-7552-733a-9700-95e5847bc895",
       "type": "agent",
       "position": {
-        "x": 1247.6574864971412,
-        "y": 246.9460234237623
+        "x": 796.5497364885008,
+        "y": 324.7232217011141
       },
       "data": {},
       "deletable": false
     },
     {
-      "id": "019adf4e-1fca-7006-8c25-521c817357be",
+      "id": "019ae7da-7552-733a-9700-9bda75186272",
       "type": "dataStore",
       "position": {
         "x": 2360.043987473423,
@@ -153,70 +130,86 @@
       "deletable": false
     },
     {
-      "id": "019adf4e-4b77-7006-8c25-cc8268be3abb",
+      "id": "019ae7da-7552-733a-9700-a6bbc23678c1",
       "type": "dataStore",
       "position": {
         "x": 2760.043987473423,
         "y": 248.0583271929939
       },
-      "data": {},
+      "data": {
+        "name": "before_end_node",
+        "color": "#FDE047",
+        "dataStoreFields": []
+      },
       "deletable": false
+    },
+    {
+      "id": "7f8d0ca9-224e-4a63-a23f-98a58692332d",
+      "type": "start",
+      "position": {
+        "x": 233.33159483205526,
+        "y": 437.4063836233216
+      },
+      "data": {
+        "nodeVariant": "user"
+      },
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "bb6dee6d-5ffa-40b2-9293-990cf9c2ad81",
+      "type": "start",
+      "position": {
+        "x": 238.51674138387872,
+        "y": 909.3263989822176
+      },
+      "data": {
+        "nodeVariant": "scenario"
+      },
+      "deletable": false,
+      "zIndex": 1000
     }
   ],
   "edges": [
     {
-      "id": "019adf4e-1fcb-7006-8c25-607c0349d8c6",
-      "source": "019adf4e-1fca-7006-8c25-21c3879a7960",
-      "target": "019adf4e-1fca-7006-8c25-1e49daf0b251",
-      "sourceHandle": "true",
-      "label": "True"
+      "id": "019ae7da-7552-733a-9700-b9b04e0fefad",
+      "source": "019ae7da-7552-733a-9700-7451df30d270",
+      "target": "019ae7da-7552-733a-9700-7bbd12591a84"
     },
     {
-      "id": "019adf4e-1fcb-7006-8c25-6ec6144823dc",
-      "source": "019adf4e-1fca-7006-8c25-2f48a8fd493a",
-      "target": "019adf4e-1fca-7006-8c25-3234993e18bf"
+      "id": "019ae7da-7552-733a-9700-c534aaf5ca03",
+      "source": "019ae7da-7552-733a-9700-60f43eb53af5",
+      "target": "019ae7da-7552-733a-9700-803e1bcd4baa"
     },
     {
-      "id": "019adf4e-1fcb-7006-8c25-7245253df10b",
-      "source": "019adf4e-1fca-7006-8c25-1e49daf0b251",
-      "target": "019adf4e-1fca-7006-8c25-3b3534696922"
+      "id": "019ae7da-7552-733a-9700-c864d95f024c",
+      "source": "019ae7da-7552-733a-9700-803e1bcd4baa",
+      "target": "019ae7da-7552-733a-9700-89254170b262"
     },
     {
-      "id": "019adf4e-1fcb-7006-8c25-7d6d565f3256",
-      "source": "019adf4e-1fca-7006-8c25-3b3534696922",
-      "target": "019adf4e-1fca-7006-8c25-464d7fd1d08b"
+      "id": "019ae7da-7552-733a-9700-d774d7c56417",
+      "source": "019ae7da-7552-733a-9700-89254170b262",
+      "target": "019ae7da-7552-733a-9700-7bbd12591a84"
     },
     {
-      "id": "019adf4e-1fcb-7006-8c25-8291bb68bb42",
-      "source": "019adf4e-1fca-7006-8c25-464d7fd1d08b",
-      "target": "019adf4e-1fca-7006-8c25-3234993e18bf"
+      "id": "019ae7da-7552-733a-9700-dc1c8787d3f4",
+      "source": "019ae7da-7552-733a-9700-95e5847bc895",
+      "target": "019ae7da-7552-733a-9700-7bbd12591a84"
     },
     {
-      "id": "019adf4e-1fcb-7006-8c25-8b370e2a7cfb",
-      "source": "019adf4e-1fca-7006-8c25-4cec0c734207",
-      "target": "019adf4e-1fca-7006-8c25-3234993e18bf"
+      "id": "019ae7da-7552-733a-9700-ea7d3131cbd3",
+      "source": "019ae7da-7552-733a-9700-7bbd12591a84",
+      "target": "019ae7da-7552-733a-9700-9bda75186272"
     },
     {
-      "id": "019adf4e-1fcb-7006-8c25-905a71a4f7af",
-      "source": "019adf4e-1fca-7006-8c25-21c3879a7960",
-      "target": "019adf4e-1fca-7006-8c25-4cec0c734207",
-      "sourceHandle": "false",
-      "label": "False"
-    },
-    {
-      "id": "019adf4e-1fcb-7006-8c25-9e8aebaf2e06",
-      "source": "019adf4e-1fca-7006-8c25-3234993e18bf",
-      "target": "019adf4e-1fca-7006-8c25-521c817357be"
-    },
-    {
-      "id": "019adf4e-1fca-7006-8c25-521c817357be-019adf4e-4b77-7006-8c25-cc8268be3abb",
-      "source": "019adf4e-1fca-7006-8c25-521c817357be",
-      "target": "019adf4e-4b77-7006-8c25-cc8268be3abb"
+      "id": "019ae7da-7552-733a-9700-f0ee39c732f3",
+      "source": "019ae7da-7552-733a-9700-9bda75186272",
+      "target": "019ae7da-7552-733a-9700-a6bbc23678c1"
     }
   ],
-  "responseTemplate": "{{battle_response_ai_char.response}}\n{{impersonation_user_char.response}}\n{{plot_progression_scenario.response}}",
-  "createdAt": "2025-12-02T13:44:14.475Z",
-  "updatedAt": "2025-12-02T13:44:14.475Z",
+  "responseTemplate": "{{rp_agent_character.response}}\n{{rp_agent_user.response}}\n{{rp_agent_scenario.response}}",
+  "createdAt": "2025-12-04T05:39:13.099Z",
+  "updatedAt": "2025-12-04T05:39:13.099Z",
   "panelStructure": {
     "panels": [],
     "version": 2,
@@ -226,9 +219,89 @@
         "title": "Flow Editor",
         "params": {
           "title": "Flow Editor",
-          "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+          "flowId": "019ae7da-7552-733a-9700-ad94fade375a"
         },
         "component": "flow"
+      },
+      "responseDesign-standalone": {
+        "title": "Response Design",
+        "params": {
+          "title": "Response Design",
+          "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+          "panelType": "responseDesign"
+        },
+        "component": "responseDesign"
+      },
+      "prompt-019ae7da-7552-733a-9700-60f43eb53af5": {
+        "title": "[Battle response AI char] Prompt",
+        "params": {
+          "title": "[rp_agent_character] Prompt",
+          "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+          "agentId": "019ae7da-7552-733a-9700-60f43eb53af5",
+          "panelType": "prompt",
+          "agentColor": "#A5B4FC",
+          "agentInactive": true
+        },
+        "component": "prompt"
+      },
+      "prompt-019ae7da-7552-733a-9700-7bbd12591a84": {
+        "title": "[Summarization] Prompt",
+        "params": {
+          "title": "[Summarization] Prompt",
+          "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+          "agentId": "019ae7da-7552-733a-9700-7bbd12591a84",
+          "panelType": "prompt",
+          "agentColor": "#FCA5A5",
+          "agentInactive": true
+        },
+        "component": "prompt"
+      },
+      "prompt-019ae7da-7552-733a-9700-95e5847bc895": {
+        "title": "[rp_agent_user] Prompt",
+        "params": {
+          "title": "[rp_agent_user] Prompt",
+          "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+          "agentId": "019ae7da-7552-733a-9700-95e5847bc895",
+          "panelType": "prompt",
+          "agentColor": "#67E8F9",
+          "agentInactive": true
+        },
+        "component": "prompt"
+      },
+      "dataStore-019ae7da-7552-733a-9700-9bda75186272": {
+        "title": "[Data Update] Data update",
+        "params": {
+          "title": "[Data Update] Data update",
+          "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+          "nodeId": "019ae7da-7552-733a-9700-9bda75186272",
+          "agentId": "019ae7da-7552-733a-9700-9bda75186272",
+          "panelType": "dataStore"
+        },
+        "component": "dataStore"
+      },
+      "structuredOutput-019ae7da-7552-733a-9700-60f43eb53af5": {
+        "title": "[rp_agent_character] Output",
+        "params": {
+          "title": "[rp_agent_character] Output",
+          "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+          "agentId": "019ae7da-7552-733a-9700-60f43eb53af5",
+          "panelType": "structuredOutput",
+          "agentColor": "#A5B4FC",
+          "agentInactive": true
+        },
+        "component": "structuredOutput"
+      },
+      "structuredOutput-019ae7da-7552-733a-9700-7bbd12591a84": {
+        "title": "[Summarization] Output",
+        "params": {
+          "title": "[Summarization] Output",
+          "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+          "agentId": "019ae7da-7552-733a-9700-7bbd12591a84",
+          "panelType": "structuredOutput",
+          "agentColor": "#FCA5A5",
+          "agentInactive": true
+        },
+        "component": "structuredOutput"
       }
     },
     "serializedLayout": {
@@ -244,15 +317,32 @@
                 "locked": true,
                 "activeView": "flow-panel-main"
               },
-              "size": 2480,
+              "size": 641,
+              "type": "leaf"
+            },
+            {
+              "data": {
+                "id": "2",
+                "views": [
+                  "prompt-019ae7da-7552-733a-9700-60f43eb53af5",
+                  "dataStore-019ae7da-7552-733a-9700-9bda75186272",
+                  "structuredOutput-019ae7da-7552-733a-9700-7bbd12591a84",
+                  "prompt-019ae7da-7552-733a-9700-7bbd12591a84",
+                  "responseDesign-standalone",
+                  "structuredOutput-019ae7da-7552-733a-9700-60f43eb53af5",
+                  "prompt-019ae7da-7552-733a-9700-95e5847bc895"
+                ],
+                "activeView": "prompt-019ae7da-7552-733a-9700-95e5847bc895"
+              },
+              "size": 1007,
               "type": "leaf"
             }
           ],
-          "size": 1328,
+          "size": 992,
           "type": "branch"
         },
-        "width": 2480,
-        "height": 1328,
+        "width": 1648,
+        "height": 992,
         "orientation": "HORIZONTAL"
       },
       "panels": {
@@ -261,19 +351,113 @@
           "title": "Flow Editor",
           "params": {
             "title": "Flow Editor",
-            "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+            "flowId": "019ae7da-7552-733a-9700-ad94fade375a"
           },
           "tabComponent": "colored",
           "contentComponent": "flow"
+        },
+        "responseDesign-standalone": {
+          "id": "responseDesign-standalone",
+          "title": "Response Design",
+          "params": {
+            "title": "Response Design",
+            "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+            "panelType": "responseDesign"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "responseDesign"
+        },
+        "prompt-019ae7da-7552-733a-9700-60f43eb53af5": {
+          "id": "prompt-019ae7da-7552-733a-9700-60f43eb53af5",
+          "title": "[Battle response AI char] Prompt",
+          "params": {
+            "title": "[rp_agent_character] Prompt",
+            "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+            "agentId": "019ae7da-7552-733a-9700-60f43eb53af5",
+            "panelType": "prompt",
+            "agentColor": "#A5B4FC",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "prompt"
+        },
+        "prompt-019ae7da-7552-733a-9700-7bbd12591a84": {
+          "id": "prompt-019ae7da-7552-733a-9700-7bbd12591a84",
+          "title": "[Summarization] Prompt",
+          "params": {
+            "title": "[Summarization] Prompt",
+            "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+            "agentId": "019ae7da-7552-733a-9700-7bbd12591a84",
+            "panelType": "prompt",
+            "agentColor": "#FCA5A5",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "prompt"
+        },
+        "prompt-019ae7da-7552-733a-9700-95e5847bc895": {
+          "id": "prompt-019ae7da-7552-733a-9700-95e5847bc895",
+          "title": "[rp_agent_user] Prompt",
+          "params": {
+            "title": "[rp_agent_user] Prompt",
+            "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+            "agentId": "019ae7da-7552-733a-9700-95e5847bc895",
+            "panelType": "prompt",
+            "agentColor": "#67E8F9",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "prompt"
+        },
+        "dataStore-019ae7da-7552-733a-9700-9bda75186272": {
+          "id": "dataStore-019ae7da-7552-733a-9700-9bda75186272",
+          "title": "[Data Update] Data update",
+          "params": {
+            "title": "[Data Update] Data update",
+            "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+            "nodeId": "019ae7da-7552-733a-9700-9bda75186272",
+            "agentId": "019ae7da-7552-733a-9700-9bda75186272",
+            "panelType": "dataStore"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "dataStore"
+        },
+        "structuredOutput-019ae7da-7552-733a-9700-60f43eb53af5": {
+          "id": "structuredOutput-019ae7da-7552-733a-9700-60f43eb53af5",
+          "title": "[rp_agent_character] Output",
+          "params": {
+            "title": "[rp_agent_character] Output",
+            "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+            "agentId": "019ae7da-7552-733a-9700-60f43eb53af5",
+            "panelType": "structuredOutput",
+            "agentColor": "#A5B4FC",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "structuredOutput"
+        },
+        "structuredOutput-019ae7da-7552-733a-9700-7bbd12591a84": {
+          "id": "structuredOutput-019ae7da-7552-733a-9700-7bbd12591a84",
+          "title": "[Summarization] Output",
+          "params": {
+            "title": "[Summarization] Output",
+            "flowId": "019ae7da-7552-733a-9700-ad94fade375a",
+            "agentId": "019ae7da-7552-733a-9700-7bbd12591a84",
+            "panelType": "structuredOutput",
+            "agentColor": "#FCA5A5",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "structuredOutput"
         }
       },
       "activeGroup": "1"
     }
   },
   "viewport": {
-    "x": -537.3581072570023,
-    "y": 476.2385505552146,
-    "zoom": 0.7364177401723261
+    "x": -151.9658455524077,
+    "y": 115.23834920559938,
+    "zoom": 0.7714343191694991
   },
   "dataStoreSchema": {
     "fields": [
@@ -323,8 +507,8 @@
   },
   "readyState": "draft",
   "agents": {
-    "019adf4e-1fca-7006-8c25-1e49daf0b251": {
-      "name": "Battle response AI char",
+    "019ae7da-7552-733a-9700-60f43eb53af5": {
+      "name": "rp_agent_character",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "lmstudio",
@@ -358,7 +542,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T06:55:45.727Z",
               "updatedAt": "2025-11-11T06:55:45.727Z",
@@ -368,7 +552,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T06:55:45.727Z",
               "updatedAt": "2025-11-11T06:55:45.727Z",
@@ -409,13 +593,13 @@
       "schemaFields": [],
       "tokenCount": 0,
       "color": "#A5B4FC",
-      "createdAt": "2025-12-02T13:43:50.486Z",
-      "updatedAt": "2025-12-02T13:43:50.486Z",
+      "createdAt": "2025-12-04T05:34:05.156Z",
+      "updatedAt": "2025-12-04T05:35:40.402Z",
       "modelTier": "light",
-      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+      "flowId": "019ae7da-7552-733a-9700-ad94fade375a"
     },
-    "019adf4e-1fca-7006-8c25-2f48a8fd493a": {
-      "name": "Plot progression Scenario",
+    "019ae7da-7552-733a-9700-7451df30d270": {
+      "name": "rp_agent_scenario",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "lmstudio",
@@ -429,7 +613,7 @@
           "promptBlocks": [
             {
               "name": "Message 1",
-              "template": "Introduce challenges, opportunities, and NPCs that fit the world's tone and theme. Whatever the characters do, decide how the environment and the surrounding elements and characters will act according to the character actions. When characters walk into danger, you determine what lurks in the shadows. When the user seeks purpose, you present goals worth pursuing—or warnings worth heeding.\r\n\r\nRespond to the character's choices with consequences, both immediate and long-term. Actions have weight. Decisions matter. The world reacts and also initiates conflicts, events, and relationships.\r\n\r\nGoal: ensure {{user.name}}'s journey remains engaging: provide conflicts to overcome, mysteries to unravel, allies to meet, and enemies to face. Every scene should present something interesting—a choice to make, a threat to handle, or a secret to discover.\r\n\r\nDo not be the {{user.name}}'s enemy, nor its servant. You are the world itself, responding to what the user does and offering what the user needs to create a memorable story.\r\n\r\nAbide by the following information as you actively create and initiate the storyline forward.\r\n\r\n## Scenario\r\n{{scenario.scenario}}\r\n\r\n## Significant information\r\n{{scenario.entries}}\r\n\r\n## Previous Summary\r\n{{previous_summary}}\r\n\r\n## Last Message",
+              "template": "You are the SCENARIO NARRATOR / WORLD ENVIRONMENT in a fantasy roleplay. You are omniscient - you know everything about the world, all characters, and all events.\n\nYour job is to:\n1. Describe the world/environment and what's happening around the characters\n2. Move the story forward when it stalls or needs direction\n3. Introduce events, NPCs, or environmental changes to keep things interesting\n4. CORRECT inconsistencies or errors in the story (you know the truth)\n5. Provide world reactions to character actions\n\nIntroduce challenges, opportunities, and NPCs that fit the world's tone and theme. Whatever the characters do, decide how the environment and the surrounding elements and characters will act according to the character actions. When characters walk into danger, you determine what lurks in the shadows.\n\nRespond to the character's choices with consequences, both immediate and long-term. Actions have weight. Decisions matter. The world reacts and also initiates conflicts, events, and relationships.\n\nGoal: ensure {{user.name}}'s journey remains engaging: provide conflicts to overcome, mysteries to unravel, allies to meet, and enemies to face. Every scene should present something interesting - a choice to make, a threat to handle, or a secret to discover.\n\nYou are the world itself, responding to what happens and offering what's needed to create a memorable story.\n\n## World Setting & Characters\n\n### Main Character (AI-controlled)\n- Name: {{cast.active.name}}\n- Description: {{cast.active.description}}\n\n### User's Character\n- Name: {{user.name}}\n- Description: {{user.description}}\n\n## Scenario\n{{session.scenario}}\n\n## Significant information\n{% for entry in session.entries %}\n{{entry}}\n{% endfor %}\n\n## Previous Summary\n{{previous_summary}}\n\n## Last Message",
               "type": "plain",
               "createdAt": "2025-11-11T06:53:34.664Z",
               "updatedAt": "2025-11-11T06:53:34.664Z",
@@ -449,7 +633,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T06:53:34.664Z",
               "updatedAt": "2025-11-11T06:53:34.664Z",
@@ -459,7 +643,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T06:53:34.664Z",
               "updatedAt": "2025-11-11T06:53:34.664Z",
@@ -471,6 +655,23 @@
           "subCharMessageRole": "user",
           "createdAt": "2025-11-11T06:53:34.664Z",
           "id": "history-1761723427617"
+        },
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "user",
+          "promptBlocks": [
+            {
+              "name": "Critical Rules",
+              "template": "#Critical Scenario Rules\n- You are the WORLD/ENVIRONMENT narrator, not a character.\n- You know EVERYTHING - use this to keep the story consistent and accurate.\n- If something is wrong or off in the story, correct it through natural narration.\n- Move the story forward when needed - introduce events, describe consequences.\n- **CRITICAL: NEVER write dialogue or actions for {{cast.active.name}}, {{user.name}}, or other main characters.**\n- You may control minor NPCs and environmental elements.\n- Keep responses focused and purposeful - don't over-narrate.\n- Support the characters' story, don't overshadow it.\n- Write in third person omniscient POV.\n",
+              "type": "plain",
+              "createdAt": "2025-11-11T06:53:34.664Z",
+              "updatedAt": "2025-11-11T06:53:34.664Z",
+              "id": "019a71b0-f848-7bb4-bba9-f000000000001"
+            }
+          ],
+          "createdAt": "2025-11-11T06:53:34.664Z",
+          "id": "message-1761723500000"
         }
       ],
       "textPrompt": "",
@@ -483,12 +684,12 @@
       "schemaFields": [],
       "tokenCount": 0,
       "color": "#BEF264",
-      "createdAt": "2025-12-02T13:43:50.490Z",
-      "updatedAt": "2025-12-02T13:43:50.490Z",
+      "createdAt": "2025-12-04T05:34:05.163Z",
+      "updatedAt": "2025-12-04T05:36:29.062Z",
       "modelTier": "light",
-      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+      "flowId": "019ae7da-7552-733a-9700-ad94fade375a"
     },
-    "019adf4e-1fca-7006-8c25-3234993e18bf": {
+    "019ae7da-7552-733a-9700-7bbd12591a84": {
       "name": "Summarization",
       "description": "",
       "targetApiType": "chat",
@@ -523,7 +724,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T06:54:10.817Z",
               "updatedAt": "2025-11-11T06:54:10.817Z",
@@ -533,7 +734,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T06:54:10.817Z",
               "updatedAt": "2025-11-11T06:54:10.817Z",
@@ -557,12 +758,12 @@
       "schemaFields": [],
       "tokenCount": 0,
       "color": "#FCA5A5",
-      "createdAt": "2025-12-02T13:43:50.494Z",
-      "updatedAt": "2025-12-02T13:43:50.494Z",
+      "createdAt": "2025-12-04T05:34:05.169Z",
+      "updatedAt": "2025-12-04T05:34:05.169Z",
       "modelTier": "light",
-      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+      "flowId": "019ae7da-7552-733a-9700-ad94fade375a"
     },
-    "019adf4e-1fca-7006-8c25-3b3534696922": {
+    "019ae7da-7552-733a-9700-803e1bcd4baa": {
       "name": "Results Tally",
       "description": "",
       "targetApiType": "chat",
@@ -577,14 +778,15 @@
           "promptBlocks": [
             {
               "name": "Message 1",
-              "template": "Analyze the situation and give an appropriate and logical response:\r\n\r\n## Current Character Status\r\n- {{user.name}}'s current HP: {{hp}} / {{max_hp}}\r\n- {{user.name}}'s current MP: {{mp}} / {{max_mp}}\r\n- {{user.name}}'s status Conditions: {{user_status}}\r\n\r\n## Most Recent Situation\r\n{{battle_response_ai_char.response}}",
+              "template": "Analyze the situation and give an appropriate and logical response:\r\n\r\n## Current Character Status\r\n- {{user.name}}'s current HP: {{hp}} / {{max_hp}}\r\n- {{user.name}}'s current MP: {{mp}} / {{max_mp}}\r\n- {{user.name}}'s status Conditions: {{user_status}}\r\n\r\n## Most Recent Situation\r\n{{rp_agent_character.response}}",
               "type": "plain",
               "createdAt": "2025-11-11T07:04:39.507Z",
-              "updatedAt": "2025-11-11T07:04:39.507Z",
+              "updatedAt": "2025-12-04T05:35:40.399Z",
               "id": "019a71bb-1d53-7445-a1a0-f958d0f7dafe"
             }
           ],
           "createdAt": "2025-11-11T07:04:39.507Z",
+          "updatedAt": "2025-12-04T05:35:40.399Z",
           "id": "message-1761712710868"
         },
         {
@@ -614,7 +816,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T07:04:39.507Z",
               "updatedAt": "2025-11-11T07:04:39.507Z",
@@ -624,7 +826,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T07:04:39.507Z",
               "updatedAt": "2025-11-11T07:04:39.507Z",
@@ -681,13 +883,13 @@
       ],
       "tokenCount": 0,
       "color": "#93C5FD",
-      "createdAt": "2025-12-02T13:43:50.498Z",
-      "updatedAt": "2025-12-02T13:43:50.498Z",
+      "createdAt": "2025-12-04T05:34:05.175Z",
+      "updatedAt": "2025-12-04T05:35:40.432Z",
       "modelTier": "light",
-      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+      "flowId": "019ae7da-7552-733a-9700-ad94fade375a"
     },
-    "019adf4e-1fca-7006-8c25-4cec0c734207": {
-      "name": "Impersonation User char",
+    "019ae7da-7552-733a-9700-95e5847bc895": {
+      "name": "rp_agent_user",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "lmstudio",
@@ -701,7 +903,7 @@
           "promptBlocks": [
             {
               "name": "Message 1",
-              "template": "You are {{user.name}}. Your role is to deliver the scene narration and perform one main NPC character in detail, while other NPCs are described indirectly through narration.\r\n\r\n## Additional Information\r\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\r\n\r\n{% for entry in session.entries %}\r\n{{entry}}\r\n{% endfor %}\r\n\r\n## Scenario\r\n{{session.scenario}}\r\n\r\n## Previous Summary\r\n{{previous_summary}}\r\n\r\n## Last Message",
+              "template": "You are impersonating {{user.name}} (the user's character) in a fantasy roleplay scenario. Your job is to write dialogue and actions AS {{user.name}}, capturing their voice, personality, and mannerisms.\n\n#Impersonation Priority\n1. **If previous messages from {{user.name}} exist**: Study them closely and mimic exactly how they spoke - their vocabulary, tone, sentence structure, and mannerisms.\n2. **If NO previous messages exist**: Use {{user.name}}'s character description to imagine how they would naturally speak and act. Stay true to their personality, background, and traits as described.\n\n## Character You Are Impersonating\n- Name: {{user.name}}\n- Description: {{user.description}}\n\n## Other Characters in the Scene\n- {{cast.active.name}}: {{cast.active.description}}\n\n## Additional Information\nUse any of the following information that is relevant to current situation. If it is not relevant, ignore it.\n\n{% for entry in session.entries %}\n{{entry}}\n{% endfor %}\n\n## Scenario\n{{session.scenario}}\n\n## Previous Summary\n{{previous_summary}}\n\n## Last Message",
               "type": "plain",
               "createdAt": "2025-11-11T07:09:23.061Z",
               "updatedAt": "2025-11-11T07:09:23.061Z",
@@ -721,7 +923,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T07:09:23.061Z",
               "updatedAt": "2025-11-11T07:09:23.061Z",
@@ -731,7 +933,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{char.name}}: {{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-11T07:09:23.061Z",
               "updatedAt": "2025-11-11T07:09:23.061Z",
@@ -751,7 +953,7 @@
           "promptBlocks": [
             {
               "name": "Message 3",
-              "template": "Dont forget you are playing as {{user.name}}. Do not speak or take action on behalf of user characters. User can play a lot of characters, but you should only focus on \"{{user.name}}\". You should always respond in first person, in the perspective of {{user.name}}.\n",
+              "template": "#Critical Impersonation Rules\n- You ARE {{user.name}}. Write EXACTLY like they would.\n- If previous messages exist: Copy their exact style, not generic AI writing.\n- If NO previous messages exist: Base your style on their character description - imagine how this person would naturally talk.\n- Match their emotional tone, energy level, and personality.\n- DO NOT add AI-like flourishes, explanations, or overly descriptive prose.\n- Keep it natural and human-like, as {{user.name}} would actually respond.\n- **CRITICAL: NEVER write dialogue or actions for {{cast.active.name}} or any other character.**\n- Write in third person POV, from {{user.name}}'s perspective.\n",
               "type": "plain",
               "createdAt": "2025-11-11T07:09:23.061Z",
               "updatedAt": "2025-11-11T07:09:23.061Z",
@@ -772,14 +974,14 @@
       "schemaFields": [],
       "tokenCount": 0,
       "color": "#67E8F9",
-      "createdAt": "2025-12-02T13:43:50.503Z",
-      "updatedAt": "2025-12-02T13:43:50.503Z",
+      "createdAt": "2025-12-04T05:34:05.187Z",
+      "updatedAt": "2025-12-04T05:36:10.142Z",
       "modelTier": "light",
-      "flowId": "019adf4e-1fca-7006-8c25-5ce804d63796"
+      "flowId": "019ae7da-7552-733a-9700-ad94fade375a"
     }
   },
   "dataStoreNodes": {
-    "019adf4e-1fca-7006-8c25-464d7fd1d08b": {
+    "019ae7da-7552-733a-9700-89254170b262": {
       "name": "New Data Update",
       "color": "#FCD34D",
       "dataStoreFields": [
@@ -804,10 +1006,10 @@
           "logic": "{{results_tally.is_battle}}"
         }
       ],
-      "createdAt": "2025-12-02T13:43:50.509Z",
-      "updatedAt": "2025-12-02T13:43:50.509Z"
+      "createdAt": "2025-12-04T05:34:05.190Z",
+      "updatedAt": "2025-12-04T05:34:05.190Z"
     },
-    "019adf4e-1fca-7006-8c25-521c817357be": {
+    "019ae7da-7552-733a-9700-9bda75186272": {
       "name": "Summary update",
       "color": "#F0ABFC",
       "dataStoreFields": [
@@ -817,36 +1019,18 @@
           "logic": "{{summarization.response}}"
         }
       ],
-      "createdAt": "2025-12-02T13:43:50.514Z",
-      "updatedAt": "2025-12-02T13:43:50.514Z"
+      "createdAt": "2025-12-04T05:34:05.198Z",
+      "updatedAt": "2025-12-04T05:34:05.198Z"
     },
-    "019adf4e-4b77-7006-8c25-cc8268be3abb": {
+    "019ae7da-7552-733a-9700-a6bbc23678c1": {
       "name": "before_end_node",
       "color": "#FDE047",
       "dataStoreFields": [],
-      "createdAt": "2025-12-02T13:44:01.704Z",
-      "updatedAt": "2025-12-02T13:44:09.404Z"
+      "createdAt": "2025-12-04T05:34:05.209Z",
+      "updatedAt": "2025-12-04T05:34:05.209Z"
     }
   },
-  "ifNodes": {
-    "019adf4e-1fca-7006-8c25-21c3879a7960": {
-      "name": "Is battle?",
-      "color": "#FDBA74",
-      "logicOperator": "AND",
-      "conditions": [
-        {
-          "id": "019a2b00-8c10-7333-ab7d-c298e61ac233",
-          "value1": "{{cast.active.id}}",
-          "value2": "{{user.id}}",
-          "dataType": "string",
-          "operator": "string_not_equals"
-        }
-      ],
-      "createdAt": "2025-12-02T13:44:14.483Z",
-      "updatedAt": "2025-12-02T13:44:14.483Z"
-    }
-  },
-  "exportedAt": "2025-12-02T13:44:14.511Z",
+  "exportedAt": "2025-12-04T05:39:13.127Z",
   "exportedBy": "astrsk-v2.3.0",
   "metadata": {
     "processing": {
@@ -861,17 +1045,16 @@
         "failed": 0
       },
       "ifNodes": {
-        "found": 1,
-        "exported": 1,
+        "found": 0,
+        "exported": 0,
         "failed": 0
       }
     },
-    "totalNodes": 11,
+    "totalNodes": 12,
     "nodeTypes": {
-      "start": 1,
+      "start": 3,
       "end": 1,
       "agent": 5,
-      "if": 1,
       "dataStore": 3
     }
   }

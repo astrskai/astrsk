@@ -1172,14 +1172,15 @@ export function createWorkflowTools(
         const shouldRun = (cat: string) => runAllCategories || categories?.includes(cat as typeof categories[number]);
         const errors: Array<{ code: string; severity: "error" | "warning"; message: string; fix?: string }> = [];
 
-        // Helper to get execution order via BFS from start
+        // Helper to get execution order via BFS from all start nodes
         const getExecutionOrder = (): string[] => {
-          const startNode = state.nodes.find((n) => n.type === NodeType.START);
-          if (!startNode) return [];
+          const allStartNodes = state.nodes.filter((n) => n.type === NodeType.START);
+          if (allStartNodes.length === 0) return [];
 
           const visited = new Set<string>();
           const order: string[] = [];
-          const queue = [startNode.id];
+          // Initialize queue with all start node IDs
+          const queue = allStartNodes.map((n) => n.id);
 
           while (queue.length > 0) {
             const nodeId = queue.shift()!;
@@ -1200,7 +1201,8 @@ export function createWorkflowTools(
         };
 
         // Common node references (needed by multiple categories)
-        const startNode = state.nodes.find((n) => n.type === NodeType.START);
+        // Support multiple start nodes (character, user, scenario variants)
+        const startNodes = state.nodes.filter((n) => n.type === NodeType.START);
         const endNode = state.nodes.find((n) => n.type === NodeType.END);
 
         // =========================
@@ -1224,15 +1226,16 @@ export function createWorkflowTools(
             }
           }
 
-          // 3. Check if Start has outgoing edges
-          if (startNode) {
+          // 3. Check if ALL Start nodes have outgoing edges
+          for (const startNode of startNodes) {
+            const variant = (startNode.data as { nodeVariant?: string })?.nodeVariant || "character";
             const startEdges = state.edges.filter((e) => e.source === startNode.id);
             if (startEdges.length === 0) {
               errors.push({
                 code: "START_NO_OUTGOING",
                 severity: "error",
-                message: "Start node has no outgoing edges",
-                fix: "Use add_edges to connect Start to the first agent node",
+                message: `Start node (${variant}) has no outgoing edges`,
+                fix: `Use add_edges to connect Start (${variant}) to its corresponding RP agent (rp_agent_${variant} or rp_response_${variant})`,
               });
             }
           }
@@ -1281,21 +1284,21 @@ export function createWorkflowTools(
         // CATEGORY: paths
         // =========================
         if (shouldRun("paths")) {
-          // 2. Check if Start node leads to End node (reachability)
-          if (startNode && endNode) {
+          // 2. Check if any Start node leads to End node (reachability)
+          if (startNodes.length > 0 && endNode) {
             const reachable = getExecutionOrder();
             if (!reachable.includes(endNode.id)) {
               errors.push({
                 code: "END_NOT_REACHABLE",
                 severity: "error",
-                message: "End node is not reachable from Start node",
-                fix: "Ensure there's a path from Start to End through edges",
+                message: "End node is not reachable from any Start node",
+                fix: "Ensure there's a path from Start nodes to End through edges",
               });
             }
           }
 
           // 2b. Check if ALL paths eventually lead to End node (no dead-end paths)
-          if (startNode && endNode) {
+          if (startNodes.length > 0 && endNode) {
           // Helper: Check if a node can reach End via DFS
           const canReachEnd = (nodeId: string, visited: Set<string> = new Set()): boolean => {
             if (nodeId === endNode.id) return true;
@@ -1317,10 +1320,11 @@ export function createWorkflowTools(
           // Find nodes that are reachable from Start but don't lead to End
           const reachableFromStart = getExecutionOrder();
           const deadEndNodes: string[] = [];
+          const startNodeIds = new Set(startNodes.map((n) => n.id));
 
           for (const nodeId of reachableFromStart) {
             // Skip Start and End nodes themselves
-            if (nodeId === startNode.id || nodeId === endNode.id) continue;
+            if (startNodeIds.has(nodeId) || nodeId === endNode.id) continue;
 
             // Check if this node has outgoing edges
             const outgoing = state.edges.filter((e) => e.source === nodeId);

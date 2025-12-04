@@ -3,7 +3,7 @@
   "description": "",
   "nodes": [
     {
-      "id": "019adf4d-4ff5-7006-8c23-b5239f44b0aa",
+      "id": "019ae7fc-d2df-7ddf-a116-c87992c3c767",
       "type": "start",
       "position": {
         "x": 51.631930115157616,
@@ -14,7 +14,7 @@
       "zIndex": 1000
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-bfa157804960",
+      "id": "019ae7fc-d2df-7ddf-a116-d37a9f170068",
       "type": "end",
       "position": {
         "x": 3050.820493933117,
@@ -25,7 +25,7 @@
       "zIndex": 1000
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-c531fe19a1bc",
+      "id": "019ae7fc-d2df-7ddf-a116-d923730702d8",
       "type": "agent",
       "position": {
         "x": 1328.3250321795304,
@@ -35,7 +35,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-ca03626a3ca1",
+      "id": "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603",
       "type": "if",
       "position": {
         "x": 653.7851483526429,
@@ -58,7 +58,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-d0e7133491e3",
+      "id": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
       "type": "agent",
       "position": {
         "x": 1328.6679548387094,
@@ -68,11 +68,11 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-dd3b36428734",
+      "id": "019ae7fc-d2df-7ddf-a116-f49b6e62c9a6",
       "type": "if",
       "position": {
-        "x": 682.298773364372,
-        "y": -1369.8831719442398
+        "x": 411.574645874429,
+        "y": -1366.2081837882677
       },
       "data": {
         "name": "If getting to know each other",
@@ -112,7 +112,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-e6b43500702f",
+      "id": "019ae7fc-d2df-7ddf-a116-fe11b8a0aeaa",
       "type": "agent",
       "position": {
         "x": 1284.7126633848418,
@@ -122,7 +122,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-eae1c3e6d21f",
+      "id": "019ae7fc-d2df-7ddf-a117-03ca190c86fa",
       "type": "dataStore",
       "position": {
         "x": 1943.4605280090777,
@@ -131,7 +131,7 @@
       "data": {
         "name": "New Data Update",
         "color": "#F0ABFC",
-        "flowId": "019adf4d-4ff5-7006-8c24-4da0969580b6",
+        "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
         "dataStoreFields": [
           {
             "id": "019a590f-f167-7771-96b4-57cb38a60dd4",
@@ -163,7 +163,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-f5a5f0cc53c8",
+      "id": "019ae7fc-d2df-7ddf-a117-085615d629e8",
       "type": "if",
       "position": {
         "x": 661.2924268224539,
@@ -186,7 +186,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-f86a455e67ab",
+      "id": "019ae7fc-d2df-7ddf-a117-13685585df44",
       "type": "agent",
       "position": {
         "x": 1331.7624268958336,
@@ -196,7 +196,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-047ccdf52cc2",
+      "id": "019ae7fc-d2df-7ddf-a117-197d4b95b1e8",
       "type": "if",
       "position": {
         "x": 665.0748974471143,
@@ -219,7 +219,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-0e4fcbdd7791",
+      "id": "019ae7fc-d2df-7ddf-a117-23ef3f0198ca",
       "type": "agent",
       "position": {
         "x": 1322.340126485726,
@@ -229,7 +229,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-1526b1ebf86a",
+      "id": "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d",
       "type": "if",
       "position": {
         "x": 659.2085137170426,
@@ -252,7 +252,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-1c9462e7c516",
+      "id": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
       "type": "agent",
       "position": {
         "x": 1283.252184907311,
@@ -262,7 +262,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-27b8eee7deea",
+      "id": "019ae7fc-d2df-7ddf-a117-3dc80c594111",
       "type": "dataStore",
       "position": {
         "x": 1925.7141588088398,
@@ -282,7 +282,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-2f7425415a7e",
+      "id": "019ae7fc-d2df-7ddf-a117-47422b93bcfc",
       "type": "dataStore",
       "position": {
         "x": 1944.5603080499418,
@@ -302,7 +302,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-363f4177de89",
+      "id": "019ae7fc-d2df-7ddf-a117-4b61f0652102",
       "type": "dataStore",
       "position": {
         "x": 1948.149382224301,
@@ -322,7 +322,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-39b124352b89",
+      "id": "019ae7fc-d2df-7ddf-a117-5479ed1a09c6",
       "type": "dataStore",
       "position": {
         "x": 1955.8363235466727,
@@ -342,7 +342,7 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-44db9a020cec",
+      "id": "019ae7fc-d2df-7ddf-a117-5c3af7634a4c",
       "type": "dataStore",
       "position": {
         "x": 1921.0592578773358,
@@ -362,11 +362,61 @@
       "deletable": false
     },
     {
-      "id": "019adf4d-6a8c-7006-8c25-066226852730",
+      "id": "019ae7fc-d2df-7ddf-a117-628707aae578",
       "type": "dataStore",
       "position": {
         "x": 2455.4605280090777,
         "y": -533.8454558878941
+      },
+      "data": {
+        "name": "before_end_node",
+        "color": "#A5B4FC",
+        "dataStoreFields": []
+      },
+      "deletable": false
+    },
+    {
+      "id": "e0fcda79-a27e-4aa9-8f75-33de81ee2f7b",
+      "type": "start",
+      "position": {
+        "x": 80.93544670430562,
+        "y": 960.1198276521294
+      },
+      "data": {
+        "nodeVariant": "user"
+      },
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "23e49d5c-6ce1-4425-aff1-660dd64c5784",
+      "type": "start",
+      "position": {
+        "x": 106.28425966339182,
+        "y": 1561.5072219810286
+      },
+      "data": {
+        "nodeVariant": "scenario"
+      },
+      "deletable": false,
+      "zIndex": 1000
+    },
+    {
+      "id": "019ae807-e84a-7ddf-a118-5474ae378110",
+      "type": "agent",
+      "position": {
+        "x": 1302.0695967908614,
+        "y": 957.2458168767047
+      },
+      "data": {},
+      "deletable": false
+    },
+    {
+      "id": "019ae808-15ba-7ddf-a118-592fe68b222a",
+      "type": "agent",
+      "position": {
+        "x": 1309.7324941353595,
+        "y": 1398.2376508607188
       },
       "data": {},
       "deletable": false
@@ -374,139 +424,139 @@
   ],
   "edges": [
     {
-      "id": "019adf4d-4ff5-7006-8c24-5200e0fe92aa",
-      "source": "019adf4d-4ff5-7006-8c23-ca03626a3ca1",
-      "target": "019adf4d-4ff5-7006-8c23-c531fe19a1bc",
+      "id": "019ae7fc-d2df-7ddf-a117-7379feab594a",
+      "source": "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603",
+      "target": "019ae7fc-d2df-7ddf-a116-d923730702d8",
       "sourceHandle": "true",
       "label": "True"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-5ce684187c30",
-      "source": "019adf4d-4ff5-7006-8c23-f5a5f0cc53c8",
-      "target": "019adf4d-4ff5-7006-8c23-f86a455e67ab",
+      "id": "019ae7fc-d2df-7ddf-a117-797424f2e62b",
+      "source": "019ae7fc-d2df-7ddf-a117-085615d629e8",
+      "target": "019ae7fc-d2df-7ddf-a117-13685585df44",
       "sourceHandle": "true",
       "label": "True"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-600b59c3b5bc",
-      "source": "019adf4d-4ff5-7006-8c23-f5a5f0cc53c8",
-      "target": "019adf4d-4ff5-7006-8c23-d0e7133491e3",
+      "id": "019ae7fc-d2df-7ddf-a117-82582331747d",
+      "source": "019ae7fc-d2df-7ddf-a117-085615d629e8",
+      "target": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
       "sourceHandle": "false",
       "label": "False"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-6a5fa1dc413b",
-      "source": "019adf4d-4ff5-7006-8c23-ca03626a3ca1",
-      "target": "019adf4d-4ff5-7006-8c23-f5a5f0cc53c8",
+      "id": "019ae7fc-d2df-7ddf-a117-8c84127a3f0c",
+      "source": "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603",
+      "target": "019ae7fc-d2df-7ddf-a117-085615d629e8",
       "sourceHandle": "false",
       "label": "False"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-765a5d0212a1",
-      "source": "019adf4d-4ff5-7006-8c23-e6b43500702f",
-      "target": "019adf4d-4ff5-7006-8c23-eae1c3e6d21f"
+      "id": "019ae7fc-d2df-7ddf-a117-9199f5ee944c",
+      "source": "019ae7fc-d2df-7ddf-a116-fe11b8a0aeaa",
+      "target": "019ae7fc-d2df-7ddf-a117-03ca190c86fa"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-7da4766fd959",
-      "source": "019adf4d-4ff5-7006-8c23-dd3b36428734",
-      "target": "019adf4d-4ff5-7006-8c23-e6b43500702f",
+      "id": "019ae7fc-d2df-7ddf-a117-9be5551fb1c1",
+      "source": "019ae7fc-d2df-7ddf-a116-f49b6e62c9a6",
+      "target": "019ae7fc-d2df-7ddf-a116-fe11b8a0aeaa",
       "sourceHandle": "true",
       "label": "True"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-81cf69357f84",
-      "source": "019adf4d-4ff5-7006-8c23-dd3b36428734",
-      "target": "019adf4d-4ff5-7006-8c24-1526b1ebf86a",
+      "id": "019ae7fc-d2df-7ddf-a117-a490503e27b8",
+      "source": "019ae7fc-d2df-7ddf-a116-f49b6e62c9a6",
+      "target": "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d",
       "sourceHandle": "false",
       "label": "False"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-892e8bd70b13",
-      "source": "019adf4d-4ff5-7006-8c24-1526b1ebf86a",
-      "target": "019adf4d-4ff5-7006-8c24-1c9462e7c516",
+      "id": "019ae7fc-d2df-7ddf-a117-a9a3fdd05955",
+      "source": "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d",
+      "target": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
       "sourceHandle": "true",
       "label": "True"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-93a6e8f653fd",
-      "source": "019adf4d-4ff5-7006-8c24-1526b1ebf86a",
-      "target": "019adf4d-4ff5-7006-8c24-047ccdf52cc2",
+      "id": "019ae7fc-d2df-7ddf-a117-b4f9917e6f88",
+      "source": "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d",
+      "target": "019ae7fc-d2df-7ddf-a117-197d4b95b1e8",
       "sourceHandle": "false",
       "label": "False"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-9df4f4a59dbc",
-      "source": "019adf4d-4ff5-7006-8c24-047ccdf52cc2",
-      "target": "019adf4d-4ff5-7006-8c24-0e4fcbdd7791",
+      "id": "019ae7fc-d2df-7ddf-a117-be693384da1f",
+      "source": "019ae7fc-d2df-7ddf-a117-197d4b95b1e8",
+      "target": "019ae7fc-d2df-7ddf-a117-23ef3f0198ca",
       "sourceHandle": "true",
       "label": "True"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-a3a5cf32a1db",
-      "source": "019adf4d-4ff5-7006-8c24-047ccdf52cc2",
-      "target": "019adf4d-4ff5-7006-8c23-ca03626a3ca1",
+      "id": "019ae7fc-d2df-7ddf-a117-c2ab29102b51",
+      "source": "019ae7fc-d2df-7ddf-a117-197d4b95b1e8",
+      "target": "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603",
       "sourceHandle": "false",
       "label": "False"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-aca18935cbb7",
-      "source": "019adf4d-4ff5-7006-8c24-1c9462e7c516",
-      "target": "019adf4d-4ff5-7006-8c24-27b8eee7deea"
+      "id": "019ae7fc-d2df-7ddf-a117-cc1d4d047cff",
+      "source": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
+      "target": "019ae7fc-d2df-7ddf-a117-3dc80c594111"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-b31bba3090b9",
-      "source": "019adf4d-4ff5-7006-8c24-0e4fcbdd7791",
-      "target": "019adf4d-4ff5-7006-8c24-2f7425415a7e"
+      "id": "019ae7fc-d2df-7ddf-a117-d1bf84689a91",
+      "source": "019ae7fc-d2df-7ddf-a117-23ef3f0198ca",
+      "target": "019ae7fc-d2df-7ddf-a117-47422b93bcfc"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-b8c725e81488",
-      "source": "019adf4d-4ff5-7006-8c23-c531fe19a1bc",
-      "target": "019adf4d-4ff5-7006-8c24-363f4177de89"
+      "id": "019ae7fc-d2df-7ddf-a117-dcad44659925",
+      "source": "019ae7fc-d2df-7ddf-a116-d923730702d8",
+      "target": "019ae7fc-d2df-7ddf-a117-4b61f0652102"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-c24d4962a002",
-      "source": "019adf4d-4ff5-7006-8c23-d0e7133491e3",
-      "target": "019adf4d-4ff5-7006-8c24-39b124352b89"
+      "id": "019ae7fc-d2df-7ddf-a117-e4e112023e67",
+      "source": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+      "target": "019ae7fc-d2df-7ddf-a117-5479ed1a09c6"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c24-ce0d52f4b224",
-      "source": "019adf4d-4ff5-7006-8c23-f86a455e67ab",
-      "target": "019adf4d-4ff5-7006-8c24-44db9a020cec"
+      "id": "019ae7fc-d2df-7ddf-a117-ee741352aa44",
+      "source": "019ae7fc-d2df-7ddf-a117-13685585df44",
+      "target": "019ae7fc-d2df-7ddf-a117-5c3af7634a4c"
     },
     {
-      "id": "019adf4d-4ff5-7006-8c23-eae1c3e6d21f-019adf4d-6a8c-7006-8c25-066226852730",
-      "source": "019adf4d-4ff5-7006-8c23-eae1c3e6d21f",
-      "target": "019adf4d-6a8c-7006-8c25-066226852730"
+      "id": "019ae7fc-d2df-7ddf-a117-f10c6daf1889",
+      "source": "019ae7fc-d2df-7ddf-a117-03ca190c86fa",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
     },
     {
-      "id": "xy-edge__019adf4d-4ff5-7006-8c24-27b8eee7deea-019adf4d-6a8c-7006-8c25-066226852730",
-      "source": "019adf4d-4ff5-7006-8c24-27b8eee7deea",
-      "target": "019adf4d-6a8c-7006-8c25-066226852730"
+      "id": "019ae7fc-d2df-7ddf-a117-fe8dd3643e3e",
+      "source": "019ae7fc-d2df-7ddf-a117-3dc80c594111",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
     },
     {
-      "id": "xy-edge__019adf4d-4ff5-7006-8c24-2f7425415a7e-019adf4d-6a8c-7006-8c25-066226852730",
-      "source": "019adf4d-4ff5-7006-8c24-2f7425415a7e",
-      "target": "019adf4d-6a8c-7006-8c25-066226852730"
+      "id": "019ae7fc-d2df-7ddf-a118-064ad8ef54dc",
+      "source": "019ae7fc-d2df-7ddf-a117-47422b93bcfc",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
     },
     {
-      "id": "xy-edge__019adf4d-4ff5-7006-8c24-363f4177de89-019adf4d-6a8c-7006-8c25-066226852730",
-      "source": "019adf4d-4ff5-7006-8c24-363f4177de89",
-      "target": "019adf4d-6a8c-7006-8c25-066226852730"
+      "id": "019ae7fc-d2df-7ddf-a118-0c562b0cee8c",
+      "source": "019ae7fc-d2df-7ddf-a117-4b61f0652102",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
     },
     {
-      "id": "xy-edge__019adf4d-4ff5-7006-8c24-44db9a020cec-019adf4d-6a8c-7006-8c25-066226852730",
-      "source": "019adf4d-4ff5-7006-8c24-44db9a020cec",
-      "target": "019adf4d-6a8c-7006-8c25-066226852730"
+      "id": "019ae7fc-d2df-7ddf-a118-15f41ddec115",
+      "source": "019ae7fc-d2df-7ddf-a117-5c3af7634a4c",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
     },
     {
-      "id": "xy-edge__019adf4d-4ff5-7006-8c24-39b124352b89-019adf4d-6a8c-7006-8c25-066226852730",
-      "source": "019adf4d-4ff5-7006-8c24-39b124352b89",
-      "target": "019adf4d-6a8c-7006-8c25-066226852730"
+      "id": "019ae7fc-d2df-7ddf-a118-1a011aac6678",
+      "source": "019ae7fc-d2df-7ddf-a117-5479ed1a09c6",
+      "target": "019ae7fc-d2df-7ddf-a117-628707aae578"
     }
   ],
-  "responseTemplate": "{{first_hi.Response}}\r\n{{get_lost.response}}\r\n{{compare_compatibility.Response}}\r\n{{be_protective_and_want_to_end_convo.response}}\r\n{{seem_more_interested.response}}\r\n{{where_are_we_going_.response}}",
-  "createdAt": "2025-12-02T13:43:31.277Z",
-  "updatedAt": "2025-12-02T13:43:31.277Z",
+  "responseTemplate": "{{first_hi.Response}}\r\n{{get_lost.response}}\r\n{{be_protective_and_want_to_end_convo.response}}\r\n{{compare_compatibility.Response}}\r\n{{where_are_we_going.response}}\r\n{{seem_more_interested.response}}\r\n{{rp_agent_user.response}}\r\n{{rp_agent_scenario.response}}",
+  "createdAt": "2025-12-04T06:26:03.081Z",
+  "updatedAt": "2025-12-04T06:26:03.081Z",
   "panelStructure": {
     "panels": [],
     "version": 2,
@@ -516,9 +566,54 @@
         "title": "Flow Editor",
         "params": {
           "title": "Flow Editor",
-          "flowId": "019adf4d-4ff5-7006-8c24-4da0969580b6"
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
         },
         "component": "flow"
+      },
+      "responseDesign-standalone": {
+        "title": "Response Design",
+        "params": {
+          "title": "Response Design",
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+          "panelType": "responseDesign"
+        },
+        "component": "responseDesign"
+      },
+      "prompt-019ae7fc-d2df-7ddf-a116-d923730702d8": {
+        "title": "[Compare compatibility] Prompt",
+        "params": {
+          "title": "[compare_compatibility] Prompt",
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+          "agentId": "019ae7fc-d2df-7ddf-a116-d923730702d8",
+          "panelType": "prompt",
+          "agentColor": "#A5B4FC",
+          "agentInactive": true
+        },
+        "component": "prompt"
+      },
+      "prompt-019ae7fc-d2df-7ddf-a116-ed31cc9235f7": {
+        "title": "[Seem more interested] Prompt",
+        "params": {
+          "title": "[seem_more_interested] Prompt",
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+          "agentId": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+          "panelType": "prompt",
+          "agentColor": "#BEF264",
+          "agentInactive": true
+        },
+        "component": "prompt"
+      },
+      "structuredOutput-019ae7fc-d2df-7ddf-a117-30991e9e7676": {
+        "title": "[Get lost] Output",
+        "params": {
+          "title": "[get_lost] Output",
+          "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+          "agentId": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
+          "panelType": "structuredOutput",
+          "agentColor": "#FCD34D",
+          "agentInactive": true
+        },
+        "component": "structuredOutput"
       }
     },
     "serializedLayout": {
@@ -534,15 +629,29 @@
                 "locked": true,
                 "activeView": "flow-panel-main"
               },
-              "size": 2480,
+              "size": 833,
+              "type": "leaf"
+            },
+            {
+              "data": {
+                "id": "2",
+                "views": [
+                  "responseDesign-standalone",
+                  "prompt-019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+                  "prompt-019ae7fc-d2df-7ddf-a116-d923730702d8",
+                  "structuredOutput-019ae7fc-d2df-7ddf-a117-30991e9e7676"
+                ],
+                "activeView": "responseDesign-standalone"
+              },
+              "size": 815,
               "type": "leaf"
             }
           ],
-          "size": 1328,
+          "size": 992,
           "type": "branch"
         },
-        "width": 2480,
-        "height": 1328,
+        "width": 1648,
+        "height": 992,
         "orientation": "HORIZONTAL"
       },
       "panels": {
@@ -551,19 +660,72 @@
           "title": "Flow Editor",
           "params": {
             "title": "Flow Editor",
-            "flowId": "019adf4d-4ff5-7006-8c24-4da0969580b6"
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
           },
           "tabComponent": "colored",
           "contentComponent": "flow"
+        },
+        "responseDesign-standalone": {
+          "id": "responseDesign-standalone",
+          "title": "Response Design",
+          "params": {
+            "title": "Response Design",
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+            "panelType": "responseDesign"
+          },
+          "tabComponent": "colored",
+          "contentComponent": "responseDesign"
+        },
+        "prompt-019ae7fc-d2df-7ddf-a116-d923730702d8": {
+          "id": "prompt-019ae7fc-d2df-7ddf-a116-d923730702d8",
+          "title": "[Compare compatibility] Prompt",
+          "params": {
+            "title": "[compare_compatibility] Prompt",
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+            "agentId": "019ae7fc-d2df-7ddf-a116-d923730702d8",
+            "panelType": "prompt",
+            "agentColor": "#A5B4FC",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "prompt"
+        },
+        "prompt-019ae7fc-d2df-7ddf-a116-ed31cc9235f7": {
+          "id": "prompt-019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+          "title": "[Seem more interested] Prompt",
+          "params": {
+            "title": "[seem_more_interested] Prompt",
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+            "agentId": "019ae7fc-d2df-7ddf-a116-ed31cc9235f7",
+            "panelType": "prompt",
+            "agentColor": "#BEF264",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "prompt"
+        },
+        "structuredOutput-019ae7fc-d2df-7ddf-a117-30991e9e7676": {
+          "id": "structuredOutput-019ae7fc-d2df-7ddf-a117-30991e9e7676",
+          "title": "[Get lost] Output",
+          "params": {
+            "title": "[get_lost] Output",
+            "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8",
+            "agentId": "019ae7fc-d2df-7ddf-a117-30991e9e7676",
+            "panelType": "structuredOutput",
+            "agentColor": "#FCD34D",
+            "agentInactive": true
+          },
+          "tabComponent": "colored",
+          "contentComponent": "structuredOutput"
         }
       },
       "activeGroup": "1"
     }
   },
   "viewport": {
-    "x": 515.8868939879312,
-    "y": 912.1327071982455,
-    "zoom": 0.5
+    "x": -252.0231748265685,
+    "y": -355.6573423210623,
+    "zoom": 0.6977584329271814
   },
   "dataStoreSchema": {
     "fields": [
@@ -601,8 +763,8 @@
   },
   "readyState": "draft",
   "agents": {
-    "019adf4d-4ff5-7006-8c23-c531fe19a1bc": {
-      "name": "Compare compatibility",
+    "019ae7fc-d2df-7ddf-a116-d923730702d8": {
+      "name": "compare_compatibility",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "anthropic",
@@ -636,7 +798,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T08:28:16.133Z",
               "updatedAt": "2025-11-12T08:28:16.133Z",
@@ -646,7 +808,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T08:28:16.133Z",
               "updatedAt": "2025-11-12T08:28:16.133Z",
@@ -687,13 +849,13 @@
       ],
       "tokenCount": 0,
       "color": "#A5B4FC",
-      "createdAt": "2025-12-02T13:42:57.284Z",
-      "updatedAt": "2025-12-02T13:42:57.284Z",
+      "createdAt": "2025-12-04T06:11:37.322Z",
+      "updatedAt": "2025-12-04T06:25:06.276Z",
       "modelTier": "light",
-      "flowId": "019adf4d-4ff5-7006-8c24-4da0969580b6"
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
     },
-    "019adf4d-4ff5-7006-8c23-d0e7133491e3": {
-      "name": "Seem more interested",
+    "019ae7fc-d2df-7ddf-a116-ed31cc9235f7": {
+      "name": "seem_more_interested",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "deepseek",
@@ -727,7 +889,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T11:48:30.975Z",
               "updatedAt": "2025-11-12T11:48:30.975Z",
@@ -737,7 +899,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T11:48:30.975Z",
               "updatedAt": "2025-11-12T11:48:30.975Z",
@@ -778,13 +940,13 @@
       ],
       "tokenCount": 0,
       "color": "#BEF264",
-      "createdAt": "2025-12-02T13:42:57.293Z",
-      "updatedAt": "2025-12-02T13:42:57.293Z",
+      "createdAt": "2025-12-04T06:11:37.327Z",
+      "updatedAt": "2025-12-04T06:25:20.680Z",
       "modelTier": "light",
-      "flowId": "019adf4d-4ff5-7006-8c24-4da0969580b6"
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
     },
-    "019adf4d-4ff5-7006-8c23-e6b43500702f": {
-      "name": "first hi",
+    "019ae7fc-d2df-7ddf-a116-fe11b8a0aeaa": {
+      "name": "first_hi",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "anthropic",
@@ -818,7 +980,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T10:49:32.593Z",
               "updatedAt": "2025-11-12T10:49:32.593Z",
@@ -828,7 +990,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T10:49:32.593Z",
               "updatedAt": "2025-11-12T10:49:32.593Z",
@@ -897,13 +1059,13 @@
       ],
       "tokenCount": 0,
       "color": "#67E8F9",
-      "createdAt": "2025-12-02T13:42:57.298Z",
-      "updatedAt": "2025-12-02T13:42:57.298Z",
+      "createdAt": "2025-12-04T06:11:37.332Z",
+      "updatedAt": "2025-12-04T06:25:12.048Z",
       "modelTier": "light",
-      "flowId": "019adf4d-4ff5-7006-8c24-4da0969580b6"
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
     },
-    "019adf4d-4ff5-7006-8c23-f86a455e67ab": {
-      "name": "Where are we going?",
+    "019ae7fc-d2df-7ddf-a117-13685585df44": {
+      "name": "where_are_we_going",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "deepseek",
@@ -937,7 +1099,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T11:59:16.689Z",
               "updatedAt": "2025-11-12T11:59:16.689Z",
@@ -947,7 +1109,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T11:59:16.689Z",
               "updatedAt": "2025-11-12T11:59:16.689Z",
@@ -988,13 +1150,13 @@
       ],
       "tokenCount": 0,
       "color": "#C4B5FD",
-      "createdAt": "2025-12-02T13:42:57.301Z",
-      "updatedAt": "2025-12-02T13:42:57.301Z",
+      "createdAt": "2025-12-04T06:11:37.336Z",
+      "updatedAt": "2025-12-04T06:25:18.356Z",
       "modelTier": "light",
-      "flowId": "019adf4d-4ff5-7006-8c24-4da0969580b6"
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
     },
-    "019adf4d-4ff5-7006-8c24-0e4fcbdd7791": {
-      "name": "Be protective and want to end convo.",
+    "019ae7fc-d2df-7ddf-a117-23ef3f0198ca": {
+      "name": "be_protective_and_want_to_end_convo",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "anthropic",
@@ -1028,7 +1190,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T10:44:57.419Z",
               "updatedAt": "2025-11-12T10:44:57.419Z",
@@ -1038,7 +1200,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T10:44:57.419Z",
               "updatedAt": "2025-11-12T10:44:57.419Z",
@@ -1079,13 +1241,13 @@
       ],
       "tokenCount": 0,
       "color": "#FDA4AF",
-      "createdAt": "2025-12-02T13:42:57.310Z",
-      "updatedAt": "2025-12-02T13:42:57.310Z",
+      "createdAt": "2025-12-04T06:11:37.340Z",
+      "updatedAt": "2025-12-04T06:24:58.918Z",
       "modelTier": "light",
-      "flowId": "019adf4d-4ff5-7006-8c24-4da0969580b6"
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
     },
-    "019adf4d-4ff5-7006-8c24-1c9462e7c516": {
-      "name": "Get lost",
+    "019ae7fc-d2df-7ddf-a117-30991e9e7676": {
+      "name": "get_lost",
       "description": "",
       "targetApiType": "chat",
       "apiSource": "deepseek",
@@ -1119,7 +1281,7 @@
           "userPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T10:50:01.184Z",
               "updatedAt": "2025-11-12T10:50:01.184Z",
@@ -1129,7 +1291,7 @@
           "assistantPromptBlocks": [
             {
               "name": "History Message 1",
-              "template": "{{turn.content}}",
+              "template": "{{turn.char_name}}: {{turn.content}}",
               "type": "plain",
               "createdAt": "2025-11-12T10:50:01.184Z",
               "updatedAt": "2025-11-12T10:50:01.184Z",
@@ -1170,14 +1332,162 @@
       ],
       "tokenCount": 0,
       "color": "#FCD34D",
-      "createdAt": "2025-12-02T13:42:57.313Z",
-      "updatedAt": "2025-12-02T13:42:57.313Z",
+      "createdAt": "2025-12-04T06:11:37.349Z",
+      "updatedAt": "2025-12-04T06:25:08.272Z",
       "modelTier": "light",
-      "flowId": "019adf4d-4ff5-7006-8c24-4da0969580b6"
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    },
+    "019ae807-e84a-7ddf-a118-5474ae378110": {
+      "name": "rp_agent_user",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "# Impersonation Priority\n\n{% if session.entries | length > 0 %}\n## Previous Messages Available\nAnalyze how {{user.name}} has been texting throughout this conversation. Your PRIMARY job is to perfectly mimic their established texting style, patterns, and personality.\n\n**Analyze these aspects from {{user.name}}'s previous messages:**\n- Texting style (short/long messages, emoji usage, punctuation habits)\n- Personality vibe (playful, serious, sarcastic, sweet)\n- Response patterns (quick one-liners vs thoughtful replies)\n- Word choices and phrases they repeat\n- How they respond to flirtation or serious topics\n\n{% else %}\n## First Message - No Previous History\nThis is the FIRST message from {{user.name}}. Build their texting persona based on their description below.\n{% endif %}\n\n## Character Info\n**You are**: {{user.name}}\n**Your personality/background**: {{user.description}}\n\n## Current Scenario\n{{session.scenario}} - You're texting with {{cast.active.name}} through DMs.\n\n## Critical Rules\n- Write ONLY as {{user.name}} - never break character\n- You can only communicate through texting (no physical actions visible to other party)\n- Match the established texting style EXACTLY\n- Keep responses natural for a DM conversation\n- Third person POV for any internal thoughts or descriptions\n- Do NOT write for {{cast.active.name}} or any other character\n\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:43.821Z",
+              "updatedAt": "2025-12-04T06:23:43.821Z",
+              "id": "019ae807-e84a-7ddf-a118-prompt-user-1"
+            }
+          ],
+          "createdAt": "2025-12-04T06:23:43.821Z",
+          "id": "message-rp-user-1"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:43.821Z",
+              "updatedAt": "2025-12-04T06:23:43.821Z",
+              "id": "019ae807-e84a-7ddf-a118-history-user-1"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:43.821Z",
+              "updatedAt": "2025-12-04T06:23:43.821Z",
+              "id": "019ae807-e84a-7ddf-a118-history-asst-1"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-12-04T06:23:43.821Z",
+          "id": "history-rp-user-1"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#FDBA74",
+      "createdAt": "2025-12-04T06:23:43.821Z",
+      "updatedAt": "2025-12-04T06:23:51.505Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
+    },
+    "019ae808-15ba-7ddf-a118-592fe68b222a": {
+      "name": "rp_agent_scenario",
+      "description": "",
+      "targetApiType": "chat",
+      "apiSource": "anthropic",
+      "modelId": "claude-sonnet-4-5-20250929",
+      "modelName": "Claude Sonnet 4.5",
+      "promptMessages": [
+        {
+          "type": "plain",
+          "enabled": true,
+          "role": "system",
+          "promptBlocks": [
+            {
+              "name": "Message 1",
+              "template": "# Role: Omniscient Scenario Narrator\n\nYou are the omniscient narrator of this DM/texting roleplay scenario. You exist outside the conversation itself, observing everything and guiding the story forward.\n\n## Your Capabilities\n- You know everything happening in the world of this scenario\n- You can describe events outside the DM conversation (notifications, real-life moments, time skips)\n- You can introduce plot elements, complications, or opportunities\n- You can correct story inconsistencies or errors when they occur\n- You move the narrative forward when it stalls\n\n## Current Scenario\n{{session.scenario}}\n\n## Characters Involved\n**Character 1**: {{cast.active.name}} - {{cast.active.description}}\n**Character 2**: {{user.name}} - {{user.description}}\n\n## Narration Guidelines\n- Write in third person POV\n- You are NOT a character in the conversation - you observe and narrate\n- Describe what's happening outside the texts (someone's phone buzzes, time passes, real-life events)\n- Keep the story moving if the conversation stalls\n- Introduce realistic complications or opportunities for connection\n- If you notice inconsistencies in the story, gently correct them through narration\n- Don't write dialogue FOR the characters - just set the stage\n\n## Examples of Scenario Narration\n- \"Hours passed. The typing indicator appeared and disappeared several times before finally...\"\n- \"Meanwhile, outside the digital exchange, rain began to fall across the city.\"\n- \"The notification sound broke the silence of the empty apartment.\"\n\n## Critical Rules\n- Never write as {{user.name}} or {{cast.active.name}}\n- Only provide environmental/scenario narration\n- Keep interventions brief and purposeful\n- Maintain the DM/texting context\n\n## Recent chat history",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:55.440Z",
+              "updatedAt": "2025-12-04T06:23:55.440Z",
+              "id": "019ae808-15ba-7ddf-a118-prompt-scenario-1"
+            }
+          ],
+          "createdAt": "2025-12-04T06:23:55.440Z",
+          "id": "message-rp-scenario-1"
+        },
+        {
+          "type": "history",
+          "enabled": true,
+          "historyType": "split",
+          "start": 0,
+          "end": 10,
+          "countFromEnd": true,
+          "userPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:55.440Z",
+              "updatedAt": "2025-12-04T06:23:55.440Z",
+              "id": "019ae808-15ba-7ddf-a118-history-user-1"
+            }
+          ],
+          "assistantPromptBlocks": [
+            {
+              "name": "History Message 1",
+              "template": "{{turn.char_name}}: {{turn.content}}",
+              "type": "plain",
+              "createdAt": "2025-12-04T06:23:55.440Z",
+              "updatedAt": "2025-12-04T06:23:55.440Z",
+              "id": "019ae808-15ba-7ddf-a118-history-asst-1"
+            }
+          ],
+          "userMessageRole": "user",
+          "charMessageRole": "assistant",
+          "subCharMessageRole": "user",
+          "createdAt": "2025-12-04T06:23:55.440Z",
+          "id": "history-rp-scenario-1"
+        }
+      ],
+      "textPrompt": "",
+      "enabledParameters": {},
+      "parameterValues": {},
+      "enabledStructuredOutput": false,
+      "outputFormat": "text_output",
+      "outputStreaming": true,
+      "schemaName": "response",
+      "schemaFields": [],
+      "tokenCount": 0,
+      "color": "#BEF264",
+      "createdAt": "2025-12-04T06:23:55.440Z",
+      "updatedAt": "2025-12-04T06:24:04.758Z",
+      "modelTier": "light",
+      "flowId": "019ae7fc-d2df-7ddf-a117-682267feffd8"
     }
   },
   "dataStoreNodes": {
-    "019adf4d-4ff5-7006-8c23-eae1c3e6d21f": {
+    "019ae7fc-d2df-7ddf-a117-03ca190c86fa": {
       "name": "New Data Update",
       "color": "#F0ABFC",
       "dataStoreFields": [
@@ -1207,10 +1517,10 @@
           "logic": "{{first_hi.something_unique}}"
         }
       ],
-      "createdAt": "2025-12-02T13:42:57.316Z",
-      "updatedAt": "2025-12-02T13:42:57.316Z"
+      "createdAt": "2025-12-04T06:11:37.352Z",
+      "updatedAt": "2025-12-04T06:11:37.352Z"
     },
-    "019adf4d-4ff5-7006-8c24-27b8eee7deea": {
+    "019ae7fc-d2df-7ddf-a117-3dc80c594111": {
       "name": "New Data Update 1",
       "color": "#7DD3FC",
       "dataStoreFields": [
@@ -1220,10 +1530,10 @@
           "logic": "{{attraction_level}}+{{get_lost.affection_diff}}"
         }
       ],
-      "createdAt": "2025-12-02T13:42:57.322Z",
-      "updatedAt": "2025-12-02T13:42:57.322Z"
+      "createdAt": "2025-12-04T06:11:37.358Z",
+      "updatedAt": "2025-12-04T06:11:37.358Z"
     },
-    "019adf4d-4ff5-7006-8c24-2f7425415a7e": {
+    "019ae7fc-d2df-7ddf-a117-47422b93bcfc": {
       "name": "New Data Update 2",
       "color": "#F9A8D4",
       "dataStoreFields": [
@@ -1233,10 +1543,10 @@
           "logic": "{{attraction_level}}+{{be_protective_and_want_to_end_convo.affection_diff}}"
         }
       ],
-      "createdAt": "2025-12-02T13:42:57.344Z",
-      "updatedAt": "2025-12-02T13:42:57.344Z"
+      "createdAt": "2025-12-04T06:11:37.363Z",
+      "updatedAt": "2025-12-04T06:11:37.363Z"
     },
-    "019adf4d-4ff5-7006-8c24-363f4177de89": {
+    "019ae7fc-d2df-7ddf-a117-4b61f0652102": {
       "name": "New Data Update 3",
       "color": "#6EE7B7",
       "dataStoreFields": [
@@ -1246,10 +1556,10 @@
           "logic": "{{attraction_level}}+{{compare_compatibility.affection_diff}}"
         }
       ],
-      "createdAt": "2025-12-02T13:42:57.349Z",
-      "updatedAt": "2025-12-02T13:42:57.349Z"
+      "createdAt": "2025-12-04T06:11:37.367Z",
+      "updatedAt": "2025-12-04T06:11:37.367Z"
     },
-    "019adf4d-4ff5-7006-8c24-39b124352b89": {
+    "019ae7fc-d2df-7ddf-a117-5479ed1a09c6": {
       "name": "New Data Update 4",
       "color": "#D8B4FE",
       "dataStoreFields": [
@@ -1259,10 +1569,10 @@
           "logic": "{{attraction_level}}+{{seem_more_interested.affection_diff}}"
         }
       ],
-      "createdAt": "2025-12-02T13:42:57.354Z",
-      "updatedAt": "2025-12-02T13:42:57.354Z"
+      "createdAt": "2025-12-04T06:11:37.375Z",
+      "updatedAt": "2025-12-04T06:11:37.375Z"
     },
-    "019adf4d-4ff5-7006-8c24-44db9a020cec": {
+    "019ae7fc-d2df-7ddf-a117-5c3af7634a4c": {
       "name": "New Data Update 5",
       "color": "#5EEAD4",
       "dataStoreFields": [
@@ -1272,19 +1582,19 @@
           "logic": "{{attraction_level}}+{{where_are_we_going_.affection_diff}}"
         }
       ],
-      "createdAt": "2025-12-02T13:42:57.359Z",
-      "updatedAt": "2025-12-02T13:42:57.359Z"
+      "createdAt": "2025-12-04T06:11:37.382Z",
+      "updatedAt": "2025-12-04T06:11:37.382Z"
     },
-    "019adf4d-6a8c-7006-8c25-066226852730": {
+    "019ae7fc-d2df-7ddf-a117-628707aae578": {
       "name": "before_end_node",
       "color": "#A5B4FC",
       "dataStoreFields": [],
-      "createdAt": "2025-12-02T13:43:04.172Z",
-      "updatedAt": "2025-12-02T13:43:26.050Z"
+      "createdAt": "2025-12-04T06:11:37.387Z",
+      "updatedAt": "2025-12-04T06:11:37.387Z"
     }
   },
   "ifNodes": {
-    "019adf4d-4ff5-7006-8c23-ca03626a3ca1": {
+    "019ae7fc-d2df-7ddf-a116-e2fc8b6b7603": {
       "name": "if attraction is below 88",
       "color": "#FDBA74",
       "logicOperator": "AND",
@@ -1297,10 +1607,10 @@
           "operator": "integer_less_than_or_equals"
         }
       ],
-      "createdAt": "2025-12-02T13:43:31.287Z",
-      "updatedAt": "2025-12-02T13:43:31.287Z"
+      "createdAt": "2025-12-04T06:26:03.087Z",
+      "updatedAt": "2025-12-04T06:26:03.087Z"
     },
-    "019adf4d-4ff5-7006-8c23-dd3b36428734": {
+    "019ae7fc-d2df-7ddf-a116-f49b6e62c9a6": {
       "name": "If getting to know each other",
       "color": "#93C5FD",
       "logicOperator": "OR",
@@ -1334,10 +1644,10 @@
           "operator": "string_is_empty"
         }
       ],
-      "createdAt": "2025-12-02T13:43:31.304Z",
-      "updatedAt": "2025-12-02T13:43:31.304Z"
+      "createdAt": "2025-12-04T06:26:03.090Z",
+      "updatedAt": "2025-12-04T06:26:03.090Z"
     },
-    "019adf4d-4ff5-7006-8c23-f5a5f0cc53c8": {
+    "019ae7fc-d2df-7ddf-a117-085615d629e8": {
       "name": "If attraction is 100",
       "color": "#FDE047",
       "logicOperator": "AND",
@@ -1350,10 +1660,10 @@
           "operator": "integer_greater_than_or_equals"
         }
       ],
-      "createdAt": "2025-12-02T13:43:31.312Z",
-      "updatedAt": "2025-12-02T13:43:31.312Z"
+      "createdAt": "2025-12-04T06:26:03.098Z",
+      "updatedAt": "2025-12-04T06:26:03.098Z"
     },
-    "019adf4d-4ff5-7006-8c24-047ccdf52cc2": {
+    "019ae7fc-d2df-7ddf-a117-197d4b95b1e8": {
       "name": "If attraction is below 25",
       "color": "#86EFAC",
       "logicOperator": "AND",
@@ -1366,10 +1676,10 @@
           "operator": "integer_less_than_or_equals"
         }
       ],
-      "createdAt": "2025-12-02T13:43:31.317Z",
-      "updatedAt": "2025-12-02T13:43:31.317Z"
+      "createdAt": "2025-12-04T06:26:03.105Z",
+      "updatedAt": "2025-12-04T06:26:03.105Z"
     },
-    "019adf4d-4ff5-7006-8c24-1526b1ebf86a": {
+    "019ae7fc-d2df-7ddf-a117-2e4bba5ccb8d": {
       "name": "If attraction is 0",
       "color": "#FCA5A5",
       "logicOperator": "AND",
@@ -1382,17 +1692,17 @@
           "operator": "integer_less_than_or_equals"
         }
       ],
-      "createdAt": "2025-12-02T13:43:31.321Z",
-      "updatedAt": "2025-12-02T13:43:31.321Z"
+      "createdAt": "2025-12-04T06:26:03.111Z",
+      "updatedAt": "2025-12-04T06:26:03.111Z"
     }
   },
-  "exportedAt": "2025-12-02T13:43:31.342Z",
+  "exportedAt": "2025-12-04T06:26:03.134Z",
   "exportedBy": "astrsk-v2.3.0",
   "metadata": {
     "processing": {
       "agents": {
-        "found": 6,
-        "exported": 6,
+        "found": 8,
+        "exported": 8,
         "failed": 0
       },
       "dataStoreNodes": {
@@ -1406,11 +1716,11 @@
         "failed": 0
       }
     },
-    "totalNodes": 20,
+    "totalNodes": 24,
     "nodeTypes": {
-      "start": 1,
+      "start": 3,
       "end": 1,
-      "agent": 6,
+      "agent": 8,
       "if": 5,
       "dataStore": 7
     }

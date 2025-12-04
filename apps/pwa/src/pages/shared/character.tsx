@@ -26,7 +26,7 @@ type ImportState = "loading" | "success" | "persona_selection" | "creating_sessi
 
 // Timeout before showing "Go back" button (in ms)
 const LOADING_TIMEOUT = 10000;
-const DEFAULT_FLOW_FILE = "Simple_vf.json";
+const DEFAULT_FLOW_FILE = "Simple.json";
 
 export default function SharedCharacterPage() {
   const navigate = useNavigate();
@@ -111,7 +111,7 @@ export default function SharedCharacterPage() {
           allCards: [],
           userCharacterCardId: undefined,
           turnIds: [],
-          autoReply: AutoReply.Off,
+          autoReply: AutoReply.Random,
           chatStyles: defaultChatStyles,
           isPlaySession: true,
           createdAt: new Date(),

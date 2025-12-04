@@ -17,6 +17,7 @@ import {
   type PersonaResult,
 } from "@/features/character/ui/persona-selection-dialog";
 import type { Session } from "@/entities/session/domain/session";
+import { CardType } from "@/entities/card/domain";
 
 type ImportState = "loading" | "success" | "persona_selection" | "cloning" | "error";
 
@@ -120,6 +121,9 @@ export default function SharedSessionPage() {
 
         // Handle persona selection
         let userCharacterCardId: UniqueEntityID | undefined;
+        let updatedAllCards = clonedSession.props.allCards;
+        const originalUserCardId = clonedSession.props.userCharacterCardId;
+
         if (personaResult?.type === "existing" && personaResult.characterId) {
           // Clone the persona card into the session
           const personaCloneResult = await CardService.cloneCard.execute({
@@ -131,7 +135,24 @@ export default function SharedSessionPage() {
             throw new Error("Could not copy persona for session.");
           }
 
-          userCharacterCardId = personaCloneResult.getValue().id;
+          const clonedPersona = personaCloneResult.getValue();
+          userCharacterCardId = clonedPersona.id;
+
+          // Remove the original user character from allCards and add the new persona
+          // This replaces the user character instead of converting it to AI
+          updatedAllCards = clonedSession.props.allCards.filter(
+            (card) => !originalUserCardId || !card.id.equals(originalUserCardId)
+          );
+          updatedAllCards.push({
+            id: clonedPersona.id,
+            type: CardType.Character,
+            enabled: true,
+          });
+        } else if (originalUserCardId) {
+          // No persona selected - remove the original user character from allCards
+          updatedAllCards = clonedSession.props.allCards.filter(
+            (card) => !card.id.equals(originalUserCardId)
+          );
         }
 
         // Set isPlaySession: true, keep original title, and update userCharacterCardId
@@ -140,6 +161,7 @@ export default function SharedSessionPage() {
           isPlaySession: true,
           title: originalTitle,
           userCharacterCardId,
+          allCards: updatedAllCards,
         });
 
         // Save the updated session

@@ -53,10 +53,20 @@ export function buildSystemPrompt(context: WorkflowBuilderContext, initialState:
   contextInfo += `\nThese nodes are from a pre-built template. They have preserved positions and CANNOT be deleted.`;
   contextInfo += `\nYou must connect NEW agents to these existing template nodes.`;
 
+  // Identify start nodes by their variant (character, user, scenario)
+  const startNodes: { id: string; variant: string }[] = [];
+  initialState.nodes.forEach((node) => {
+    if (node.type === NodeType.START) {
+      const variant = (node.data as { nodeVariant?: string })?.nodeVariant || "character";
+      startNodes.push({ id: node.id, variant });
+    }
+  });
+
   initialState.nodes.forEach((node) => {
     const isFromTemplate = (node.data as { isFromTemplate?: boolean })?.isFromTemplate === true;
     if (node.type === NodeType.START) {
-      contextInfo += `\n- **Start**: \`${node.id}\`${isFromTemplate ? " (template)" : ""}`;
+      const variant = (node.data as { nodeVariant?: string })?.nodeVariant || "character";
+      contextInfo += `\n- **Start (${variant})**: \`${node.id}\`${isFromTemplate ? " (template)" : ""}`;
     } else if (node.type === NodeType.END) {
       contextInfo += `\n- **End**: \`${node.id}\`${isFromTemplate ? " (template)" : ""}`;
     } else if (node.type === NodeType.AGENT) {
@@ -132,6 +142,42 @@ export function buildSystemPrompt(context: WorkflowBuilderContext, initialState:
     if (!hasOutgoing) nodesWithNoOutgoing.push(node.id);
   });
 
+  // Find start nodes that need connections (no outgoing edges)
+  const startNodesNeedingConnection: { id: string; variant: string }[] = [];
+  startNodes.forEach((startNode) => {
+    const hasOutgoing = initialState.edges.some((e) => e.source === startNode.id);
+    if (!hasOutgoing) {
+      startNodesNeedingConnection.push(startNode);
+    }
+  });
+
+  // Find corresponding RP agents for each start variant
+  const rpAgentMapping: { variant: string; agentId: string; agentName: string }[] = [];
+  initialState.agents.forEach((agent, nodeId) => {
+    const nameLower = agent.name.toLowerCase();
+    if (nameLower.includes("rp_response_character") || nameLower.includes("rp_agent_character")) {
+      rpAgentMapping.push({ variant: "character", agentId: nodeId, agentName: agent.name });
+    } else if (nameLower.includes("rp_response_user") || nameLower.includes("rp_agent_user")) {
+      rpAgentMapping.push({ variant: "user", agentId: nodeId, agentName: agent.name });
+    } else if (nameLower.includes("rp_response_scenario") || nameLower.includes("rp_agent_scenario")) {
+      rpAgentMapping.push({ variant: "scenario", agentId: nodeId, agentName: agent.name });
+    }
+  });
+
+  // Show start nodes that need to be connected
+  if (startNodesNeedingConnection.length > 0) {
+    contextInfo += `\n\n## START NODE CONNECTIONS NEEDED:`;
+    contextInfo += `\nThese start nodes have NO outgoing edges and MUST be connected:`;
+    startNodesNeedingConnection.forEach((startNode) => {
+      const matchingAgent = rpAgentMapping.find((m) => m.variant === startNode.variant);
+      if (matchingAgent) {
+        contextInfo += `\n- **Start (${startNode.variant})** \`${startNode.id}\` → **${matchingAgent.agentName}** \`${matchingAgent.agentId}\``;
+      } else {
+        contextInfo += `\n- **Start (${startNode.variant})** \`${startNode.id}\` → (needs corresponding RP agent)`;
+      }
+    });
+  }
+
   // Only show before_end_node as needing outgoing connection (that's where NEW blocks attach)
   if (nodesWithNoOutgoing.length > 0) {
     const beforeEndNode = nodesWithNoOutgoing.find((nodeId) => {
@@ -149,14 +195,23 @@ export function buildSystemPrompt(context: WorkflowBuilderContext, initialState:
   return `You are a workflow builder for roleplay sessions.
 ${contextInfo}
 
-## Architecture
-\`Start → [Analysis?] → TemplateAgents → before_end_node → [AgentBlock]* → End\`
-- AgentBlock: \`[If?] → Agent → DataStore\` (created via add_agent_block)
-- TemplateAgents: Pre-existing agents from template (configure prompts only)
-- before_end_node: Template DataStore for initialization - DO NOT modify its fields
+## Architecture (3-Way Start Nodes)
+The flow has 3 parallel start triggers for roleplay:
+\`\`\`
+Start (character) → rp_response_character ─┐
+Start (user)      → rp_response_user      ─┼→ before_end_node → [AgentBlock]* → End
+Start (scenario)  → rp_response_scenario  ─┘
+\`\`\`
+- **3 Start Nodes**: Each variant (character, user, scenario) triggers its corresponding RP agent
+- **AgentBlock**: \`[If?] → Agent → DataStore\` (created via add_agent_block)
+- **TemplateAgents**: Pre-existing RP agents from template (configure prompts only)
+- **before_end_node**: Template DataStore for initialization - DO NOT modify its fields
 
 ## Placement Rules
-- **Template section (ALREADY CONNECTED)**: Start → TemplateAgents → before_end_node (don't touch these edges!)
+- **Start node connections**: Connect each Start node to its matching RP agent (if not already connected)
+  - Start (character) → rp_response_character or rp_agent_character
+  - Start (user) → rp_response_user or rp_agent_user
+  - Start (scenario) → rp_response_scenario or rp_agent_scenario
 - **Your job**: Connect before_end_node → NEW agent blocks → End
 - Use If Nodes (withIfNode: true) to skip agents when not needed
 
@@ -181,23 +236,28 @@ Use \`{{history_count}}\` for If Node conditions to run agents at intervals:
 This is more efficient than \`{{history | length}}\` as it doesn't load the history array.
 
 ## Process (ALL STEPS REQUIRED - DO NOT STOP EARLY)
-**You MUST complete ALL 6 steps. The workflow is NOT done until validate_workflow passes.**
+**You MUST complete ALL 7 steps. The workflow is NOT done until validate_workflow passes.**
 
-1. **Plan**: Decide which NEW agent blocks to create (max 4) to update ALL ${context.dataStoreSchema.length} schema fields
-2. **Template agents**: Use \`upsert_prompt_messages\` to add datastore fields to prompts (e.g., "Health: {{health}}/100")
-3. **Create NEW agent blocks**: Use \`add_agent_block\` for each planned agent - place AFTER \`before_end_node\`
-4. **Configure each NEW agent**:
+1. **Connect Start Nodes**: If START NODE CONNECTIONS NEEDED section shows disconnected start nodes, connect them:
+   - Use \`add_edges\` to connect each Start (variant) → corresponding RP agent
+   - Start (character) → rp_response_character or rp_agent_character
+   - Start (user) → rp_response_user or rp_agent_user
+   - Start (scenario) → rp_response_scenario or rp_agent_scenario
+2. **Plan**: Decide which NEW agent blocks to create (max 4) to update ALL ${context.dataStoreSchema.length} schema fields
+3. **Template agents**: Use \`upsert_prompt_messages\` to add datastore fields to prompts (e.g., "Health: {{health}}/100")
+4. **Create NEW agent blocks**: Use \`add_agent_block\` for each planned agent - place AFTER \`before_end_node\`
+5. **Configure each NEW agent**:
    - \`upsert_prompt_messages\` - add system/user prompts
    - \`upsert_output_fields\` - define structured output fields
    - \`update_data_store_node_fields\` - map agent outputs to schema fields
-5. **Connect NEW edges ONLY** (template edges already exist!):
+6. **Connect NEW edges ONLY** (template edges already exist!):
    - before_end_node → first NEW agent block (or End if no new blocks)
    - Each NEW agent block's DataStore → next NEW agent block (or End)
    - If false branches → skip to next block or End
-   - **DO NOT add edges between template nodes** - they are already connected!
-6. **Validate**: Run \`validate_workflow\` and fix ALL errors until it passes
+   - **DO NOT add duplicate edges between already-connected nodes**
+7. **Validate**: Run \`validate_workflow\` and fix ALL errors until it passes
 
-**⚠️ CRITICAL: You are NOT done until step 6 passes with 0 errors!**
+**⚠️ CRITICAL: You are NOT done until step 7 passes with 0 errors!**
 
 **Template Node Rules:**
 - Template nodes and edges CANNOT be deleted or modified
@@ -206,18 +266,27 @@ This is more efficient than \`{{history | length}}\` as it doesn't load the hist
 - NEW agent blocks go AFTER \`before_end_node\` (they update state for NEXT message)
 
 ## Flow Examples
-**CORRECT:** \`Start → TemplateAgents → before_end_node → [If?] → Agent → DS → End\`
+**CORRECT (3-Way):**
+\`\`\`
+Start (character) → rp_response_character ─┐
+Start (user)      → rp_response_user      ─┼→ before_end_node → [If?] → Agent → DS → End
+Start (scenario)  → rp_response_scenario  ─┘
+\`\`\`
 **WRONG:** \`Start → Agent → DS → TemplateAgents → End\` (DataStore before before_end_node)`;
 }
 
 export function buildUserPrompt(fieldCount: number): string {
-return `Create a complete workflow for this scenario. Follow ALL 6 process steps:
-1. Plan NEW agent blocks to update ALL ${fieldCount} schema fields
-2. Configure template agent prompts with datastore fields (e.g., "Health: {{health}}/100")
-3. Create NEW agent blocks after before_end_node using add_agent_block
-4. Configure each NEW agent (prompts → output fields → datastore mappings)
-5. Connect ONLY NEW edges: before_end_node → NEW blocks → End (template edges already exist!)
-6. Run validate_workflow and fix ALL errors until it passes
+return `Create a complete workflow for this scenario. Follow ALL 7 process steps:
+1. Connect Start Nodes to their corresponding RP agents (if START NODE CONNECTIONS NEEDED shows any)
+2. Plan NEW agent blocks to update ALL ${fieldCount} schema fields
+3. Configure template agent prompts with datastore fields (e.g., "Health: {{health}}/100")
+4. Create NEW agent blocks after before_end_node using add_agent_block
+5. Configure each NEW agent (prompts → output fields → datastore mappings)
+6. Connect ONLY NEW edges: before_end_node → NEW blocks → End
+7. Run validate_workflow and fix ALL errors until it passes
+
+**IMPORTANT**: Paths can MERGE (multiple start nodes → before_end_node) but cannot DIVERGE.
+Each start node (character/user/scenario) connects to its RP agent, which converges at before_end_node.
 
 DO NOT stop until validate_workflow returns 0 errors.`;
 }

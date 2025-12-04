@@ -102,8 +102,11 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
           const shareLink = shareResult.getValue();
 
+          // Copy URL to clipboard for safety
+          await navigator.clipboard.writeText(shareLink.shareUrl);
+
           toastSuccess("Successfully exported to cloud!", {
-            description: `Opening share page. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
+            description: `Link copied to clipboard. Check popup blocker if page doesn't open. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
           });
 
           // Open the share URL in a new tab

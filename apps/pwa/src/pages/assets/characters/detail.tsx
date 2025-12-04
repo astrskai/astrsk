@@ -35,7 +35,7 @@ import {
 } from "@/features/character/ui/persona-selection-dialog";
 
 const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
-const DEFAULT_FLOW_FILE = "Simple_vf.json";
+const DEFAULT_FLOW_FILE = "Simple.json";
 
 /**
  * Lorebook Item Title - View Mode (matches editor styling)
@@ -169,7 +169,7 @@ const CharacterDetailPage = () => {
           allCards: [],
           userCharacterCardId: undefined,
           turnIds: [],
-          autoReply: AutoReply.Off,
+          autoReply: AutoReply.Random,
           chatStyles: defaultChatStyles,
           isPlaySession: true, // Play sessions appear in sidebar
           createdAt: new Date(),
@@ -198,7 +198,7 @@ const CharacterDetailPage = () => {
           return;
         }
 
-        // Step 2: Import default flow from Simple_vf.json
+        // Step 2: Import default flow from Simple.json
         const response = await fetch(`/default/flow/${DEFAULT_FLOW_FILE}`);
         if (!response.ok) {
           throw new Error(`Failed to load default flow: ${DEFAULT_FLOW_FILE}`);
