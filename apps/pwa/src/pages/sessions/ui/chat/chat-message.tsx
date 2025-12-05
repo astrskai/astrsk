@@ -15,7 +15,10 @@ import { TranslationConfig } from "@/entities/session/domain/translation-config"
 import { TextareaAutosize } from "@mui/material";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { useUpdateTurn } from "@/entities/turn/api/turn-queries";
-import { ChatStyles } from "@/entities/session/domain/chat-styles";
+import {
+  ChatStyles,
+  defaultChatStyles,
+} from "@/entities/session/domain/chat-styles";
 import { Turn } from "@/entities/turn/domain/turn";
 import ChatMessageActions from "./chat-message-actions";
 import { ChatMarkdown } from "./chat-markdown";
@@ -151,8 +154,20 @@ const ChatMessage = ({
     : typeof message.characterCardId === "undefined";
 
   const contentColor = isUser
-    ? (chatStyles?.user?.text?.base?.color ?? "#000000")
-    : (chatStyles?.ai?.text?.base?.color ?? "#ffffff");
+    ? (chatStyles?.user?.text?.base?.color ?? defaultChatStyles.user?.text?.base?.color ?? "#000000")
+    : (chatStyles?.ai?.text?.base?.color ?? defaultChatStyles.ai?.text?.base?.color ?? "#ffffff");
+
+  const boldColor = isUser
+    ? (chatStyles?.user?.text?.bold?.color ?? defaultChatStyles.user?.text?.bold?.color)
+    : (chatStyles?.ai?.text?.bold?.color ?? defaultChatStyles.ai?.text?.bold?.color);
+
+  const italicColor = isUser
+    ? (chatStyles?.user?.text?.italic?.color ?? defaultChatStyles.user?.text?.italic?.color)
+    : (chatStyles?.ai?.text?.italic?.color ?? defaultChatStyles.ai?.text?.italic?.color);
+
+  const bubbleColor = isUser
+    ? (chatStyles?.user?.chatBubble?.backgroundColor ?? defaultChatStyles.user?.chatBubble?.backgroundColor)
+    : (chatStyles?.ai?.chatBubble?.backgroundColor ?? defaultChatStyles.ai?.chatBubble?.backgroundColor);
 
   // Get display name - use card title for scenario, character name otherwise
   const displayName = isScenarioCard
@@ -162,46 +177,39 @@ const ChatMessage = ({
   return (
     <div
       className={cn(
-        "flex items-start gap-2 pb-1 md:pb-4",
-        isScenarioCard ? "px-4 md:px-15" : "px-4",
+        "flex items-start gap-2 px-4",
         isUser ? "flex-row-reverse" : "flex-row",
         isLastMessage && "animate-fade-in-up",
       )}
     >
-      {/* Hide avatar for scenario messages */}
+      {/* Avatar and name column - hide for scenario messages */}
       {!isScenarioCard && (
-        <AvatarSimple
-          src={cardImageUrl || "/img/message-avatar-default.svg"}
-          alt={displayName}
-          className="h-9 w-9 md:h-16 md:w-16"
-          size="xl"
-        />
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <AvatarSimple
+            src={cardImageUrl || "/img/message-avatar-default.svg"}
+            alt={displayName}
+            className="h-9 w-9 md:h-16 md:w-16"
+            size="xl"
+          />
+          <div className="max-w-[36px] md:max-w-[64px] truncate text-center text-[10px] md:text-xs font-medium text-fg-muted">
+            {displayName}
+          </div>
+        </div>
       )}
 
       <div
         className={cn(
-          "group/message flex min-w-0 flex-1 flex-col gap-2",
-          isEditing ? "items-stretch" : isUser ? "items-end" : "items-start",
+          "group/message flex min-w-0 flex-1 flex-col",
+          isEditing ? "items-stretch" : isScenarioCard ? "md:items-center" : isUser ? "items-end" : "items-start",
         )}
       >
-        {/* Hide name for scenario messages */}
-        {!isScenarioCard && (
-          <div
-            className={cn(
-              "w-fit rounded-full bg-fg-default/10 px-3 py-1 text-xs font-medium backdrop-blur-sm md:text-base",
-              isEditing && isUser && "ml-auto",
-            )}
-          >
-            {displayName}
-          </div>
-        )}
         <div
           className={cn(
-            "flex max-w-full flex-col gap-2",
+            "flex max-w-full flex-col",
             isUser && "items-end",
           )}
         >
-          {/* Scenario messages use first-message style, spanning full width */}
+          {/* Scenario messages use first-message style, matching input width */}
           {isScenarioCard ? (
             <ScenarioMessageBox
               content={
@@ -209,7 +217,7 @@ const ChatMessage = ({
                   ? (content ?? "")
                   : (translation ?? content ?? "")
               }
-              className="w-full"
+              className="w-full md:mx-auto md:max-w-4xl md:ml-[4px]"
               onClick={handleMessageClick}
             >
               {isEditing && !isStreaming && (
@@ -229,6 +237,29 @@ const ChatMessage = ({
                     }
                   }}
                 />
+              )}
+              {isShowDataStore && sortedDataStoreFields && sortedDataStoreFields.length > 0 && (
+                <div
+                  className="bg-canvas/5 data-history mt-[10px] rounded-[12px] border-[1px] p-[16px] border-fg-muted/50"
+                >
+                  <div
+                    className="mb-[16px] flex flex-row items-center gap-[8px] text-fg-muted"
+                  >
+                    <History size={20} />
+                    <div className="text-[14px] leading-[20px] font-[500]">
+                      Data history
+                    </div>
+                  </div>
+                  {sortedDataStoreFields.map((field) => (
+                    <div
+                      key={field.id}
+                      className="!text-[14px] !leading-[20px] text-fg-muted"
+                    >
+                      <span className="font-[600]">{field.name} : </span>
+                      <span>{field.value}</span>
+                    </div>
+                  ))}
+                </div>
               )}
               {isStreaming && (
                 <div className="flex items-center gap-2">
@@ -287,10 +318,18 @@ const ChatMessage = ({
                     <ChatMarkdown
                       content={translation ?? content ?? ""}
                       contentColor={contentColor}
+                      boldColor={boldColor ?? undefined}
+                      italicColor={italicColor ?? undefined}
                     />
                     {isShowDataStore && (
-                      <div className="bg-canvas/5 data-history mt-[10px] rounded-[12px] border-[1px] p-[16px]">
-                        <div className="text-fg-subtle mb-[16px] flex flex-row items-center gap-[8px]">
+                      <div
+                        className="bg-canvas/5 data-history mt-[10px] rounded-[12px] border-[1px] p-[16px]"
+                        style={{ borderColor: `${contentColor}80` }}
+                      >
+                        <div
+                          className="mb-[16px] flex flex-row items-center gap-[8px]"
+                          style={{ color: contentColor }}
+                        >
                           <History size={20} />
                           <div className="text-[14px] leading-[20px] font-[500]">
                             Data history
@@ -299,7 +338,8 @@ const ChatMessage = ({
                         {sortedDataStoreFields?.map((field) => (
                           <div
                             key={field.id}
-                            className="chat-style-text !text-[14px] !leading-[20px]"
+                            className="!text-[14px] !leading-[20px]"
+                            style={{ color: contentColor }}
                           >
                             <span className="font-[600]">{field.name} : </span>
                             <span>{field.value}</span>
@@ -313,7 +353,12 @@ const ChatMessage = ({
                 <div className="flex flex-col gap-2">
                   {content && (
                     <div>
-                      <ChatMarkdown content={content} contentColor={contentColor} />
+                      <ChatMarkdown
+                        content={content}
+                        contentColor={contentColor}
+                        boldColor={boldColor ?? undefined}
+                        italicColor={italicColor ?? undefined}
+                      />
                     </div>
                   )}
                   <div className="flex items-center gap-2">
@@ -346,10 +391,13 @@ const ChatMessage = ({
             </ChatBubble>
           )}
 
-          {/* Action buttons - below bubble for both user and AI */}
+          {/* Action buttons - fixed height container to prevent layout shift */}
           {!isStreaming && (
             <div
-              className={cn("flex", isUser ? "justify-end" : "justify-start")}
+              className={cn(
+                "flex h-8 mt-1",
+                isUser ? "justify-end" : "justify-start",
+              )}
             >
               <ChatMessageActions
                 messageId={message.id}
@@ -361,6 +409,8 @@ const ChatMessage = ({
                 selectedOptionIndex={message.selectedOptionIndex}
                 totalOptions={message.options.length}
                 isExpanded={isActionsExpanded}
+                bubbleColor={isScenarioCard ? undefined : (bubbleColor ?? undefined)}
+                textColor={isScenarioCard ? undefined : contentColor}
                 onEdit={handleEdit}
                 onEditDone={handleEditDone}
                 onEditCancel={handleEditCancel}

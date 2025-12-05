@@ -7,6 +7,8 @@ import remarkBreaks from "remark-breaks";
 interface ChatMarkdownProps {
   content: string;
   contentColor: string;
+  boldColor?: string;
+  italicColor?: string;
   className?: string;
 }
 
@@ -17,6 +19,8 @@ interface ChatMarkdownProps {
 export const ChatMarkdown = memo(function ChatMarkdown({
   content,
   contentColor,
+  boldColor,
+  italicColor,
   className,
 }: ChatMarkdownProps) {
   const components = useMemo(
@@ -25,10 +29,10 @@ export const ChatMarkdown = memo(function ChatMarkdown({
         <p style={{ color: contentColor }}>{children}</p>
       ),
       strong: ({ children }: { children?: React.ReactNode }) => (
-        <strong style={{ color: contentColor }}>{children}</strong>
+        <strong style={{ color: boldColor ?? contentColor }}>{children}</strong>
       ),
       em: ({ children }: { children?: React.ReactNode }) => (
-        <em style={{ color: contentColor }}>{children}</em>
+        <em style={{ color: italicColor ?? contentColor }}>{children}</em>
       ),
       pre: ({ children }: { children?: React.ReactNode }) => (
         <pre
@@ -55,7 +59,7 @@ export const ChatMarkdown = memo(function ChatMarkdown({
         );
       },
     }),
-    [contentColor],
+    [contentColor, boldColor, italicColor],
   );
 
   return (
