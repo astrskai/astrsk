@@ -78,7 +78,7 @@ function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
           onError={() => setImageError(true)}
         />
       ) : (
-        <span className='text-[10px] text-zinc-500'>
+        <span className='text-[10px] text-zinc-400'>
           {name.charAt(0).toUpperCase() || '?'}
         </span>
       )}
@@ -194,7 +194,7 @@ export function SessionCard({
           <>
             {/* Initial fallback when image fails to load */}
             <div className='absolute inset-0 flex items-center justify-center'>
-              <span className='text-6xl font-bold text-zinc-600'>
+              <span className='text-6xl font-bold text-zinc-500'>
                 {title.charAt(0).toUpperCase() || '?'}
               </span>
             </div>
@@ -281,7 +281,7 @@ export function SessionCard({
                   <span className='text-zinc-400'>New session</span>
                 ) : (
                   <div className='flex items-center gap-2'>
-                    <MessageIcon className='h-4 w-4 text-zinc-500' />
+                    <MessageIcon className='h-4 w-4 text-zinc-400' />
                     <span className='font-semibold text-zinc-300'>
                       {messageCount.toLocaleString()}
                     </span>
@@ -313,7 +313,7 @@ export function SessionCard({
                     />
                   ))}
                   {characterAvatars.length > 3 && (
-                    <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-500'>
+                    <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-400'>
                       +{characterAvatars.length - 3}
                     </div>
                   )}

@@ -14,7 +14,7 @@ import * as React from 'react';
  */
 export function CardMetadataContainer({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-auto flex items-center justify-between border-t border-zinc-800 pt-3 text-xs text-zinc-500">
+    <div className="mt-auto flex items-center justify-between border-t border-zinc-800 pt-3 text-xs text-zinc-400">
       {children}
     </div>
   );

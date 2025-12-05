@@ -98,7 +98,7 @@ export function CharacterCard({
         )}
         {shouldShowInitial && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-6xl font-bold text-zinc-600">
+            <span className="text-6xl font-bold text-zinc-500">
               {name.charAt(0).toUpperCase() || '?'}
             </span>
           </div>
@@ -148,7 +148,7 @@ export function CharacterCard({
               )}
             </>
           ) : (
-            <span className="text-[10px] text-zinc-600">No tags</span>
+            <span className="text-[10px] text-zinc-400">No tags</span>
           )}
         </div>
 
