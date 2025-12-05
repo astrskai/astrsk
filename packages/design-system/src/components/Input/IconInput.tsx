@@ -73,6 +73,7 @@ const IconInput = React.forwardRef<HTMLInputElement, IconInputProps>(
             type='button'
             onClick={onIconClick}
             aria-label={iconAriaLabel}
+            tabIndex={-1}
             className={cn(
               'absolute top-1/2 -translate-y-1/2 text-[var(--fg-subtle)]',
               '[&_svg]:size-4',
