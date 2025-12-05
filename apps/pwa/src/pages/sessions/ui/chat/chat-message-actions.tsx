@@ -22,6 +22,8 @@ interface ChatMessageActionsProps {
   selectedOptionIndex: number;
   totalOptions: number;
   isExpanded?: boolean;
+  bubbleColor?: string;
+  textColor?: string;
   onEdit: () => void;
   onEditDone: () => void;
   onEditCancel: () => void;
@@ -44,6 +46,8 @@ const ChatMessageActions = ({
   selectedOptionIndex,
   totalOptions,
   isExpanded = false,
+  bubbleColor,
+  textColor,
   onEdit,
   onEditDone,
   onEditCancel,
@@ -52,22 +56,34 @@ const ChatMessageActions = ({
   onSelectOption,
   onRegenerate,
 }: ChatMessageActionsProps) => {
-  // Show edit mode buttons always, or when expanded (mobile tap), other buttons on hover
-  const shouldAlwaysShow = isEditing || isExpanded;
-
   const buttonVariants = isUser
     ? "hover:bg-fg-muted/80"
     : "hover:bg-border-subtle/80";
 
+  // Use inline styles if bubbleColor/textColor provided, otherwise use class-based styling
+  const containerStyle = bubbleColor
+    ? { backgroundColor: bubbleColor, color: textColor }
+    : undefined;
+
+  // Visibility logic:
+  // - Always show when editing
+  // - On mobile (< md): show when expanded (tap to toggle)
+  // - On desktop (>= md): show on hover only
   return (
     <div
       className={cn(
         "flex items-center gap-1 rounded-lg p-1",
-        isUser
-          ? "bg-fg-muted/80 text-surface"
-          : "bg-surface-raised/80 text-fg-muted",
-        shouldAlwaysShow ? "flex" : "hidden group-hover/message:flex",
+        !bubbleColor &&
+          (isUser
+            ? "bg-fg-muted/80 text-surface"
+            : "bg-surface-raised/80 text-fg-muted"),
+        isEditing
+          ? "flex"
+          : isExpanded
+            ? "flex md:hidden md:group-hover/message:flex"
+            : "hidden group-hover/message:flex",
       )}
+      style={containerStyle}
     >
       {isEditing ? (
         // Edit mode: Save and Cancel buttons
@@ -135,13 +151,12 @@ const ChatMessageActions = ({
               className={cn(
                 "flex items-center justify-center rounded p-1.5 transition-colors",
                 buttonVariants,
+                isShowDataStore && "bg-black/20",
               )}
               aria-label="History"
               onClick={onShowDataStore}
             >
-              <History
-                className={cn("h-4 w-4", isShowDataStore && "text-accent-cyan")}
-              />
+              <History className="h-4 w-4" />
             </button>
           )}
 
@@ -149,8 +164,10 @@ const ChatMessageActions = ({
             <div
               className={cn(
                 "flex items-center gap-1 rounded p-1",
-                isUser ? "bg-fg-muted/80" : "bg-border-muted/80",
+                !bubbleColor &&
+                  (isUser ? "bg-fg-muted/80" : "bg-border-muted/80"),
               )}
+              style={bubbleColor ? { backgroundColor: `${bubbleColor}cc` } : undefined}
             >
               <button
                 className={cn(

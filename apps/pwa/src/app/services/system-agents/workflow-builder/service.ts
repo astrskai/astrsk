@@ -26,33 +26,6 @@ import {
 import { createWorkflowTools, TOOL_DESCRIPTIONS } from "./tools";
 
 // ============================================================================
-// JSON Export Helper
-// ============================================================================
-
-function workflowStateToJson(state: WorkflowState) {
-  return {
-    nodes: state.nodes,
-    edges: state.edges,
-    agents: Object.fromEntries(state.agents.entries()),
-    ifNodes: Object.fromEntries(state.ifNodes.entries()),
-    dataStoreNodes: Object.fromEntries(state.dataStoreNodes.entries()),
-    dataStoreSchema: state.dataStoreSchema,
-  };
-}
-
-function downloadWorkflowJson(state: WorkflowState, filename: string = "workflow_state.json") {
-  const json = JSON.stringify(workflowStateToJson(state), null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-  logger.info(`[WorkflowBuilder] Downloaded workflow state as ${filename}`);
-}
-
-// ============================================================================
 // Helper: Get model from store settings
 // ============================================================================
 
@@ -241,9 +214,5 @@ export async function generateWorkflow({
 
     sendProgress("error", `Error: ${errorMessage}`);
     throw error;
-  } finally {
-    // Export the final state as JSON
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    downloadWorkflowJson(state, `workflow_state_${timestamp}.json`);
   }
 }

@@ -1861,18 +1861,20 @@ async function* executeAgentNode({
 
     // Log agent's model configuration for debugging
     console.log(`[ModelSelection] Agent "${agent.props.name}" model config:`, {
+      useDefaultModel: agent.props.useDefaultModel,
       modelTier: agent.props.modelTier,
-      modelTierIsUndefined: agent.props.modelTier === undefined,
       apiSource: agent.props.apiSource,
       modelId: agent.props.modelId,
       modelName: agent.props.modelName,
     });
 
-    // PRIORITY 1: Always try to use the current global default model based on agent's modelTier
-    // This ensures users can change models in settings and have them apply immediately
-    const globalDefault = getGlobalDefaultModel(agent.props.modelTier);
+    // PRIORITY 1: Use global default model only if agent is configured to use defaults
+    // (useDefaultModel === true means use tier-based defaults from settings)
+    const globalDefault = agent.props.useDefaultModel
+      ? getGlobalDefaultModel(agent.props.modelTier)
+      : null;
 
-    console.log(`[ModelSelection] getGlobalDefaultModel returned:`, globalDefault);
+    console.log(`[ModelSelection] useDefaultModel=${agent.props.useDefaultModel}, globalDefault:`, globalDefault);
 
     if (globalDefault) {
       // Find the API connection for the global default model

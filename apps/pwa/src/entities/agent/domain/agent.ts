@@ -68,6 +68,7 @@ export interface AgentProps {
   modelId?: string;
   modelName?: string;
   modelTier?: ModelTier; // Model tier for export/import (Light or Heavy)
+  useDefaultModel: boolean; // true = use tier-based default model, false = use specific model
 
   // Prompts - separated by completion type
   promptMessages: PromptMessage[]; // For chat completion
@@ -134,6 +135,7 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
         apiSource: undefined,
         modelId: undefined,
         modelName: undefined,
+        useDefaultModel: true, // Default to using tier-based default model
         promptMessages: [],
         textPrompt: "",
         enabledParameters: new Map<string, boolean>(),
@@ -497,6 +499,7 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
             Object.values(ModelTier).includes(json.modelTier)
               ? (json.modelTier as ModelTier)
               : undefined,
+          useDefaultModel: json.useDefaultModel ?? true, // Default to using tier-based model
 
           promptMessages:
             json.promptMessages?.map((message: any) =>
