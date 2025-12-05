@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Lock } from 'lucide-react';
 import { PasswordInput } from './PasswordInput';
 
 const meta = {
@@ -16,6 +17,27 @@ const meta = {
     disabled: {
       control: 'boolean',
       description: 'Whether the input is disabled',
+    },
+    label: {
+      control: 'text',
+      description: 'Label text',
+    },
+    labelPosition: {
+      control: 'select',
+      options: ['top', 'left', 'inner'],
+      description: 'Label position',
+    },
+    hint: {
+      control: 'text',
+      description: 'Hint text below the input',
+    },
+    error: {
+      control: 'text',
+      description: 'Error message',
+    },
+    required: {
+      control: 'boolean',
+      description: 'Required field indicator',
     },
   },
   decorators: [
@@ -62,25 +84,95 @@ export const Invalid: Story = {
   },
 };
 
-// Form example
-export const FormExample: Story = {
+// With Label (top position - default)
+export const WithLabel: Story = {
   args: {
+    label: 'Password',
     placeholder: 'Enter password',
   },
-  decorators: [
-    () => (
-      <div className='flex flex-col gap-4'>
-        <div>
-          <label className='mb-2 block text-sm text-zinc-400'>Password</label>
-          <PasswordInput placeholder='Enter password' />
-        </div>
-        <div>
-          <label className='mb-2 block text-sm text-zinc-400'>
-            Confirm Password
-          </label>
-          <PasswordInput placeholder='Confirm password' />
-        </div>
-      </div>
-    ),
-  ],
+};
+
+// With Label and Required
+export const WithLabelRequired: Story = {
+  args: {
+    label: 'Password',
+    placeholder: 'Enter password',
+    required: true,
+  },
+};
+
+// With Label and Hint
+export const WithLabelAndHint: Story = {
+  args: {
+    label: 'Password',
+    placeholder: 'Enter password',
+    hint: 'Must be at least 8 characters',
+  },
+};
+
+// With Label and Error
+export const WithLabelAndError: Story = {
+  args: {
+    label: 'Password',
+    placeholder: 'Enter password',
+    error: 'Password is required',
+    required: true,
+  },
+};
+
+// Label Position: Left
+export const LabelPositionLeft: Story = {
+  args: {
+    label: 'Password',
+    labelPosition: 'left',
+    placeholder: 'Enter password',
+  },
+};
+
+// Label Position: Inner (floating)
+export const LabelPositionInner: Story = {
+  args: {
+    label: 'Password',
+    labelPosition: 'inner',
+    placeholder: 'Enter password',
+  },
+};
+
+// With Left Icon
+export const WithLeftIcon: Story = {
+  args: {
+    leftIcon: <Lock />,
+    placeholder: 'Enter password',
+  },
+};
+
+// With Left Icon and Label
+export const WithLeftIconAndLabel: Story = {
+  args: {
+    leftIcon: <Lock />,
+    label: 'Password',
+    placeholder: 'Enter password',
+    required: true,
+  },
+};
+
+// Form example using new props
+export const FormExample: Story = {
+  render: () => (
+    <div className='flex flex-col gap-4'>
+      <PasswordInput
+        label='Password'
+        placeholder='Enter password'
+        leftIcon={<Lock />}
+        required
+        hint='Must be at least 8 characters'
+      />
+      <PasswordInput
+        label='Confirm Password'
+        placeholder='Confirm password'
+        leftIcon={<Lock />}
+        required
+      />
+    </div>
+  ),
 };
