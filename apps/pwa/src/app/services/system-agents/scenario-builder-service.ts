@@ -153,6 +153,16 @@ First messages are ALTERNATIVE starting options. Users pick ONE to begin. Each s
 - Set the immediate scene vividly
 - Create hooks for interaction
 - NOT be character dialogue
+- Use template variables to reference characters dynamically (see below)
+
+## Template Variables for First Messages:
+Use these variables in first message content to make them dynamic:
+- \`{{user.name}}\` - The player's character name
+- AI character names (excluding user): \`{% for c in cast.all %}{% if c.id != user.id %}{{c.name}}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}\`
+
+**IMPORTANT**: Only use template variables when you cannot describe the situation without referencing characters by name. Prefer generic descriptions like "the stranger", "your companion", "the mysterious figure" when possible.
+
+Example: "{% for c in cast.all %}{% if c.id != user.id %}{{c.name}}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %} watch as {{user.name}} approaches the dimly lit tavern..."
 
 ## Lorebook Entries:
 Create diverse entries covering:
@@ -309,7 +319,7 @@ function createScenarioTools(
       description: "Add a new first message option. First messages are ALTERNATIVE starting scenarios - users pick ONE to begin. Each should present a different situation, scene, or event as a game master narrator. Create 2-3 distinct options when asked.",
       inputSchema: z.object({
         title: z.string().describe("A short, descriptive title for this starting option (e.g., 'Peaceful Morning', 'Ambushed!', 'A Mysterious Letter')"),
-        content: z.string().describe("The full opening narration - written as a game master setting the scene. Should be vivid and create hooks for interaction."),
+        content: z.string().describe("The full opening narration - written as a game master setting the scene. Should be vivid and create hooks for interaction. Only use template variables when you cannot describe the situation without referencing characters by name. Prefer generic descriptions like 'the stranger', 'your companion', 'the mysterious figure' when possible."),
       }),
       execute: async ({ title, content }) => {
         const id = generateUniqueId();

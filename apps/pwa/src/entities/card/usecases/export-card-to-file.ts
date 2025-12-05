@@ -203,6 +203,11 @@ export class ExportCardToFile
   }
 
   private exportCharacterCard(card: CharacterCard): any {
+    // For 1:1 sessions, first_mes is the first message from first_messages array
+    const firstMessage = card.props.firstMessages?.[0]?.description ?? "";
+    // alternate_greetings are the remaining first_messages
+    const alternateGreetings = card.props.firstMessages?.slice(1).map(m => m.description) ?? [];
+
     return {
       spec: "chara_card_v2",
       spec_version: "2.0",
@@ -210,13 +215,13 @@ export class ExportCardToFile
         name: card.props.name,
         description: card.props.description,
         personality: "",
-        scenario: "",
-        first_mes: "",
+        scenario: card.props.scenario ?? "",
+        first_mes: firstMessage,
         mes_example: card.props.exampleDialogue,
         creator_notes: card.props.cardSummary,
         system_prompt: "",
         post_history_instructions: "",
-        alternate_greetings: [],
+        alternate_greetings: alternateGreetings,
         character_book: this.exportLorebook(card.props.lorebook),
         tags: card.props.tags,
         creator: card.props.creator,
