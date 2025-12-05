@@ -693,7 +693,7 @@ export default function ChatMainArea({
   }, [scenarioCardFirstMessageCount, messageCount, data?.id, hasSkippedScenarioDialog]);
 
   return (
-    <div className="mx-auto flex h-dvh max-w-5xl flex-1 flex-col items-center justify-end pt-12 md:justify-center">
+    <div className="flex h-dvh flex-1 flex-col justify-end pt-12 md:justify-center">
       <ChatMessageList
         data={data}
         streamingMessageId={streamingMessageId}
@@ -706,7 +706,7 @@ export default function ChatMainArea({
       />
 
       <ChatInput
-        className="shrink-0 md:mb-4"
+        className="mx-auto w-full max-w-5xl shrink-0 md:mb-4"
         sessionId={data.id}
         aiCharacterIds={data.aiCharacterCardIds}
         userCharacterId={data.userCharacterCardId}

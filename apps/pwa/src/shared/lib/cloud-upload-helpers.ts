@@ -37,6 +37,9 @@ export interface CharacterCloudData {
   description: string | null;
   example_dialogue: string | null;
   lorebook: any;
+  // 1:1 Session specific fields (same format as ScenarioCloudData.first_messages)
+  scenario: string | null;
+  first_messages: { name: string; description: string }[] | null;
   token_count: number;
   session_id: string | null;
   is_public: boolean;

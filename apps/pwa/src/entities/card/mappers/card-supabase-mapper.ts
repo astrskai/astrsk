@@ -69,6 +69,9 @@ export class CardSupabaseMapper {
         description: data.description ?? undefined,
         exampleDialogue: data.example_dialogue ?? undefined,
         lorebook,
+        // 1:1 Session specific fields (same format as scenario first_messages)
+        scenario: data.scenario ?? undefined,
+        firstMessages: data.first_messages ?? undefined,
         sessionId,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -109,6 +112,9 @@ export class CardSupabaseMapper {
       description: persistenceData.description ?? null,
       example_dialogue: persistenceData.example_dialogue ?? null,
       lorebook: persistenceData.lorebook ?? null,
+      // 1:1 Session specific fields (same format as scenario first_messages)
+      scenario: persistenceData.scenario ?? null,
+      first_messages: persistenceData.first_messages ?? null,
       token_count: card.props.tokenCount || 0,
       session_id: sessionId?.toString() ?? null,
       is_public: true,
