@@ -66,12 +66,12 @@ export class TemplateRenderer {
     return str.replace(/\n{2,}/g, "\n").trim();
   }
 
-  // Replace `{{char}}`, `{{user}}`, and `{{scenario}}` variables in text
+  // Replace `{{char}}`, `{{user}}`, and `{{scenario}}` variables in text (case-insensitive)
   private static replaceCharAndUserVariables(text: string): string {
     return text
-      .replace(/{{\s*char\s*}}/g, "{{char.name}}")
-      .replace(/{{\s*user\s*}}/g, "{{user.name}}")
-      .replace(/{{\s*scenario\s*}}/g, "{{scenario.name}}");
+      .replace(/{{\s*char\s*}}/gi, "{{char.name}}")
+      .replace(/{{\s*user\s*}}/gi, "{{user.name}}")
+      .replace(/{{\s*scenario\s*}}/gi, "{{scenario.name}}");
   }
 
   public static render(
