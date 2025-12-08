@@ -18,6 +18,11 @@ export interface CharacterAvatar {
   name: string;
   /** Character avatar image URL */
   avatarUrl?: string;
+  /**
+   * Loading strategy for the avatar image.
+   * @default 'lazy'
+   */
+  loading?: 'lazy' | 'eager';
 }
 
 export interface SessionCardProps {
@@ -65,12 +70,22 @@ export interface SessionCardProps {
    * @example "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
    */
   imageSizes?: string;
+  /**
+   * Loading strategy for the image.
+   * Use 'eager' for above-the-fold images (e.g., first few cards in a list).
+   * @default 'lazy'
+   */
+  loading?: 'lazy' | 'eager';
 }
 
 /**
  * Character Avatar Component (Internal)
  */
-function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
+function CharacterAvatarImage({
+  name,
+  avatarUrl,
+  loading = 'lazy',
+}: CharacterAvatar) {
   const [imageError, setImageError] = useState(false);
 
   // Reset error state when avatarUrl changes
@@ -90,6 +105,7 @@ function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
           src={avatarUrl}
           alt={name}
           className='h-full w-full object-cover'
+          loading={loading}
           onError={() => setImageError(true)}
         />
       ) : (
@@ -172,6 +188,7 @@ export function SessionCard({
   likeCount,
   downloadCount,
   imageSizes,
+  loading = 'lazy',
 }: SessionCardProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -205,7 +222,7 @@ export function SessionCard({
               alt={title}
               sizes={imageSizes}
               className='absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90'
-              loading='lazy'
+              loading={loading}
               onError={() => setImageError(true)}
             />
             <div className='absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent' />
@@ -348,6 +365,7 @@ export function SessionCard({
                       key={`${avatar.name}-${idx}`}
                       name={avatar.name}
                       avatarUrl={avatar.avatarUrl}
+                      loading={avatar.loading ?? 'lazy'}
                     />
                   ))}
                   {characterAvatars.length > 3 && (
