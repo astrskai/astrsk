@@ -6,7 +6,8 @@ import { cn } from '../../lib/utils';
  */
 export const inputBaseStyles = cn(
   // Base styles
-  'flex h-9 w-full rounded-lg border py-2 text-sm transition-colors',
+  // Use text-base (16px) to prevent iOS Safari auto-zoom on input focus
+  'flex h-9 w-full rounded-lg border py-2 text-base transition-colors',
   // Colors
   'bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--fg-default)]',
   // Placeholder
