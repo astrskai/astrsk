@@ -6,8 +6,11 @@ import {
   CardBadges,
   CardMetadataContainer,
   CardMetadataItem,
+  CardLikeButton,
+  CardPopularityStats,
   type CardAction,
   type CardBadge,
+  type LikeButtonProps,
 } from '../Card';
 
 export interface CharacterCardProps {
@@ -45,6 +48,18 @@ export interface CharacterCardProps {
   renderMetadata?: () => React.ReactNode;
   /** Text to display when summary is empty. Defaults to "No summary". Set to empty string to hide. */
   emptySummaryText?: string;
+  /** Like button configuration (displays in top-right corner) */
+  likeButton?: LikeButtonProps;
+  /** Like count to display in popularity stats */
+  likeCount?: number;
+  /** Download count to display in popularity stats */
+  downloadCount?: number;
+  /**
+   * The sizes attribute for the image element.
+   * Helps browser select appropriate image size for responsive loading.
+   * @example "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px"
+   */
+  imageSizes?: string;
 }
 
 // Re-export for backward compatibility
@@ -66,6 +81,10 @@ export function CharacterCard({
   placeholderImageUrl,
   renderMetadata,
   emptySummaryText = 'No summary',
+  likeButton,
+  likeCount,
+  downloadCount,
+  imageSizes,
 }: CharacterCardProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -91,6 +110,7 @@ export function CharacterCard({
           <img
             src={imageUrl || placeholderImageUrl}
             alt={name}
+            sizes={imageSizes}
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
             onError={() => setImageError(true)}
@@ -105,8 +125,18 @@ export function CharacterCard({
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-90" />
 
-        {/* Action Toolbar (Responsive) */}
-        <CardActionToolbar actions={actions} />
+        {/* Like Button (top-right, always visible) */}
+        {likeButton && (
+          <div className="absolute top-2 right-2 z-20">
+            <CardLikeButton {...likeButton} />
+          </div>
+        )}
+
+        {/* Action Toolbar (Responsive) - positioned below like button if present */}
+        <CardActionToolbar
+          actions={actions}
+          className={likeButton ? 'top-12' : undefined}
+        />
 
         {/* Left Badges */}
         {badges.some((b) => (b.position ?? 'left') === 'left') && (
@@ -158,6 +188,15 @@ export function CharacterCard({
           </p>
         )}
 
+        {/* Popularity Stats (likes, downloads) */}
+        {(likeCount !== undefined || downloadCount !== undefined) && (
+          <CardPopularityStats
+            likeCount={likeCount}
+            downloadCount={downloadCount}
+            className="mb-2"
+          />
+        )}
+
         {/* Metadata */}
         {renderMetadata ? (
           renderMetadata()
@@ -172,4 +211,4 @@ export function CharacterCard({
   );
 }
 
-export type { CardAction, CardBadge };
+export type { CardAction, CardBadge, LikeButtonProps };

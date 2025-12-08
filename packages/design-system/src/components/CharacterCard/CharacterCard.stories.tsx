@@ -489,3 +489,226 @@ export const SkeletonGrid: Story = {
     </>
   ),
 };
+
+// With like button
+export const WithLikeButton: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: false,
+      onClick: () => console.log('Like clicked'),
+    },
+  },
+};
+
+// With like button (liked state)
+export const WithLikeButtonLiked: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: true,
+      onClick: () => console.log('Unlike clicked'),
+    },
+  },
+};
+
+// With popularity stats (likes only)
+export const WithLikeCount: Story = {
+  args: {
+    ...Default.args,
+    likeCount: 1234,
+  },
+};
+
+// With popularity stats (downloads only)
+export const WithDownloadCount: Story = {
+  args: {
+    ...Default.args,
+    downloadCount: 5678,
+  },
+};
+
+// With both popularity stats
+export const WithPopularityStats: Story = {
+  args: {
+    ...Default.args,
+    likeCount: 1234,
+    downloadCount: 5678,
+  },
+};
+
+// With like button and popularity stats
+export const WithLikeButtonAndStats: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: false,
+      onClick: () => console.log('Like clicked'),
+    },
+    likeCount: 1234,
+    downloadCount: 5678,
+  },
+};
+
+// With like button liked and popularity stats
+export const WithLikeButtonLikedAndStats: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: true,
+      onClick: () => console.log('Unlike clicked'),
+    },
+    likeCount: 1235,
+    downloadCount: 5678,
+  },
+};
+
+// With like button and actions
+export const WithLikeButtonAndActions: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: false,
+      onClick: () => console.log('Like clicked'),
+    },
+    likeCount: 2500,
+    downloadCount: 12000,
+    actions: [
+      {
+        icon: Edit,
+        label: 'Edit',
+        onClick: () => console.log('Edit clicked'),
+        title: 'Edit character',
+      },
+      {
+        icon: Copy,
+        label: 'Duplicate',
+        onClick: () => console.log('Duplicate clicked'),
+        title: 'Duplicate character',
+      },
+      {
+        icon: Trash2,
+        label: 'Delete',
+        onClick: () => console.log('Delete clicked'),
+        title: 'Delete character',
+        className: 'hover:text-red-400',
+      },
+    ],
+  },
+};
+
+// High popularity counts (formatted)
+export const HighPopularityCounts: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: true,
+      onClick: () => console.log('Unlike clicked'),
+    },
+    likeCount: 123456,
+    downloadCount: 9876543,
+  },
+};
+
+// Full featured card
+export const FullFeatured: Story = {
+  args: {
+    name: 'Alice Wonderland',
+    imageUrl: SAMPLE_IMAGE,
+    summary:
+      'A curious young girl who falls down a rabbit hole into a fantasy world populated by peculiar creatures.',
+    tags: ['Fantasy', 'Adventure', 'Classic'],
+    tokenCount: 1523,
+    updatedAt: '2 days ago',
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} /> },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
+    likeButton: {
+      isLiked: true,
+      onClick: () => console.log('Unlike clicked'),
+    },
+    likeCount: 2847,
+    downloadCount: 15230,
+    actions: [
+      {
+        icon: Edit,
+        label: 'Edit',
+        onClick: () => console.log('Edit clicked'),
+        title: 'Edit character',
+      },
+      {
+        icon: Download,
+        label: 'Export',
+        onClick: () => console.log('Export clicked'),
+        title: 'Export character',
+      },
+    ],
+  },
+};
+
+// Grid layout with popularity
+export const GridLayoutWithPopularity: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 280px)',
+          gap: '24px',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => (
+    <>
+      <CharacterCard
+        name="Popular Character"
+        imageUrl={SAMPLE_IMAGE}
+        summary="A highly popular character loved by many users."
+        tags={['Popular', 'Trending']}
+        tokenCount={1523}
+        updatedAt="2 days ago"
+        likeButton={{
+          isLiked: true,
+          onClick: () => console.log('Unlike clicked'),
+        }}
+        likeCount={12500}
+        downloadCount={45000}
+      />
+      <CharacterCard
+        name="New Character"
+        imageUrl={SAMPLE_IMAGE_2}
+        summary="A fresh new character just added to the platform."
+        tags={['New', 'Fresh']}
+        tokenCount={890}
+        updatedAt="1 hour ago"
+        likeButton={{
+          isLiked: false,
+          onClick: () => console.log('Like clicked'),
+        }}
+        likeCount={42}
+        downloadCount={128}
+      />
+      <CharacterCard
+        name="Classic Character"
+        imageUrl={SAMPLE_IMAGE_3}
+        summary="A timeless classic that has stood the test of time."
+        tags={['Classic', 'Evergreen']}
+        tokenCount={2100}
+        updatedAt="1 year ago"
+        likeButton={{
+          isLiked: false,
+          onClick: () => console.log('Like clicked'),
+        }}
+        likeCount={98765}
+        downloadCount={543210}
+      />
+    </>
+  ),
+};

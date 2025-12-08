@@ -587,3 +587,237 @@ export const SkeletonGrid: Story = {
     </>
   ),
 };
+
+// With like button
+export const WithLikeButton: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: false,
+      onClick: () => console.log('Like clicked'),
+    },
+  },
+};
+
+// With like button (liked state)
+export const WithLikeButtonLiked: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: true,
+      onClick: () => console.log('Unlike clicked'),
+    },
+  },
+};
+
+// With popularity stats (likes only)
+export const WithLikeCount: Story = {
+  args: {
+    ...Default.args,
+    likeCount: 1234,
+  },
+};
+
+// With popularity stats (downloads only)
+export const WithDownloadCount: Story = {
+  args: {
+    ...Default.args,
+    downloadCount: 5678,
+  },
+};
+
+// With both popularity stats
+export const WithPopularityStats: Story = {
+  args: {
+    ...Default.args,
+    likeCount: 1234,
+    downloadCount: 5678,
+  },
+};
+
+// With like button and popularity stats
+export const WithLikeButtonAndStats: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: false,
+      onClick: () => console.log('Like clicked'),
+    },
+    likeCount: 1234,
+    downloadCount: 5678,
+  },
+};
+
+// With like button liked and popularity stats
+export const WithLikeButtonLikedAndStats: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: true,
+      onClick: () => console.log('Unlike clicked'),
+    },
+    likeCount: 1235,
+    downloadCount: 5678,
+  },
+};
+
+// With like button and actions
+export const WithLikeButtonAndActions: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: false,
+      onClick: () => console.log('Like clicked'),
+    },
+    likeCount: 2500,
+    downloadCount: 12000,
+    actions: [
+      {
+        icon: Edit,
+        label: 'Edit',
+        onClick: () => console.log('Edit clicked'),
+        title: 'Edit session',
+      },
+      {
+        icon: Copy,
+        label: 'Duplicate',
+        onClick: () => console.log('Duplicate clicked'),
+        title: 'Duplicate session',
+      },
+      {
+        icon: Trash2,
+        label: 'Delete',
+        onClick: () => console.log('Delete clicked'),
+        title: 'Delete session',
+        className: 'hover:text-red-400',
+      },
+    ],
+  },
+};
+
+// High popularity counts (formatted)
+export const HighPopularityCounts: Story = {
+  args: {
+    ...Default.args,
+    likeButton: {
+      isLiked: true,
+      onClick: () => console.log('Unlike clicked'),
+    },
+    likeCount: 123456,
+    downloadCount: 9876543,
+  },
+};
+
+// Full featured card
+export const FullFeatured: Story = {
+  args: {
+    title: 'Epic Adventure Campaign',
+    imageUrl: SAMPLE_COVER,
+    messageCount: 1523,
+    tags: ['Fantasy', 'Adventure', 'Epic'],
+    summary:
+      'An immersive fantasy adventure where heroes embark on a dangerous journey to save the kingdom.',
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} /> },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
+    characterAvatars: [
+      { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+      { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
+      { name: 'Charlie', avatarUrl: SAMPLE_AVATAR_3 },
+    ],
+    likeButton: {
+      isLiked: true,
+      onClick: () => console.log('Unlike clicked'),
+    },
+    likeCount: 2847,
+    downloadCount: 15230,
+    actions: [
+      {
+        icon: Edit,
+        label: 'Edit',
+        onClick: () => console.log('Edit clicked'),
+        title: 'Edit session',
+      },
+      {
+        icon: Download,
+        label: 'Export',
+        onClick: () => console.log('Export clicked'),
+        title: 'Export session',
+      },
+    ],
+  },
+};
+
+// Grid layout with popularity
+export const GridLayoutWithPopularity: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 320px)',
+          gap: '24px',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => (
+    <>
+      <SessionCard
+        title="Popular Campaign"
+        imageUrl={SAMPLE_COVER}
+        messageCount={1523}
+        tags={['Popular', 'Trending']}
+        summary="A highly popular session loved by many users."
+        characterAvatars={[
+          { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+          { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
+        ]}
+        likeButton={{
+          isLiked: true,
+          onClick: () => console.log('Unlike clicked'),
+        }}
+        likeCount={12500}
+        downloadCount={45000}
+      />
+      <SessionCard
+        title="New Adventure"
+        imageUrl={SAMPLE_COVER_2}
+        messageCount={42}
+        tags={['New', 'Fresh']}
+        summary="A fresh new session just started."
+        characterAvatars={[
+          { name: 'Charlie', avatarUrl: SAMPLE_AVATAR_3 },
+        ]}
+        likeButton={{
+          isLiked: false,
+          onClick: () => console.log('Like clicked'),
+        }}
+        likeCount={42}
+        downloadCount={128}
+      />
+      <SessionCard
+        title="Classic Journey"
+        messageCount={9999}
+        tags={['Classic', 'Evergreen']}
+        summary="A timeless classic that has stood the test of time."
+        characterAvatars={[
+          { name: 'Diana', avatarUrl: SAMPLE_AVATAR_4 },
+          { name: 'Eve' },
+        ]}
+        likeButton={{
+          isLiked: false,
+          onClick: () => console.log('Like clicked'),
+        }}
+        likeCount={98765}
+        downloadCount={543210}
+      />
+    </>
+  ),
+};

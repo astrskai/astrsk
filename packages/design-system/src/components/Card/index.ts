@@ -8,3 +8,9 @@ export {
   type CardBadgePosition,
   type CardBadgeVariant,
 } from './CardBadges';
+export { CardLikeButton, type LikeButtonProps } from './CardLikeButton';
+export {
+  CardPopularityStats,
+  formatCount,
+  type CardPopularityStatsProps,
+} from './CardPopularityStats';
