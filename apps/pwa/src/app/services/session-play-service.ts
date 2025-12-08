@@ -1671,11 +1671,18 @@ async function generateStructuredOutput({
   if (apiConnection.source === ApiSource.OpenRouter ||
     apiConnection.source === ApiSource.Ollama ||
     apiConnection.source === ApiSource.KoboldCPP ||
-    apiConnection.source === ApiSource.OpenAICompatible ||
-    apiConnection.source === ApiSource.AstrskAi
+    apiConnection.source === ApiSource.OpenAICompatible
   ) {
     mode = "json";
   }
+  // For AstrskAi: DeepSeek doesn't support tool calling, use JSON mode
+  // GLM supports tool calling, so use default mode (tools)
+  // if (apiConnection.source === ApiSource.AstrskAi) {
+  //   const isDeepSeekModel = parsedModelId.toLowerCase().includes("deepseek");
+  //   if (isDeepSeekModel) {
+  //     mode = "json";
+  //   }
+  // }
   // Note: Ollama removed - createOllama supports proper schema mode for structured output
 
   // Extra headers and body for Astrsk Cloud LLM
