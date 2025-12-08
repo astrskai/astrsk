@@ -60,6 +60,12 @@ export interface CharacterCardProps {
    * @example "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px"
    */
   imageSizes?: string;
+  /**
+   * Loading strategy for the image.
+   * Use 'eager' for above-the-fold images (e.g., first few cards in a list).
+   * @default 'lazy'
+   */
+  loading?: 'lazy' | 'eager';
 }
 
 // Re-export for backward compatibility
@@ -85,6 +91,7 @@ export function CharacterCard({
   likeCount,
   downloadCount,
   imageSizes,
+  loading = 'lazy',
 }: CharacterCardProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -112,7 +119,7 @@ export function CharacterCard({
             alt={name}
             sizes={imageSizes}
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+            loading={loading}
             onError={() => setImageError(true)}
           />
         )}
