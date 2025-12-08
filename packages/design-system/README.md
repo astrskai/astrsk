@@ -26,6 +26,10 @@ import '@astrsk/design-system/styles';
 
 ### Use Components
 
+#### Option 1: Barrel Import (Default)
+
+Import all components from the main package (simpler, but larger bundle):
+
 ```tsx
 import { Button, Input, LabeledInput } from '@astrsk/design-system';
 
@@ -48,6 +52,46 @@ function App() {
   );
 }
 ```
+
+#### Option 2: Subpath Imports (Optimized - Recommended)
+
+Import only the components you need for better tree-shaking (smaller bundle):
+
+```tsx
+import { Button } from '@astrsk/design-system/button';
+import { Input } from '@astrsk/design-system/input';
+import { LabeledInput } from '@astrsk/design-system/labeled-input';
+
+function App() {
+  return (
+    <div>
+      <Button variant="default">Click me</Button>
+      <Input placeholder="Basic input" />
+      <LabeledInput label="Email" type="email" />
+    </div>
+  );
+}
+```
+
+**Available Subpath Imports:**
+- `@astrsk/design-system/button`
+- `@astrsk/design-system/input`
+- `@astrsk/design-system/label`
+- `@astrsk/design-system/labeled-input`
+- `@astrsk/design-system/textarea`
+- `@astrsk/design-system/labeled-textarea`
+- `@astrsk/design-system/select`
+- `@astrsk/design-system/avatar`
+- `@astrsk/design-system/skeleton`
+- `@astrsk/design-system/character-card`
+- `@astrsk/design-system/session-card`
+- `@astrsk/design-system/tab-bar`
+- `@astrsk/design-system/accordion`
+- `@astrsk/design-system/utils` (utility functions like `cn`)
+
+**Bundle Size Comparison:**
+- Barrel import: ~60KB (all components)
+- Subpath imports: ~10-15KB per component (only what you use)
 
 ## Components
 
