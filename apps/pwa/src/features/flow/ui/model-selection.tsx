@@ -83,10 +83,10 @@ const modelOptions = (
     for (const apiConnectionWithModels of apiConnectionsWithModels) {
       const { apiConnection, models } = apiConnectionWithModels;
 
-      // TEMPORARY: Hide astrsk connections from model selection
-      if (apiConnection.source === ApiSource.AstrskAi) {
-        continue;
-      }
+      // // TEMPORARY: Hide astrsk connections from model selection
+      // if (apiConnection.source === ApiSource.AstrskAi) {
+      //   continue;
+      // }
 
       // Show "Title - Provider Type" format (e.g., "DeepSeek Production - OpenAI Compatible")
       const providerLabel = apiSourceLabel.get(apiConnection.source) || "";
