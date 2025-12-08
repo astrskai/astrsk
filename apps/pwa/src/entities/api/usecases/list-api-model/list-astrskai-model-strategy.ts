@@ -8,7 +8,7 @@ import { ListApiModelStrategy } from "@/entities/api/usecases/list-api-model/lis
 const ASTRSK_CLOUD_MODELS = [
   {
     id: "openai-compatible:deepseek/deepseek-chat",
-    name: "DeepSeek Chat",
+    name: "DeepSeek V3.2",
   },
 ];
 

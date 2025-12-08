@@ -77,13 +77,13 @@ import { getAISDKFetch } from "@/shared/infra/fetch-helper";
 // When using AstrskAi, format must be "openai-compatible:modelId"
 // The modelId is what gets sent to the Cloud LLM backend
 const MODEL_TIER_MAPPING = {
-  [ModelTier.Light]: "openai-compatible:deepseek-ai/DeepSeek-V3.1",
-  [ModelTier.Heavy]: "openai-compatible:deepseek-ai/DeepSeek-V3.1",
+  [ModelTier.Light]: "openai-compatible:deepseek/deepseek-chat",
+  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat",
 } as const;
 
 // Display names for the fallback models
 const MODEL_DISPLAY_NAMES: Record<string, string> = {
-  "openai-compatible:deepseek-ai/DeepSeek-V3.1": "DeepSeek V3.1",
+  "openai-compatible:deepseek/deepseek-chat": "DeepSeek V3.2",
 };
 
 // Helper function to check if user is logged in
