@@ -1675,15 +1675,14 @@ async function generateStructuredOutput({
   ) {
     mode = "json";
   }
-  // For AstrskAi: DeepSeek doesn't support tool calling, use JSON mode
-  // GLM supports tool calling, so use default mode (tools)
-  // if (apiConnection.source === ApiSource.AstrskAi) {
-  //   const isDeepSeekModel = parsedModelId.toLowerCase().includes("deepseek");
-  //   if (isDeepSeekModel) {
-  //     mode = "json";
-  //   }
-  // }
-  // Note: Ollama removed - createOllama supports proper schema mode for structured output
+  // For AstrskAi: Friendli models need json mode, others support tool calling
+  // - Friendli models (deepseek-ai/*, zai-org/*): no tool calling, use json mode
+  // - BytePlus models (byteplus/*): supports tool calling, use tool mode
+  // - GLM Official (glm-4.6): supports tool calling, use tool mode
+  if (apiConnection.source === ApiSource.AstrskAi) {
+    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
+    mode = isFriendliModel ? "json" : "tool";
+  }
 
   // Extra headers and body for Astrsk Cloud LLM
   const jwt = useAppStore.getState().jwt;
