@@ -6,8 +6,11 @@ import {
   CardBadges,
   CardMetadataContainer,
   CardMetadataItem,
+  CardLikeButton,
+  CardPopularityStats,
   type CardAction,
   type CardBadge,
+  type LikeButtonProps,
 } from '../Card';
 
 export interface CharacterAvatar {
@@ -50,6 +53,18 @@ export interface SessionCardProps {
   tags?: string[];
   /** Session summary/description */
   summary?: string;
+  /** Like button configuration (displays in top-right corner) */
+  likeButton?: LikeButtonProps;
+  /** Like count to display in popularity stats */
+  likeCount?: number;
+  /** Download count to display in popularity stats */
+  downloadCount?: number;
+  /**
+   * The sizes attribute for the image element.
+   * Helps browser select appropriate image size for responsive loading.
+   * @example "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
+   */
+  imageSizes?: string;
 }
 
 /**
@@ -153,6 +168,10 @@ export function SessionCard({
   renderMetadata,
   tags = [],
   summary,
+  likeButton,
+  likeCount,
+  downloadCount,
+  imageSizes,
 }: SessionCardProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -184,6 +203,7 @@ export function SessionCard({
             <img
               src={imageUrl}
               alt={title}
+              sizes={imageSizes}
               className='absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90'
               loading='lazy'
               onError={() => setImageError(true)}
@@ -217,8 +237,18 @@ export function SessionCard({
           </>
         )}
 
-        {/* Action Toolbar (Responsive) */}
-        <CardActionToolbar actions={actions} />
+        {/* Like Button (top-right, always visible) */}
+        {likeButton && (
+          <div className='absolute top-2 right-2 z-20'>
+            <CardLikeButton {...likeButton} />
+          </div>
+        )}
+
+        {/* Action Toolbar (Responsive) - positioned below like button if present */}
+        <CardActionToolbar
+          actions={actions}
+          className={likeButton ? 'top-12' : undefined}
+        />
 
         {/* Left Badges */}
         {badges.some((b) => (b.position ?? 'left') === 'left') && (
@@ -269,6 +299,14 @@ export function SessionCard({
             <p className='line-clamp-2 text-xs leading-relaxed break-all text-ellipsis text-zinc-400'>
               {summary}
             </p>
+          )}
+
+          {/* Popularity Stats (likes, downloads) */}
+          {(likeCount !== undefined || downloadCount !== undefined) && (
+            <CardPopularityStats
+              likeCount={likeCount}
+              downloadCount={downloadCount}
+            />
           )}
 
           {/* Metadata */}
@@ -327,4 +365,4 @@ export function SessionCard({
   );
 }
 
-export type { CardAction, CardBadge };
+export type { CardAction, CardBadge, LikeButtonProps };

@@ -1,6 +1,6 @@
 {
   "name": "@astrsk/design-system",
-  "version": "0.5.11",
+  "version": "0.6.0",
   "description": "astrsk Design System - Component library with Storybook",
   "type": "module",
   "main": "./dist/index.js",
