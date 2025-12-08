@@ -74,17 +74,16 @@ import { translate } from "@/shared/lib/translate-utils";
 import { getAISDKFetch } from "@/shared/infra/fetch-helper";
 
 // Model mapping configuration for automatic fallback
-// When using AstrskAi, format must be "ApiSource:modelId"
-// where ApiSource is a valid value from ApiSource enum that makeProvider can handle
+// When using AstrskAi, format must be "openai-compatible:modelId"
+// The modelId is what gets sent to the Cloud LLM backend
 const MODEL_TIER_MAPPING = {
-  [ModelTier.Light]: "openai-compatible:google/gemini-2.5-flash",
-  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat-v3.1",
+  [ModelTier.Light]: "openai-compatible:deepseek/deepseek-chat",
+  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat",
 } as const;
 
 // Display names for the fallback models
 const MODEL_DISPLAY_NAMES: Record<string, string> = {
-  "openai-compatible:google/gemini-2.5-flash": "Gemini 2.5 Flash",
-  "openai-compatible:deepseek/deepseek-chat-v3.1": "DeepSeek v3.1",
+  "openai-compatible:deepseek/deepseek-chat": "DeepSeek V3.2",
 };
 
 // Helper function to check if user is logged in
@@ -1381,17 +1380,23 @@ async function generateTextOutput({
   // Request by API source
   let provider;
   let parsedModelId = modelId;
+  let isAstrskAi = false;
   switch (apiConnection.source) {
-    // Route by model provider
+    // Astrsk Cloud LLM - unified /chat endpoint (OpenAI-compatible)
     case ApiSource.AstrskAi: {
+      isAstrskAi = true;
+      // Model ID format: "provider:modelId" (e.g., "openai-compatible:deepseek-ai/DeepSeek-V3.1")
       const modelIdSplitted = modelId.split(":");
-      const astrskSource = modelIdSplitted.at(0) as ApiSource;
       parsedModelId = modelIdSplitted.at(1) ?? modelId;
-      const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${astrskSource}`;
-      provider = makeProvider({
-        source: modelIdSplitted.at(0) as ApiSource,
-        apiKey: "DUMMY",
-        baseUrl: astrskBaseUrl,
+
+      const astrskBaseUrl = import.meta.env.VITE_CLOUD_LLM_URL;
+      if (!astrskBaseUrl) {
+        throw new Error("VITE_CLOUD_LLM_URL is not configured");
+      }
+      provider = createOpenAICompatible({
+        name: "astrsk-cloud",
+        baseURL: astrskBaseUrl,
+        fetch: getAISDKFetch(),
       });
       break;
     }
@@ -1464,12 +1469,18 @@ async function generateTextOutput({
   });
   const modelProvider = model.provider.split(".").at(0);
 
-  // Extra headers for astrsk
+  // Extra headers and body for Astrsk Cloud LLM
   const jwt = useAppStore.getState().jwt;
-  const headers = {
+  const astrskHeaders = {
     Authorization: `Bearer ${jwt}`,
     "x-astrsk-credit-log": JSON.stringify(creditLog),
   };
+
+  // Check if thinking should be enabled (if thinking_budget or reasoning_effort is set)
+  const thinkingBudget = parameters.get("thinking_budget");
+  const reasoningEffort = parameters.get("reasoning_effort");
+  const enableThinking = (thinkingBudget !== undefined && thinkingBudget !== null && thinkingBudget > 0) ||
+    (reasoningEffort !== undefined && reasoningEffort !== null && reasoningEffort !== "");
 
   // Request to LLM endpoint
   if (streaming) {
@@ -1492,8 +1503,9 @@ async function generateTextOutput({
       onError: (error) => {
         throw error.error;
       },
-      ...(apiConnection.source === ApiSource.AstrskAi && {
-        headers: headers,
+      ...(isAstrskAi && {
+        headers: astrskHeaders,
+        experimental_extraBody: { thinking: enableThinking },
       }),
     });
   } else {
@@ -1509,8 +1521,9 @@ async function generateTextOutput({
           },
         }
         : {}),
-      ...(apiConnection.source === ApiSource.AstrskAi && {
-        headers: headers,
+      ...(isAstrskAi && {
+        headers: astrskHeaders,
+        experimental_extraBody: { thinking: enableThinking },
       }),
     });
 
@@ -1561,18 +1574,23 @@ async function generateStructuredOutput({
   // Request by API source
   let provider;
   let parsedModelId = modelId;
+  let isAstrskAi = false;
   switch (apiConnection.source) {
-    // Route by model provider
+    // Astrsk Cloud LLM - unified /chat endpoint (OpenAI-compatible)
     case ApiSource.AstrskAi: {
+      isAstrskAi = true;
+      // Model ID format: "provider:modelId" (e.g., "openai-compatible:deepseek-ai/DeepSeek-V3.1")
       const modelIdSplitted = modelId.split(":");
-      const astrskSource = modelIdSplitted.at(0) as ApiSource;
       parsedModelId = modelIdSplitted.at(1) ?? modelId;
-      const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${astrskSource}`;
-      provider = makeProvider({
-        source: modelIdSplitted.at(0) as ApiSource,
-        apiKey: "DUMMY",
-        baseUrl: astrskBaseUrl,
-        isStructuredOutput: true,
+
+      const astrskBaseUrl = import.meta.env.VITE_CLOUD_LLM_URL;
+      if (!astrskBaseUrl) {
+        throw new Error("VITE_CLOUD_LLM_URL is not configured");
+      }
+      provider = createOpenAICompatible({
+        name: "astrsk-cloud",
+        baseURL: astrskBaseUrl,
+        fetch: getAISDKFetch(),
       });
       break;
     }
@@ -1657,14 +1675,27 @@ async function generateStructuredOutput({
   ) {
     mode = "json";
   }
-  // Note: Ollama removed - createOllama supports proper schema mode for structured output
+  // For AstrskAi: Friendli models need json mode, others support tool calling
+  // - Friendli models (deepseek-ai/*, zai-org/*): no tool calling, use json mode
+  // - BytePlus models (byteplus/*): supports tool calling, use tool mode
+  // - GLM Official (glm-4.6): supports tool calling, use tool mode
+  if (apiConnection.source === ApiSource.AstrskAi) {
+    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
+    mode = isFriendliModel ? "json" : "tool";
+  }
 
-  // Extra headers for astrsk
+  // Extra headers and body for Astrsk Cloud LLM
   const jwt = useAppStore.getState().jwt;
-  const headers = {
+  const astrskHeaders = {
     Authorization: `Bearer ${jwt}`,
     "x-astrsk-credit-log": JSON.stringify(creditLog),
   };
+
+  // Check if thinking should be enabled (if thinking_budget or reasoning_effort is set)
+  const thinkingBudget = parameters.get("thinking_budget");
+  const reasoningEffort = parameters.get("reasoning_effort");
+  const enableThinking = (thinkingBudget !== undefined && thinkingBudget !== null && thinkingBudget > 0) ||
+    (reasoningEffort !== undefined && reasoningEffort !== null && reasoningEffort !== "");
 
   // Request to LLM endpoint
   if (streaming) {
@@ -1687,8 +1718,9 @@ async function generateStructuredOutput({
       onError: (error) => {
         throw error.error;
       },
-      ...(apiConnection.source === ApiSource.AstrskAi && {
-        headers: headers,
+      ...(isAstrskAi && {
+        headers: astrskHeaders,
+        experimental_extraBody: { thinking: enableThinking },
       }),
     });
   } else {
@@ -1708,8 +1740,9 @@ async function generateStructuredOutput({
           },
         }
         : {}),
-      ...(apiConnection.source === ApiSource.AstrskAi && {
-        headers: headers,
+      ...(isAstrskAi && {
+        headers: astrskHeaders,
+        experimental_extraBody: { thinking: enableThinking },
       }),
     });
 
