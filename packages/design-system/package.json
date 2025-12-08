@@ -1,6 +1,6 @@
 {
   "name": "@astrsk/design-system",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "astrsk Design System - Component library with Storybook",
   "type": "module",
   "main": "./dist/index.js",
@@ -14,6 +14,62 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./button": {
+      "types": "./dist/components/Button/index.d.ts",
+      "import": "./dist/components/Button/index.js"
+    },
+    "./input": {
+      "types": "./dist/components/Input/index.d.ts",
+      "import": "./dist/components/Input/index.js"
+    },
+    "./label": {
+      "types": "./dist/components/Label/index.d.ts",
+      "import": "./dist/components/Label/index.js"
+    },
+    "./labeled-input": {
+      "types": "./dist/components/LabeledInput/index.d.ts",
+      "import": "./dist/components/LabeledInput/index.js"
+    },
+    "./textarea": {
+      "types": "./dist/components/Textarea/index.d.ts",
+      "import": "./dist/components/Textarea/index.js"
+    },
+    "./labeled-textarea": {
+      "types": "./dist/components/LabeledTextarea/index.d.ts",
+      "import": "./dist/components/LabeledTextarea/index.js"
+    },
+    "./select": {
+      "types": "./dist/components/Select/index.d.ts",
+      "import": "./dist/components/Select/index.js"
+    },
+    "./avatar": {
+      "types": "./dist/components/Avatar/index.d.ts",
+      "import": "./dist/components/Avatar/index.js"
+    },
+    "./skeleton": {
+      "types": "./dist/components/Skeleton/index.d.ts",
+      "import": "./dist/components/Skeleton/index.js"
+    },
+    "./character-card": {
+      "types": "./dist/components/CharacterCard/index.d.ts",
+      "import": "./dist/components/CharacterCard/index.js"
+    },
+    "./session-card": {
+      "types": "./dist/components/SessionCard/index.d.ts",
+      "import": "./dist/components/SessionCard/index.js"
+    },
+    "./tab-bar": {
+      "types": "./dist/components/TabBar/index.d.ts",
+      "import": "./dist/components/TabBar/index.js"
+    },
+    "./accordion": {
+      "types": "./dist/components/Accordion/index.d.ts",
+      "import": "./dist/components/Accordion/index.js"
+    },
+    "./utils": {
+      "types": "./dist/lib/utils.d.ts",
+      "import": "./dist/lib/utils.js"
+    },
     "./styles": "./dist/index.css"
   },
   "files": [
@@ -22,7 +78,7 @@
   ],
   "scripts": {
     "dev": "storybook dev -p 6006",
-    "build": "tsup src/index.ts --dts --format esm && tailwindcss -i src/index.css -o dist/index.css --minify",
+    "build": "tsup && tailwindcss -i src/index.css -o dist/index.css --minify",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "vitest",
