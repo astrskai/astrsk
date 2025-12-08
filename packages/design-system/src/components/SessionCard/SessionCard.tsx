@@ -18,6 +18,11 @@ export interface CharacterAvatar {
   name: string;
   /** Character avatar image URL */
   avatarUrl?: string;
+  /**
+   * Loading strategy for the avatar image.
+   * @default 'lazy'
+   */
+  loading?: 'lazy' | 'eager';
 }
 
 export interface SessionCardProps {
@@ -76,7 +81,11 @@ export interface SessionCardProps {
 /**
  * Character Avatar Component (Internal)
  */
-function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
+function CharacterAvatarImage({
+  name,
+  avatarUrl,
+  loading = 'lazy',
+}: CharacterAvatar) {
   const [imageError, setImageError] = useState(false);
 
   // Reset error state when avatarUrl changes
@@ -96,6 +105,7 @@ function CharacterAvatarImage({ name, avatarUrl }: CharacterAvatar) {
           src={avatarUrl}
           alt={name}
           className='h-full w-full object-cover'
+          loading={loading}
           onError={() => setImageError(true)}
         />
       ) : (
@@ -355,6 +365,7 @@ export function SessionCard({
                       key={`${avatar.name}-${idx}`}
                       name={avatar.name}
                       avatarUrl={avatar.avatarUrl}
+                      loading={avatar.loading ?? 'lazy'}
                     />
                   ))}
                   {characterAvatars.length > 3 && (
