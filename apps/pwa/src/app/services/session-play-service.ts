@@ -1671,7 +1671,8 @@ async function generateStructuredOutput({
   if (apiConnection.source === ApiSource.OpenRouter ||
     apiConnection.source === ApiSource.Ollama ||
     apiConnection.source === ApiSource.KoboldCPP ||
-    apiConnection.source === ApiSource.OpenAICompatible
+    apiConnection.source === ApiSource.OpenAICompatible ||
+    apiConnection.source === ApiSource.AstrskAi
   ) {
     mode = "json";
   }
