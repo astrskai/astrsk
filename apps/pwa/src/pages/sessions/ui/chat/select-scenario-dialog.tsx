@@ -113,7 +113,6 @@ const SelectScenarioDialog = ({
         // Only onSkip and onAdd can close the dialog
       }}
       title="First message"
-      description="Select a first message for your new session."
       content={dialogContent}
       footer={dialogFooter}
       isShowCloseButton={false}

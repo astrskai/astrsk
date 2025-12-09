@@ -57,6 +57,7 @@ export * from "./loading-overlay";
 export * from "./media-display";
 export * from "./create-item-card";
 export * from "./play-button";
+export * from "./resource-link";
 export * from "./search-empty-state";
 export * from "./search-input";
 export * from "./step-indicator";

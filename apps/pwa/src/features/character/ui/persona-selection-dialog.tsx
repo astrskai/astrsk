@@ -3,15 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { DialogBase } from "@/shared/ui/dialogs/base";
 import { Button, Input, Textarea, SearchInput } from "@/shared/ui/forms";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui/tabs";
-import { Avatar } from "@/shared/ui/avatar";
 import { toastError } from "@/shared/ui/toast";
 import { useCreateCharacterCard } from "@/entities/character/api";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
 import { UniqueEntityID } from "@/shared/domain";
-import { useAsset } from "@/shared/hooks/use-asset";
-import { cn } from "@/shared/lib";
+import PersonaItem from "@/pages/sessions/ui/chat/settings/persona-item";
 
 /**
  * Persona data to return (either selected character or new persona info)
@@ -35,63 +33,9 @@ interface PersonaSelectionDialogProps {
   allowSkip?: boolean;
   /** Optional: Suggested persona card ID (shown at top with "Suggested" label) */
   suggestedPersonaId?: string;
+  /** Optional: If true, allows closing by clicking outside (default: true) */
+  closeOnOverlayClick?: boolean;
 }
-
-/**
- * Persona Card - Displays a selectable character card as persona option
- */
-interface PersonaCardProps {
-  card: CharacterCard;
-  isSelected: boolean;
-  onSelect: () => void;
-  isSuggested?: boolean;
-}
-
-const PersonaCard = ({
-  card,
-  isSelected,
-  onSelect,
-  isSuggested,
-}: PersonaCardProps) => {
-  const [imageUrl] = useAsset(card.props.iconAssetId);
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        "flex w-full cursor-pointer items-center gap-4 rounded-xl border-2 p-4 text-left transition-all duration-200",
-        isSelected
-          ? "border-brand-500 bg-brand-900/50 shadow-lg"
-          : "border-neutral-700 hover:border-brand-500 hover:bg-neutral-800/50",
-      )}
-    >
-      {/* Avatar */}
-      <Avatar
-        src={imageUrl}
-        alt={card.props.name || "Persona"}
-        size={48}
-        className="flex-shrink-0"
-      />
-
-      {/* Info */}
-      <div className="min-w-0 flex-1">
-        <h3 className="truncate text-lg font-semibold text-white">
-          {card.props.name || "Unnamed"}
-          {isSuggested && (
-            <span className="ml-2 text-sm text-brand-400">(Suggested)</span>
-          )}
-        </h3>
-        <p className="truncate text-sm text-neutral-400">
-          {card.props.cardSummary || card.props.description || "No description"}
-        </p>
-      </div>
-
-      {/* Selected indicator */}
-      {isSelected && <span className="text-brand-400">✓</span>}
-    </button>
-  );
-};
 
 /**
  * No Persona Card - Special option to skip persona selection
@@ -103,38 +47,34 @@ interface NoPersonaCardProps {
 
 const NoPersonaCard = ({ isSelected, onSelect }: NoPersonaCardProps) => {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        "flex w-full cursor-pointer items-center gap-4 rounded-xl border-2 p-4 text-left transition-all duration-200",
-        isSelected
-          ? "border-brand-500 bg-brand-900/50 shadow-lg"
-          : "border-neutral-700 hover:border-brand-500 hover:bg-neutral-800/50",
+    <div className="relative">
+      {/* Border overlay for selected state */}
+      {isSelected && (
+        <div className="absolute inset-0 rounded-lg border-2 border-brand-500 pointer-events-none z-10" />
       )}
-    >
-      {/* Avatar placeholder */}
-      <Avatar
-        src={null}
-        alt="No Persona"
-        size={48}
-        className="flex-shrink-0"
-      />
 
-      {/* Info */}
-      <div className="min-w-0 flex-1">
-        <h3 className="truncate text-lg font-semibold text-white">
-          No persona
-          <span className="ml-2 text-sm text-neutral-500">(Default)</span>
-        </h3>
-        <p className="truncate text-sm text-neutral-400">
-          Start roleplay without defining your role
-        </p>
+      <div
+        className="group flex h-[64px] cursor-pointer overflow-hidden rounded-lg border border-border-subtle hover:border-fg-subtle transition-all duration-200"
+        onClick={onSelect}
+      >
+        <div className="relative w-[25%]">
+          <img
+            className="h-full w-full object-cover"
+            src="/img/placeholder/character-placeholder.png"
+            alt="No Persona"
+          />
+        </div>
+        <div className="flex w-[75%] items-center justify-between gap-2 p-4">
+          <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-fg-default">
+            No persona
+          </h3>
+          <p className="flex-shrink-0 text-sm text-fg-subtle">
+            <span className="font-semibold text-fg-default">0</span>{" "}
+            <span>Tokens</span>
+          </p>
+        </div>
       </div>
-
-      {/* Selected indicator */}
-      {isSelected && <span className="text-brand-400">✓</span>}
-    </button>
+    </div>
   );
 };
 
@@ -152,6 +92,7 @@ export function PersonaSelectionDialog({
   onConfirm,
   allowSkip = true,
   suggestedPersonaId,
+  closeOnOverlayClick = true,
 }: PersonaSelectionDialogProps) {
   const [activeTab, setActiveTab] = useState<"select" | "create">("select");
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
@@ -313,9 +254,9 @@ export function PersonaSelectionDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="Choose your persona"
-      description="Select a character to represent you in this session, or create a new one."
       size="lg"
       isShowCloseButton={false}
+      closeOnOverlayClick={closeOnOverlayClick}
       content={
         <div className="space-y-4">
           {/* Tabs */}
@@ -331,7 +272,7 @@ export function PersonaSelectionDialog({
             </TabsList>
 
             {/* Select Tab Content */}
-            <TabsContent value="select" className="space-y-4">
+            <TabsContent value="select" className="min-h-[320px] space-y-4">
               {/* Search */}
               <SearchInput
                 name="persona-search"
@@ -341,16 +282,16 @@ export function PersonaSelectionDialog({
               />
 
               {/* Persona List */}
-              <div className="max-h-[300px] space-y-3 overflow-y-auto pr-2">
+              <div className="max-h-[300px] space-y-3 overflow-y-auto overflow-x-visible px-0.5">
                 {/* Suggested Persona (shown at top if exists) */}
                 {suggestedPersona && (
-                  <PersonaCard
+                  <PersonaItem
                     key={suggestedPersona.id.toString()}
-                    card={suggestedPersona}
+                    characterId={suggestedPersona.id}
                     isSelected={
                       selectedCharacterId === suggestedPersona.id.toString()
                     }
-                    onSelect={() =>
+                    onClick={() =>
                       setSelectedCharacterId(suggestedPersona.id.toString())
                     }
                     isSuggested
@@ -367,11 +308,11 @@ export function PersonaSelectionDialog({
 
                 {/* Other Character Cards */}
                 {otherCharacters.map((card: CharacterCard) => (
-                  <PersonaCard
+                  <PersonaItem
                     key={card.id.toString()}
-                    card={card}
+                    characterId={card.id}
                     isSelected={selectedCharacterId === card.id.toString()}
-                    onSelect={() =>
+                    onClick={() =>
                       setSelectedCharacterId(card.id.toString())
                     }
                   />
@@ -389,8 +330,8 @@ export function PersonaSelectionDialog({
             </TabsContent>
 
             {/* Create Tab Content */}
-            <TabsContent value="create" className="space-y-4">
-              <div className="space-y-4 rounded-xl border border-neutral-700 bg-neutral-900/50 p-4">
+            <TabsContent value="create" className="flex min-h-[320px] items-center justify-center">
+              <div className="w-full space-y-4 rounded-xl border border-neutral-700 bg-neutral-900/50 p-4">
                 <h3 className="border-b border-neutral-700 pb-2 text-lg font-bold text-white">
                   New persona
                 </h3>
@@ -416,10 +357,6 @@ export function PersonaSelectionDialog({
                   isRequired
                 />
 
-                <p className="text-xs text-neutral-500">
-                  This persona will be used to represent you in conversations
-                  with the AI.
-                </p>
               </div>
             </TabsContent>
           </Tabs>
@@ -427,15 +364,12 @@ export function PersonaSelectionDialog({
       }
       footer={
         <div className="flex justify-end gap-2 border-t border-neutral-800 pt-4">
-          <Button variant="ghost" onClick={handleClose}>
-            Cancel
-          </Button>
           <Button
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
             loading={isSubmitting}
           >
-            {activeTab === "create" ? "Create & Start" : "Start Session"}
+            {activeTab === "create" ? "Create & Choose" : "Choose"}
           </Button>
         </div>
       }

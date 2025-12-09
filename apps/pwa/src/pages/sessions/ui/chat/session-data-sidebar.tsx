@@ -232,7 +232,7 @@ export default function SessionDataSidebar({
                           ? lastTurnDataStore[field.name]
                           : "--"
                     }
-                    onEdit={isInitialDataStore ? undefined : updateDataStore}
+                    onEdit={undefined}
                   />
                 ))}
               </SortableContext>

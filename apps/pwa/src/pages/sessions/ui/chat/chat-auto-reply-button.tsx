@@ -41,13 +41,13 @@ export default function ChatAutoReplyButton({
           {autoReply === AutoReply.Off ? "Auto-reply off" : "Auto-reply on"}
         </div>
 
-        <div className="font-normal">
+        {/* <div className="font-normal">
           {autoReply === AutoReply.Random
             ? "Random character"
             : autoReply === AutoReply.Rotate
               ? "All characters"
               : ""}
-        </div>
+        </div> */}
       </div>
     </div>
   );

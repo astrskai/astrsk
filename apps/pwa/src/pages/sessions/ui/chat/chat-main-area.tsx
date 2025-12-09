@@ -46,6 +46,7 @@ interface ChatMainAreaProps {
   onAutoReply: () => void;
   isOpenStats: boolean;
   onOpenStats: (isOpen: boolean) => void;
+  isPersonaDialogOpen?: boolean;
 }
 
 export default function ChatMainArea({
@@ -53,6 +54,7 @@ export default function ChatMainArea({
   onAutoReply,
   isOpenStats,
   onOpenStats,
+  isPersonaDialogOpen = false,
 }: ChatMainAreaProps) {
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState<boolean>(false);
@@ -669,6 +671,7 @@ export default function ChatMainArea({
 
   useEffect(() => {
     const sessionId = data?.id.toString() ?? "";
+    const DIALOG_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
     // Check scenario count
     if (scenarioCardFirstMessageCount === 0) {
@@ -682,15 +685,32 @@ export default function ChatMainArea({
       return;
     }
 
-    // Check if user already skipped for this session
+    // IMPORTANT: Don't show scenario dialog while persona dialog is open
+    // Wait for persona dialog to close first (sequential display)
+    if (isPersonaDialogOpen) {
+      setIsOpenSelectScenarioModal(false);
+      return;
+    }
+
+    // Check if user already skipped for this session (localStorage - 24h TTL)
     if (hasSkippedScenarioDialog(sessionId)) {
+      setIsOpenSelectScenarioModal(false);
+      return;
+    }
+
+    // Check if user has seen scenario dialog recently (session.config - 24h TTL)
+    const lastSeenTimestamp = data?.props.config?.hasSeenScenarioDialog as number | undefined;
+    const hasSeenRecently = lastSeenTimestamp &&
+      (Date.now() - lastSeenTimestamp < DIALOG_TTL_MS);
+
+    if (hasSeenRecently) {
       setIsOpenSelectScenarioModal(false);
       return;
     }
 
     // Show select scenario modal
     setIsOpenSelectScenarioModal(true);
-  }, [scenarioCardFirstMessageCount, messageCount, data?.id, hasSkippedScenarioDialog]);
+  }, [scenarioCardFirstMessageCount, messageCount, data?.id, data?.props.config?.hasSeenScenarioDialog, hasSkippedScenarioDialog, isPersonaDialogOpen]);
 
   return (
     <div className="flex h-dvh flex-1 flex-col justify-end pt-12 md:justify-center">
@@ -724,7 +744,17 @@ export default function ChatMainArea({
       <SelectScenarioDialog
         open={isOpenSelectScenarioModal}
         onSkip={() => {
+          // Mark in localStorage (24h TTL)
           skipScenarioDialog(data.id.toString());
+
+          // Mark in session.config (24h TTL - persisted to DB)
+          data.update({
+            config: {
+              ...data.props.config,
+              hasSeenScenarioDialog: Date.now(),
+            },
+          });
+
           setIsOpenSelectScenarioModal(false);
         }}
         onAdd={handleAddScenario}

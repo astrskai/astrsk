@@ -13,6 +13,7 @@ interface DialogBaseProps {
   isShowCloseButton?: boolean;
   size?: "sm" | "md" | "lg" | "xl" | "2xl"; // Dialog size (default: "md")
   className?: string; // Custom className for dialog content container
+  closeOnOverlayClick?: boolean; // If true, allows closing by clicking outside (default: true)
 }
 
 export const DialogBase = ({
@@ -26,6 +27,7 @@ export const DialogBase = ({
   isShowCloseButton = true,
   size = "md",
   className,
+  closeOnOverlayClick = true,
 }: DialogBaseProps) => {
   // Map size to max-width classes
   const sizeClasses = {
@@ -57,6 +59,16 @@ export const DialogBase = ({
             "data-[state=closed]:duration-200 data-[state=open]:duration-200",
             className,
           )}
+          onPointerDownOutside={(e) => {
+            if (!closeOnOverlayClick) {
+              e.preventDefault();
+            }
+          }}
+          onInteractOutside={(e) => {
+            if (!closeOnOverlayClick) {
+              e.preventDefault();
+            }
+          }}
         >
           {title && (
             <Dialog.Title className="m-0 flex-shrink-0 text-lg font-semibold text-fg-default md:text-xl">

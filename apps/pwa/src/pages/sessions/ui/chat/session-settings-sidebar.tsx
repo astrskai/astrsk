@@ -28,7 +28,7 @@ import {
   useDeleteSession,
   useCloneSession,
 } from "@/entities/session/api";
-import CharacterItem from "./settings/character-item";
+import PersonaItem from "./settings/persona-item";
 
 import { cn } from "@/shared/lib";
 import {
@@ -40,7 +40,7 @@ import {
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useQuery } from "@tanstack/react-query";
 import { useFlow } from "@/shared/hooks/use-flow";
-import { Loading, PopoverBase, DropdownMenuBase, Switch } from "@/shared/ui";
+import { Loading, PopoverBase, DropdownMenuBase, Switch, ResourceLink } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
 import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
 import { DialogBase } from "@/shared/ui/dialogs/base";
@@ -347,9 +347,6 @@ const SessionSettingsSidebar = ({
 
         // Save to backend
         await saveSessionMutation.mutateAsync({ session: latestSession });
-
-        // Show success message
-        toastSuccess(newEnabled ? "Character activated" : "Character deactivated");
       } catch (error) {
         toastError("Failed to toggle character", {
           description: error instanceof Error ? error.message : "Unknown error",
@@ -459,7 +456,7 @@ const SessionSettingsSidebar = ({
         params: { sessionId: clonedSession.id.toString() },
       });
     } catch (error) {
-      toastError("Failed to save as session", {
+      toastError("Failed to save as asset", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
@@ -614,7 +611,7 @@ const SessionSettingsSidebar = ({
           }
           items={[
             {
-              label: "Save as session",
+              label: "Save as asset",
               icon: <Save className="h-4 w-4" />,
               onClick: handleSaveAsPreset,
             },
@@ -650,7 +647,7 @@ const SessionSettingsSidebar = ({
               session.characterCards
                 .filter((card) => !card.id.equals(session.userCharacterCardId))
                 .map((card, index) => (
-                  <CharacterItem
+                  <PersonaItem
                     key={`ai-character-${index}-${card.id.toString()}`}
                     characterId={card.id}
                     isEnabled={card.enabled}
@@ -703,29 +700,21 @@ const SessionSettingsSidebar = ({
           <h3 className="font-semibold">User Character</h3>
           <div className="space-y-2">
             {session.userCharacterCardId ? (
-              (() => {
-                const userCard = session.characterCards.find((c) =>
-                  c.id.equals(session.userCharacterCardId)
-                );
-                return (
-                  <CharacterItem
-                    key={`user-character-${session.userCharacterCardId.toString()}`}
-                    characterId={session.userCharacterCardId}
-                    isEnabled={userCard?.enabled ?? true}
-                    onClick={() => {
-                      navigate({
-                        to: "/assets/characters/{-$characterId}",
-                        params: {
-                          characterId:
-                            session.userCharacterCardId?.toString() ?? "",
-                        },
-                        search: { mode: "edit" },
-                      });
-                    }}
-                    onToggleActive={() => handleToggleCharacterActive(session.userCharacterCardId!)}
-                  />
-                );
-              })()
+              <PersonaItem
+                key={`user-character-${session.userCharacterCardId.toString()}`}
+                characterId={session.userCharacterCardId}
+                isEnabled={true}
+                onClick={() => {
+                  navigate({
+                    to: "/assets/characters/{-$characterId}",
+                    params: {
+                      characterId:
+                        session.userCharacterCardId?.toString() ?? "",
+                    },
+                    search: { mode: "edit" },
+                  });
+                }}
+              />
             ) : (
               <div
                 className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base"
@@ -754,30 +743,23 @@ const SessionSettingsSidebar = ({
         </section>
 
         <section>
-          <h3 className="font-semibold">Scenario</h3>
-          <div>
-            {session.plotCard ? (
-              <ScenarioPreviewItem
-                scenarioId={session.plotCard.id}
-                onClick={() => {
-                  navigate({
-                    to: "/assets/scenarios/{-$scenarioId}",
-                    params: {
-                      scenarioId: session.plotCard?.id.toString() ?? "",
-                    },
-                  });
-                }}
-              />
-            ) : (
-              <div
-                className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base"
-                onClick={handleAddScenario}
-              >
-                <Plus className="h-5 w-5" />
-                <p>Add Scenario</p>
-              </div>
-            )}
-          </div>
+          <ResourceLink
+            isActive={!!session.plotCard}
+            onClick={() => {
+              if (session.plotCard) {
+                navigate({
+                  to: "/assets/scenarios/{-$scenarioId}",
+                  params: {
+                    scenarioId: session.plotCard?.id.toString() ?? "",
+                  },
+                });
+              } else {
+                handleAddScenario();
+              }
+            }}
+          >
+            Scenario
+          </ResourceLink>
 
           {/* Scenario Selection Dialog */}
           <ScenarioSelectionDialog
@@ -792,29 +774,26 @@ const SessionSettingsSidebar = ({
         </section>
 
         <section>
-          <h3 className="font-semibold">Workflow</h3>
-          <div>
-            {isLoadingFlow ? (
+          {isLoadingFlow ? (
+            <div className="flex items-center gap-2">
+              <h3 className="text-left font-semibold">Workflow</h3>
               <Loading size="sm" />
-            ) : flow ? (
-              <WorkflowPreviewItem
-                title={flow?.props.name ?? "No flow selected"}
-                nodeCount={flow?.props.nodes.length}
-                onClick={() => {
-                  if (!flow?.id) return;
+            </div>
+          ) : (
+            <ResourceLink
+              isActive={!!flow}
+              onClick={() => {
+                if (!flow?.id) return;
 
-                  navigate({
-                    to: "/assets/workflows/$workflowId",
-                    params: { workflowId: flow.id.toString() },
-                  });
-                }}
-              />
-            ) : (
-              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-surface-raised/50">
-                <p className="text-sm text-fg-subtle">No flow selected</p>
-              </div>
-            )}
-          </div>
+                navigate({
+                  to: "/assets/workflows/$workflowId",
+                  params: { workflowId: flow.id.toString() },
+                });
+              }}
+            >
+              Workflow
+            </ResourceLink>
+          )}
         </section>
 
         <section className="block md:hidden!">
@@ -948,7 +927,7 @@ const SessionSettingsSidebar = ({
         </section>
 
         <section>
-          <h3 className="font-semibold">Message text colors</h3>
+          <h3 className="font-semibold">Message styling</h3>
 
           <MessageStyling
             sessionId={session.id}
@@ -956,32 +935,32 @@ const SessionSettingsSidebar = ({
           />
         </section>
 
-        {/* Save as session - Mobile only (inside sections) */}
+        {/* Save as asset - Mobile only (inside sections) */}
         <section className="md:hidden!">
           <Button
             type="button"
-            variant="default"
+            variant="secondary"
             size="lg"
             className="w-full"
             onClick={handleSaveAsPreset}
           >
             <Save className="h-5 w-5" />
-            Save as session
+            Save as asset
           </Button>
         </section>
       </div>
 
-      {/* Save as session - Desktop only (footer) */}
+      {/* Save as asset - Desktop only (footer) */}
       <div className="mt-auto hidden p-4 pt-0 md:block">
         <Button
           type="button"
-          variant="default"
+          variant="secondary"
           size="lg"
           className="w-full"
           onClick={handleSaveAsPreset}
         >
           <Save className="h-5 w-5" />
-          Save as session
+          Save as asset
         </Button>
       </div>
     </aside>

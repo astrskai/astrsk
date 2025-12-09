@@ -1045,7 +1045,7 @@ const ScenarioEditorPage = () => {
 
           {lorebookFields.length === 0 ? (
             <p className="text-sm text-neutral-400">
-              No lorebook entries yet. Add one to get started.
+              No lorebook entries
             </p>
           ) : (
             <AccordionBase

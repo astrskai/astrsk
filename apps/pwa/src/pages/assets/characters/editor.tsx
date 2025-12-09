@@ -1097,7 +1097,7 @@ const CharacterEditorPage = () => {
 
           {fields.length === 0 ? (
             <p className="text-sm text-neutral-400">
-              No lorebook entries yet. Add one to get started.
+              No lorebook entries
             </p>
           ) : (
             <AccordionBase
@@ -1155,12 +1155,7 @@ const CharacterEditorPage = () => {
                 <div className="mt-2 flex items-start gap-3 rounded-lg border border-neutral-800/50 bg-black/40 p-3 text-sm text-neutral-400">
                   <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
                   <div>
-                    <span className="font-medium text-amber-500">
-                      Context Warning:
-                    </span>{" "}
-                    This data is only used for 1:1 chats. It is overridden
-                    (ignored) if the character is part of a Group or specific
-                    Session.
+                    This data is only used for 1:1 chats. It is overridden (ignored) if the character is part of a session
                   </div>
                 </div>
               </div>
@@ -1178,7 +1173,7 @@ const CharacterEditorPage = () => {
               {/* First Messages Section */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="rounded bg-neutral-900 px-1 text-xs text-amber-500/80">
+                  <label className="flex items-center rounded bg-neutral-900 px-1 text-xs text-amber-500/80">
                     First Messages (1:1 Only)
                   </label>
                   <Button
