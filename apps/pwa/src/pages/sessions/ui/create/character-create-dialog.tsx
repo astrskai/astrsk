@@ -526,7 +526,7 @@ export function CharacterCreateDialog({
             {fields.length === 0 ? (
               <div className="rounded-xl border border-dashed border-neutral-700 bg-neutral-900/50 p-6 text-center">
                 <BookOpen size={28} className="mx-auto mb-2 text-neutral-600" />
-                <p className="text-xs text-neutral-500">No lorebook entries yet</p>
+                <p className="text-xs text-neutral-500">No lorebook entries</p>
                 <Button
                   type="button"
                   variant="link"

@@ -768,7 +768,7 @@ This sets the stage for your story."
               {lorebook.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border-subtle bg-canvas/50 p-6 text-center">
                   <BookOpen size={28} className="mx-auto mb-2 text-fg-subtle" />
-                  <p className="text-xs text-fg-muted">No lorebook entries yet</p>
+                  <p className="text-xs text-fg-muted">No lorebook entries</p>
                   <button
                     onClick={addLorebook}
                     className="mt-2 text-xs font-bold text-brand-400 hover:text-brand-300"

@@ -1,9 +1,9 @@
-import { EyeOff, Eye } from "lucide-react";
 import { UniqueEntityID } from "@/shared/domain";
 import { useCard } from "@/shared/hooks/use-card";
 import { CharacterCard } from "@/entities/card/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { cn } from "@/shared/lib";
+import { Switch } from "@/shared/ui";
 
 interface CharacterItemProps {
   characterId: UniqueEntityID;
@@ -47,39 +47,18 @@ export default function CharacterItem({
           {character.props.title}
         </h3>
 
-        <div className="relative flex-shrink-0">
-          {/* Token count - visible by default, hidden on hover when onToggleActive exists */}
-          <p className={cn(
-            "text-sm text-fg-subtle",
-            onToggleActive && "group-hover:hidden"
-          )}>
-            <span className={cn("font-semibold", isEnabled ? "text-fg-default" : "text-fg-subtle")}>
-              {character.props.tokenCount}
-            </span>{" "}
-            <span>Tokens</span>
-          </p>
-
-          {/* Toggle active button - hidden by default, visible on hover */}
-          {onToggleActive && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleActive();
-              }}
-              className={cn(
-                "hidden h-8 w-8 items-center justify-center rounded-full text-white transition-colors group-hover:flex",
-                isEnabled
-                  ? "bg-fg-subtle hover:bg-fg-muted"
-                  : "bg-brand-500 hover:bg-brand-600"
-              )}
-              aria-label={isEnabled ? "Deactivate character" : "Activate character"}
-              title={isEnabled ? "Click to deactivate" : "Click to activate"}
-            >
-              {isEnabled ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          )}
-        </div>
+        {/* Toggle switch for enable/disable */}
+        {onToggleActive && (
+          <Switch
+            checked={isEnabled}
+            onCheckedChange={(checked) => {
+              onToggleActive();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          />
+        )}
       </div>
     </div>
   );

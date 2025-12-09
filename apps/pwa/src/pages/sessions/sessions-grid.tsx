@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { Session } from "@/entities/session/domain/session";
-import { CardType } from "@/entities/card/domain";
+
 import { IconHarpyLogo } from "@/shared/assets/icons";
 import type {
   SessionWithCharacterMetadata,
@@ -24,12 +24,8 @@ import { useSessionStore } from "@/shared/stores/session-store";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { cn, logger } from "@/shared/lib";
 import { SessionService } from "@/app/services/session-service";
-import { CardService } from "@/app/services/card-service";
 import { toastError } from "@/shared/ui/toast";
-import {
-  PersonaSelectionDialog,
-  type PersonaResult,
-} from "@/features/character/ui/persona-selection-dialog";
+
 
 interface SessionsGridProps {
   sessions: SessionWithCharacterMetadata[];
@@ -153,12 +149,7 @@ export function SessionsGrid({
   const { animatingId, triggerAnimation } = useNewItemAnimation();
   const [isCloning, setIsCloning] = useState<string | null>(null);
 
-  // Persona selection dialog state
-  const [isPersonaDialogOpen, setIsPersonaDialogOpen] = useState(false);
-  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
-  const [suggestedPersonaId, setSuggestedPersonaId] = useState<
-    string | undefined
-  >(undefined);
+
 
   const {
     loadingStates,
@@ -183,27 +174,22 @@ export function SessionsGrid({
   }, [newlyCreatedSessionId, triggerAnimation]);
 
   /**
-   * Handle session click - always show persona selection dialog
-   * If session has userCharacterCardId, use it as suggested persona
+   * Handle session click - clone and play session immediately
    */
   const handleSessionClick = (sessionId: string) => {
-    const item = sessions.find((s) => s.session.id.toString() === sessionId);
-    if (!item) return;
-
-    const userCharacterCardId = item.session.props.userCharacterCardId;
-
-    // Always show persona selection dialog
-    setPendingSessionId(sessionId);
-    setSuggestedPersonaId(userCharacterCardId?.toString());
-    setIsPersonaDialogOpen(true);
+    cloneAndPlaySession(sessionId);
   };
 
   /**
    * Clone the session and navigate to cloned session for play
    * This preserves the original session as a "template" and creates a play session
    */
+  /**
+   * Clone the session and navigate to cloned session for play
+   * This preserves the original session as a "template" and creates a play session
+   */
   const cloneAndPlaySession = useCallback(
-    async (sessionId: string, personaResult: PersonaResult | null) => {
+    async (sessionId: string) => {
       const item = sessions.find((s) => s.session.id.toString() === sessionId);
       if (!item) return;
 
@@ -221,50 +207,24 @@ export function SessionsGrid({
         }
 
         const clonedSession = clonedSessionOrError.getValue();
-        const clonedSessionId = clonedSession.id;
 
-        // Handle persona selection
-        let userCharacterCardId: UniqueEntityID | undefined;
-        let updatedAllCards = clonedSession.props.allCards;
+        // Remove the original user character from allCards
+        // The user will select a persona in the chat page
         const originalUserCardId = clonedSession.props.userCharacterCardId;
+        let updatedAllCards = clonedSession.props.allCards;
 
-        if (personaResult?.type === "existing" && personaResult.characterId) {
-          // Clone the persona card into the session
-          const personaCloneResult = await CardService.cloneCard.execute({
-            cardId: new UniqueEntityID(personaResult.characterId),
-            sessionId: clonedSessionId,
-          });
-
-          if (personaCloneResult.isFailure) {
-            throw new Error("Could not copy persona for session.");
-          }
-
-          const clonedPersona = personaCloneResult.getValue();
-          userCharacterCardId = clonedPersona.id;
-
-          // Remove the original user character from allCards and add the new persona
-          // This replaces the user character instead of converting it to AI
-          updatedAllCards = clonedSession.props.allCards.filter(
-            (card) => !originalUserCardId || !card.id.equals(originalUserCardId)
-          );
-          updatedAllCards.push({
-            id: clonedPersona.id,
-            type: CardType.Character,
-            enabled: true,
-          });
-        } else if (originalUserCardId) {
-          // No persona selected - remove the original user character from allCards
+        if (originalUserCardId) {
           updatedAllCards = clonedSession.props.allCards.filter(
             (card) => !card.id.equals(originalUserCardId)
           );
         }
 
-        // Set isPlaySession: true, fix title, and update userCharacterCardId
+        // Set isPlaySession: true, fix title, and clear userCharacterCardId
         const originalTitle = item.session.props.title;
         clonedSession.update({
           isPlaySession: true,
           title: originalTitle, // Use original title, not "Copy of..."
-          userCharacterCardId,
+          userCharacterCardId: originalUserCardId, // Keep it so ChatPage prompts for persona as suggestion
           allCards: updatedAllCards,
         });
 
@@ -309,19 +269,7 @@ export function SessionsGrid({
     [sessions, queryClient, selectSession, navigate],
   );
 
-  /**
-   * Handle persona selection confirmation
-   */
-  const handlePersonaConfirm = useCallback(
-    (personaResult: PersonaResult | null) => {
-      if (pendingSessionId) {
-        cloneAndPlaySession(pendingSessionId, personaResult);
-        setPendingSessionId(null);
-        setSuggestedPersonaId(undefined);
-      }
-    },
-    [pendingSessionId, cloneAndPlaySession],
-  );
+
 
   return (
     <>
@@ -383,14 +331,7 @@ export function SessionsGrid({
         confirmVariant="destructive"
       />
 
-      {/* Persona Selection Dialog */}
-      <PersonaSelectionDialog
-        open={isPersonaDialogOpen}
-        onOpenChange={setIsPersonaDialogOpen}
-        onConfirm={handlePersonaConfirm}
-        allowSkip={true}
-        suggestedPersonaId={suggestedPersonaId}
-      />
+
     </>
   );
 }

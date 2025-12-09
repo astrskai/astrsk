@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Route } from "@/routes/_layout/sessions/$sessionId";
@@ -24,11 +24,10 @@ import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { AutoReply } from "@/shared/stores/session-store";
 import { useSaveSession } from "@/entities/session/api/mutations";
+import { PersonaSelectionDialog, type PersonaResult } from "@/features/character/ui/persona-selection-dialog";
+import { useSessionConfig } from "@/shared/hooks/use-session-config";
 
 export default function ChatPage() {
-  const [isOpenSessionDataSidebar, setIsOpenSessionDataSidebar] =
-    useState<boolean>(false);
-  const [isOpenSettings, setIsOpenSettings] = useState<boolean>(false);
 
   const saveSessionMutation = useSaveSession();
 
@@ -38,6 +37,46 @@ export default function ChatPage() {
   const { data: session, isLoading } = useQuery(
     sessionQueries.detail(sessionIdEntity),
   );
+
+  // Handle persona selection/creation
+  // Note: This only updates the session object; actual save happens in useSessionConfig hook
+  const handlePersonaConfirm = useCallback(
+    (result: PersonaResult | null | undefined) => {
+      if (!session) return;
+
+      // Handle undefined (dialog closed without action - clicking outside, ESC key, etc.)
+      if (result === undefined) {
+        return; // Do nothing, keep existing persona
+      }
+
+      if (result === null) {
+        // User clicked "Skip" or "No Persona" - remove user character
+        session.update({
+          userCharacterCardId: undefined,
+        });
+      } else if (result.type === "existing" && result.characterId) {
+        // User selected existing character
+        session.update({
+          userCharacterCardId: new UniqueEntityID(result.characterId),
+        });
+      }
+      // Note: result.type === "new" means create new persona (handled by PersonaSelectionDialog itself)
+    },
+    [session],
+  );
+
+  // Session config hook - manages persona dialog and panel states
+  const {
+    isPersonaDialogOpen,
+    handlePersonaDialogClose,
+    isSettingsPanelOpen,
+    isDataPanelOpen,
+    toggleSettingsPanel,
+    toggleDataPanel,
+  } = useSessionConfig({
+    session: session ?? null,
+    onPersonaConfirm: handlePersonaConfirm,
+  });
 
   const { data: flow } = useQuery(
     flowQueries.detail(session?.flowId?.toString() ?? ""),
@@ -165,6 +204,17 @@ export default function ChatPage() {
     saveSessionMutation.isPending,
   ]);
 
+  // Wrapper function to convert toggle to the expected (isOpen: boolean) => void signature
+  const handleDataPanelToggle = useCallback(
+    (isOpen: boolean) => {
+      // Only toggle if current state differs from desired state
+      if (isDataPanelOpen !== isOpen) {
+        toggleDataPanel();
+      }
+    },
+    [isDataPanelOpen, toggleDataPanel],
+  );
+
   return isLoading ? (
     <Loading />
   ) : session ? (
@@ -204,14 +254,14 @@ export default function ChatPage() {
 
       <SessionHeader
         title={session.title ?? "Session"}
-        onSettingsClick={() => setIsOpenSettings(true)}
+        onSettingsClick={toggleSettingsPanel}
       />
 
       <div className="relative flex flex-1 overflow-hidden">
         <SessionDataSidebar
           session={session}
-          isOpen={isOpenSessionDataSidebar}
-          onToggle={() => setIsOpenSessionDataSidebar((prev) => !prev)}
+          isOpen={isDataPanelOpen}
+          onToggle={toggleDataPanel}
           sortedDataSchemaFields={sortedDataSchemaFields}
           isInitialDataStore={isInitialDataStore}
           lastTurnDataStore={lastTurnDataStore}
@@ -220,17 +270,33 @@ export default function ChatPage() {
 
         <ChatMainArea
           data={session}
-          isOpenStats={isOpenSessionDataSidebar}
-          onOpenStats={setIsOpenSessionDataSidebar}
+          isOpenStats={isDataPanelOpen}
+          onOpenStats={handleDataPanelToggle}
           onAutoReply={handleAutoReplyClick}
+          isPersonaDialogOpen={isPersonaDialogOpen}
         />
       </div>
 
       <SessionSettingsSidebar
         session={session}
-        isOpen={isOpenSettings}
+        isOpen={isSettingsPanelOpen}
         onAutoReply={handleAutoReplyClick}
-        onClose={() => setIsOpenSettings(false)}
+        onClose={toggleSettingsPanel}
+      />
+
+      <PersonaSelectionDialog
+        open={isPersonaDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handlePersonaDialogClose();
+          }
+        }}
+        onConfirm={(result) => {
+          handlePersonaDialogClose(result);
+        }}
+        allowSkip={true}
+        suggestedPersonaId={session.props.userCharacterCardId?.toString()}
+        closeOnOverlayClick={false}
       />
     </div>
   ) : (

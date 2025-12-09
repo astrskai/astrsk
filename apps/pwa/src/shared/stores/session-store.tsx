@@ -112,6 +112,8 @@ interface SessionState {
   setCreateSessionName: (name: string) => void;
 
   // Panel visibility per session (keyed by sessionId)
+  // NOTE: These are kept for backward compatibility with legacy pages (detail.tsx, session-content.tsx)
+  // New code should use session.config instead (see use-session-config hook)
   settingsPanelOpen: Record<string, boolean>;
   dataPanelOpen: Record<string, boolean>;
   setSettingsPanelOpen: (sessionId: string, open: boolean) => void;
@@ -158,7 +160,7 @@ const useSessionStoreBase = create<SessionState>()(
           state.createSessionName = name;
         }),
 
-      // Panel visibility per session
+      // Panel visibility per session (backward compatibility)
       settingsPanelOpen: {},
       dataPanelOpen: {},
       setSettingsPanelOpen: (sessionId: string, open: boolean) =>

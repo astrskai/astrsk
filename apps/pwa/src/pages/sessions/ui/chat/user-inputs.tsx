@@ -280,10 +280,10 @@ const UserInputAutoReplyButton = ({
         )}
       >
         {autoReply === AutoReply.Off ? "Auto-reply off" : "Auto-reply on"}
-        <div className="mt-1 min-h-[15px] font-[400]">
+        {/* <div className="mt-1 min-h-[15px] font-[400]">
           {autoReply === AutoReply.Random && "Random character"}
           {autoReply === AutoReply.Rotate && "All characters"}
-        </div>
+        </div> */}
       </div>
     </div>
   );

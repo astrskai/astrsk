@@ -561,7 +561,7 @@ const CharacterDetailPage = () => {
 
           {lorebookEntries.length === 0 ? (
             <p className="text-sm text-neutral-400">
-              No lorebook entries yet.
+              No lorebook entries
             </p>
           ) : (
             <AccordionBase

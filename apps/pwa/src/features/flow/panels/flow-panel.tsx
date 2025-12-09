@@ -1760,8 +1760,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           )}
 
           {/* Save as workflow and Download buttons */}
-          <div className="flex flex-row items-center gap-2">
-            {/* Save as workflow - only shown for session-local flows */}
+          {/* <div className="flex flex-row items-center gap-2">
             {isSessionLocal && (
               <ButtonPill
                 size="default"
@@ -1773,7 +1772,6 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 {isCopyingAsGlobal ? "Saving..." : "Save as workflow"}
               </ButtonPill>
             )}
-            {/* Download - only shown for global flows */}
             {!isSessionLocal && (
               <ButtonPill
                 size="default"
@@ -1785,7 +1783,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                 {isDownloading ? "Downloading..." : "Download"}
               </ButtonPill>
             )}
-          </div>
+          </div> */}
         </div>
 
         {/* Flow panel buttons - new layout */}
