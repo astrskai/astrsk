@@ -6,7 +6,7 @@
     }
   },
   "installCommand": "pnpm --filter pwa... install --frozen-lockfile",
-  "buildCommand": "cd apps/pwa && pnpm run build",
+  "buildCommand": "pnpm --filter @astrsk/design-system build && cd apps/pwa && pnpm run build",
   "outputDirectory": "apps/pwa/dist",
   "rewrites": [
     {
