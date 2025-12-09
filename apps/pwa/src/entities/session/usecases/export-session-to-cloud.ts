@@ -15,6 +15,7 @@ import { PrepareSessionCloudData } from './prepare-session-cloud-data';
 import { CloneSession } from './clone-session';
 import { DeleteSession } from './delete-session';
 import { LoadAssetRepo } from '@/entities/asset/repos/load-asset-repo';
+import { getDefaultBackground } from '@/entities/background/api/query-factory';
 
 interface Command {
   sessionId: UniqueEntityID;
@@ -77,19 +78,29 @@ export class ExportSessionToCloud
 
       // 3a. Upload session assets (background, cover) - no session_id FK yet
       if (bundle.session.background_id) {
-        const backgroundAsset = await this.loadAssetRepo.getAssetById(
-          new UniqueEntityID(bundle.session.background_id)
-        );
-        if (backgroundAsset.isSuccess) {
-          const uploadResult = await uploadAssetToSupabase(backgroundAsset.getValue());
-          if (uploadResult.isFailure) {
-            return Result.fail<ShareLinkResult>(
-              `Failed to upload background asset: ${uploadResult.getError()}`
-            );
-          }
+        // Check if it's a default background (astrsk-provided)
+        const defaultBackground = getDefaultBackground(new UniqueEntityID(bundle.session.background_id));
+
+        if (defaultBackground) {
+          // Default backgrounds are CDN references, no need to upload assets
+          // The background_id in the session already contains the default background ID
+          console.log(`[EXPORT] Skipping default background upload: ${bundle.session.background_id}`);
         } else {
-          // Asset not found locally - clear the reference so session can be uploaded
-          bundle.session.background_id = null;
+          // User-uploaded background: Upload the asset
+          const backgroundAsset = await this.loadAssetRepo.getAssetById(
+            new UniqueEntityID(bundle.session.background_id)
+          );
+          if (backgroundAsset.isSuccess) {
+            const uploadResult = await uploadAssetToSupabase(backgroundAsset.getValue());
+            if (uploadResult.isFailure) {
+              return Result.fail<ShareLinkResult>(
+                `Failed to upload background asset: ${uploadResult.getError()}`
+              );
+            }
+          } else {
+            // Asset not found locally - clear the reference so session can be uploaded
+            bundle.session.background_id = null;
+          }
         }
       }
       if (bundle.session.cover_id) {

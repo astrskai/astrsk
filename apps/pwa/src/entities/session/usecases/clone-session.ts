@@ -13,6 +13,7 @@ import { CloneCard } from "@/entities/card/usecases/clone-card";
 import { CloneFlow } from "@/entities/flow/usecases/clone-flow";
 import { CloneAsset } from "@/entities/asset/usecases/clone-asset";
 import { CloneBackground } from "@/entities/background/usecases/clone-background";
+import { getDefaultBackground } from "@/entities/background/api/query-factory";
 
 type Command = {
   sessionId: UniqueEntityID;
@@ -206,38 +207,55 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
       );
     }
 
-    // Clone background AFTER session is saved
+    // Clone background AFTER session is saved (unless it's a default background)
     if (originalSession.props.backgroundId) {
-      if (!this.cloneBackground) {
-        return formatFail(
-          "Cannot clone resources",
-          "CloneBackground dependency not provided",
-        );
-      }
+      // Check if it's a default background (astrsk-provided)
+      const defaultBackground = getDefaultBackground(originalSession.props.backgroundId);
 
-      const clonedBackgroundResult = await this.cloneBackground.execute({
-        backgroundId: originalSession.props.backgroundId,
-        sessionId: newSessionId, // Now session exists in DB
-      });
+      if (defaultBackground) {
+        // Default backgrounds are just CDN references, reuse the same ID
+        clonedSession.update({ backgroundId: originalSession.props.backgroundId });
 
-      if (clonedBackgroundResult.isFailure) {
-        return formatFail(
-          "Failed to clone background",
-          clonedBackgroundResult.getError(),
-        );
-      }
+        const updateSessionResult = await this.saveSessionRepo.saveSession(clonedSession);
+        if (updateSessionResult.isFailure) {
+          return formatFail(
+            "Failed to update session with background",
+            updateSessionResult.getError(),
+          );
+        }
+      } else {
+        // User-uploaded background, needs to be cloned
+        if (!this.cloneBackground) {
+          return formatFail(
+            "Cannot clone resources",
+            "CloneBackground dependency not provided",
+          );
+        }
 
-      const clonedBackgroundId = clonedBackgroundResult.getValue().id.toString();
+        const clonedBackgroundResult = await this.cloneBackground.execute({
+          backgroundId: originalSession.props.backgroundId,
+          sessionId: newSessionId, // Now session exists in DB
+        });
 
-      // Update session with cloned background ID
-      clonedSession.update({ backgroundId: new UniqueEntityID(clonedBackgroundId) });
+        if (clonedBackgroundResult.isFailure) {
+          return formatFail(
+            "Failed to clone background",
+            clonedBackgroundResult.getError(),
+          );
+        }
 
-      const updateSessionResult = await this.saveSessionRepo.saveSession(clonedSession);
-      if (updateSessionResult.isFailure) {
-        return formatFail(
-          "Failed to update session with background",
-          updateSessionResult.getError(),
-        );
+        const clonedBackgroundId = clonedBackgroundResult.getValue().id.toString();
+
+        // Update session with cloned background ID
+        clonedSession.update({ backgroundId: new UniqueEntityID(clonedBackgroundId) });
+
+        const updateSessionResult = await this.saveSessionRepo.saveSession(clonedSession);
+        if (updateSessionResult.isFailure) {
+          return formatFail(
+            "Failed to update session with background",
+            updateSessionResult.getError(),
+          );
+        }
       }
     }
 

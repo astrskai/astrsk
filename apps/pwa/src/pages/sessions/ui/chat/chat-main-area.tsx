@@ -46,7 +46,6 @@ interface ChatMainAreaProps {
   onAutoReply: () => void;
   isOpenStats: boolean;
   onOpenStats: (isOpen: boolean) => void;
-  isPersonaDialogOpen?: boolean;
 }
 
 export default function ChatMainArea({
@@ -54,7 +53,6 @@ export default function ChatMainArea({
   onAutoReply,
   isOpenStats,
   onOpenStats,
-  isPersonaDialogOpen = false,
 }: ChatMainAreaProps) {
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState<boolean>(false);
@@ -685,13 +683,6 @@ export default function ChatMainArea({
       return;
     }
 
-    // IMPORTANT: Don't show scenario dialog while persona dialog is open
-    // Wait for persona dialog to close first (sequential display)
-    if (isPersonaDialogOpen) {
-      setIsOpenSelectScenarioModal(false);
-      return;
-    }
-
     // Check if user already skipped for this session (localStorage - 24h TTL)
     if (hasSkippedScenarioDialog(sessionId)) {
       setIsOpenSelectScenarioModal(false);
@@ -710,7 +701,7 @@ export default function ChatMainArea({
 
     // Show select scenario modal
     setIsOpenSelectScenarioModal(true);
-  }, [scenarioCardFirstMessageCount, messageCount, data?.id, data?.props.config?.hasSeenScenarioDialog, hasSkippedScenarioDialog, isPersonaDialogOpen]);
+  }, [scenarioCardFirstMessageCount, messageCount, data?.id, data?.props.config?.hasSeenScenarioDialog, hasSkippedScenarioDialog]);
 
   return (
     <div className="flex h-dvh flex-1 flex-col justify-end pt-12 md:justify-center">
