@@ -1,690 +1,782 @@
-import { Loader2, Upload, Pencil, Check, X } from "lucide-react";
 import {
-  forwardRef,
   MutableRefObject,
   useCallback,
-  useEffect,
   useRef,
   useState,
+  useMemo,
+  useId,
 } from "react";
-import { toastError } from "@/shared/ui/toast";
-
-import { downloadFile, logger } from "@/shared/lib";
-import { languagesLabelMap } from "@/shared/lib/translate-utils";
-import { UniqueEntityID } from "@/shared/domain";
-
-import { useFlow } from "@/shared/hooks/use-flow";
-import { useSession } from "@/shared/hooks/use-session";
-import { useAutoSaveSession } from "@/shared/hooks/use-auto-save-session";
-import { SessionService } from "@/app/services/session-service";
-import { useAppStore } from "@/shared/stores/app-store";
-import { useSessionStore } from "@/shared/stores/session-store";
-import { useValidationStore } from "@/shared/stores/validation-store";
+import { Plus, Trash2, ArrowLeft, FileUp, Image, Pencil, Check, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/shared/lib";
+import { useSession } from "@/shared/hooks/use-session";
+import { useFlow } from "@/shared/hooks/use-flow";
+import { useCard } from "@/shared/hooks/use-card";
+import { useSessionSettingsHandlers } from "@/shared/hooks/use-session-settings-handlers";
+import { useSessionStore } from "@/shared/stores/session-store";
+import { UniqueEntityID } from "@/shared/domain";
+import { fetchSession, useSaveSession } from "@/entities/session/api";
 import { CardTab } from "@/features/session/create-session/step-cards";
-import {
-  EditBackground,
-  SelectedBackground,
-} from "./edit/edit-background";
-import {
-  CardListItem,
-  EditCards,
-  EmptyCard,
-} from "./edit/edit-cards";
-import {
-  ColorTable,
-  EditChatStyling,
-} from "./edit/edit-chat-styling";
-import {
-  AgentListItem,
-  EditFlowAndAgents,
-  EmptyFlow,
-} from "./edit/edit-flow-and-agents";
-import { EditLanguage } from "./edit/edit-language";
+import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/shared/ui";
+import { DialogBase } from "@/shared/ui/dialogs/base";
+import CharacterCardUI from "@/features/character/ui/character-card";
+import { CharacterCard } from "@/entities/card/domain/character-card";
+import { useAsset } from "@/shared/hooks/use-asset";
+import { useQuery } from "@tanstack/react-query";
+import { backgroundQueries, getDefaultBackground, getBackgroundAssetId } from "@/entities/background/api";
+import { AssetService } from "@/app/services/asset-service";
+import { toastError, toastSuccess } from "@/shared/ui/toast";
+import BackgroundGrid from "./settings/background-grid";
+import MessageStyling from "./settings/message-styling";
+import { IconWorkflow } from "@/shared/assets";
 
-import {
-  SvgIcon,
-  Carousel,
-  CarouselContent,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/shared/ui";
+interface SessionSettingsProps {
+  actionButton?: React.ReactNode;
+  setIsOpenSettings: (open: boolean) => void;
+  refEditCards: React.RefObject<HTMLDivElement>;
+  refInitCardTab: MutableRefObject<CardTab>;
+  isSettingsOpen: boolean;
+}
 
-import { SessionProps } from "@/entities/session/domain/session";
-
-const Section = forwardRef<
-  HTMLDivElement,
-  React.ComponentPropsWithoutRef<"div"> & {
-    title: string;
-    subtitle?: string;
-    colSpan?: number;
-    children?: React.ReactNode;
-    className?: string;
-    fill?: boolean;
-    error?: boolean;
-    onboarding?: boolean;
-  }
->(
-  (
-    { title, subtitle, children, className, fill, error, onboarding, ...props },
-    ref,
-  ) => {
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          "group/section bg-surface-overlay relative cursor-pointer rounded-[8px]",
-          "transition-all duration-200 ease-in-out",
-          "border-border-muted hover:border-text-primary hover:ring-text-primary border hover:ring",
-          onboarding &&
-            "border-accent-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
-          className,
-        )}
-        {...props}
-      >
-        <div className={cn(
-          "flex flex-row items-center justify-between pb-0",
-          "p-[16px]",
-          "max-md:p-[12px]",
-        )}>
-          <div className="flex flex-row gap-[16px]">
-            <div className={cn(
-              "text-fg-default font-[600] break-words",
-              "text-[20px] leading-[24px]",
-              "max-md:text-[18px] max-md:leading-[22px]",
-            )}>
-              {title}
-            </div>
-            {subtitle && (
-              <div className={cn(
-                "text-fg-default font-[500]",
-                "text-[20px] leading-[24px]",
-                "max-md:text-[18px] max-md:leading-[22px]",
-              )}>
-                {subtitle}
-              </div>
-            )}
-          </div>
-          <div
-            className={cn(
-              "opacity-0 transition-opacity duration-200 ease-in-out group-hover/section:opacity-100",
-              onboarding && "opacity-100",
-            )}
-          >
-            <SvgIcon name="edit" size={24} />
-          </div>
-        </div>
-        <div className={cn(
-          !fill && "m-[16px]",
-          !fill && "max-md:m-[12px]",
-          className
-        )}>{children}</div>
-        {error && (
-          <div
-            className={cn(
-              "pointer-events-none absolute inset-[-1px] rounded-[8px]",
-              "inset-ring-status-error inset-ring-2",
-            )}
-          />
-        )}
+/**
+ * Section wrapper matching HTML example styling
+ */
+const Section = ({
+  title,
+  children,
+  className,
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div
+      className={cn(
+        "bg-surface-raised rounded-xl border border-border-muted p-6",
+        className
+      )}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-fg-default">{title}</h3>
       </div>
-    );
-  },
-);
-Section.displayName = "Section";
+      {children}
+    </div>
+  );
+};
 
 const SectionCarousel = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Carousel>
-      <CarouselContent className={cn(
-        "mr-4 ml-0",
-        "max-md:mr-2 max-md:ml-0",
-      )}>{children}</CarouselContent>
+      <CarouselContent className="mr-4 ml-0 max-md:mr-2 max-md:ml-0 gap-4">
+        {children}
+      </CarouselContent>
       <CarouselPrevious
-        className={cn(
-          "bg-surface-raised border-border-muted border disabled:hidden",
-          "left-4",
-          "max-md:left-2 max-md:h-8 max-md:w-8",
-        )}
+        className="bg-surface-raised border-border-muted border disabled:hidden left-4 max-md:left-2 max-md:h-8 max-md:w-8"
         variant="ghost_white"
       />
       <CarouselNext
-        className={cn(
-          "bg-surface-raised border-border-muted border disabled:hidden",
-          "right-4",
-          "max-md:right-2 max-md:h-8 max-md:w-8",
-        )}
+        className="bg-surface-raised border-border-muted border disabled:hidden right-4 max-md:right-2 max-md:h-8 max-md:w-8"
         variant="ghost_white"
       />
     </Carousel>
   );
 };
 
-const SessionSettings = ({
-  setIsOpenSettings,
-  refEditCards,
-  refInitCardTab,
-  isSettingsOpen,
-  actionButton,
+/**
+ * Character Card Content (used in both grid and carousel)
+ */
+const CharacterCardContent = ({
+  cardId,
+  onDelete,
+  onAdd,
+  isEmpty = false,
+  label,
 }: {
-  setIsOpenSettings: (open: boolean) => void;
-  refEditCards: React.RefObject<HTMLDivElement>;
-  refInitCardTab: MutableRefObject<CardTab>;
-  isSettingsOpen: boolean;
-  actionButton?: React.ReactNode;
+  cardId?: UniqueEntityID;
+  onDelete?: () => void;
+  onAdd?: () => void;
+  isEmpty?: boolean;
+  label?: string;
 }) => {
-  const { activePage } = useAppStore();
-  const { selectedSessionId } = useSessionStore();
+  const [isHovered, setIsHovered] = useState(false);
+  const [card] = useCard(cardId);
+  const [iconUrl] = useAsset(card?.props?.iconAssetId);
+  const navigate = useNavigate();
 
-  // Session onboarding
-  const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
-  const setSessionOnboardingStep = useAppStore.use.setSessionOnboardingStep();
-  const shouldShowResourceManagementTooltip =
-    !sessionOnboardingSteps.sessionEdit;
-  const [showSectionAnimation, setShowSectionAnimation] = useState(false);
-
-  // Detect if there's enough space for the tooltip on the left
-  const [hasSpaceForTooltip, setHasSpaceForTooltip] = useState(false);
-  useEffect(() => {
-    const checkSpace = () => {
-      // Check if viewport is wide enough (need at least 1364px for 1024px container + 340px tooltip)
-      setHasSpaceForTooltip(window.innerWidth >= 1464);
-    };
-    checkSpace();
-    window.addEventListener("resize", checkSpace);
-    return () => window.removeEventListener("resize", checkSpace);
-  }, []);
-
-  // Derive tooltip visibility directly from onboarding state (no useState needed!)
-  const showResourceTooltip = shouldShowResourceManagementTooltip;
-
-  // Handle completing the session edit onboarding step
-  const handleResourceManagementGotIt = useCallback(() => {
-    // Complete the onboarding step (this will hide the tooltip automatically)
-    setSessionOnboardingStep("sessionEdit", true);
-
-    // Trigger animation on "Got it!" press
-    setShowSectionAnimation(true);
-    setTimeout(() => {
-      setShowSectionAnimation(false);
-    }, 1500);
-  }, [setSessionOnboardingStep, setIsOpenSettings]);
-
-  const [session, invalidateSession] = useSession(selectedSessionId);
-  const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
-
-  // Auto-save functionality
-  const { autoSave } = useAutoSaveSession({
-    session: session ?? null,
-    debounceMs: 0,
-  });
-
-  // Title editing state
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedTitle, setEditedTitle] = useState("");
-
-  // Update session with auto-save
-  const updateSession = useCallback(
-    async (props: Partial<SessionProps>) => {
-      await autoSave(props, true); // Skip toast for auto-save
-    },
-    [autoSave],
-  );
-
-  // Export session
-  const [isOpenExport, setIsOpenExport] = useState(false);
-  const [includeHistory, setIncludeHistory] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const exportSession = useCallback(async () => {
-    // Check session is null
-    if (!session) {
-      return;
-    }
-
-    try {
-      // Start export
-      setIsExporting(true);
-
-      // Export session to file
-      const fileOrError = await SessionService.exportSessionToFile.execute({
-        sessionId: session.id,
-        includeHistory: includeHistory,
+  const handleCardClick = useCallback(() => {
+    if (cardId && !isEmpty) {
+      navigate({
+        to: "/assets/characters/{-$characterId}",
+        params: { characterId: cardId.toString() },
+        search: { mode: "edit" as const },
       });
-      if (fileOrError.isFailure) {
-        throw new Error(fileOrError.getError());
-      }
-      const file = fileOrError.getValue();
-
-      // Download session file
-      downloadFile(file);
-
-      // Close dialog
-      setIsOpenExport(false);
-      setIncludeHistory(false);
-    } catch (error) {
-      logger.error(error);
-      if (error instanceof Error) {
-        toastError("Failed to export session", {
-          description: error.message,
-        });
-      }
-    } finally {
-      // End export
-      setIsExporting(false);
     }
-  }, [includeHistory, session]);
+  }, [cardId, isEmpty, navigate]);
 
-  // Title editing handlers
-  const handleSaveTitle = useCallback(async () => {
-    if (!session || editedTitle === session.title) {
-      setIsEditingTitle(false);
-      return;
-    }
+  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete?.();
+  }, [onDelete]);
 
-    try {
-      await updateSession({
-        title: editedTitle,
-      });
-      setIsEditingTitle(false);
-    } catch (error) {
-      console.error("Error saving session title:", error);
-      toastError("Failed to save session title");
-    }
-  }, [session, editedTitle, updateSession]);
+  const handleAddClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAdd?.();
+  }, [onAdd]);
 
-  const handleCancelEdit = useCallback(() => {
-    setIsEditingTitle(false);
-    setEditedTitle("");
-  }, []);
-
-  // Validate session settings
-  const refEditFlowAndAgents = useRef<HTMLDivElement>(null);
-  const { invalids } = useValidationStore();
-  const isFlowInvalid = session?.flowId
-    ? (invalids.get("flows")?.[session.flowId.toString()] ?? false)
-    : false;
-  /*
-  const validateSessionSettings = useCallback(() => {
-    // Check active page is
-    if (activePage !== Page.Sessions) {
-      return;
-    }
-
-    // Check session is null
-    if (!session) {
-      return;
-    }
-
-    // Validate flow
-    if (!isLoadingFlow && !flow) {
-      showBanner({
-        title: "Flow not found",
-        description: "Please select a flow.",
-        actionLabel: "Go to select",
-        onAction: () => {
-          setIsOpenSettings(true);
-          refEditFlowAndAgents.current?.click();
-        },
-      });
-      return;
-    }
-  }, [activePage, flow, isLoadingFlow, session, setIsOpenSettings]);
-  useEffect(() => {
-    validateSessionSettings();
-  }, [validateSessionSettings, selectedSessionId]);
-  */
-
-  if (!session) {
-    return null;
-  }
-
-  return (
-    <div
-      className={cn(
-        "relative mx-auto flex w-full flex-col rounded-[16px] bg-surface-raised",
-        // Desktop: margin, max-width, padding
-        "my-[80px] max-w-[1024px] p-[16px]",
-        // Mobile: no margin, full width, smaller padding
-        "max-md:my-0 max-md:rounded-none max-md:p-[12px]",
-        shouldShowResourceManagementTooltip &&
-          "border-accent-primary border-1 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
-      )}
-    >
-      <div className={cn(
-        "flex flex-col justify-end space-y-0",
-        "gap-[16px]",
-        "max-md:gap-[12px]",
-      )}>
-        <div className={cn(
-          "flex justify-between",
-          // Desktop: horizontal
-          "flex-row",
-          // Mobile: vertical
-          "max-md:flex-col max-md:items-start max-md:gap-[8px]",
-        )}>
-          <div className={cn(
-            "flex items-center",
-            // Desktop: horizontal
-            "flex-row gap-[16px] pr-[16px]",
-            // Mobile: vertical, full width
-            "max-md:flex-col max-md:items-start max-md:gap-[8px] max-md:pr-0 max-md:w-full",
-          )}>
-            <div className={cn(
-              "text-fg-muted font-[600]",
-              "text-[16px] leading-[25.6px]",
-              "max-md:text-[14px] max-md:leading-[20px]",
-            )}>
-              Session
-            </div>
-            {actionButton && (
-              <div className="ml-4">
-                {actionButton}
-              </div>
-            )}
-            {isEditingTitle ? (
-              <div className={cn(
-                "flex items-center",
-                // Desktop: horizontal
-                "flex-row gap-[8px]",
-                // Mobile: vertical, full width
-                "max-md:flex-col max-md:items-stretch max-md:gap-[8px] max-md:w-full",
-              )}>
-                <input
-                  type="text"
-                  value={editedTitle}
-                  onChange={(e) => setEditedTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSaveTitle();
-                    if (e.key === "Escape") handleCancelEdit();
-                  }}
-                  className={cn(
-                    "text-fg-default border-text-primary border-b bg-transparent font-[400] outline-none",
-                    // Desktop: larger size
-                    "text-[16px] leading-[25.6px] max-w-[820px] min-w-[200px]",
-                    // Mobile: smaller size and full width
-                    "max-md:text-[14px] max-md:leading-[20px] max-md:max-w-full max-md:min-w-0 max-md:w-full",
-                  )}
-                  autoFocus
-                />
-                <div className={cn(
-                  "flex flex-row gap-[8px]",
-                  "max-md:justify-end",
-                )}>
-                  <button
-                    onClick={handleSaveTitle}
-                    className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"
-                  >
-                    <Check className="text-status-success h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className={cn(
-                "flex items-center",
-                // Desktop: horizontal
-                "flex-row gap-[8px]",
-                // Mobile: horizontal but with full width title
-                "max-md:w-full max-md:gap-[8px]",
-              )}>
-                <div className={cn(
-                  "text-fg-default truncate font-[400]",
-                  // Desktop: max-w
-                  "max-w-[870px] text-[16px] leading-[25.6px]",
-                  // Mobile: smaller text, full width
-                  "max-md:flex-1 max-md:text-[14px] max-md:leading-[20px]",
-                )}>
-                  {session.title}
-                </div>
-                <button
-                  onClick={() => {
-                    setEditedTitle(session.title || "");
-                    setIsEditingTitle(true);
-                  }}
-                  className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"
-                >
-                  <Pencil className="text-fg-subtle hover:text-fg-default h-4 w-4 transition-colors" />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        <EditCards
-          refInitCardTab={refInitCardTab}
-          defaultValue={{
-            userCharacterCardId: session.userCharacterCardId ?? null,
-            aiCharacterCardIds: session.aiCharacterCardIds,
-            plotCardId: session.plotCard?.id ?? null,
-          }}
-          onSave={async (newValue) => {
-            await updateSession(newValue);
-          }}
-          trigger={
-            <Section
-              ref={refEditCards}
-              title="Cards"
-              className=""
-              error={session?.aiCharacterCardIds.length === 0}
-              onboarding={showSectionAnimation}
-              fill
-            >
-              <SectionCarousel>
-                {session?.plotCard && (
-                  <CardListItem
-                    label="Plot"
-                    separator
-                    cardId={session.plotCard.id}
-                  />
-                )}
-                {session?.userCharacterCardId && (
-                  <CardListItem
-                    label="User character"
-                    separator
-                    cardId={session?.userCharacterCardId}
-                  />
-                )}
-                {session?.aiCharacterCardIds.length > 0 ? (
-                  session?.aiCharacterCardIds.map(
-                    (cardId: UniqueEntityID, index: number) => (
-                      <CardListItem
-                        key={cardId.toString()}
-                        cardId={cardId}
-                        {...(index === 0 && { label: "AI character" })}
-                      />
-                    ),
-                  )
-                ) : (
-                  <EmptyCard
-                    label="AI character"
-                    description={
-                      <>
-                        Add at least one AI
-                        <br />
-                        character to continue
-                      </>
-                    }
-                  />
-                )}
-              </SectionCarousel>
-            </Section>
-          }
+  // Empty state - "No persona" using CharacterCard component
+  if (isEmpty) {
+    return (
+      <div
+        className="relative w-full"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <CharacterCardUI
+          name="No persona"
+          imageUrl={null}
+          summary=""
+          tags={[]}
+          tokenCount={0}
+          className="w-full !min-h-[320px] !h-[320px]"
         />
-        <EditFlowAndAgents
-          defaultValue={{
-            flowId: session.props.flowId?.toString() ?? "",
-          }}
-          onSave={async (newValue) => {
-            await updateSession({
-              flowId: newValue.flowId,
-            });
-          }}
-          trigger={
-            <Section
-              ref={refEditFlowAndAgents}
-              title="Flow"
-              className="col-span-3"
-              subtitle={flow?.props.name}
-              error={!flow || isFlowInvalid}
-              onboarding={showSectionAnimation}
-              fill
-            >
-              <SectionCarousel>
-                {flow ? (
-                  flow.agentIds.map((agentId: UniqueEntityID) => (
-                    <AgentListItem key={agentId.toString()} agentId={agentId} />
-                  ))
-                ) : (
-                  <EmptyFlow />
-                )}
-              </SectionCarousel>
-            </Section>
-          }
-        />
-        <div className={cn(
-          "flex gap-[16px]",
-          // Desktop: horizontal
-          "flex-row",
-          // Mobile: vertical stack
-          "max-md:flex-col max-md:gap-[12px]",
-        )}>
-          <div className={cn(
-            "w-[30%]",
-            "max-md:w-full",
-          )}>
-            <EditLanguage
-              defaultValue={{
-                translation: session.translation!,
-              }}
-              onSave={async (newValue) => {
-                await updateSession(newValue);
-              }}
-              trigger={
-                <Section
-                  title="Language & Translation"
-                  className="h-full"
-                  onboarding={showSectionAnimation}
-                >
-                  <div className="w-full">
-                    <div className="flex flex-col gap-[16px]">
-                      <div className="flex flex-col gap-[8px]">
-                        <div className="text-fg-subtle text-[16px] leading-[19px] font-[400]">
-                          Displayed language
-                        </div>
-                        <div className="text-fg-default max-w-[150px] text-[16px] leading-[19px] font-[600]">
-                          {languagesLabelMap.get(
-                            session?.translation?.displayLanguage ?? "",
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-[8px]">
-                        <div className="text-fg-subtle text-[16px] leading-[19px] font-[400]">
-                          AI understanding language
-                        </div>
-                        <div className="text-fg-default max-w-[150px] text-[16px] leading-[19px] font-[600]">
-                          {languagesLabelMap.get(
-                            session?.translation?.promptLanguage ?? "",
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Section>
-              }
-            />
-          </div>
-          <div className={cn(
-            "w-[30%]",
-            "max-md:w-full",
-          )}>
-            <EditBackground
-              sessionId={session.id}
-              defaultValue={{
-                backgroundId: session?.backgroundId,
-              }}
-              onSave={async (newValue) => {
-                await updateSession(newValue);
-              }}
-              trigger={
-                <Section
-                  title="Background"
-                  className="h-full"
-                  onboarding={showSectionAnimation}
-                >
-                  <div className="max-w-full">
-                    <SelectedBackground backgroundId={session?.backgroundId} />
-                  </div>
-                </Section>
-              }
-            />
-          </div>
-          <div className={cn(
-            "w-[40%]",
-            "max-md:w-full",
-          )}>
-            <EditChatStyling
-              defaultValue={{
-                chatStyles: session.chatStyles!,
-              }}
-              onSave={async (newValue) => {
-                await updateSession(newValue);
-              }}
-              container={session.id.toString()}
-              backgroundId={session.backgroundId}
-              trigger={
-                <Section
-                  title="Message styling"
-                  className="h-full items-center"
-                  onboarding={showSectionAnimation}
-                >
-                  <ColorTable chatStyles={session?.chatStyles} />
-                </Section>
-              }
-              characterCardId={session.aiCharacterCardIds?.[0]}
-              userCharacterCardId={session.userCharacterCardId}
-            />
-          </div>
-        </div>
-      </div>
 
-      {/* Resource Management Tooltip */}
-      {showResourceTooltip && (
-        <div
-          className={cn(
-            "bg-surface-raised border-accent-primary absolute z-10 flex flex-col items-end justify-center gap-2 rounded-2xl border-1 px-4 py-3 shadow-[0px_0px_15px_-3px_rgba(152,215,249,1.00)]",
-            // Desktop: left side if space, inside top if no space
-            hasSpaceForTooltip
-              ? "top-4 left-[-340px] w-80 max-w-80"
-              : "top-4 right-4 left-4 w-80 max-w-80",
-            // Mobile: always inside at top with margins
-            "max-md:top-2 max-md:right-2 max-md:left-2 max-md:w-auto max-md:max-w-none",
-          )}
-        >
-          <div className="text-fg-default justify-start self-stretch text-sm leading-tight font-semibold">
-            Local resource management
+        {/* Label overlay */}
+        {label && (
+          <div className="absolute top-2 left-2 text-xs font-bold text-white uppercase tracking-wider bg-black/70 px-2 py-1 rounded z-10">
+            {label}
           </div>
-          <div className="text-fg-default justify-start self-stretch text-xs font-normal">
-            This area manages local resources specific to this session only.
-            Session-specific assets & tools.
-          </div>
-          <div className="inline-flex items-start justify-start gap-2">
+        )}
+
+        {/* Hover overlay with add button */}
+        {isHovered && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity rounded-lg z-10">
             <button
-              onClick={handleResourceManagementGotIt}
-              className="bg-emphasis hover:bg-hover inline-flex min-w-20 flex-col items-center justify-center gap-2 rounded-[20px] px-3 py-1.5 transition-colors"
+              onClick={handleAddClick}
+              className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform z-20"
             >
-              <div className="text-fg-on-emphasis justify-center text-xs font-semibold">
-                Got it
-              </div>
+              <Plus className="h-5 w-5" />
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+    );
+  }
+
+  // Character card with click navigation and delete button on top-right
+  return (
+    <div
+      className="relative w-full"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div
+        className="relative cursor-pointer"
+        onClick={handleCardClick}
+      >
+        <CharacterCardUI
+          name={card?.props?.title || card?.props?.name || "Loading..."}
+          imageUrl={iconUrl ?? null}
+          summary={card?.props?.description || ""}
+          tags={card?.props?.tags || []}
+          tokenCount={card?.props?.tokenCount ?? 0}
+          className="w-full !min-h-[320px] !h-[320px]"
+        />
+
+        {/* Label overlay */}
+        {label && (
+          <div className="absolute top-2 left-2 text-xs font-bold text-white uppercase tracking-wider bg-black/70 px-2 py-1 rounded z-10">
+            {label}
+          </div>
+        )}
+
+        {/* Delete button on top-right corner */}
+        {isHovered && onDelete && (
+          <button
+            onClick={handleDeleteClick}
+            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:scale-110 transition-transform z-20 shadow-lg"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
+      </div>
     </div>
   );
 };
 
-export { SessionSettings };
+/**
+ * Interactive Character Card for Carousel (wrapped in CarouselItem)
+ */
+const InteractiveCharacterCard = (props: {
+  cardId?: UniqueEntityID;
+  onDelete?: () => void;
+  onAdd?: () => void;
+  isEmpty?: boolean;
+  label?: string;
+}) => {
+  return (
+    <CarouselItem className="relative basis-1/5 py-6 pl-6 lg:basis-1/6 min-w-[220px]">
+      <div className="w-[220px]">
+        <CharacterCardContent {...props} />
+      </div>
+    </CarouselItem>
+  );
+};
+
+/**
+ * Interactive Character Card for Grid (no CarouselItem wrapper)
+ */
+const InteractiveCharacterCardGrid = (props: {
+  cardId?: UniqueEntityID;
+  onDelete?: () => void;
+  onAdd?: () => void;
+  isEmpty?: boolean;
+  label?: string;
+}) => {
+  return (
+    <div className="relative">
+      <CharacterCardContent {...props} />
+    </div>
+  );
+};
+
+/**
+ * Add Character Card Content (used in both grid and carousel)
+ */
+const AddCharacterCardContent = ({ onAdd }: { onAdd: () => void }) => {
+  return (
+    <button
+      onClick={onAdd}
+      className="flex flex-col items-center justify-start gap-2 group w-full"
+    >
+      <div className="w-full h-[320px] rounded-lg border-2 border-dashed border-border-muted bg-surface-raised hover:border-fg-muted hover:bg-surface-overlay transition-all flex items-center justify-center">
+        <Plus className="h-8 w-8 text-fg-subtle group-hover:text-fg-default transition-colors" />
+      </div>
+    </button>
+  );
+};
+
+/**
+ * Add Character Placeholder Card for Carousel
+ */
+const AddCharacterCard = ({ onAdd }: { onAdd: () => void }) => {
+  return (
+    <CarouselItem className="basis-1/5 py-6 pl-6 lg:basis-1/6 min-w-[220px]">
+      <div className="w-[220px]">
+        <AddCharacterCardContent onAdd={onAdd} />
+      </div>
+    </CarouselItem>
+  );
+};
+
+/**
+ * Add Character Placeholder Card for Grid
+ */
+const AddCharacterCardGrid = ({ onAdd }: { onAdd: () => void }) => {
+  return (
+    <div className="relative">
+      <AddCharacterCardContent onAdd={onAdd} />
+    </div>
+  );
+};
+
+/**
+ * Background Preview Component
+ */
+const BackgroundPreview = ({ backgroundId }: { backgroundId: UniqueEntityID | null | undefined }) => {
+  const defaultBg = backgroundId ? getDefaultBackground(backgroundId) : undefined;
+
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(backgroundId ?? undefined),
+    enabled: !!backgroundId && !defaultBg,
+  });
+
+  const [backgroundAsset] = useAsset(getBackgroundAssetId(background));
+
+  const backgroundImageSrc = useMemo(() => {
+    if (defaultBg) {
+      return defaultBg.src;
+    }
+    return backgroundAsset; // undefined or string
+  }, [defaultBg, backgroundAsset]);
+
+  if (!backgroundImageSrc) {
+    return null;
+  }
+
+  return (
+    <img
+      src={backgroundImageSrc}
+      alt="Background"
+      className="w-full h-full object-cover"
+    />
+  );
+};
+
+/**
+ * New SessionSettings layout matching the HTML example
+ * Display-only components with same visual style as Scenario section
+ */
+export const SessionSettings = ({
+  actionButton,
+  setIsOpenSettings,
+  refEditCards,
+  refInitCardTab,
+  isSettingsOpen,
+}: SessionSettingsProps) => {
+  const navigate = useNavigate();
+  const { selectedSessionId } = useSessionStore();
+  const [session] = useSession(selectedSessionId);
+  const { data: flow } = useFlow(session?.flowId);
+  const saveSessionMutation = useSaveSession();
+
+  // Fetch plot card data
+  const [plotCard] = useCard(session?.plotCard?.id);
+
+  // All session settings handlers from reusable hook
+  const {
+    handleDeleteUserCharacter,
+    handleSetUserCharacter,
+    handleDeleteAICharacter,
+    handleAddAICharacter: handleAddAICharacterToSession,
+    handleUpdateSession,
+  } = useSessionSettingsHandlers(session);
+
+  // Character selection dialog state
+  const [isUserCharacterDialogOpen, setIsUserCharacterDialogOpen] = useState(false);
+  const [isAICharacterDialogOpen, setIsAICharacterDialogOpen] = useState(false);
+
+  // Background dialog state
+  const [isBackgroundDialogOpen, setIsBackgroundDialogOpen] = useState(false);
+
+  // Session title edit state
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+  // Cover image handlers
+  const coverImageInputId = useId();
+  const [coverImageSrc] = useAsset(session?.coverId);
+
+  const handleCoverImageChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!session) return;
+
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        // Upload file to asset
+        const assetResult = await AssetService.saveFileToAsset.execute({
+          file,
+        });
+
+        if (assetResult.isFailure) {
+          toastError("Failed to upload cover image", {
+            description: assetResult.getError(),
+          });
+          return;
+        }
+
+        const asset = assetResult.getValue();
+
+        // Update session with new cover ID
+        await handleUpdateSession({ coverId: asset.id });
+        toastSuccess("Cover image uploaded successfully");
+      } catch (error) {
+        toastError("Failed to upload cover image", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+
+      // Reset the input
+      e.target.value = "";
+    },
+    [session, handleUpdateSession],
+  );
+
+  const handleDeleteCoverImage = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!session?.coverId) return;
+
+      try {
+        await handleUpdateSession({ coverId: null });
+        toastSuccess("Cover image removed successfully");
+      } catch (error) {
+        toastError("Failed to remove cover image", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [session, handleUpdateSession],
+  );
+
+  // Background change handler
+  const handleChangeBackground = useCallback(
+    async (backgroundId: UniqueEntityID | undefined) => {
+      if (!session) return;
+
+      try {
+        await handleUpdateSession({ backgroundId: backgroundId ?? null });
+        setIsBackgroundDialogOpen(false);
+      } catch (error) {
+        toastError("Failed to update background", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [session, handleUpdateSession],
+  );
+
+  // Dialog handlers
+  const handleAddUserCharacter = useCallback(() => {
+    setIsUserCharacterDialogOpen(true);
+  }, []);
+
+  const handleUserCharacterSelected = useCallback(
+    async (characters: CharacterCard[]) => {
+      const characterId = characters.length > 0 ? characters[0].id.toString() : null;
+      await handleSetUserCharacter(characterId);
+      setIsUserCharacterDialogOpen(false);
+    },
+    [handleSetUserCharacter],
+  );
+
+  const handleAddAICharacter = useCallback(() => {
+    setIsAICharacterDialogOpen(true);
+  }, []);
+
+  const handleAICharacterSelected = useCallback(
+    async (characters: CharacterCard[]) => {
+      if (characters.length > 0) {
+        await handleAddAICharacterToSession(characters[0].id.toString());
+      }
+      setIsAICharacterDialogOpen(false);
+    },
+    [handleAddAICharacterToSession],
+  );
+
+  // Session title edit handlers
+  const handleStartEditTitle = useCallback(() => {
+    setEditedTitle(session?.title || "");
+    setIsEditingTitle(true);
+    // Focus input after state update
+    setTimeout(() => titleInputRef.current?.focus(), 0);
+  }, [session?.title]);
+
+  const handleSaveTitle = useCallback(async () => {
+    if (!session) return;
+
+    const trimmedTitle = editedTitle.trim();
+    if (trimmedTitle && trimmedTitle !== session.title) {
+      try {
+        const latestSession = await fetchSession(session.id);
+        latestSession.update({ title: trimmedTitle });
+        await saveSessionMutation.mutateAsync({ session: latestSession });
+        toastSuccess("Session title updated");
+      } catch (error) {
+        toastError("Failed to update session title", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+    setIsEditingTitle(false);
+  }, [session, editedTitle, saveSessionMutation]);
+
+  const handleCancelEditTitle = useCallback(() => {
+    setIsEditingTitle(false);
+    setEditedTitle("");
+  }, []);
+
+  const handleTitleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSaveTitle();
+    } else if (e.key === "Escape") {
+      handleCancelEditTitle();
+    }
+  }, [handleSaveTitle, handleCancelEditTitle]);
+
+  if (!session) return null;
+
+  return (
+    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-10 space-y-6">
+      {/* Header: Session Title + Start Button */}
+      <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            aria-label="Back to sessions"
+            onClick={() => navigate({ to: "/sessions" })}
+            className="cursor-pointer text-fg-subtle hover:text-fg-default"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <span className="text-fg-muted font-semibold">Session</span>
+
+          {/* Session Title - Inline Edit */}
+          {isEditingTitle ? (
+            <div className="flex items-center gap-2">
+              <input
+                ref={titleInputRef}
+                type="text"
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                onKeyDown={handleTitleKeyDown}
+                className="px-2 py-1 text-fg-default font-medium bg-surface-overlay border border-border-subtle rounded focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                placeholder="Session title"
+              />
+              <button
+                onClick={handleSaveTitle}
+                className="p-1 text-fg-subtle hover:text-fg-default transition-colors"
+                aria-label="Save title"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleCancelEditTitle}
+                className="p-1 text-fg-subtle hover:text-fg-default transition-colors"
+                aria-label="Cancel editing"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 group">
+              <span className="text-fg-default font-medium">{session.title || "Untitled Session"}</span>
+              <button
+                onClick={handleStartEditTitle}
+                className="p-1 text-fg-muted opacity-0 group-hover:opacity-100 hover:text-fg-default transition-all"
+                aria-label="Edit title"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
+        {actionButton}
+      </header>
+
+      {/* Row 1: Characters */}
+      <Section title="Characters">
+        {/* Mobile: 2-column grid */}
+        <div className="grid grid-cols-2 gap-4 md:hidden">
+          {/* User Character Card */}
+          <InteractiveCharacterCardGrid
+            cardId={session?.userCharacterCardId}
+            isEmpty={!session?.userCharacterCardId}
+            onDelete={session?.userCharacterCardId ? handleDeleteUserCharacter : undefined}
+            onAdd={!session?.userCharacterCardId ? handleAddUserCharacter : undefined}
+            label="User"
+          />
+
+          {/* AI Character Cards */}
+          {session?.aiCharacterCardIds.map((cardId: UniqueEntityID) => (
+            <InteractiveCharacterCardGrid
+              key={cardId.toString()}
+              cardId={cardId}
+              onDelete={() => handleDeleteAICharacter(cardId)}
+            />
+          ))}
+
+          {/* Add AI Character Button */}
+          <AddCharacterCardGrid onAdd={handleAddAICharacter} />
+        </div>
+
+        {/* Desktop: Carousel */}
+        <div className="hidden md:block">
+          <SectionCarousel>
+            {/* User Character Card */}
+            <InteractiveCharacterCard
+              cardId={session?.userCharacterCardId}
+              isEmpty={!session?.userCharacterCardId}
+              onDelete={session?.userCharacterCardId ? handleDeleteUserCharacter : undefined}
+              onAdd={!session?.userCharacterCardId ? handleAddUserCharacter : undefined}
+              label="User"
+            />
+
+            {/* AI Character Cards */}
+            {session?.aiCharacterCardIds.map((cardId: UniqueEntityID) => (
+              <InteractiveCharacterCard
+                key={cardId.toString()}
+                cardId={cardId}
+                onDelete={() => handleDeleteAICharacter(cardId)}
+              />
+            ))}
+
+            {/* Add AI Character Button */}
+            <AddCharacterCard onAdd={handleAddAICharacter} />
+          </SectionCarousel>
+        </div>
+      </Section>
+
+      {/* Character Selection Dialogs */}
+      <CharacterSelectionDialog
+        open={isUserCharacterDialogOpen}
+        onOpenChange={setIsUserCharacterDialogOpen}
+        selectedCharacters={[]}
+        onConfirm={handleUserCharacterSelected}
+        title="Select User Character"
+      />
+
+      <CharacterSelectionDialog
+        open={isAICharacterDialogOpen}
+        onOpenChange={setIsAICharacterDialogOpen}
+        selectedCharacters={[]}
+        onConfirm={handleAICharacterSelected}
+        title="Select AI Character"
+      />
+
+      {/* Row 2: Narrative (Scenario + Workflow) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Scenario - 2/3 width */}
+        <Section title="Scenario" className="lg:col-span-2 h-80 flex flex-col">
+          <div className="flex-grow space-y-4 overflow-y-auto pr-2">
+            {plotCard ? (
+              <>
+                <div>
+                  <label className="text-xs text-fg-subtle uppercase font-bold tracking-wider mb-2 block">
+                    Description
+                  </label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-18 w-1 bg-accent-primary rounded-full"></div>
+                    <p className="text-sm text-fg-default font-medium line-clamp-4">{plotCard.props.description}</p>
+                  </div>
+                </div>
+
+                {plotCard.props.firstMessages && plotCard.props.firstMessages.length > 0 && (
+                  <div>
+                    <label className="text-xs text-fg-subtle uppercase font-bold tracking-wider mb-2 block">
+                      First Message
+                    </label>
+                    <div className="bg-surface-overlay p-3 rounded-lg border border-border-subtle overflow-hidden">
+                      <div className="text-sm text-fg-muted leading-5 line-clamp-2">
+                        {plotCard.props.firstMessages[0].description || "No first message"}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full text-fg-subtle">
+                <p className="text-sm">No scenario selected</p>
+              </div>
+            )}
+          </div>
+        </Section>
+
+        {/* Workflow - 1/3 width */}
+        <Section title="Workflow" className="h-80 flex flex-col">
+          <button
+            onClick={() => {
+              if (session?.props.flowId) {
+                navigate({ to: "/assets/workflows/$workflowId", params: { workflowId: session.props.flowId.toString() } });
+              }
+            }}
+            className="flex-grow rounded-lg border border-border-subtle relative overflow-hidden flex items-center justify-center transition-colors cursor-pointer group"
+          >
+            <IconWorkflow className="w-16 h-16 text-fg-subtle group-hover:text-fg-default transition-colors" />
+          </button>
+        </Section>
+      </div>
+
+      {/* Row 3: Visuals & Styling */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Cover Image - 1 column */}
+        <Section title="Cover Image" className="h-72 flex flex-col">
+          <div className={cn(
+            "flex-grow rounded-lg relative overflow-hidden border border-border-subtle",
+            coverImageSrc && "border-2"
+          )}>
+            <label htmlFor={coverImageInputId} className="cursor-pointer h-full block">
+              {coverImageSrc ? (
+                <div className="relative h-full group">
+                  <img
+                    src={coverImageSrc}
+                    alt="Cover image"
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Delete button on hover */}
+                  <button
+                    onClick={handleDeleteCoverImage}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:scale-110 transition-transform opacity-0 group-hover:opacity-100 z-10 shadow-lg"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="flex cursor-pointer items-center justify-center gap-2 rounded-lg text-fg-subtle hover:text-fg-default text-sm font-medium transition-colors md:text-base">
+                    <FileUp className="h-5 w-5" />
+                    <p>Upload cover image</p>
+                  </div>
+                </div>
+              )}
+            </label>
+            <input
+              id={coverImageInputId}
+              type="file"
+              accept=".jpg,.jpeg,.png"
+              onChange={handleCoverImageChange}
+              className="hidden"
+            />
+          </div>
+        </Section>
+
+        {/* Background - 1 column */}
+        <Section title="Background" className="h-72 flex flex-col">
+          <div className={cn(
+            "flex-grow rounded-lg relative overflow-hidden border border-border-subtle",
+            session?.backgroundId && "border-2"
+          )}>
+            <button
+              onClick={() => setIsBackgroundDialogOpen(true)}
+              className="w-full h-full cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              {session?.backgroundId ? (
+                <BackgroundPreview backgroundId={session.backgroundId} />
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="flex cursor-pointer items-center justify-center gap-2 rounded-lg text-fg-subtle hover:text-fg-default text-sm font-medium transition-colors md:text-base">
+                    <Image className="h-5 w-5" />
+                    <p>Select background</p>
+                  </div>
+                </div>
+              )}
+            </button>
+          </div>
+        </Section>
+
+        {/* Message Styling - 2 columns */}
+        <Section title="Message Styling" className="lg:col-span-2 h-72 flex flex-col">
+          <div className="flex-grow flex items-center">
+            <div className="flex-grow overflow-y-auto">
+              <MessageStyling
+                sessionId={session.id}
+                chatStyles={session.chatStyles}
+              />
+            </div>
+          </div>
+        </Section>
+      </div>
+
+      {/* Background Selection Dialog */}
+      <DialogBase
+        open={isBackgroundDialogOpen}
+        onOpenChange={setIsBackgroundDialogOpen}
+        title="Select Background"
+        content={
+          <BackgroundGrid
+            sessionId={session.id}
+            currentBackgroundId={session.backgroundId}
+            onSelect={handleChangeBackground}
+            isEditable={true}
+          />
+        }
+      />
+    </div>
+  );
+};

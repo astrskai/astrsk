@@ -2,7 +2,7 @@ import { useCallback, useState, useRef, MutableRefObject, useEffect } from "reac
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Play } from "lucide-react";
 
-import { SessionSettingsNew } from "./ui/chat/session-settings-new";
+import { SessionSettings } from "./ui/chat/session-settings";
 import { fetchSession, useCloneSession, useSaveSession } from "@/entities/session/api";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useSessionStore, useSessionUIStore } from "@/shared/stores/session-store";
@@ -101,7 +101,7 @@ export function SessionSettingsPage() {
 
   return (
     <div className="w-full h-full overflow-y-auto bg-surface">
-      <SessionSettingsNew
+      <SessionSettings
         setIsOpenSettings={() => {
           // Navigate back to sessions list
           navigate({ to: "/sessions" });
