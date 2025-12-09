@@ -32,6 +32,9 @@ importers:
       '@ai-sdk/xai':
         specifier: ^2.0.39
         version: 2.0.39(zod@3.25.76)
+      '@astrsk/design-system':
+        specifier: workspace:*
+        version: link:../../packages/design-system
       '@dnd-kit/core':
         specifier: ^6.1.0
         version: 6.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

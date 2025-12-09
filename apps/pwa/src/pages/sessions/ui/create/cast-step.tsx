@@ -15,7 +15,7 @@ import {
   Sparkles,
   AlertTriangle,
 } from "lucide-react";
-import { CharacterCard as DesignSystemCharacterCard } from "@astrsk/design-system/CharacterCard";
+import { CharacterCard as DesignSystemCharacterCard } from "@astrsk/design-system/character-card";
 import { Badge } from "@/shared/ui/badge";
 import { SearchInput, Button } from "@/shared/ui/forms";
 import {
@@ -227,8 +227,8 @@ interface LibraryCharacterCardProps {
   isPlayer: boolean;
   isAI: boolean;
   isLocal: boolean;
-  onAssignPlayer: (e: React.MouseEvent) => void;
-  onAddAI: (e: React.MouseEvent) => void;
+  onAssignPlayer: () => void;
+  onAddAI: () => void;
   onOpenDetails: () => void;
   triggerFlyingTrail?: (
     event: React.MouseEvent,
@@ -269,7 +269,7 @@ function LibraryCharacterCard({
               e.stopPropagation();
               if (!isSelected) {
                 triggerFlyingTrail?.(e, "player", card.props.name || "Character", imageUrl ?? undefined);
-                onAssignPlayer(e);
+                onAssignPlayer();
               }
             }}
             disabled={isSelected}
@@ -288,7 +288,7 @@ function LibraryCharacterCard({
               e.stopPropagation();
               if (!isSelected) {
                 triggerFlyingTrail?.(e, "ai", card.props.name || "Character", imageUrl ?? undefined);
-                onAddAI(e);
+                onAddAI();
               }
             }}
             disabled={isSelected}
@@ -445,6 +445,13 @@ export function CastStep({
     setFlyingTrails((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
   // Handle character creation from AI - creates DraftCharacter without DB save
   const handleCharacterCreated = useCallback(
     (characterData: CharacterData) => {
@@ -477,7 +484,7 @@ export function CastStep({
     if (!chatInput.trim() || isGenerating) return;
 
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       role: "user",
       content: chatInput,
     };
@@ -509,7 +516,7 @@ export function CastStep({
       // Add assistant response to chat
       if (response.text) {
         const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
+          id: crypto.randomUUID(),
           role: "assistant",
           content: response.text,
         };
@@ -522,7 +529,7 @@ export function CastStep({
         logger.error("[CastStep] Character generation failed", error);
         // Add error message to chat
         const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
+          id: crypto.randomUUID(),
           role: "assistant",
           content:
             "Sorry, I encountered an error while generating the character. Please try again.",
@@ -571,11 +578,17 @@ export function CastStep({
     if (playerCharacter && playerCharacter.source !== "library") {
       onDraftCharactersChange([...draftCharacters, playerCharacter]);
     }
-    // Wrap library character as DraftCharacter
+    // Wrap library character as DraftCharacter with data for context
     const draftCharacter: DraftCharacter = {
       tempId: `library-${cardId}`,
       source: "library",
       existingCardId: cardId,
+      data: {
+        name: card.props.name || "",
+        description: card.props.description || "",
+        tags: card.props.tags,
+        cardSummary: card.props.cardSummary,
+      },
     };
     onPlayerCharacterChange(draftCharacter);
   };
@@ -588,11 +601,17 @@ export function CastStep({
     }
     // Add to AI if not already there
     if (!aiCharacters.find((c) => c.existingCardId === cardId)) {
-      // Wrap library character as DraftCharacter
+      // Wrap library character as DraftCharacter with data for context
       const draftCharacter: DraftCharacter = {
         tempId: `library-${cardId}`,
         source: "library",
         existingCardId: cardId,
+        data: {
+          name: card.props.name || "",
+          description: card.props.description || "",
+          tags: card.props.tags,
+          cardSummary: card.props.cardSummary,
+        },
       };
       onAiCharactersChange([...aiCharacters, draftCharacter]);
     }

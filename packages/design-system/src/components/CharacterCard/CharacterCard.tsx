@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { cn } from '../../lib/utils';
+import { cn, formatCompactNumber } from '../../lib/utils';
 import {
   BaseCard,
   CardActionToolbar,
@@ -241,7 +241,7 @@ export function CharacterCard({
           renderMetadata()
         ) : (
           <CardMetadataContainer>
-            <CardMetadataItem>{tokenCount} Tokens</CardMetadataItem>
+            <CardMetadataItem>{formatCompactNumber(tokenCount)} Tokens</CardMetadataItem>
             {updatedAt && <CardMetadataItem>{updatedAt}</CardMetadataItem>}
           </CardMetadataContainer>
         )}

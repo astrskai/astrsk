@@ -359,7 +359,7 @@ export function ScenarioStep({
 
     // Add user message to chat
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       role: "user",
       content: aiPrompt,
     };
@@ -456,7 +456,7 @@ export function ScenarioStep({
 
       // Add AI response to chat
       const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: crypto.randomUUID(),
         role: "assistant",
         content: result.text || "I've made the changes to your scenario.",
       };
@@ -475,7 +475,7 @@ export function ScenarioStep({
 
       // Add error message to chat
       const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: crypto.randomUUID(),
         role: "assistant",
         content:
           error instanceof Error

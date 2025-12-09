@@ -156,6 +156,12 @@ export function HudStep({
   // Track if component is mounted (for cleanup)
   const isMountedRef = useRef(true);
 
+  // Track latest chatMessages for async callbacks (avoids stale closure)
+  const chatMessagesRef = useRef(chatMessages);
+  useEffect(() => {
+    chatMessagesRef.current = chatMessages;
+  }, [chatMessages]);
+
   // Abort controller for AI generation
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -338,27 +344,27 @@ export function HudStep({
       // Mark generation as attempted (prevents infinite retry on empty result)
       onHasAttemptedGenerationChange(true);
 
-      // Add chat message about generation result
+      // Add chat message about generation result (use ref to get latest messages)
       const finalStoreCount = generatingStoresRef.current.length;
       if (finalStoreCount === 0) {
         // No trackers were generated - notify user via chat
         const noResultMessage: ChatMessage = {
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           role: "assistant",
           content: "I couldn't find suitable trackers from your scenario. You can add them manually using the 'New Tracker' button above, or tell me what trackers you need!",
         };
-        onChatMessagesChange?.([...chatMessages, noResultMessage]);
+        onChatMessagesChange?.([...chatMessagesRef.current, noResultMessage]);
       } else {
         // Trackers were generated - summarize what was found
         const successMessage: ChatMessage = {
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           role: "assistant",
           content: `I've generated ${finalStoreCount} tracker${finalStoreCount > 1 ? 's' : ''}. Let me know if you'd like to add or modify any trackers!`,
         };
-        onChatMessagesChange?.([...chatMessages, successMessage]);
+        onChatMessagesChange?.([...chatMessagesRef.current, successMessage]);
       }
     }
-  }, [onDataStoresChange, dataSchemaEntryToHudDataStore, templateFieldToHudDataStore, onIsGeneratingChange, onHasAttemptedGenerationChange, onSelectedTemplateChange, chatMessages, onChatMessagesChange]);
+  }, [onDataStoresChange, dataSchemaEntryToHudDataStore, templateFieldToHudDataStore, onIsGeneratingChange, onHasAttemptedGenerationChange, onSelectedTemplateChange, onChatMessagesChange]);
 
   // Stop generation
   const handleStopGeneration = useCallback(() => {
@@ -493,14 +499,14 @@ export function HudStep({
       e.preventDefault();
       if (!refinePrompt.trim()) return;
 
-      // Add user message to chat
+      // Add user message to chat (use ref to get latest messages, avoiding stale closure)
       const userMessage: ChatMessage = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         role: "user",
         content: refinePrompt,
       };
-      const updatedChatMessages = [...chatMessages, userMessage];
-      onChatMessagesChange?.(updatedChatMessages);
+      const currentMessages = chatMessagesRef.current;
+      onChatMessagesChange?.([...currentMessages, userMessage]);
 
       const promptText = refinePrompt;
       setRefinePrompt("");
@@ -572,13 +578,13 @@ export function HudStep({
           responseText = "No changes were made.";
         }
 
-        // Add AI response to chat
+        // Add AI response to chat (use ref to get latest messages after async operation)
         const aiResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
+          id: crypto.randomUUID(),
           role: "assistant",
           content: responseText,
         };
-        onChatMessagesChange?.([...updatedChatMessages, aiResponse]);
+        onChatMessagesChange?.([...chatMessagesRef.current, aiResponse]);
       } catch (e) {
         if ((e as Error).name === "AbortError") {
           // Request was cancelled, ignore
@@ -586,15 +592,15 @@ export function HudStep({
         }
         console.error("Failed to refine schema:", e);
 
-        // Add error message to chat
+        // Add error message to chat (use ref to get latest messages after async operation)
         const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
+          id: crypto.randomUUID(),
           role: "assistant",
           content: e instanceof Error
             ? `Sorry, I encountered an error: ${e.message}`
             : "Sorry, I encountered an error. Please try again.",
         };
-        onChatMessagesChange?.([...updatedChatMessages, errorMessage]);
+        onChatMessagesChange?.([...chatMessagesRef.current, errorMessage]);
 
         toastError("Failed to refine schema", {
           description: e instanceof Error ? e.message : "An unknown error occurred",
@@ -603,7 +609,7 @@ export function HudStep({
         setIsRefining(false);
       }
     },
-    [refinePrompt, dataStores, onDataStoresChange, dataSchemaEntryToHudDataStore, chatMessages, onChatMessagesChange],
+    [refinePrompt, dataStores, onDataStoresChange, dataSchemaEntryToHudDataStore, onChatMessagesChange],
   );
 
   // Handle chat submit (wraps handleRefine)

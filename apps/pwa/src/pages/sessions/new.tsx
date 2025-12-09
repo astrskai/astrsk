@@ -798,6 +798,7 @@ Ground Rules:`;
     defaultLiteModel,
     defaultStrongModel,
     flowResponseTemplate,
+    createCharacterMutation,
   ]);
 
   const handleNext = () => {
