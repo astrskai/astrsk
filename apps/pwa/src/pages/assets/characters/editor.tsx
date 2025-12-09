@@ -877,14 +877,14 @@ const CharacterEditorPage = () => {
           {isSessionLocal && (
             <Button
               variant="secondary"
-              icon={<Globe className="h-4 w-4" />}
+              icon={<Save className="h-4 w-4" />}
               type="button"
               onClick={handleCopyAsGlobal}
               disabled={isCopyingAsGlobal}
               loading={isCopyingAsGlobal}
-              title="Save as character"
+              title="Save as asset"
             >
-              <span className="hidden sm:inline">Save as character</span>
+              <span className="hidden sm:inline">Save as asset</span>
             </Button>
           )}
           <Button
@@ -1146,9 +1146,6 @@ const CharacterEditorPage = () => {
                   <h2 className="text-lg font-bold text-neutral-200">
                     1:1 Session Config
                   </h2>
-                  <p className="mt-0.5 text-xs text-neutral-500">
-                    Custom behavior for direct messages only
-                  </p>
                 </div>
 
                 {/* Context Warning Banner */}

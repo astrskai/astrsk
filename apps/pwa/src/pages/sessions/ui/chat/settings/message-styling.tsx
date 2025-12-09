@@ -49,7 +49,7 @@ const ColorGrid = ({
 
   return (
     <div>
-      <h4 className="text-fg-subtle mb-2 text-sm font-medium">{title}</h4>
+      <h4 className="text-fg-subtle mb-4 text-sm font-medium flex justify-center">{title}</h4>
       <div className="grid grid-cols-2 gap-2">
         {fields.map((item) => {
           const fieldName = getFieldName(userType, item.field);

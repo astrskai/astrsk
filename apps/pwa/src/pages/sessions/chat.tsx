@@ -24,7 +24,6 @@ import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { AutoReply } from "@/shared/stores/session-store";
 import { useSaveSession } from "@/entities/session/api/mutations";
-import { PersonaSelectionDialog, type PersonaResult } from "@/features/character/ui/persona-selection-dialog";
 import { useSessionConfig } from "@/shared/hooks/use-session-config";
 
 export default function ChatPage() {
@@ -38,44 +37,14 @@ export default function ChatPage() {
     sessionQueries.detail(sessionIdEntity),
   );
 
-  // Handle persona selection/creation
-  // Note: This only updates the session object; actual save happens in useSessionConfig hook
-  const handlePersonaConfirm = useCallback(
-    (result: PersonaResult | null | undefined) => {
-      if (!session) return;
-
-      // Handle undefined (dialog closed without action - clicking outside, ESC key, etc.)
-      if (result === undefined) {
-        return; // Do nothing, keep existing persona
-      }
-
-      if (result === null) {
-        // User clicked "Skip" or "No Persona" - remove user character
-        session.update({
-          userCharacterCardId: undefined,
-        });
-      } else if (result.type === "existing" && result.characterId) {
-        // User selected existing character
-        session.update({
-          userCharacterCardId: new UniqueEntityID(result.characterId),
-        });
-      }
-      // Note: result.type === "new" means create new persona (handled by PersonaSelectionDialog itself)
-    },
-    [session],
-  );
-
-  // Session config hook - manages persona dialog and panel states
+  // Session config hook - manages panel states
   const {
-    isPersonaDialogOpen,
-    handlePersonaDialogClose,
     isSettingsPanelOpen,
     isDataPanelOpen,
     toggleSettingsPanel,
     toggleDataPanel,
   } = useSessionConfig({
     session: session ?? null,
-    onPersonaConfirm: handlePersonaConfirm,
   });
 
   const { data: flow } = useQuery(
@@ -273,7 +242,6 @@ export default function ChatPage() {
           isOpenStats={isDataPanelOpen}
           onOpenStats={handleDataPanelToggle}
           onAutoReply={handleAutoReplyClick}
-          isPersonaDialogOpen={isPersonaDialogOpen}
         />
       </div>
 
@@ -282,21 +250,6 @@ export default function ChatPage() {
         isOpen={isSettingsPanelOpen}
         onAutoReply={handleAutoReplyClick}
         onClose={toggleSettingsPanel}
-      />
-
-      <PersonaSelectionDialog
-        open={isPersonaDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            handlePersonaDialogClose();
-          }
-        }}
-        onConfirm={(result) => {
-          handlePersonaDialogClose(result);
-        }}
-        allowSkip={true}
-        suggestedPersonaId={session.props.userCharacterCardId?.toString()}
-        closeOnOverlayClick={false}
       />
     </div>
   ) : (

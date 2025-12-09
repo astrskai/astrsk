@@ -1,7 +1,6 @@
 import { Upload, Copy, Trash2 } from "lucide-react";
+import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 
 import { Session } from "@/entities/session/domain/session";
 
@@ -10,21 +9,16 @@ import type {
   SessionWithCharacterMetadata,
   CharacterMetadata,
 } from "@/entities/session/api";
-import { sessionQueries, SessionListItem } from "@/entities/session/api";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { DialogConfirm } from "@/shared/ui/dialogs";
-import { Loading } from "@/shared/ui";
 
 import SessionCard from "@/features/session/ui/session-card";
 import type { CardAction } from "@/features/common/ui";
 import { useSessionActions } from "@/features/session/model/use-session-actions";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
 import { SessionExportDialog } from "@/features/session/ui/session-export-dialog";
-import { useSessionStore } from "@/shared/stores/session-store";
 import { useAsset } from "@/shared/hooks/use-asset";
-import { cn, logger } from "@/shared/lib";
-import { SessionService } from "@/app/services/session-service";
-import { toastError } from "@/shared/ui/toast";
+import { cn } from "@/shared/lib";
 
 
 interface SessionsGridProps {
@@ -143,13 +137,8 @@ export function SessionsGrid({
   newlyCreatedSessionId = null,
   areCharactersLoading = false,
 }: SessionsGridProps) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const selectSession = useSessionStore.use.selectSession();
   const { animatingId, triggerAnimation } = useNewItemAnimation();
-  const [isCloning, setIsCloning] = useState<string | null>(null);
-
-
+  const navigate = useNavigate();
 
   const {
     loadingStates,
@@ -174,100 +163,15 @@ export function SessionsGrid({
   }, [newlyCreatedSessionId, triggerAnimation]);
 
   /**
-   * Handle session click - clone and play session immediately
+   * Handle session click - navigate to settings page
    */
   const handleSessionClick = (sessionId: string) => {
-    cloneAndPlaySession(sessionId);
+    navigate({
+      to: "/sessions/settings/$sessionId",
+      params: { sessionId },
+    });
   };
 
-  /**
-   * Clone the session and navigate to cloned session for play
-   * This preserves the original session as a "template" and creates a play session
-   */
-  /**
-   * Clone the session and navigate to cloned session for play
-   * This preserves the original session as a "template" and creates a play session
-   */
-  const cloneAndPlaySession = useCallback(
-    async (sessionId: string) => {
-      const item = sessions.find((s) => s.session.id.toString() === sessionId);
-      if (!item) return;
-
-      setIsCloning(sessionId);
-
-      try {
-        // Clone the session (without chat history since it's a fresh play)
-        const clonedSessionOrError = await SessionService.cloneSession.execute({
-          sessionId: new UniqueEntityID(sessionId),
-          includeHistory: false,
-        });
-
-        if (clonedSessionOrError.isFailure) {
-          throw new Error(clonedSessionOrError.getError());
-        }
-
-        const clonedSession = clonedSessionOrError.getValue();
-
-        // Remove the original user character from allCards
-        // The user will select a persona in the chat page
-        const originalUserCardId = clonedSession.props.userCharacterCardId;
-        let updatedAllCards = clonedSession.props.allCards;
-
-        if (originalUserCardId) {
-          updatedAllCards = clonedSession.props.allCards.filter(
-            (card) => !card.id.equals(originalUserCardId)
-          );
-        }
-
-        // Set isPlaySession: true, fix title, and clear userCharacterCardId
-        const originalTitle = item.session.props.title;
-        clonedSession.update({
-          isPlaySession: true,
-          title: originalTitle, // Use original title, not "Copy of..."
-          userCharacterCardId: originalUserCardId, // Keep it so ChatPage prompts for persona as suggestion
-          allCards: updatedAllCards,
-        });
-
-        // Save the updated session
-        const saveResult = await SessionService.saveSession.execute({
-          session: clonedSession,
-        });
-        if (saveResult.isFailure) {
-          throw new Error(saveResult.getError());
-        }
-
-        // Optimistically update the sidebar list by adding the new session at the top
-        const listItemQueryKey = sessionQueries.listItem({
-          isPlaySession: true,
-        }).queryKey;
-        queryClient.setQueryData<SessionListItem[]>(listItemQueryKey, (oldData) => {
-          const newItem: SessionListItem = {
-            id: clonedSession.id.toString(),
-            title: clonedSession.props.title,
-            messageCount: 0, // New cloned session has no messages
-            updatedAt: new Date(),
-          };
-          // Add new item at the top (sorted by updatedAt desc)
-          return [newItem, ...(oldData || [])];
-        });
-
-        // Select and navigate to the cloned session
-        selectSession(clonedSession.id, clonedSession.props.title);
-        navigate({
-          to: "/sessions/$sessionId",
-          params: { sessionId: clonedSession.id.toString() },
-        });
-      } catch (error) {
-        logger.error("Failed to start play session:", error);
-        toastError("Failed to start play session", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      } finally {
-        setIsCloning(null);
-      }
-    },
-    [sessions, queryClient, selectSession, navigate],
-  );
 
 
 
@@ -279,15 +183,9 @@ export function SessionsGrid({
           const sessionId = session.id.toString();
           const loading = loadingStates[sessionId] || {};
           const isNewlyCreated = animatingId === sessionId;
-          const isCloningThis = isCloning === sessionId;
 
           return (
             <div key={sessionId} className="relative">
-              {isCloningThis && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-black/60">
-                  <Loading />
-                </div>
-              )}
               <SessionGridItem
                 session={session}
                 characterAvatars={characterAvatars}
@@ -298,7 +196,6 @@ export function SessionsGrid({
                     "shadow-[0_0_20px_rgba(34,197,94,0.5)]",
                     "animate-pulse",
                   ],
-                  isCloningThis && "opacity-50",
                 )}
                 areCharactersLoading={areCharactersLoading}
                 onSessionClick={handleSessionClick}

@@ -19,6 +19,7 @@ import { PrepareAgentsCloudData } from '@/entities/agent/usecases/prepare-agents
 import { PrepareDataStoreNodesCloudData } from '@/entities/data-store-node/usecases/prepare-data-store-nodes-cloud-data';
 import { PrepareIfNodesCloudData } from '@/entities/if-node/usecases/prepare-if-nodes-cloud-data';
 import { LoadBackgroundRepo } from '@/entities/background/repos/load-background-repo';
+import { getDefaultBackground } from '@/entities/background/api/query-factory';
 
 interface Command {
   sessionId: UniqueEntityID;
@@ -64,12 +65,23 @@ export class PrepareSessionCloudData
 
       // 2. Resolve background entity ID to asset ID for cloud storage
       // The session stores backgroundId (Background entity ID), but Supabase needs the asset ID directly
+      // Note: Default backgrounds are CDN references - we store the default background ID itself (not asset ID)
       let backgroundAssetId: string | null = null;
       if (session.props.backgroundId) {
-        const backgroundResult = await this.loadBackgroundRepo.getBackgroundById(session.props.backgroundId);
-        if (backgroundResult.isSuccess) {
-          const background = backgroundResult.getValue();
-          backgroundAssetId = background.assetId.toString();
+        // Check if it's a default background (astrsk-provided)
+        const defaultBackground = getDefaultBackground(session.props.backgroundId);
+
+        if (defaultBackground) {
+          // Default backgrounds: Store the background ID itself (not an asset ID)
+          // Cloud sessions will use this ID to reference the same default background
+          backgroundAssetId = session.props.backgroundId.toString();
+        } else {
+          // User-uploaded background: Resolve Background entity to asset ID
+          const backgroundResult = await this.loadBackgroundRepo.getBackgroundById(session.props.backgroundId);
+          if (backgroundResult.isSuccess) {
+            const background = backgroundResult.getValue();
+            backgroundAssetId = background.assetId.toString();
+          }
         }
       }
 

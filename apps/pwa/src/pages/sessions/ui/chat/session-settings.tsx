@@ -165,11 +165,13 @@ const SessionSettings = ({
   refEditCards,
   refInitCardTab,
   isSettingsOpen,
+  actionButton,
 }: {
   setIsOpenSettings: (open: boolean) => void;
   refEditCards: React.RefObject<HTMLDivElement>;
   refInitCardTab: MutableRefObject<CardTab>;
   isSettingsOpen: boolean;
+  actionButton?: React.ReactNode;
 }) => {
   const { activePage } = useAppStore();
   const { selectedSessionId } = useSessionStore();
@@ -374,6 +376,11 @@ const SessionSettings = ({
             )}>
               Session
             </div>
+            {actionButton && (
+              <div className="ml-4">
+                {actionButton}
+              </div>
+            )}
             {isEditingTitle ? (
               <div className={cn(
                 "flex items-center",
