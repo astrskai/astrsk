@@ -52,6 +52,7 @@ function HeartIcon({
  */
 export function CardLikeButton({ isLiked, onClick, isLoading }: LikeButtonProps) {
   const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     if (!isLoading) {
       onClick(e);
