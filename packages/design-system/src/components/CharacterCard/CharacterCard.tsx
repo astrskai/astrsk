@@ -48,7 +48,21 @@ export interface CharacterCardProps {
   renderMetadata?: () => React.ReactNode;
   /** Text to display when summary is empty. Defaults to "No summary". Set to empty string to hide. */
   emptySummaryText?: string;
-  /** Like button configuration (displays in top-right corner) */
+  /**
+   * Like button configuration (displays in top-right corner).
+   * Controlled component - parent manages isLiked state and handles onClick.
+   * @example
+   * ```tsx
+   * const [isLiked, setIsLiked] = useState(false);
+   * <CharacterCard
+   *   likeButton={{
+   *     isLiked: isLiked,
+   *     onClick: () => setIsLiked(!isLiked),
+   *     isLoading: false
+   *   }}
+   * />
+   * ```
+   */
   likeButton?: LikeButtonProps;
   /** Like count to display in popularity stats */
   likeCount?: number;
