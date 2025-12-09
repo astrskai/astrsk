@@ -222,6 +222,8 @@ export function HudStep({
 
   // Ref to track stores being generated (for incremental updates)
   const generatingStoresRef = useRef<HudDataStore[]>([]);
+  // Ref to track if generation was stopped due to max limit
+  const reachedMaxLimitRef = useRef(false);
 
   // Generate data stores using AI based on context
   // 1. First select a flow template using AI
@@ -236,8 +238,9 @@ export function HudStep({
     }
     abortControllerRef.current = new AbortController();
 
-    // Clear existing stores and reset tracking ref
+    // Clear existing stores and reset tracking refs
     generatingStoresRef.current = [];
+    reachedMaxLimitRef.current = false;
     onDataStoresChange([]);
 
     try {
@@ -310,7 +313,8 @@ export function HudStep({
             onAddStore: (store) => {
               // Check if we've reached the limit
               if (generatingStoresRef.current.length >= MAX_TOTAL_STORES) {
-                // Abort generation when limit reached
+                // Mark that we hit the limit and abort generation
+                reachedMaxLimitRef.current = true;
                 abortControllerRef.current?.abort();
                 return;
               }
@@ -354,6 +358,14 @@ export function HudStep({
           content: "I couldn't find suitable trackers from your scenario. You can add them manually using the 'New Tracker' button above, or tell me what trackers you need!",
         };
         onChatMessagesChange?.([...chatMessagesRef.current, noResultMessage]);
+      } else if (reachedMaxLimitRef.current) {
+        // Trackers were generated but hit the limit
+        const limitMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: `I've generated ${finalStoreCount} trackers (maximum reached). You can remove some trackers and ask me for more if needed!`,
+        };
+        onChatMessagesChange?.([...chatMessagesRef.current, limitMessage]);
       } else {
         // Trackers were generated - summarize what was found
         const successMessage: ChatMessage = {

@@ -14,12 +14,17 @@ export function cn(...inputs: ClassValue[]) {
  * formatCompactNumber(1000000000) // "1B"
  */
 export function formatCompactNumber(num: number): string {
-  if (num < 1000) {
+  // Guard: non-finite values (NaN, Infinity, -Infinity) or small numbers
+  if (!Number.isFinite(num) || num < 1000) {
     return num.toString();
   }
 
   const units = ['', 'k', 'M', 'B', 'T'];
-  const order = Math.floor(Math.log10(num) / 3);
+  // Clamp order to prevent array out-of-bounds for very large numbers (≥ 1e15)
+  const order = Math.min(
+    Math.floor(Math.log10(num) / 3),
+    units.length - 1
+  );
   const unitName = units[order];
   const value = num / Math.pow(1000, order);
 

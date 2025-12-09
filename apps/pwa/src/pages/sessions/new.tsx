@@ -153,6 +153,8 @@ Ground Rules:`;
     aiCharacters.length > 0 ||
     draftCharacters.length > 0 ||
     scenarioBackground !== defaultScenarioTemplate ||
+    scenarioFirstMessages.length > 0 ||
+    scenarioLorebook.length > 0 ||
     hudDataStores.length > 0;
 
   // Block navigation when there are unsaved changes (but not during save)

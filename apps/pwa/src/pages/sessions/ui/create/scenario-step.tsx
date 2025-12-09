@@ -273,7 +273,7 @@ export function ScenarioStep({
 
   // --- First Message Handlers ---
   const addMessage = () => {
-    const newId = Date.now().toString();
+    const newId = crypto.randomUUID();
     onFirstMessagesChange([
       ...firstMessages,
       { id: newId, title: "", content: "", expanded: true },
@@ -310,7 +310,7 @@ export function ScenarioStep({
 
   // --- Lorebook Handlers ---
   const addLorebook = () => {
-    const newId = Date.now().toString();
+    const newId = crypto.randomUUID();
     onLorebookChange([
       ...lorebook,
       {
