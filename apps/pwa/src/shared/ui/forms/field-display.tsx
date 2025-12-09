@@ -111,7 +111,7 @@ const TEXTAREA_STYLES = {
   },
   label: {
     floating:
-      "absolute left-3 top-0 -translate-y-1/2 rounded-sm bg-neutral-800 px-1 text-xs font-medium transition-all pointer-events-none",
+      "absolute left-3 top-0 -translate-y-1/2 rounded-sm bg-canvas px-1 text-xs font-medium transition-all pointer-events-none",
     standard: "text-sm font-medium text-neutral-200",
   },
   text: {

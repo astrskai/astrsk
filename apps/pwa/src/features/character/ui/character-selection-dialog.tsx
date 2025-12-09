@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { UserIcon, ChevronLeft, Info } from "lucide-react";
+import { ChevronLeft, Info } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
 import CharacterCardUI from "@/features/character/ui/character-card";
 import Carousel from "@/shared/ui/carousel-v2";
@@ -85,6 +85,7 @@ const CharacterPreviewItem = ({
           tags={card.props.tags || []}
           tokenCount={card.props.tokenCount}
           className={cn(
+            "!h-[380px]", // Fixed height to prevent size variations
             isSelected
               ? "border-brand-500 hover:border-brand-400 border-2 shadow-lg"
               : "border-2 border-transparent",
@@ -207,9 +208,6 @@ export function CharacterSelectionDialog({
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(
     selectedCharacters.map((c) => c.id.toString()),
   );
-  const [previewCharacterId, setPreviewCharacterId] = useState<string | null>(
-    null,
-  );
   const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
   const [mobileDetailCharacterId, setMobileDetailCharacterId] = useState<
     string | null
@@ -229,14 +227,6 @@ export function CharacterSelectionDialog({
       setMobileDetailCharacterId(null);
     }
   }, [open, selectedCharacters]);
-
-  // Get preview character details (desktop)
-  const previewCharacter = useMemo(() => {
-    if (!previewCharacterId || !characterCards) return null;
-    return characterCards.find(
-      (card: CharacterCard) => card.id.toString() === previewCharacterId,
-    ) as CharacterCard | null;
-  }, [previewCharacterId, characterCards]);
 
   // Get mobile detail character
   const mobileDetailCharacter = useMemo(() => {
@@ -346,10 +336,10 @@ export function CharacterSelectionDialog({
               </div>
             )}
 
-            {/* Left Side: Search + Character List */}
+            {/* Character Grid - Full Width */}
             <div
               className={cn(
-                "flex min-h-0 w-full flex-col gap-4 md:w-1/2",
+                "flex min-h-0 w-full flex-col gap-4",
                 showMobileDetail && "hidden md:flex",
               )}
             >
@@ -362,9 +352,9 @@ export function CharacterSelectionDialog({
                 className="flex-shrink-0"
               />
 
-              {/* Character Preview List */}
+              {/* Character Grid */}
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
                   {filteredCharacterCards.map(
                     (card: CharacterCard, index: number) => {
                       const cardId = card.id.toString();
@@ -384,7 +374,7 @@ export function CharacterSelectionDialog({
                             setShowMobileDetail(true);
                           }}
                           onMouseEnter={() => {
-                            setPreviewCharacterId(cardId);
+                            // No-op: preview removed
                           }}
                         />
                       );
@@ -413,21 +403,6 @@ export function CharacterSelectionDialog({
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Right Side: Character Detail (Desktop only) */}
-            <div className="hidden w-1/2 flex-col overflow-y-auto rounded-lg bg-surface-raised p-4 md:flex">
-              {previewCharacter ? (
-                <CharacterDetailPanel character={previewCharacter} />
-              ) : (
-                <div className="text-fg-subtle flex h-full flex-col items-center justify-center text-center">
-                  <UserIcon className="mb-3 h-12 w-12 opacity-50" />
-                  <p className="text-lg">Hover over a character</p>
-                  <p className="text-sm">
-                    Move your mouse over a character to see details
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </>

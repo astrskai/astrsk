@@ -29,7 +29,7 @@ export const ScenarioMessageBox = memo(function ScenarioMessageBox({
   return (
     <div
       className={cn(
-        "flex flex-col items-start justify-start gap-2 self-stretch rounded-lg border-2 bg-surface/30 p-4 backdrop-blur-3xl",
+        "flex flex-col items-start justify-start gap-2 self-stretch rounded-lg border-2 bg-surface-overlay p-4 backdrop-blur-3xl",
         active ? "border-accent-primary" : "border-transparent",
         onClick && "cursor-pointer",
         className,

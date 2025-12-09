@@ -44,6 +44,7 @@ import { Route as LayoutSettingsLegalContentPolicyRouteImport } from './routes/_
 import { Route as LayoutSettingsAdvancedMigrationHistoryRouteImport } from './routes/_layout/settings/advanced/migration-history'
 import { Route as LayoutSettingsAdvancedInitializationLogsRouteImport } from './routes/_layout/settings/advanced/initialization-logs'
 import { Route as LayoutSettingsAccountCreditUsageRouteImport } from './routes/_layout/settings/account/credit-usage'
+import { Route as LayoutSessionsSettingsSessionIdRouteImport } from './routes/_layout/sessions/settings/$sessionId'
 import { Route as LayoutAssetsWorkflowsWorkflowIdRouteImport } from './routes/_layout/assets/workflows/$workflowId'
 import { Route as LayoutAssetsScenariosChar123ScenarioIdChar125RouteImport } from './routes/_layout/assets/scenarios/{-$scenarioId}'
 import { Route as LayoutAssetsCharactersChar123CharacterIdChar125RouteImport } from './routes/_layout/assets/characters/{-$characterId}'
@@ -236,6 +237,12 @@ const LayoutSettingsAccountCreditUsageRoute =
     path: '/account/credit-usage',
     getParentRoute: () => LayoutSettingsRoute,
   } as any)
+const LayoutSessionsSettingsSessionIdRoute =
+  LayoutSessionsSettingsSessionIdRouteImport.update({
+    id: '/sessions/settings/$sessionId',
+    path: '/sessions/settings/$sessionId',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 const LayoutAssetsWorkflowsWorkflowIdRoute =
   LayoutAssetsWorkflowsWorkflowIdRouteImport.update({
     id: '/assets/workflows/$workflowId',
@@ -279,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/assets/characters/{-$characterId}': typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
   '/assets/scenarios/{-$scenarioId}': typeof LayoutAssetsScenariosChar123ScenarioIdChar125Route
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
+  '/sessions/settings/$sessionId': typeof LayoutSessionsSettingsSessionIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
   '/settings/advanced/migration-history': typeof LayoutSettingsAdvancedMigrationHistoryRoute
@@ -317,6 +325,7 @@ export interface FileRoutesByTo {
   '/assets/characters/{-$characterId}': typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
   '/assets/scenarios/{-$scenarioId}': typeof LayoutAssetsScenariosChar123ScenarioIdChar125Route
   '/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
+  '/sessions/settings/$sessionId': typeof LayoutSessionsSettingsSessionIdRoute
   '/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
   '/settings/advanced/migration-history': typeof LayoutSettingsAdvancedMigrationHistoryRoute
@@ -358,6 +367,7 @@ export interface FileRoutesById {
   '/_layout/assets/characters/{-$characterId}': typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
   '/_layout/assets/scenarios/{-$scenarioId}': typeof LayoutAssetsScenariosChar123ScenarioIdChar125Route
   '/_layout/assets/workflows/$workflowId': typeof LayoutAssetsWorkflowsWorkflowIdRoute
+  '/_layout/sessions/settings/$sessionId': typeof LayoutSessionsSettingsSessionIdRoute
   '/_layout/settings/account/credit-usage': typeof LayoutSettingsAccountCreditUsageRoute
   '/_layout/settings/advanced/initialization-logs': typeof LayoutSettingsAdvancedInitializationLogsRoute
   '/_layout/settings/advanced/migration-history': typeof LayoutSettingsAdvancedMigrationHistoryRoute
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/assets/characters/{-$characterId}'
     | '/assets/scenarios/{-$scenarioId}'
     | '/assets/workflows/$workflowId'
+    | '/sessions/settings/$sessionId'
     | '/settings/account/credit-usage'
     | '/settings/advanced/initialization-logs'
     | '/settings/advanced/migration-history'
@@ -437,6 +448,7 @@ export interface FileRouteTypes {
     | '/assets/characters/{-$characterId}'
     | '/assets/scenarios/{-$scenarioId}'
     | '/assets/workflows/$workflowId'
+    | '/sessions/settings/$sessionId'
     | '/settings/account/credit-usage'
     | '/settings/advanced/initialization-logs'
     | '/settings/advanced/migration-history'
@@ -477,6 +489,7 @@ export interface FileRouteTypes {
     | '/_layout/assets/characters/{-$characterId}'
     | '/_layout/assets/scenarios/{-$scenarioId}'
     | '/_layout/assets/workflows/$workflowId'
+    | '/_layout/sessions/settings/$sessionId'
     | '/_layout/settings/account/credit-usage'
     | '/_layout/settings/advanced/initialization-logs'
     | '/_layout/settings/advanced/migration-history'
@@ -748,6 +761,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsAccountCreditUsageRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
+    '/_layout/sessions/settings/$sessionId': {
+      id: '/_layout/sessions/settings/$sessionId'
+      path: '/sessions/settings/$sessionId'
+      fullPath: '/sessions/settings/$sessionId'
+      preLoaderRoute: typeof LayoutSessionsSettingsSessionIdRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/assets/workflows/$workflowId': {
       id: '/_layout/assets/workflows/$workflowId'
       path: '/assets/workflows/$workflowId'
@@ -829,6 +849,7 @@ interface LayoutRouteChildren {
   LayoutAssetsCharactersChar123CharacterIdChar125Route: typeof LayoutAssetsCharactersChar123CharacterIdChar125Route
   LayoutAssetsScenariosChar123ScenarioIdChar125Route: typeof LayoutAssetsScenariosChar123ScenarioIdChar125Route
   LayoutAssetsWorkflowsWorkflowIdRoute: typeof LayoutAssetsWorkflowsWorkflowIdRoute
+  LayoutSessionsSettingsSessionIdRoute: typeof LayoutSessionsSettingsSessionIdRoute
   LayoutAssetsCharactersIndexRoute: typeof LayoutAssetsCharactersIndexRoute
   LayoutAssetsScenariosIndexRoute: typeof LayoutAssetsScenariosIndexRoute
   LayoutAssetsWorkflowsIndexRoute: typeof LayoutAssetsWorkflowsIndexRoute
@@ -854,6 +875,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAssetsScenariosChar123ScenarioIdChar125Route:
     LayoutAssetsScenariosChar123ScenarioIdChar125Route,
   LayoutAssetsWorkflowsWorkflowIdRoute: LayoutAssetsWorkflowsWorkflowIdRoute,
+  LayoutSessionsSettingsSessionIdRoute: LayoutSessionsSettingsSessionIdRoute,
   LayoutAssetsCharactersIndexRoute: LayoutAssetsCharactersIndexRoute,
   LayoutAssetsScenariosIndexRoute: LayoutAssetsScenariosIndexRoute,
   LayoutAssetsWorkflowsIndexRoute: LayoutAssetsWorkflowsIndexRoute,

@@ -5,7 +5,7 @@ import {
   ArrowLeft,
   MessageCircle,
   Pencil,
-  Globe,
+  Save,
   AlertTriangle,
 } from "lucide-react";
 import { Route } from "@/routes/_layout/assets/characters/{-$characterId}";
@@ -420,14 +420,14 @@ const CharacterDetailPage = () => {
           {isSessionLocal && (
             <Button
               variant="secondary"
-              icon={<Globe className="h-4 w-4" />}
               type="button"
+              icon={<Save className="h-4 w-4" />}
               onClick={handleCopyAsGlobal}
               disabled={isCopyingAsGlobal}
               loading={isCopyingAsGlobal}
-              title="Save as character"
+              title="Save as asset"
             >
-              <span className="hidden sm:inline">Save as character</span>
+              <span className="hidden sm:inline">Save as asset</span>
             </Button>
           )}
           {/* Edit button */}
