@@ -26,6 +26,10 @@ export default defineConfig({
         __dirname,
         "../vibe-shared-types/src/index.ts",
       ),
+      "@astrsk/design-system": path.resolve(
+        __dirname,
+        "../../packages/design-system/src/components",
+      ),
     },
     // Prevent multiple React copies from registering separate HMR runtimes
     dedupe: ["react", "react-dom"],

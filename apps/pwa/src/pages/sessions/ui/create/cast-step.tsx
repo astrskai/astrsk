@@ -1,5 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence, LayoutGroup } from "motion/react";
+import { createPortal } from "react-dom";
 import {
   User,
   Cpu,
@@ -7,181 +9,377 @@ import {
   Plus,
   LayoutGrid,
   Users,
-  Upload,
-  Info,
+  Import,
   Activity,
+  Info,
+  Sparkles,
+  AlertTriangle,
 } from "lucide-react";
+import { CharacterCard as DesignSystemCharacterCard } from "@astrsk/design-system/CharacterCard";
 import { Badge } from "@/shared/ui/badge";
 import { SearchInput, Button } from "@/shared/ui/forms";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/tooltip";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
-import { cn } from "@/shared/lib";
+import { cn, logger } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
+import { StepHeader } from "./step-header";
+import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
+import {
+  generateCharacterResponse,
+  type CharacterBuilderMessage,
+  type CharacterData,
+} from "@/app/services/system-agents/character-builder-service";
+import {
+  DraftCharacter,
+  generateTempId,
+  getDraftCharacterName,
+} from "./draft-character";
 
 interface CastStepProps {
-  playerCharacter: CharacterCard | null;
-  aiCharacters: CharacterCard[];
-  onPlayerCharacterChange: (character: CharacterCard | null) => void;
-  onAiCharactersChange: (characters: CharacterCard[]) => void;
+  playerCharacter: DraftCharacter | null;
+  aiCharacters: DraftCharacter[];
+  onPlayerCharacterChange: (character: DraftCharacter | null) => void;
+  onAiCharactersChange: (characters: DraftCharacter[]) => void;
+  // Draft characters shown in library (from import/chat/create) - not yet assigned to roster
+  draftCharacters: DraftCharacter[];
+  onDraftCharactersChange: (characters: DraftCharacter[]) => void;
   onCreateCharacter: () => void;
   onImportCharacter: () => void;
   // Mobile tab state (controlled by parent for navigation)
-  mobileTab: "library" | "cast";
-  onMobileTabChange: (tab: "library" | "cast") => void;
+  mobileTab: "library" | "cast" | "chat";
+  onMobileTabChange: (tab: "library" | "cast" | "chat") => void;
+  // Chat messages (lifted to parent for persistence across step navigation)
+  chatMessages?: ChatMessage[];
+  onChatMessagesChange?: (messages: ChatMessage[]) => void;
+  // Callback when a character is created via chat (returns DraftCharacter)
+  onCharacterCreatedFromChat?: (character: DraftCharacter) => void;
+}
+
+const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
+
+// Flying trail animation constants
+const TRAIL_ICON_SIZE = 48; // 12 * 4 = h-12 w-12
+const TRAIL_ICON_OFFSET = TRAIL_ICON_SIZE / 2; // Center the icon on cursor
+const PLAYER_SECTION_Y_OFFSET = 120; // Distance from roster top to player section
+const AI_SECTION_Y_OFFSET = 300; // Distance from roster top to AI section
+
+/**
+ * Build character card badges based on selection state
+ */
+function buildCharacterBadges(
+  isPlayer: boolean,
+  isAI: boolean,
+  isLocal: boolean,
+) {
+  return [
+    // Local badge (left position) - amber color
+    ...(isLocal
+      ? [
+          {
+            label: "LOCAL",
+            variant: "default" as const,
+            position: "left" as const,
+            className: "border-[#f59e0b]/30 bg-[#451a03]/50 text-[#fcd34d]",
+          },
+        ]
+      : []),
+    // Selection badge (right position)
+    ...(isPlayer
+      ? [
+          {
+            label: "PLAYER",
+            variant: "default" as const,
+            position: "right" as const,
+            className: "border-[#3b82f6]/30 bg-[#172554]/50 text-[#93c5fd]",
+          },
+        ]
+      : isAI
+        ? [
+            {
+              label: "AI",
+              variant: "default" as const,
+              position: "right" as const,
+              className: "border-[#a855f7]/30 bg-[#3b0764]/50 text-[#d8b4fe]",
+            },
+          ]
+        : []),
+  ];
+}
+
+/**
+ * Flying Trail Animation
+ * Shows a ghost element flying from source card to roster panel
+ */
+interface FlyingTrail {
+  id: string;
+  startX: number;
+  startY: number;
+  targetType: "player" | "ai";
+  imageUrl?: string;
+  name: string;
+}
+
+function FlyingTrailOverlay({
+  trails,
+  onComplete,
+  rosterRef,
+}: {
+  trails: FlyingTrail[];
+  onComplete: (id: string) => void;
+  rosterRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {trails.map((trail) => {
+        // Calculate target position based on roster panel
+        const rosterRect = rosterRef.current?.getBoundingClientRect();
+        const targetX = rosterRect
+          ? rosterRect.left + rosterRect.width / 2 - TRAIL_ICON_OFFSET
+          : window.innerWidth - 200;
+        const targetY = rosterRect
+          ? trail.targetType === "player"
+            ? rosterRect.top + PLAYER_SECTION_Y_OFFSET
+            : rosterRect.top + AI_SECTION_Y_OFFSET
+          : 200;
+
+        return (
+          <motion.div
+            key={trail.id}
+            initial={{
+              x: trail.startX,
+              y: trail.startY,
+              scale: 1,
+              opacity: 0.9,
+            }}
+            animate={{
+              x: targetX,
+              y: targetY,
+              scale: 0.4,
+              opacity: 0,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.5,
+              ease: [0.32, 0.72, 0, 1],
+            }}
+            onAnimationComplete={() => onComplete(trail.id)}
+            className="pointer-events-none fixed z-[9999]"
+            style={{ left: 0, top: 0 }}
+          >
+            <div
+              className={cn(
+                "flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl font-bold text-white shadow-lg",
+                trail.targetType === "player" ? "bg-[#3b82f6]" : "bg-[#a855f7]",
+              )}
+            >
+              {trail.imageUrl ? (
+                <img
+                  src={trail.imageUrl}
+                  alt={trail.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                trail.name.substring(0, 2).toUpperCase()
+              )}
+            </div>
+            {/* Trailing glow effect */}
+            <motion.div
+              className={cn(
+                "absolute inset-0 rounded-xl blur-md",
+                trail.targetType === "player"
+                  ? "bg-[#3b82f6]/50"
+                  : "bg-[#a855f7]/50",
+              )}
+              initial={{ scale: 1 }}
+              animate={{ scale: 1.5, opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            />
+          </motion.div>
+        );
+      })}
+    </AnimatePresence>,
+    document.body,
+  );
 }
 
 /**
  * Library Character Card Wrapper
- * Uses BaseCard styling with PLAY/ADD buttons always visible at bottom
+ * Wraps design-system CharacterCard with asset loading and footer actions
  */
 interface LibraryCharacterCardProps {
   card: CharacterCard;
   isPlayer: boolean;
   isAI: boolean;
-  onAssignPlayer: () => void;
-  onAddAI: () => void;
+  isLocal: boolean;
+  onAssignPlayer: (e: React.MouseEvent) => void;
+  onAddAI: (e: React.MouseEvent) => void;
   onOpenDetails: () => void;
+  triggerFlyingTrail?: (
+    event: React.MouseEvent,
+    targetType: "player" | "ai",
+    name: string,
+    imageUrl?: string,
+  ) => void;
 }
 
-const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
-
-const LibraryCharacterCard = ({
+function LibraryCharacterCard({
   card,
+  isPlayer,
+  isAI,
+  isLocal,
+  onAssignPlayer,
+  onAddAI,
+  onOpenDetails,
+  triggerFlyingTrail,
+}: LibraryCharacterCardProps) {
+  const [imageUrl] = useAsset(card.props.iconAssetId);
+  const isSelected = isPlayer || isAI;
+  const badges = buildCharacterBadges(isPlayer, isAI, isLocal);
+
+  return (
+    <DesignSystemCharacterCard
+      name={card.props.name || "Unnamed"}
+      imageUrl={imageUrl}
+      placeholderImageUrl={PLACEHOLDER_IMAGE_URL}
+      summary={card.props.cardSummary}
+      tags={card.props.tags || []}
+      badges={badges}
+      onClick={onOpenDetails}
+      renderMetadata={() => null}
+      footerActions={
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isSelected) {
+                triggerFlyingTrail?.(e, "player", card.props.name || "Character", imageUrl ?? undefined);
+                onAssignPlayer(e);
+              }
+            }}
+            disabled={isSelected}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
+              "border-r border-zinc-800",
+              isSelected
+                ? "cursor-not-allowed text-zinc-600"
+                : "text-zinc-400 hover:bg-blue-600/10 hover:text-blue-300",
+            )}
+          >
+            <User size={10} className="sm:h-3 sm:w-3" /> PLAY AS
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isSelected) {
+                triggerFlyingTrail?.(e, "ai", card.props.name || "Character", imageUrl ?? undefined);
+                onAddAI(e);
+              }
+            }}
+            disabled={isSelected}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
+              isSelected
+                ? "cursor-not-allowed text-zinc-600"
+                : "text-zinc-400 hover:bg-amber-600/10 hover:text-amber-300",
+            )}
+          >
+            <Cpu size={10} className="sm:h-3 sm:w-3" /> ADD AS AI
+          </button>
+        </>
+      }
+    />
+  );
+}
+
+/**
+ * Draft Character Card for Library
+ * Displays import/chat/create characters in the library with LOCAL badge
+ */
+interface DraftCharacterCardProps {
+  draft: DraftCharacter;
+  isPlayer: boolean;
+  isAI: boolean;
+  onAssignPlayer: (e: React.MouseEvent) => void;
+  onAddAI: (e: React.MouseEvent) => void;
+}
+
+function DraftCharacterCard({
+  draft,
   isPlayer,
   isAI,
   onAssignPlayer,
   onAddAI,
-  onOpenDetails,
-}: LibraryCharacterCardProps) => {
-  const [imageUrl] = useAsset(card.props.iconAssetId);
+}: DraftCharacterCardProps) {
   const isSelected = isPlayer || isAI;
+  const name = draft.data?.name || "Unnamed";
+  const imageUrl = draft.data?.imageUrl;
+  // Draft characters are always local
+  const badges = buildCharacterBadges(isPlayer, isAI, true);
 
   return (
-    <article
-      onClick={onOpenDetails}
-      className={cn(
-        // Base structure (matching BaseCard)
-        "group relative flex h-full flex-col overflow-hidden cursor-pointer",
-        // Visual styling (matching BaseCard)
-        "rounded-xl border bg-surface-raised shadow-lg",
-        // Transitions
-        "transition-all duration-300",
-        // Selection states
-        isPlayer
-          ? "border-brand-400"
-          : isAI
-            ? "border-[#8a7355]"
-            : "border-border-default hover:border-border-muted hover:shadow-xl",
-      )}
-    >
-      {/* Selection Badge */}
-      {isPlayer && (
-        <div className="absolute top-3 right-3 z-10 rounded border border-brand-400 bg-brand-600/20 px-2 py-0.5 text-[10px] font-bold tracking-widest text-brand-300 backdrop-blur-sm">
-          PLAYER
-        </div>
-      )}
-      {isAI && (
-        <div className="absolute top-3 right-3 z-10 rounded border border-[#8a7355] bg-[#8a7355]/20 px-2 py-0.5 text-[10px] font-bold tracking-widest text-[#c9b89a] backdrop-blur-sm">
-          AI
-        </div>
-      )}
-      {/* Info Button - shown when not selected */}
-      {!isSelected && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetails();
-          }}
-          className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-black/70 transition-colors backdrop-blur-sm opacity-0 group-hover:opacity-100"
-        >
-          <Info size={14} />
-        </button>
-      )}
-
-      {/* Image Area */}
-      <div className="relative h-32 overflow-hidden bg-zinc-800 sm:h-48">
-        <img
-          src={imageUrl || PLACEHOLDER_IMAGE_URL}
-          alt={card.props.name || ""}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent opacity-60" />
-      </div>
-
-      {/* Content Area */}
-      <div className="relative z-10 -mt-6 flex flex-grow flex-col p-3 sm:-mt-8 sm:p-4">
-        <h3 className="mb-1 line-clamp-2 text-sm font-bold break-words text-white drop-shadow-md sm:text-lg">
-          {card.props.name || "Unnamed"}
-        </h3>
-
-        {/* Tags - hidden on mobile for compact view */}
-        <div className="mb-2 hidden flex-wrap gap-1.5 sm:mb-3 sm:flex">
-          {(card.props.tags || []).length > 0 ? (
-            <>
-              {(card.props.tags || []).slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300"
-                >
-                  {tag}
-                </span>
-              ))}
-              {(card.props.tags || []).length > 3 && (
-                <span className="rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300">
-                  +{(card.props.tags || []).length - 3}
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="text-[10px] text-zinc-600">No tags</span>
-          )}
-        </div>
-
-        <p className="mb-2 line-clamp-2 hidden flex-grow text-xs leading-relaxed break-words text-zinc-400 sm:mb-4 sm:block">
-          {card.props.cardSummary || "No summary"}
-        </p>
-      </div>
-
-      {/* Action Buttons - Always visible at bottom */}
-      <div className="flex border-t border-zinc-800">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!isSelected) onAssignPlayer();
-          }}
-          disabled={isSelected}
-          className={cn(
-            "flex flex-1 items-center justify-center gap-1 py-2 text-[10px] font-bold transition-all sm:gap-2 sm:py-3 sm:text-xs",
-            "border-r border-zinc-800",
-            isSelected
-              ? "cursor-not-allowed text-neutral-600"
-              : "text-neutral-400 hover:bg-brand-600/10 hover:text-brand-300",
-          )}
-        >
-          <User size={12} className="sm:h-[14px] sm:w-[14px]" /> PLAY
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!isSelected) onAddAI();
-          }}
-          disabled={isSelected}
-          className={cn(
-            "flex flex-1 items-center justify-center gap-1 py-2 text-[10px] font-bold transition-all sm:gap-2 sm:py-3 sm:text-xs",
-            isSelected
-              ? "cursor-not-allowed text-neutral-600"
-              : "text-neutral-400 hover:bg-[#8a7355]/10 hover:text-[#c9b89a]",
-          )}
-        >
-          <Cpu size={12} className="sm:h-[14px] sm:w-[14px]" /> ADD
-        </button>
-      </div>
-    </article>
+    <DesignSystemCharacterCard
+      name={name}
+      imageUrl={imageUrl}
+      placeholderImageUrl={PLACEHOLDER_IMAGE_URL}
+      summary={draft.data?.cardSummary}
+      tags={draft.data?.tags || []}
+      badges={badges}
+      className="border-dashed border-[#f59e0b]/50"
+      renderMetadata={() => null}
+      footerActions={
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isSelected) onAssignPlayer(e);
+            }}
+            disabled={isSelected}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
+              "border-r border-zinc-800",
+              isSelected
+                ? "cursor-not-allowed text-zinc-600"
+                : "text-zinc-400 hover:bg-blue-600/10 hover:text-blue-300",
+            )}
+          >
+            <User size={10} className="sm:h-3 sm:w-3" /> PLAY AS
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isSelected) onAddAI(e);
+            }}
+            disabled={isSelected}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
+              isSelected
+                ? "cursor-not-allowed text-zinc-600"
+                : "text-zinc-400 hover:bg-amber-600/10 hover:text-amber-300",
+            )}
+          >
+            <Cpu size={10} className="sm:h-3 sm:w-3" /> ADD AS AI
+          </button>
+        </>
+      }
+    />
   );
-};
+}
 
 /**
  * Cast Step
@@ -193,13 +391,155 @@ export function CastStep({
   aiCharacters,
   onPlayerCharacterChange,
   onAiCharactersChange,
+  draftCharacters,
+  onDraftCharactersChange,
   onCreateCharacter,
   onImportCharacter,
   mobileTab,
   onMobileTabChange,
+  chatMessages = [],
+  onChatMessagesChange,
+  onCharacterCreatedFromChat,
 }: CastStepProps) {
   const [search, setSearch] = useState("");
-  const [selectedDetailsChar, setSelectedDetailsChar] = useState<CharacterCard | null>(null);
+  const [selectedDetailsChar, setSelectedDetailsChar] =
+    useState<CharacterCard | null>(null);
+  const [chatInput, setChatInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Flying trail animation state
+  const [flyingTrails, setFlyingTrails] = useState<FlyingTrail[]>([]);
+  const rosterPanelRef = useRef<HTMLDivElement>(null);
+
+  // Helper to trigger flying trail animation (desktop only)
+  const triggerFlyingTrail = useCallback(
+    (
+      event: React.MouseEvent,
+      targetType: "player" | "ai",
+      name: string,
+      imageUrl?: string,
+    ) => {
+      // Skip animation on mobile (< 768px) - roster panel is on separate tab
+      if (window.innerWidth < 768) return;
+
+      const rect = (event.currentTarget as HTMLElement)
+        .closest("[data-card-wrapper]")
+        ?.getBoundingClientRect();
+      if (!rect) return;
+
+      const trail: FlyingTrail = {
+        id: `trail-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        startX: rect.left + rect.width / 2 - TRAIL_ICON_OFFSET,
+        startY: rect.top + rect.height / 2 - TRAIL_ICON_OFFSET,
+        targetType,
+        imageUrl,
+        name,
+      };
+      setFlyingTrails((prev) => [...prev, trail]);
+    },
+    [],
+  );
+
+  const handleTrailComplete = useCallback((id: string) => {
+    setFlyingTrails((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // Handle character creation from AI - creates DraftCharacter without DB save
+  const handleCharacterCreated = useCallback(
+    (characterData: CharacterData) => {
+      // Create a DraftCharacter with source: "chat" - NOT saved to DB until session creation
+      const draftCharacter: DraftCharacter = {
+        tempId: generateTempId(),
+        source: "chat",
+        data: {
+          name: characterData.name,
+          description: characterData.description,
+          tags: characterData.tags,
+          cardSummary: characterData.cardSummary,
+          exampleDialogue: characterData.exampleDialogue,
+        },
+      };
+
+      // Notify parent about the created draft character
+      onCharacterCreatedFromChat?.(draftCharacter);
+
+      logger.info("[CastStep] Draft character created from chat", {
+        tempId: draftCharacter.tempId,
+        name: characterData.name,
+      });
+    },
+    [onCharacterCreatedFromChat],
+  );
+
+  // Handle chat submit with AI character generation
+  const handleChatSubmit = useCallback(async () => {
+    if (!chatInput.trim() || isGenerating) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: "user",
+      content: chatInput,
+    };
+    const newMessages = [...chatMessages, userMessage];
+    onChatMessagesChange?.(newMessages);
+    setChatInput("");
+
+    // Start AI generation
+    setIsGenerating(true);
+    abortControllerRef.current = new AbortController();
+
+    try {
+      // Convert ChatMessage to CharacterBuilderMessage format
+      const builderMessages: CharacterBuilderMessage[] = newMessages.map(
+        (msg) => ({
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+        }),
+      );
+
+      const response = await generateCharacterResponse({
+        messages: builderMessages,
+        callbacks: {
+          onCreateCharacter: handleCharacterCreated,
+        },
+        abortSignal: abortControllerRef.current.signal,
+      });
+
+      // Add assistant response to chat
+      if (response.text) {
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: response.text,
+        };
+        onChatMessagesChange?.([...newMessages, assistantMessage]);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        logger.info("[CastStep] Character generation aborted");
+      } else {
+        logger.error("[CastStep] Character generation failed", error);
+        // Add error message to chat
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content:
+            "Sorry, I encountered an error while generating the character. Please try again.",
+        };
+        onChatMessagesChange?.([...newMessages, errorMessage]);
+      }
+    } finally {
+      setIsGenerating(false);
+      abortControllerRef.current = null;
+    }
+  }, [
+    chatInput,
+    chatMessages,
+    onChatMessagesChange,
+    isGenerating,
+    handleCharacterCreated,
+  ]);
 
   // Fetch character cards
   const { data: characterCards } = useQuery({
@@ -218,45 +558,142 @@ export function CastStep({
     });
   }, [characterCards, search]);
 
-  // Handlers
-  const handleAssignPlayer = (char: CharacterCard) => {
+  // Handlers for library characters (from DB)
+  const handleAssignPlayer = (card: CharacterCard) => {
+    const cardId = card.id.toString();
     // If already AI, remove from AI list
-    if (aiCharacters.find((c) => c.id.toString() === char.id.toString())) {
+    if (aiCharacters.find((c) => c.existingCardId === cardId)) {
       onAiCharactersChange(
-        aiCharacters.filter((c) => c.id.toString() !== char.id.toString()),
+        aiCharacters.filter((c) => c.existingCardId !== cardId),
       );
     }
-    onPlayerCharacterChange(char);
+    // If there's an existing player character that is a draft, return it to draft list
+    if (playerCharacter && playerCharacter.source !== "library") {
+      onDraftCharactersChange([...draftCharacters, playerCharacter]);
+    }
+    // Wrap library character as DraftCharacter
+    const draftCharacter: DraftCharacter = {
+      tempId: `library-${cardId}`,
+      source: "library",
+      existingCardId: cardId,
+    };
+    onPlayerCharacterChange(draftCharacter);
   };
 
-  const handleAddAI = (char: CharacterCard) => {
-    // If already player, remove from player
-    if (playerCharacter?.id.toString() === char.id.toString()) {
+  const handleAddAI = (card: CharacterCard) => {
+    const cardId = card.id.toString();
+    // If this card is currently player, just move it to AI (no need to return to draft)
+    if (playerCharacter?.existingCardId === cardId) {
       onPlayerCharacterChange(null);
     }
     // Add to AI if not already there
-    if (!aiCharacters.find((c) => c.id.toString() === char.id.toString())) {
-      onAiCharactersChange([...aiCharacters, char]);
+    if (!aiCharacters.find((c) => c.existingCardId === cardId)) {
+      // Wrap library character as DraftCharacter
+      const draftCharacter: DraftCharacter = {
+        tempId: `library-${cardId}`,
+        source: "library",
+        existingCardId: cardId,
+      };
+      onAiCharactersChange([...aiCharacters, draftCharacter]);
     }
   };
 
-  const handleRemoveAI = (charId: string) => {
-    onAiCharactersChange(
-      aiCharacters.filter((c) => c.id.toString() !== charId),
-    );
+  // Handlers for draft characters (from import/chat/create - shown in library with LOCAL badge)
+  const handleAssignDraftPlayer = (draft: DraftCharacter) => {
+    // If already AI, remove from AI list
+    const inAI = aiCharacters.find((c) => c.tempId === draft.tempId);
+    if (inAI) {
+      onAiCharactersChange(aiCharacters.filter((c) => c.tempId !== draft.tempId));
+    }
+    // If there's an existing player character that is a draft (and different from new one), return it to draft list
+    let updatedDraftList = draftCharacters.filter((c) => c.tempId !== draft.tempId);
+    if (playerCharacter && playerCharacter.source !== "library" && playerCharacter.tempId !== draft.tempId) {
+      updatedDraftList = [...updatedDraftList, playerCharacter];
+    }
+    // Remove from draft list and set as player
+    onDraftCharactersChange(updatedDraftList);
+    onPlayerCharacterChange(draft);
+  };
+
+  const handleAddDraftAI = (draft: DraftCharacter) => {
+    // If already player, remove from player
+    if (playerCharacter?.tempId === draft.tempId) {
+      onPlayerCharacterChange(null);
+    }
+    // Add to AI if not already there
+    if (!aiCharacters.find((c) => c.tempId === draft.tempId)) {
+      onDraftCharactersChange(draftCharacters.filter((c) => c.tempId !== draft.tempId));
+      onAiCharactersChange([...aiCharacters, draft]);
+    }
+  };
+
+  const handleRemoveAI = (tempId: string) => {
+    const removed = aiCharacters.find((c) => c.tempId === tempId);
+    onAiCharactersChange(aiCharacters.filter((c) => c.tempId !== tempId));
+    // If it's a draft character (not library), return it to draft list
+    if (removed && removed.source !== "library") {
+      onDraftCharactersChange([...draftCharacters, removed]);
+    }
   };
 
   const handleRemovePlayer = () => {
+    // If player is a draft character, return it to draft list
+    if (playerCharacter && playerCharacter.source !== "library") {
+      onDraftCharactersChange([...draftCharacters, playerCharacter]);
+    }
     onPlayerCharacterChange(null);
   };
 
   const totalSelected = (playerCharacter ? 1 : 0) + aiCharacters.length;
 
-  // Get player character image
-  const [playerImageUrl] = useAsset(playerCharacter?.props.iconAssetId);
+  // Get player character details from library if it's a library character
+  const playerLibraryChar = useMemo(() => {
+    if (!playerCharacter?.existingCardId || !characterCards) return null;
+    return characterCards.find(
+      (c: CharacterCard) => c.id.toString() === playerCharacter.existingCardId,
+    );
+  }, [playerCharacter, characterCards]);
+
+  // Get player character image - either from library card or draft data
+  const playerIconAssetId = playerLibraryChar?.props.iconAssetId;
+  const [playerImageUrl] = useAsset(playerIconAssetId);
+  // For draft characters created via import/chat, use the imageUrl from data
+  const playerDisplayImageUrl =
+    playerImageUrl || playerCharacter?.data?.imageUrl;
+  const playerDisplayName = playerCharacter
+    ? playerLibraryChar?.props.name ||
+      playerCharacter.data?.name ||
+      getDraftCharacterName(playerCharacter)
+    : undefined;
+
+  // Mobile tab configuration
+  const mobileTabs = useMemo<MobileTab<"library" | "cast" | "chat">[]>(
+    () => [
+      { value: "library", label: "Library", icon: <LayoutGrid size={14} /> },
+      {
+        value: "cast",
+        label: "Roster",
+        icon: <Users size={14} />,
+        badge: (
+          <span className="rounded-full bg-indigo-600 px-1.5 text-[9px] text-white">
+            {totalSelected}
+          </span>
+        ),
+      },
+      { value: "chat", label: "AI", icon: <Sparkles size={14} /> },
+    ],
+    [totalSelected],
+  );
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
+      {/* Flying Trail Animation Overlay */}
+      <FlyingTrailOverlay
+        trails={flyingTrails}
+        onComplete={handleTrailComplete}
+        rosterRef={rosterPanelRef}
+      />
+
       {/* Character Details Modal */}
       <CharacterDetailsModal
         character={selectedDetailsChar}
@@ -264,46 +701,38 @@ export function CastStep({
       />
 
       {/* Mobile Tab Nav */}
-      <div className="z-20 flex-shrink-0 p-3 md:hidden">
-        <Tabs
-          value={mobileTab}
-          onValueChange={(value) => onMobileTabChange(value as "library" | "cast")}
-        >
-          <TabsList variant="dark-mobile" className="w-full">
-            <TabsTrigger value="library" className="gap-2">
-              <LayoutGrid size={14} /> Library
-            </TabsTrigger>
-            <TabsTrigger value="cast" className="gap-2">
-              <Users size={14} /> Roster{" "}
-              <span className="rounded-full bg-indigo-600 px-1.5 text-[9px] text-white">
-                {totalSelected}
-              </span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      <MobileTabNav
+        value={mobileTab}
+        onValueChange={onMobileTabChange}
+        tabs={mobileTabs}
+      />
 
       {/* Main Content */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-6 overflow-hidden px-0 pb-0 md:flex-row md:px-6 md:pb-6">
-        {/* Left Panel: Character Library - border provides visual distinction */}
+      <div className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 overflow-hidden px-0 pb-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
+        {/* Left Panel: AI Chat */}
+        <ChatPanel
+          messages={chatMessages}
+          agent={CHAT_AGENTS.cast}
+          inputValue={chatInput}
+          onInputChange={setChatInput}
+          onSubmit={handleChatSubmit}
+          isLoading={isGenerating}
+          disabled={isGenerating}
+          className={mobileTab === "chat" ? "" : "hidden md:flex"}
+        />
+
+        {/* Middle Panel: Character Library - border provides visual distinction */}
         <div
           className={cn(
             "flex min-w-0 flex-1 flex-col overflow-hidden border border-zinc-800 md:rounded-xl",
             mobileTab === "library" ? "flex" : "hidden md:flex",
           )}
         >
-          {/* Library Header */}
-          <div className="flex flex-shrink-0 flex-col gap-4 border-b border-zinc-800 p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-fg-default">
-                  <LayoutGrid size={20} className="text-brand-400" />
-                  Character Library
-                </h1>
-                <p className="mt-1 font-mono text-xs text-fg-muted">
-                  SELECT PERSONAS FOR SIMULATION
-                </p>
-              </div>
+          <StepHeader
+            icon={<LayoutGrid size={20} />}
+            title="Character Library"
+            subtitle="SELECT PERSONAS FOR SIMULATION"
+            actions={
               <Button
                 onClick={onCreateCharacter}
                 variant="default"
@@ -312,8 +741,8 @@ export function CastStep({
               >
                 <span className="hidden sm:inline">New Character</span>
               </Button>
-            </div>
-
+            }
+          >
             {/* Search */}
             <div className="flex gap-2">
               <SearchInput
@@ -323,40 +752,132 @@ export function CastStep({
                 variant="dark"
                 className="flex-1"
               />
-              <Button
-                onClick={onImportCharacter}
-                variant="secondary"
-                size="md"
-                icon={<Upload size={16} />}
-                title="Import JSON"
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={onImportCharacter}
+                      variant="secondary"
+                      size="md"
+                      icon={<Import size={16} />}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent variant="button" side="bottom">
+                    Import V2, V3 character cards
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
+          </StepHeader>
+
+          {/* Info & Warning Banners */}
+          <div className="mx-3 mt-1 space-y-1 sm:mx-6 sm:mt-2">
+            <div className="flex items-start gap-2 rounded-lg border border-[#3b82f6]/20 bg-[#172554]/20 px-3 py-2">
+              <Info size={14} className="mt-0.5 flex-shrink-0 text-[#60a5fa]" />
+              <p className="text-[11px] leading-relaxed text-zinc-400">
+                Browsing{" "}
+                <span className="font-semibold text-[#93c5fd]">Global Library</span>.
+                New characters are{" "}
+                <span className="font-semibold text-[#fcd34d]">Local</span> to this scenario.
+              </p>
+            </div>
+
+            {draftCharacters.length > 0 && (
+              <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2">
+                <AlertTriangle size={14} className="mt-0.5 flex-shrink-0 text-red-400" />
+                <p className="text-[11px] leading-relaxed text-red-300">
+                  <span className="font-semibold">Warning:</span> Local characters will be lost if you leave without creating a session.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Character Grid */}
           <div className="flex-1 overflow-y-auto p-3 sm:p-6">
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredCharacters.map((card: CharacterCard) => {
-                const cardId = card.id.toString();
-                const isPlayer = playerCharacter?.id.toString() === cardId;
-                const isAI = aiCharacters.some((c) => c.id.toString() === cardId);
+            <LayoutGroup>
+              <motion.div
+                layout
+                className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3"
+              >
+                <AnimatePresence mode="popLayout">
+                  {/* Draft characters first (LOCAL - from import/chat/create) */}
+                  {draftCharacters
+                    .filter((draft) => {
+                      if (!search) return true;
+                      const name = draft.data?.name?.toLowerCase() || "";
+                      return name.includes(search.toLowerCase());
+                    })
+                    .map((draft) => {
+                      // Check if this draft is already assigned to roster
+                      const isPlayer = playerCharacter?.tempId === draft.tempId;
+                      const isAI = aiCharacters.some((c) => c.tempId === draft.tempId);
 
-                return (
-                  <LibraryCharacterCard
-                    key={cardId}
-                    card={card}
-                    isPlayer={isPlayer}
-                    isAI={isAI}
-                    onAssignPlayer={() => handleAssignPlayer(card)}
-                    onAddAI={() => handleAddAI(card)}
-                    onOpenDetails={() => setSelectedDetailsChar(card)}
-                  />
-                );
-              })}
-            </div>
+                      return (
+                        <motion.div
+                          key={draft.tempId}
+                          layout
+                          data-card-wrapper
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        >
+                          <DraftCharacterCard
+                            draft={draft}
+                            isPlayer={isPlayer}
+                            isAI={isAI}
+                            onAssignPlayer={(e) => {
+                              triggerFlyingTrail(e, "player", draft.data?.name || "Character", draft.data?.imageUrl);
+                              handleAssignDraftPlayer(draft);
+                            }}
+                            onAddAI={(e) => {
+                              triggerFlyingTrail(e, "ai", draft.data?.name || "Character", draft.data?.imageUrl);
+                              handleAddDraftAI(draft);
+                            }}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  {/* Library characters (from DB) */}
+                  {filteredCharacters.map((card: CharacterCard) => {
+                    const cardId = card.id.toString();
+                    // Check if this library card is selected (by existingCardId)
+                    const isPlayer = playerCharacter?.existingCardId === cardId;
+                    const isAI = aiCharacters.some(
+                      (c) => c.existingCardId === cardId,
+                    );
+                    // Library cards are never "local"
+                    const isLocal = false;
+
+                    return (
+                      <motion.div
+                        key={cardId}
+                        layout
+                        data-card-wrapper
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      >
+                        <LibraryCharacterCard
+                          card={card}
+                          isPlayer={isPlayer}
+                          isAI={isAI}
+                          isLocal={isLocal}
+                          onAssignPlayer={() => handleAssignPlayer(card)}
+                          onAddAI={() => handleAddAI(card)}
+                          onOpenDetails={() => setSelectedDetailsChar(card)}
+                          triggerFlyingTrail={triggerFlyingTrail}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
+            </LayoutGroup>
 
             {/* Empty State */}
-            {filteredCharacters.length === 0 && (
+            {filteredCharacters.length === 0 && draftCharacters.length === 0 && (
               <div className="flex h-64 flex-col items-center justify-center text-zinc-600">
                 <div className="mb-3 rounded-full bg-zinc-900/50 p-4">
                   <Users size={32} />
@@ -369,17 +890,22 @@ export function CastStep({
 
         {/* Right Panel: Session Roster - border provides visual distinction */}
         <div
+          ref={rosterPanelRef}
           className={cn(
             "relative w-full flex-col overflow-hidden rounded-xl border border-zinc-800 md:w-80 lg:w-96",
             mobileTab === "cast" ? "flex h-full" : "hidden md:flex",
           )}
         >
           {/* Roster Header */}
-          <div className="flex-shrink-0 border-b border-zinc-800 p-5">
-            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-fg-default">
-              <Users size={16} className="text-brand-400" />
-              Session Roster
-            </h2>
+          <div className="flex-shrink-0 p-4">
+            <div className="flex items-center gap-2.5 rounded-lg bg-zinc-800/40 px-3.5 py-2.5">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-500/20">
+                <Users size={14} className="text-brand-400" />
+              </div>
+              <h2 className="text-sm font-semibold tracking-wide text-zinc-200">
+                Session Roster
+              </h2>
+            </div>
           </div>
 
           {/* Roster Content */}
@@ -387,8 +913,8 @@ export function CastStep({
             {/* Player Character Section */}
             <div>
               <div className="mb-3 flex items-center justify-between">
-                <label className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                  <User size={12} /> Your Character
+                <label className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
+                  <User size={12} /> User Persona
                 </label>
                 {playerCharacter && (
                   <button
@@ -400,46 +926,68 @@ export function CastStep({
                 )}
               </div>
 
-              {playerCharacter ? (
-                <div className="group relative overflow-hidden rounded-xl border border-brand-500/30 bg-brand-700/10 p-1">
-                  <div className="relative flex items-center gap-3 rounded-xl bg-surface-raised p-3">
-                    <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-brand-600 font-bold text-white">
-                      {playerImageUrl ? (
-                        <img
-                          src={playerImageUrl}
-                          alt={playerCharacter.props.name || ""}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        (playerCharacter.props.name || "??")
-                          .substring(0, 2)
-                          .toUpperCase()
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-bold text-white">
-                        {playerCharacter.props.name || "Unnamed"}
+              <AnimatePresence mode="wait">
+                {playerCharacter ? (
+                  <motion.div
+                    key={playerCharacter.tempId}
+                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className="group relative overflow-hidden rounded-xl border border-[#3b82f6]/30 bg-[#172554]/20"
+                  >
+                    <div className="relative flex items-center gap-3 rounded-xl bg-[#172554]/40 p-3">
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-[#3b82f6] font-bold text-white">
+                        {playerDisplayImageUrl ? (
+                          <img
+                            src={playerDisplayImageUrl}
+                            alt={playerDisplayName}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          (playerDisplayName || "??")
+                            .substring(0, 2)
+                            .toUpperCase()
+                        )}
                       </div>
-                      <div className="mt-1 inline-block rounded border border-brand-500/20 bg-brand-600/10 px-1.5 py-0.5 text-[10px] text-brand-300">
-                        PLAYER
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-bold text-white">
+                          {playerDisplayName}
+                        </div>
+                        <div className="mt-1 inline-block rounded border border-[#3b82f6]/20 bg-[#172554]/30 px-1.5 py-0.5 text-[10px] text-[#93c5fd]">
+                          PLAYER
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-brand-500/50 bg-brand-900/10 p-4 text-center">
-                  <p className="text-xs text-brand-400">
-                    Select your character from the library using the PLAY button
-                  </p>
-                </div>
-              )}
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty-player"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#3b82f6]/40 bg-[#172554]/20 px-4 py-5 text-center"
+                  >
+                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#3b82f6]/20">
+                      <User size={14} className="text-[#60a5fa]" />
+                    </div>
+                    <p className="text-[11px] font-medium text-[#93c5fd]">
+                      No persona selected
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-[#60a5fa]">
+                      Use PLAY AS to assign
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* AI Support Characters Section */}
             <div>
               <div className="mb-3 flex items-center justify-between">
-                <label className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                  <Cpu size={12} /> Support Characters
+                <label className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
+                  <Cpu size={12} /> AI Character(s)
                 </label>
                 <Badge
                   variant="outline"
@@ -449,35 +997,68 @@ export function CastStep({
                 </Badge>
               </div>
 
-              {aiCharacters.length > 0 ? (
-                <div className="space-y-2">
-                  {aiCharacters.map((char) => (
-                    <AIRosterItem
-                      key={char.id.toString()}
-                      character={char}
-                      onRemove={() => handleRemoveAI(char.id.toString())}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/20 p-6 text-center">
-                  <p className="text-[10px] text-zinc-600">
-                    No AI companions selected.
-                  </p>
-                </div>
-              )}
+              <AnimatePresence mode="popLayout">
+                {aiCharacters.length > 0 ? (
+                  aiCharacters.map((draft) => (
+                    <motion.div
+                      key={draft.tempId}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9, x: -20 }}
+                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, x: 20 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      className="mb-2 last:mb-0"
+                    >
+                      <AIRosterItem
+                        draft={draft}
+                        libraryCards={characterCards || []}
+                        onRemove={() => handleRemoveAI(draft.tempId)}
+                      />
+                    </motion.div>
+                  ))
+                ) : (
+                  <motion.div
+                    key="empty-ai"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#a855f7]/40 bg-[#3b0764]/20 px-4 py-5 text-center"
+                  >
+                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#a855f7]/20">
+                      <Cpu size={14} className="text-[#c084fc]" />
+                    </div>
+                    <p className="text-[11px] font-medium text-[#d8b4fe]">
+                      No AI companions selected
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-[#c084fc]">
+                      Use ADD AS AI to assign
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-
           </div>
 
           {/* Footer */}
-          <div className="flex-shrink-0 border-t border-zinc-800 p-4">
-            <div className="text-center text-xs text-zinc-500">
-              {totalSelected === 0
-                ? "Select at least one character to continue"
-                : `${totalSelected} character${totalSelected > 1 ? "s" : ""} selected`
-              }
-            </div>
+          <div className="flex-shrink-0 p-4">
+            {totalSelected === 0 ? (
+              <div className="flex items-center justify-center gap-2 rounded-lg border border-amber-500/30 bg-amber-950/20 px-3 py-2.5">
+                <AlertTriangle size={14} className="flex-shrink-0 text-amber-400" />
+                <p className="text-[11px] font-medium text-amber-300">
+                  Select at least one character
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2 rounded-lg border border-green-500/30 bg-green-950/20 px-3 py-2.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20 text-[10px] font-bold text-green-400">
+                  {totalSelected}
+                </span>
+                <p className="text-[11px] font-medium text-green-300">
+                  character{totalSelected > 1 ? "s" : ""} selected
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -487,42 +1068,68 @@ export function CastStep({
 
 /**
  * AI Roster Item
- * Single AI character in the roster
+ * Single AI character in the roster (supports both library and draft characters)
  * Uses consistent rounded-xl to match system design
  */
 function AIRosterItem({
-  character,
+  draft,
+  libraryCards,
   onRemove,
 }: {
-  character: CharacterCard;
+  draft: DraftCharacter;
+  libraryCards: CharacterCard[];
   onRemove: () => void;
 }) {
-  const [imageUrl] = useAsset(character.props.iconAssetId);
+  // For library characters, find the actual CharacterCard
+  const libraryCard = useMemo(() => {
+    if (draft.source === "library" && draft.existingCardId) {
+      return libraryCards.find((c) => c.id.toString() === draft.existingCardId);
+    }
+    return null;
+  }, [draft, libraryCards]);
+
+  // Get asset from library card's iconAssetId
+  const [libraryImageUrl] = useAsset(libraryCard?.props.iconAssetId);
+
+  // Resolve display name and image
+  const displayName =
+    libraryCard?.props.name || draft.data?.name || getDraftCharacterName(draft);
+  const displayImageUrl = libraryImageUrl || draft.data?.imageUrl;
+
+  // Check if this is a local (non-library) character
+  const isLocal = draft.source !== "library";
 
   return (
-    <div className="group relative flex items-center gap-3 rounded-xl border border-border-default bg-surface-raised p-3 transition-all hover:border-border-muted">
-      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-[#8a7355] text-xs font-bold text-white">
-        {imageUrl ? (
+    <div className="group relative flex items-center gap-3 rounded-xl border border-[#a855f7]/30 bg-[#3b0764]/40 p-3 transition-all hover:border-[#a855f7]/40">
+      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-[#a855f7] text-xs font-bold text-white">
+        {displayImageUrl ? (
           <img
-            src={imageUrl}
-            alt={character.props.name || ""}
+            src={displayImageUrl}
+            alt={displayName}
             className="h-full w-full object-cover"
           />
         ) : (
-          (character.props.name || "??").substring(0, 2).toUpperCase()
+          (displayName || "??").substring(0, 2).toUpperCase()
         )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-zinc-200">
-          {character.props.name || "Unnamed"}
+          {displayName}
         </div>
-        <div className="mt-0.5 inline-block rounded border border-[#8a7355]/30 bg-[#8a7355]/10 px-1.5 py-0.5 text-[10px] text-[#c9b89a]">
-          AI
+        <div className="mt-0.5 flex gap-1">
+          <div className="inline-block rounded border border-[#a855f7]/30 bg-[#3b0764]/30 px-1.5 py-0.5 text-[10px] text-[#d8b4fe]">
+            AI
+          </div>
+          {isLocal && (
+            <div className="inline-block rounded border border-[#f59e0b]/30 bg-[#451a03]/50 px-1.5 py-0.5 text-[10px] text-[#fcd34d]">
+              LOCAL
+            </div>
+          )}
         </div>
       </div>
       <button
         onClick={onRemove}
-        className="rounded-lg p-1.5 text-zinc-500 opacity-0 transition-all hover:bg-red-500/10 hover:text-rose-400 group-hover:opacity-100"
+        className="rounded-lg p-1.5 text-zinc-500 transition-all hover:bg-red-500/10 hover:text-rose-400 md:opacity-0 md:group-hover:opacity-100"
       >
         <X size={14} />
       </button>
@@ -547,16 +1154,16 @@ function CharacterDetailsModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+      className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm duration-200"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl bg-surface border border-border-default rounded-xl shadow-2xl relative flex flex-col overflow-hidden animate-in slide-in-from-bottom-4 duration-300"
+        className="bg-surface border-border-default animate-in slide-in-from-bottom-4 relative flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border shadow-2xl duration-300"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex h-full flex-col md:flex-row min-h-[400px]">
+        <div className="flex h-full min-h-[400px] flex-col md:flex-row">
           {/* Visual Side - Character Image */}
-          <div className="w-full md:w-1/3 relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-brand-600 to-brand-800">
+          <div className="from-brand-600 to-brand-800 relative flex w-full flex-col justify-between overflow-hidden bg-gradient-to-br md:w-1/3">
             {imageUrl ? (
               <img
                 src={imageUrl}
@@ -573,15 +1180,17 @@ function CharacterDetailsModal({
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
             <div className="relative z-10 p-6">
-              <span className="font-mono text-white/50 text-xs">CHARACTER_PROFILE</span>
+              <span className="font-mono text-xs text-white/50">
+                CHARACTER_PROFILE
+              </span>
             </div>
 
             <div className="relative z-10 p-6">
-              <h2 className="text-2xl font-bold text-white leading-tight">
+              <h2 className="text-2xl leading-tight font-bold text-white">
                 {character.props.name || "Unnamed"}
               </h2>
               {character.props.version && (
-                <p className="font-mono text-white/70 text-sm mt-1">
+                <p className="mt-1 font-mono text-sm text-white/70">
                   v{character.props.version}
                 </p>
               )}
@@ -589,26 +1198,26 @@ function CharacterDetailsModal({
           </div>
 
           {/* Data Side - Character Info */}
-          <div className="flex-1 p-6 flex flex-col bg-surface">
-            <div className="flex justify-between items-start mb-6">
+          <div className="bg-surface flex flex-1 flex-col p-6">
+            <div className="mb-6 flex items-start justify-between">
               <div>
-                <h3 className="text-xs font-bold text-fg-muted uppercase tracking-widest mb-1 flex items-center gap-2">
+                <h3 className="text-fg-muted mb-1 flex items-center gap-2 text-xs font-bold tracking-widest uppercase">
                   <Activity size={12} /> Character Info
                 </h3>
-                <div className="h-0.5 w-12 bg-brand-500" />
+                <div className="bg-brand-500 h-0.5 w-12" />
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-surface-raised text-fg-muted hover:text-fg-default transition-colors rounded-full"
+                className="hover:bg-surface-raised text-fg-muted hover:text-fg-default rounded-full p-2 transition-colors"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="space-y-6 flex-1 overflow-y-auto">
+            <div className="flex-1 space-y-6 overflow-y-auto">
               {/* Summary */}
               {character.props.cardSummary && (
-                <p className="text-sm text-fg-muted leading-relaxed border-l-2 border-border-default pl-4">
+                <p className="text-fg-muted border-border-default border-l-2 pl-4 text-sm leading-relaxed">
                   {character.props.cardSummary}
                 </p>
               )}
@@ -616,10 +1225,10 @@ function CharacterDetailsModal({
               {/* Description */}
               {character.props.description && (
                 <div>
-                  <h4 className="text-[10px] font-mono text-fg-subtle uppercase mb-2">
+                  <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
                     Description
                   </h4>
-                  <p className="text-sm text-fg-muted leading-relaxed whitespace-pre-wrap max-h-40 overflow-y-auto">
+                  <p className="text-fg-muted max-h-40 overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap">
                     {character.props.description}
                   </p>
                 </div>
@@ -628,14 +1237,14 @@ function CharacterDetailsModal({
               {/* Tags */}
               {character.props.tags && character.props.tags.length > 0 && (
                 <div>
-                  <h4 className="text-[10px] font-mono text-fg-subtle uppercase mb-2">
+                  <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
                     Tags
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {character.props.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="text-xs px-2 py-1 bg-surface-raised text-brand-300 border border-border-default rounded"
+                        className="bg-surface-raised text-brand-300 border-border-default rounded border px-2 py-1 text-xs"
                       >
                         {tag}
                       </span>
@@ -645,7 +1254,7 @@ function CharacterDetailsModal({
               )}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-border-default flex justify-end">
+            <div className="border-border-default mt-6 flex justify-end border-t pt-4">
               <Button onClick={onClose} variant="secondary" size="sm">
                 Close
               </Button>
@@ -656,4 +1265,3 @@ function CharacterDetailsModal({
     </div>
   );
 }
-

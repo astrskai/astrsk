@@ -1,21 +1,21 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import {
   Database,
   Plus,
   Trash2,
   ChevronDown,
   ChevronUp,
-  Send,
   Loader2,
   Hash,
   ToggleLeft,
   Type,
-  Smartphone,
   Ruler,
   X,
   Square,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
+import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
 import { cn, logger } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Button } from "@/shared/ui/forms";
@@ -27,6 +27,8 @@ import {
   type DataSchemaEntry,
   type DataSchemaContext,
 } from "@/app/services/system-agents";
+import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
+import { StepHeader } from "./step-header";
 
 // Simple template is the only template - no AI selection needed
 const SIMPLE_TEMPLATE = {
@@ -54,6 +56,9 @@ async function loadFlowTemplate(filename: string): Promise<any> {
 // Shared input styles matching the design system
 const INPUT_FOCUS_STYLES = "outline-none focus:ring-2 focus:ring-brand-500/20 focus:ring-offset-0 focus:border-brand-500";
 
+// Format name for display (replace underscores with spaces)
+const formatDisplayName = (name: string) => name.replace(/_/g, " ");
+
 /**
  * Data Store Type
  * Represents a trackable variable in the HUD
@@ -72,6 +77,8 @@ export interface HudDataStore {
   isFromTemplate?: boolean;
 }
 
+// ChatMessage type imported from scenario-step.tsx for unified chat
+
 interface HudStepProps {
   dataStores: HudDataStore[];
   onDataStoresChange: (stores: HudDataStore[]) => void;
@@ -85,57 +92,21 @@ interface HudStepProps {
   // Generation state (lifted to parent to disable navigation)
   isGenerating: boolean;
   onIsGeneratingChange: (isGenerating: boolean) => void;
+  // Track if generation has been attempted (lifted to parent to persist across step navigation)
+  hasAttemptedGeneration: boolean;
+  onHasAttemptedGenerationChange: (attempted: boolean) => void;
   // Selected flow template (lifted to parent for workflow generation)
   selectedTemplate?: TemplateSelectionResult | null;
   onSelectedTemplateChange?: (template: TemplateSelectionResult | null) => void;
   // Response template from selected flow template
   onResponseTemplateChange?: (responseTemplate: string) => void;
+  // Chat messages (lifted to parent for persistence across step navigation)
+  chatMessages?: ChatMessage[];
+  onChatMessagesChange?: (messages: ChatMessage[]) => void;
+  // Mobile tab state (controlled by parent for navigation)
+  mobileTab: "editor" | "chat";
+  onMobileTabChange: (tab: "editor" | "chat") => void;
 }
-
-/**
- * Generate a simple hash from scenario content for change detection
- */
-function generateContentHash(context: HudStepProps["sessionContext"]): string {
-  if (!context) return "";
-
-  const parts: string[] = [];
-
-  // Include scenario background
-  if (context.scenario) {
-    parts.push(context.scenario);
-  }
-
-  // Include character name
-  if (context.character) {
-    parts.push(context.character);
-  }
-
-  // Include cast names
-  if (context.cast && context.cast.length > 0) {
-    parts.push(context.cast.join(","));
-  }
-
-  // Include first messages content
-  if (context.firstMessages && context.firstMessages.length > 0) {
-    parts.push(context.firstMessages.map(m => `${m.title}:${m.content}`).join("|"));
-  }
-
-  // Include lorebook content
-  if (context.lorebook && context.lorebook.length > 0) {
-    parts.push(context.lorebook.map(l => `${l.title}:${l.keys}:${l.desc}`).join("|"));
-  }
-
-  // Simple hash using string length and character sum for quick comparison
-  const combined = parts.join("###");
-  let hash = 0;
-  for (let i = 0; i < combined.length; i++) {
-    const char = combined.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return `${combined.length}-${hash}`;
-}
-
 /**
  * Type Icon Component
  * Returns appropriate icon for data store type
@@ -156,120 +127,6 @@ function TypeIcon({ type, className }: { type: DataStoreType; className?: string
 }
 
 /**
- * HUD Preview Component
- * Shows how data stores appear in-session
- */
-function HudPreview({ dataStores }: { dataStores: HudDataStore[] }) {
-  return (
-    <div className="relative flex h-full flex-col items-center justify-center overflow-hidden p-8">
-      {/* Background Decor */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--brand-500-rgb),0.05)_0,transparent_70%)]" />
-
-      <div className="relative z-10 w-full max-w-sm">
-        <div className="mb-6 text-center">
-          <h3 className="flex items-center justify-center gap-2 text-sm font-bold text-fg-muted">
-            <Smartphone size={16} /> Player view
-          </h3>
-          <p className="mt-1 text-[10px] text-fg-subtle">
-            This is how the HUD appears in-session
-          </p>
-        </div>
-
-        {/* Device Container */}
-        <div className="relative overflow-hidden rounded-3xl border border-border-default bg-surface-raised shadow-2xl ring-4 ring-surface">
-          {/* Header Bar */}
-          <div className="flex items-center justify-between border-b border-border-default bg-surface px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-red-500" />
-              <div className="h-2 w-2 rounded-full bg-yellow-500" />
-              <div className="h-2 w-2 rounded-full bg-green-500" />
-            </div>
-            <span className="font-mono text-[10px] text-fg-muted">SESSION_ACTIVE</span>
-          </div>
-
-          {/* Content Area */}
-          <div className="min-h-[400px] space-y-3 bg-surface/50 p-4">
-            <div className="mb-2 ml-1 text-xs font-bold text-fg-muted">
-              Current state
-            </div>
-
-            {dataStores.length === 0 ? (
-              <div className="py-10 text-center text-xs italic text-fg-subtle">
-                No active trackers. Add some on the left.
-              </div>
-            ) : (
-              dataStores.map((store) => (
-                <div
-                  key={store.id}
-                  className="group relative overflow-hidden rounded-lg border border-border-subtle bg-surface-raised p-3 transition-colors hover:border-brand-400/30"
-                >
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <span className="text-xs font-bold text-fg-default">
-                      {store.name}
-                    </span>
-                    {store.type === "integer" && store.min !== undefined && store.max !== undefined && (
-                      <span className="font-mono text-[10px] text-brand-400">
-                        {store.initial as number} / {store.max}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Integer with bounds = slider */}
-                  {store.type === "integer" && store.min !== undefined && store.max !== undefined && (
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
-                      <div
-                        className="h-full rounded-full bg-brand-500 transition-all duration-500"
-                        style={{
-                          width: `${Math.min(100, Math.max(0, ((store.initial as number - store.min) / (store.max - store.min)) * 100))}%`,
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Integer without bounds = just number */}
-                  {store.type === "integer" && (store.min === undefined || store.max === undefined) && (
-                    <div className="mt-1 rounded border border-border-subtle bg-canvas p-1.5 font-mono text-xs text-fg-muted">
-                      {store.initial as number}
-                    </div>
-                  )}
-
-                  {store.type === "boolean" && (
-                    <div className="mt-1 flex items-center gap-2">
-                      <div
-                        className={cn(
-                          "h-1.5 w-1.5 rounded-full",
-                          store.initial
-                            ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                            : "bg-red-500",
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "font-mono text-[10px]",
-                          store.initial ? "text-emerald-500" : "text-fg-muted",
-                        )}
-                      >
-                        {store.initial ? "ACTIVE" : "DISABLED"}
-                      </span>
-                    </div>
-                  )}
-
-                  {store.type === "string" && (
-                    <div className="mt-1 rounded border border-border-subtle bg-canvas p-1.5 font-mono text-xs text-fg-muted">
-                      {(store.initial as string) || "—"}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
  * HUD Step Component
  * Third step for configuring session data stores/trackers
  */
@@ -279,9 +136,15 @@ export function HudStep({
   sessionContext,
   isGenerating,
   onIsGeneratingChange,
+  hasAttemptedGeneration,
+  onHasAttemptedGenerationChange,
   selectedTemplate,
   onSelectedTemplateChange,
   onResponseTemplateChange,
+  chatMessages = [],
+  onChatMessagesChange,
+  mobileTab,
+  onMobileTabChange,
 }: HudStepProps) {
   const [expandedId, setExpandedId] = useState<string | null>(
     dataStores[0]?.id || null,
@@ -289,9 +152,6 @@ export function HudStep({
   const [refinePrompt, setRefinePrompt] = useState("");
   const [isRefining, setIsRefining] = useState(false);
   const [templateStatus, setTemplateStatus] = useState<string>("");
-
-  // Track the last content hash that triggered generation
-  const lastContentHashRef = useRef<string>("");
 
   // Track if component is mounted (for cleanup)
   const isMountedRef = useRef(true);
@@ -434,11 +294,21 @@ export function HudStep({
           max: store.max,
         }));
 
+        // Max total stores (template + AI generated)
+        const MAX_TOTAL_STORES = 10;
+
         await generateDataSchemaAI({
           context,
           currentStores: existingStores,
           callbacks: {
             onAddStore: (store) => {
+              // Check if we've reached the limit
+              if (generatingStoresRef.current.length >= MAX_TOTAL_STORES) {
+                // Abort generation when limit reached
+                abortControllerRef.current?.abort();
+                return;
+              }
+
               // Add AI-generated store incrementally
               const hudStore = dataSchemaEntryToHudDataStore(store);
               generatingStoresRef.current = [...generatingStoresRef.current, hudStore];
@@ -465,8 +335,30 @@ export function HudStep({
       setTemplateStatus("");
     } finally {
       onIsGeneratingChange(false);
+      // Mark generation as attempted (prevents infinite retry on empty result)
+      onHasAttemptedGenerationChange(true);
+
+      // Add chat message about generation result
+      const finalStoreCount = generatingStoresRef.current.length;
+      if (finalStoreCount === 0) {
+        // No trackers were generated - notify user via chat
+        const noResultMessage: ChatMessage = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: "I couldn't find suitable trackers from your scenario. You can add them manually using the 'New Tracker' button above, or tell me what trackers you need!",
+        };
+        onChatMessagesChange?.([...chatMessages, noResultMessage]);
+      } else {
+        // Trackers were generated - summarize what was found
+        const successMessage: ChatMessage = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `I've generated ${finalStoreCount} tracker${finalStoreCount > 1 ? 's' : ''}. Let me know if you'd like to add or modify any trackers!`,
+        };
+        onChatMessagesChange?.([...chatMessages, successMessage]);
+      }
     }
-  }, [onDataStoresChange, dataSchemaEntryToHudDataStore, templateFieldToHudDataStore, onIsGeneratingChange, onSelectedTemplateChange]);
+  }, [onDataStoresChange, dataSchemaEntryToHudDataStore, templateFieldToHudDataStore, onIsGeneratingChange, onHasAttemptedGenerationChange, onSelectedTemplateChange, chatMessages, onChatMessagesChange]);
 
   // Stop generation
   const handleStopGeneration = useCallback(() => {
@@ -477,8 +369,12 @@ export function HudStep({
     onIsGeneratingChange(false);
   }, [onIsGeneratingChange]);
 
-  // Compute current content hash
-  const currentContentHash = generateContentHash(sessionContext);
+  // Regenerate trackers (clears existing and generates new ones)
+  const handleRegenerate = useCallback(() => {
+    // Reset attempt flag and clear stores to trigger regeneration
+    onHasAttemptedGenerationChange(false);
+    onDataStoresChange([]);
+  }, [onDataStoresChange, onHasAttemptedGenerationChange]);
 
   // Cleanup effect - only runs on unmount
   useEffect(() => {
@@ -491,33 +387,24 @@ export function HudStep({
     };
   }, []);
 
-  // Auto-generate data schema when entering the HUD step or when content changes
+  // Auto-generate data schema ONLY on first entry when no data stores exist
+  // Once generated (or user manually added), don't auto-regenerate
   useEffect(() => {
-    // Generate if:
-    // 1. No data stores exist (first time or previous generation was aborted), OR
-    // 2. Content has changed since last successful generation
-    const needsInitialGeneration = dataStores.length === 0 && !isGenerating;
-    const hasContentChanged = lastContentHashRef.current !== "" &&
-                              lastContentHashRef.current !== currentContentHash &&
-                              dataStores.length > 0;
+    // Only generate if:
+    // 1. No data stores exist AND
+    // 2. Generation hasn't been attempted yet AND
+    // 3. Not currently generating
+    const needsInitialGeneration = dataStores.length === 0 && !isGenerating && !hasAttemptedGeneration;
 
     logger.info("[HudStep] useEffect triggered", {
-      currentContentHash,
-      lastContentHash: lastContentHashRef.current,
       dataStoresLength: dataStores.length,
       isGenerating,
+      hasAttemptedGeneration,
       needsInitialGeneration,
-      hasContentChanged,
     });
 
-    if (needsInitialGeneration || hasContentChanged) {
-      logger.info("[HudStep] Conditions met, will generate data schema", {
-        needsInitialGeneration,
-        hasContentChanged,
-      });
-
-      // Store the hash we're about to generate for
-      const hashToGenerate = currentContentHash;
+    if (needsInitialGeneration) {
+      logger.info("[HudStep] Conditions met, will generate data schema");
 
       // Delay slightly to avoid StrictMode double-mount issues
       const timeoutId = setTimeout(() => {
@@ -525,23 +412,20 @@ export function HudStep({
           isMounted: isMountedRef.current,
         });
         if (isMountedRef.current) {
-          // Only update the ref and generate if we're still mounted
-          lastContentHashRef.current = hashToGenerate;
           logger.info("[HudStep] Calling generateDataSchema");
           generateDataSchema();
         }
       }, 150); // Slightly longer timeout to survive StrictMode
 
       return () => {
-        logger.info("[HudStep] Cleanup - clearing timeout (NOT updating hash ref)");
+        logger.info("[HudStep] Cleanup - clearing timeout");
         clearTimeout(timeoutId);
-        // Don't update lastContentHashRef here - let it stay empty so next mount can generate
       };
     } else {
       logger.info("[HudStep] Conditions NOT met, skipping generation");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentContentHash, dataStores.length, isGenerating]); // Re-run when stores change or generation completes
+  }, [dataStores.length, isGenerating, hasAttemptedGeneration]); // Re-run when stores change or generation completes
 
   // Toggle accordion expansion
   const toggleExpand = (id: string) => {
@@ -603,12 +487,23 @@ export function HudStep({
     [dataStores, onDataStoresChange],
   );
 
-  // Handle refine prompt submission
+  // Handle refine prompt submission (via chat)
   const handleRefine = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!refinePrompt.trim()) return;
 
+      // Add user message to chat
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: "user",
+        content: refinePrompt,
+      };
+      const updatedChatMessages = [...chatMessages, userMessage];
+      onChatMessagesChange?.(updatedChatMessages);
+
+      const promptText = refinePrompt;
+      setRefinePrompt("");
       setIsRefining(true);
 
       // Cancel any previous request
@@ -637,21 +532,27 @@ export function HudStep({
 
         // Track the updated stores
         let updatedStores = [...dataStores];
+        const addedStoreNames: string[] = [];
+        const removedStoreNames: string[] = [];
 
         await refineDataSchema({
-          prompt: refinePrompt,
+          prompt: promptText,
           context,
           currentStores,
           callbacks: {
             onAddStore: (store) => {
+              addedStoreNames.push(store.name);
               updatedStores = [...updatedStores, dataSchemaEntryToHudDataStore(store)];
               onDataStoresChange(updatedStores);
             },
             onRemoveStore: (id) => {
+              const removedStore = updatedStores.find(s => s.id === id);
+              if (removedStore) removedStoreNames.push(removedStore.name);
               updatedStores = updatedStores.filter((s) => s.id !== id);
               onDataStoresChange(updatedStores);
             },
             onClearAll: () => {
+              removedStoreNames.push(...updatedStores.map(s => s.name));
               updatedStores = [];
               onDataStoresChange([]);
             },
@@ -659,13 +560,42 @@ export function HudStep({
           abortSignal: abortControllerRef.current.signal,
         });
 
-        setRefinePrompt("");
+        // Build AI response message
+        let responseText = "Done!";
+        if (addedStoreNames.length > 0) {
+          responseText = `Added: ${addedStoreNames.join(", ")}`;
+        }
+        if (removedStoreNames.length > 0) {
+          responseText += addedStoreNames.length > 0 ? `. Removed: ${removedStoreNames.join(", ")}` : `Removed: ${removedStoreNames.join(", ")}`;
+        }
+        if (addedStoreNames.length === 0 && removedStoreNames.length === 0) {
+          responseText = "No changes were made.";
+        }
+
+        // Add AI response to chat
+        const aiResponse: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: responseText,
+        };
+        onChatMessagesChange?.([...updatedChatMessages, aiResponse]);
       } catch (e) {
         if ((e as Error).name === "AbortError") {
           // Request was cancelled, ignore
           return;
         }
         console.error("Failed to refine schema:", e);
+
+        // Add error message to chat
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: e instanceof Error
+            ? `Sorry, I encountered an error: ${e.message}`
+            : "Sorry, I encountered an error. Please try again.",
+        };
+        onChatMessagesChange?.([...updatedChatMessages, errorMessage]);
+
         toastError("Failed to refine schema", {
           description: e instanceof Error ? e.message : "An unknown error occurred",
         });
@@ -673,70 +603,83 @@ export function HudStep({
         setIsRefining(false);
       }
     },
-    [refinePrompt, dataStores, onDataStoresChange, dataSchemaEntryToHudDataStore],
+    [refinePrompt, dataStores, onDataStoresChange, dataSchemaEntryToHudDataStore, chatMessages, onChatMessagesChange],
+  );
+
+  // Handle chat submit (wraps handleRefine)
+  const handleChatSubmit = useCallback(() => {
+    if (!refinePrompt.trim()) return;
+    // Create a synthetic form event for handleRefine
+    const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
+    handleRefine(syntheticEvent);
+  }, [refinePrompt, handleRefine]);
+
+  // Mobile tab configuration
+  const mobileTabs = useMemo<MobileTab<"editor" | "chat">[]>(
+    () => [
+      { value: "editor", label: "Editor", icon: <Database size={14} /> },
+      { value: "chat", label: "AI", icon: <Sparkles size={14} /> },
+    ],
+    [],
   );
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-6 overflow-hidden px-0 md:flex-row md:px-6 md:pb-6">
-        {/* Left Panel: Editor List */}
-        <div className="flex min-w-0 flex-1 flex-col border-border-default md:max-w-2xl md:rounded-xl md:border">
-          {/* Header */}
-          <div className="flex flex-shrink-0 flex-col gap-4 border-b border-border-default p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight text-fg-default">
-                  <Database size={20} className="text-brand-400" />
-                  Data Protocol
-                </h1>
-                <p className="mt-1 font-mono text-xs text-fg-muted">
-                  Define variables for AI to track
-                </p>
-              </div>
-              <Button
-                onClick={handleAddStore}
-                variant="default"
-                size="sm"
-                icon={<Plus size={16} />}
-              >
-                <span className="hidden sm:inline">New Tracker</span>
-              </Button>
-            </div>
-          </div>
+      {/* Mobile Tab Navigation */}
+      <MobileTabNav
+        value={mobileTab}
+        onValueChange={onMobileTabChange}
+        tabs={mobileTabs}
+      />
 
-        {/* AI Command Bar */}
-        <div className="flex flex-shrink-0 gap-2 border-b border-border-default bg-surface/50 p-4">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={refinePrompt}
-              onChange={(e) => setRefinePrompt(e.target.value)}
-              placeholder="Ask AI to adjust schema (e.g. 'Add a stress meter')..."
-              className={cn(
-                "w-full rounded-lg border border-border-default bg-surface py-2 pr-10 pl-3 text-sm text-fg-default transition-all placeholder:text-fg-subtle",
-                INPUT_FOCUS_STYLES,
-              )}
-              onKeyDown={(e) => e.key === "Enter" && handleRefine(e)}
-            />
-            <button
-              onClick={isGenerating || isRefining ? handleStopGeneration : handleRefine}
-              disabled={!isGenerating && !isRefining && !refinePrompt.trim()}
-              className={cn(
-                "absolute top-1 right-1 bottom-1 flex aspect-square items-center justify-center rounded-md text-white transition-colors disabled:opacity-50",
-                isGenerating || isRefining
-                  ? "bg-red-600 hover:bg-red-500"
-                  : "bg-brand-600 hover:bg-brand-500",
-              )}
-              title={isGenerating || isRefining ? "Stop generation" : "Send"}
-            >
-              {isGenerating || isRefining ? (
-                <Square size={14} />
-              ) : (
-                <Send size={14} />
-              )}
-            </button>
-          </div>
-        </div>
+      <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-4 overflow-hidden px-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
+        {/* Left Panel: AI Chat */}
+        <ChatPanel
+          messages={chatMessages}
+          agent={CHAT_AGENTS.hud}
+          inputValue={refinePrompt}
+          onInputChange={setRefinePrompt}
+          onSubmit={handleChatSubmit}
+          isLoading={isRefining}
+          disabled={isRefining}
+          className={mobileTab === "chat" ? "" : "hidden md:flex"}
+        />
+
+        {/* Right Panel: Data Protocol Editor */}
+        <div
+          className={cn(
+            "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-border-default md:rounded-xl md:border",
+            mobileTab === "editor" ? "" : "hidden md:flex",
+          )}
+        >
+          <StepHeader
+            icon={<Database size={20} />}
+            title="Data Protocol"
+            subtitle="Define variables for AI to track"
+            actions={
+              <>
+                {hasAttemptedGeneration && !isGenerating && (
+                  <Button
+                    onClick={handleRegenerate}
+                    variant="secondary"
+                    size="sm"
+                    icon={<RefreshCw size={16} />}
+                    title="Regenerate trackers from scenario"
+                  >
+                    <span className="hidden sm:inline">Regenerate</span>
+                  </Button>
+                )}
+                <Button
+                  onClick={handleAddStore}
+                  variant="default"
+                  size="sm"
+                  icon={<Plus size={16} />}
+                >
+                  <span className="hidden sm:inline">New Tracker</span>
+                </Button>
+              </>
+            }
+          />
 
         {/* Expandable List */}
         <div className="flex-1 space-y-3 overflow-y-auto p-4">
@@ -768,14 +711,29 @@ export function HudStep({
           )}
           {/* Empty state - only show when not generating and no stores */}
           {!isGenerating && dataStores.length === 0 && (
-            <div className="flex h-64 flex-col items-center justify-center gap-4 text-fg-muted">
-              <Database size={48} className="text-fg-subtle" />
-              <div className="text-center">
-                <p className="text-sm font-medium">No trackers defined</p>
-                <p className="mt-1 text-xs text-fg-subtle">
-                  Add trackers manually or use AI to generate them
-                </p>
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-900/30 px-6 py-10 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
+                <Database size={20} className="text-zinc-400" />
               </div>
+              <p className="text-sm font-medium text-zinc-400">
+                {hasAttemptedGeneration ? "No trackers were generated" : "No trackers defined"}
+              </p>
+              <p className="mt-1 max-w-[280px] text-xs text-zinc-500">
+                {hasAttemptedGeneration
+                  ? "AI couldn't find suitable trackers for your scenario"
+                  : "Add trackers manually or use AI to generate them"}
+              </p>
+              {hasAttemptedGeneration && (
+                <Button
+                  onClick={handleAddStore}
+                  variant="outline"
+                  size="sm"
+                  icon={<Plus size={16} />}
+                  className="mt-4"
+                >
+                  New Tracker
+                </Button>
+              )}
             </div>
           )}
           {/* Data stores list - shows during generation as stores arrive */}
@@ -815,7 +773,7 @@ export function HudStep({
                             isExpanded ? "text-fg-default" : "text-fg-default",
                           )}
                         >
-                          {store.name}
+                          {formatDisplayName(store.name)}
                         </h4>
                         <p className="font-mono text-xs text-fg-muted">
                           {store.type} •{" "}
@@ -1064,11 +1022,6 @@ export function HudStep({
             })
           )}
         </div>
-      </div>
-
-        {/* Right Panel: Preview (hidden on mobile) */}
-        <div className="hidden flex-1 border-border-default bg-canvas md:rounded-xl md:border lg:block">
-          <HudPreview dataStores={dataStores} />
         </div>
       </div>
     </div>

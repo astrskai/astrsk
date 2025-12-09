@@ -97,6 +97,7 @@
     "lucide-react": "^0.503.0",
     "minijinja-js": "^2.12.0",
     "monaco-editor": "^0.52.2",
+    "motion": "^12.23.25",
     "ollama-ai-provider": "^1.2.0",
     "opfs-tools": "^0.7.0",
     "png-chunks-encode": "^1.0.0",

@@ -80,6 +80,23 @@ export interface CharacterCardProps {
    * @default 'lazy'
    */
   loading?: 'lazy' | 'eager';
+  /**
+   * Custom footer actions to display at the bottom of the card.
+   * Renders below the content area with a top border separator.
+   * Useful for action buttons like "Play", "Add", "Edit", etc.
+   * @example
+   * ```tsx
+   * <CharacterCard
+   *   footerActions={
+   *     <>
+   *       <button className="flex-1 py-2">Play</button>
+   *       <button className="flex-1 py-2">Add</button>
+   *     </>
+   *   }
+   * />
+   * ```
+   */
+  footerActions?: React.ReactNode;
 }
 
 // Re-export for backward compatibility
@@ -106,6 +123,7 @@ export function CharacterCard({
   downloadCount,
   imageSizes,
   loading = 'lazy',
+  footerActions,
 }: CharacterCardProps) {
   const [imageError, setImageError] = useState(false);
 
@@ -228,6 +246,13 @@ export function CharacterCard({
           </CardMetadataContainer>
         )}
       </div>
+
+      {/* Footer Actions */}
+      {footerActions && (
+        <div className="mt-auto flex border-t border-zinc-800">
+          {footerActions}
+        </div>
+      )}
     </BaseCard>
   );
 }

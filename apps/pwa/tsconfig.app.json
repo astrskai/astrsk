@@ -26,7 +26,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "vibe-shared-types": ["../vibe-shared-types/src/index.ts"]
+      "vibe-shared-types": ["../vibe-shared-types/src/index.ts"],
+      "@astrsk/design-system/*": ["../../packages/design-system/src/components/*"]
     }
   },
   "include": ["src"],
