@@ -50,6 +50,8 @@ export interface CreateCharacterData {
   // 1:1 Session Config
   scenario?: string;
   firstMessages?: FirstMessageData[];
+  // Session-local character (if provided, character belongs to this session only)
+  sessionId?: UniqueEntityID;
 }
 
 /**
@@ -154,6 +156,8 @@ export const useCreateCharacterCard = () => {
         // 1:1 Session Config
         scenario: data.scenario,
         firstMessages: data.firstMessages,
+        // Session-local character (if provided)
+        sessionId: data.sessionId,
       });
 
       if (cardResult.isFailure) {
@@ -173,6 +177,13 @@ export const useCreateCharacterCard = () => {
     },
 
     onSuccess: (newCard) => {
+      // Session-local characters should NOT be added to global caches
+      // They belong only to the session they were created for
+      if (newCard.props.sessionId) {
+        // Don't update global caches for session-local characters
+        return;
+      }
+
       // Optimistically add the new card to character list caches
       const characterListQueries = queryClient.getQueriesData<CharacterCard[]>({
         queryKey: characterKeys.lists(),

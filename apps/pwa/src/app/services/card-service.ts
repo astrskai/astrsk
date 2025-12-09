@@ -32,6 +32,7 @@ import {
   UpdatePlotDescription,
   RestoreCardFromSnapshot,
 } from "@/entities/card/usecases";
+import { ParseCharacterFromFile } from "@/entities/card/usecases/parse-character-from-file";
 import { ImportCharacterFromCloud } from "@/entities/card/usecases/import-character-from-cloud";
 import { ImportScenarioFromCloud } from "@/entities/card/usecases/import-scenario-from-cloud";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
@@ -67,6 +68,7 @@ export class CardService {
   public static restoreCardFromSnapshot: RestoreCardFromSnapshot;
   public static importCharacterFromCloud: ImportCharacterFromCloud;
   public static importScenarioFromCloud: ImportScenarioFromCloud;
+  public static parseCharacterFromFile: ParseCharacterFromFile;
 
   private constructor() {}
 
@@ -166,5 +168,8 @@ export class CardService {
       saveFileToAsset,
       this.cardRepo,
     );
+
+    // Parse only (no DB save) - for lazy character creation
+    this.parseCharacterFromFile = new ParseCharacterFromFile();
   }
 }

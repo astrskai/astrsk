@@ -8,7 +8,6 @@ export {
   ScenarioStep,
   type FirstMessage,
   type LorebookEntry,
-  type ChatMessage,
   type CharacterContext,
 } from "./scenario-step";
 export { HudStep, type HudDataStore, type DataStoreType } from "./hud-step";
@@ -16,3 +15,16 @@ export {
   CharacterCreateDialog,
   type PendingCharacterData,
 } from "./character-create-dialog";
+export {
+  ChatPanel,
+  CHAT_AGENTS,
+  type ChatMessage,
+  type ChatAgentConfig,
+} from "./chat-panel";
+export { StepHeader } from "./step-header";
+export {
+  SessionStepper,
+  SESSION_STEPS,
+  type SessionStep,
+  type StepConfig,
+} from "./session-stepper";

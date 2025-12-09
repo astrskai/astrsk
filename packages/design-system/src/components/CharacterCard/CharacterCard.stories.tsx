@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Copy, Download, Edit, Trash2, Heart, MessageSquare, Clock, Layers, Lock, User } from 'lucide-react';
+import { Copy, Download, Edit, Trash2, Heart, MessageSquare, Clock, Layers, Lock, User, Play, Plus } from 'lucide-react';
 import { CharacterCard, MetadataContainer, MetadataItem } from './CharacterCard';
 import { CharacterCardSkeleton } from './CharacterCardSkeleton';
 
@@ -645,6 +645,197 @@ export const FullFeatured: Story = {
       },
     ],
   },
+};
+
+// With footer actions (selection buttons)
+export const WithFooterActions: Story = {
+  args: {
+    ...Default.args,
+    footerActions: (
+      <>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-400 transition-all hover:bg-blue-600/10 hover:text-blue-300 border-r border-zinc-800"
+          onClick={() => console.log('Play clicked')}
+        >
+          <Play size={14} /> PLAY
+        </button>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-400 transition-all hover:bg-amber-600/10 hover:text-amber-300"
+          onClick={() => console.log('Add clicked')}
+        >
+          <Plus size={14} /> ADD
+        </button>
+      </>
+    ),
+  },
+};
+
+// With footer actions (selected as player)
+export const WithFooterActionsSelectedPlayer: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'PLAYER', variant: 'default', position: 'right' },
+    ],
+    footerActions: (
+      <>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-600 cursor-not-allowed border-r border-zinc-800"
+          disabled
+        >
+          <Play size={14} /> PLAY
+        </button>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-600 cursor-not-allowed"
+          disabled
+        >
+          <Plus size={14} /> ADD
+        </button>
+      </>
+    ),
+  },
+};
+
+// With footer actions (selected as AI)
+export const WithFooterActionsSelectedAI: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'AI', variant: 'private', position: 'right' },
+    ],
+    footerActions: (
+      <>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-600 cursor-not-allowed border-r border-zinc-800"
+          disabled
+        >
+          <Play size={14} /> PLAY
+        </button>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-600 cursor-not-allowed"
+          disabled
+        >
+          <Plus size={14} /> ADD
+        </button>
+      </>
+    ),
+  },
+};
+
+// With footer actions - compact mobile style
+export const WithFooterActionsCompact: Story = {
+  args: {
+    name: 'Mobile Character',
+    imageUrl: SAMPLE_IMAGE,
+    summary: 'A character card with compact footer for mobile view.',
+    tags: ['Mobile'],
+    tokenCount: 500,
+    emptySummaryText: '',
+    className: 'min-h-0',
+    footerActions: (
+      <>
+        <button
+          className="flex flex-1 items-center justify-center gap-1 py-2 text-[10px] font-bold text-zinc-400 transition-all hover:bg-blue-600/10 hover:text-blue-300 border-r border-zinc-800"
+          onClick={() => console.log('Play clicked')}
+        >
+          <Play size={12} /> PLAY
+        </button>
+        <button
+          className="flex flex-1 items-center justify-center gap-1 py-2 text-[10px] font-bold text-zinc-400 transition-all hover:bg-amber-600/10 hover:text-amber-300"
+          onClick={() => console.log('Add clicked')}
+        >
+          <Plus size={12} /> ADD
+        </button>
+      </>
+    ),
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '160px' }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+// Grid layout with footer actions
+export const GridLayoutWithFooterActions: Story = {
+  args: {
+    ...Default.args,
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 280px)',
+          gap: '24px',
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => (
+    <>
+      <CharacterCard
+        name="Alice Wonderland"
+        imageUrl={SAMPLE_IMAGE}
+        summary="A curious young girl who falls down a rabbit hole."
+        tags={['Fantasy', 'Adventure']}
+        tokenCount={1523}
+        updatedAt="2 days ago"
+        footerActions={
+          <>
+            <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-400 hover:bg-blue-600/10 hover:text-blue-300 border-r border-zinc-800">
+              <Play size={14} /> PLAY
+            </button>
+            <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-400 hover:bg-amber-600/10 hover:text-amber-300">
+              <Plus size={14} /> ADD
+            </button>
+          </>
+        }
+      />
+      <CharacterCard
+        name="Bob the Builder"
+        imageUrl={SAMPLE_IMAGE_2}
+        summary="Can we fix it? Yes we can!"
+        tags={['Kids', 'Comedy']}
+        tokenCount={890}
+        updatedAt="1 week ago"
+        badges={[{ label: 'PLAYER', variant: 'default', position: 'right' }]}
+        footerActions={
+          <>
+            <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-600 cursor-not-allowed border-r border-zinc-800" disabled>
+              <Play size={14} /> PLAY
+            </button>
+            <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-600 cursor-not-allowed" disabled>
+              <Plus size={14} /> ADD
+            </button>
+          </>
+        }
+      />
+      <CharacterCard
+        name="Charlie Detective"
+        imageUrl={SAMPLE_IMAGE_3}
+        summary="A sharp-minded detective solving mysteries."
+        tags={['Mystery', 'Thriller']}
+        tokenCount={2100}
+        updatedAt="Just now"
+        badges={[{ label: 'AI', variant: 'private', position: 'right' }]}
+        footerActions={
+          <>
+            <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-600 cursor-not-allowed border-r border-zinc-800" disabled>
+              <Play size={14} /> PLAY
+            </button>
+            <button className="flex flex-1 items-center justify-center gap-2 py-3 text-xs font-bold text-zinc-600 cursor-not-allowed" disabled>
+              <Plus size={14} /> ADD
+            </button>
+          </>
+        }
+      />
+    </>
+  ),
 };
 
 // Grid layout with popularity

@@ -285,6 +285,28 @@
   }
 }
 
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.2);
+  }
+}
+
+@keyframes pulse-highlight {
+  0% {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
 /* Custom Utilities - must be at top level, cannot be nested in @layer */
 @utility h-screen-minus-topbar {
   height: calc(100vh - var(--topbar-height));
@@ -312,6 +334,35 @@
 
 @utility animate-accordion-up {
   animation: accordion-up 0.2s ease-out;
+}
+
+@utility animate-pulse-highlight {
+  animation: pulse-highlight 0.8s ease-out;
+}
+
+/* Class-based animations for dynamic usage */
+.animate-pulse-highlight {
+  animation: pulse-highlight 0.8s ease-out;
+}
+
+.animate-fade-in-up-dynamic {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+.animate-new-item-highlight {
+  animation: new-item-highlight 1.2s ease-out;
+}
+
+@keyframes new-item-highlight {
+  0%, 50% {
+    border-color: rgba(34, 197, 94, 0.8);
+  }
+  25%, 75% {
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+  100% {
+    border-color: rgb(82, 82, 82);
+  }
 }
 
 @layer base {

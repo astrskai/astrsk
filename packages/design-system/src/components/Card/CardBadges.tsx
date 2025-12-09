@@ -13,6 +13,8 @@ export interface CardBadge {
   variant?: CardBadgeVariant;
   /** Badge position (left or right). Defaults to 'left' */
   position?: CardBadgePosition;
+  /** Custom CSS classes to override default styles */
+  className?: string;
 }
 
 interface CardBadgesProps {
@@ -65,10 +67,11 @@ export function CardBadges({ badges, position, className }: CardBadgesProps) {
           key={`${badge.label}-${index}`}
           className={cn(
             'flex max-w-full items-center gap-1 rounded border px-2 py-1 text-[10px] font-bold backdrop-blur-md',
-            badgeVariantStyles[badge.variant ?? 'default']
+            badgeVariantStyles[badge.variant ?? 'default'],
+            badge.className
           )}
         >
-          <span className="shrink-0">{badge.icon}</span>
+          {badge.icon && <span className="shrink-0">{badge.icon}</span>}
           <span className="truncate">{badge.label}</span>
         </div>
       ))}

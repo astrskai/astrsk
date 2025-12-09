@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import type { MouseEvent, KeyboardEvent } from "react";
 import {
   Plus,
@@ -8,10 +8,6 @@ import {
   MessageSquare,
   BookOpen,
   Globe,
-  Loader2,
-  Send,
-  Bot,
-  User,
 } from "lucide-react";
 import { Input, Textarea, Button } from "@/shared/ui/forms";
 import { AccordionBase } from "@/shared/ui";
@@ -21,20 +17,15 @@ import {
   generateScenarioResponse,
   type ScenarioBuilderMessage,
 } from "@/app/services/system-agents";
+import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
+import { StepHeader } from "./step-header";
+import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
 
-// Shared input styles matching the design system
-const INPUT_FOCUS_STYLES =
-  "outline-none focus:ring-2 focus:ring-brand-500/20 focus:ring-offset-0 focus:border-brand-500";
+// Animation for newly added items - highlight effect that fades out
+const NEW_ITEM_ANIMATION = "animate-new-item-highlight";
 
-// Animation for newly added items - uses existing animate-fade-in-up from global.css
-const FADE_IN_ANIMATION = "animate-fade-in-up";
-
-// Chat message for AI conversation
-export interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-}
+// Re-export ChatMessage for backwards compatibility
+export type { ChatMessage };
 
 // Character info for scenario context
 export interface CharacterContext {
@@ -44,6 +35,13 @@ export interface CharacterContext {
 
 // Minimum characters required for scenario description
 const MIN_SCENARIO_LENGTH = 400;
+
+// Initial welcome message content
+const WELCOME_MESSAGE_CONTENT =
+  "Hi! I'm here to help you build your scenario. Tell me about the world, setting, or story you'd like to create, and I'll help you craft the background, first messages, and lorebook entries.";
+
+// Typing speed (ms per character)
+const TYPING_SPEED = 15;
 
 interface ScenarioStepProps {
   // Scenario data
@@ -62,6 +60,9 @@ interface ScenarioStepProps {
   // Generation state (lifted to parent to disable navigation)
   isGenerating: boolean;
   onIsGeneratingChange: (isGenerating: boolean) => void;
+  // Mobile tab state (controlled by parent for navigation)
+  mobileTab: "chat" | "builder";
+  onMobileTabChange: (tab: "chat" | "builder") => void;
 }
 
 export interface FirstMessage {
@@ -125,25 +126,27 @@ const AccordionItemTitle = ({
       </div>
       <div className="flex flex-shrink-0 items-center gap-2">
         {onCopy && (
-          <button
-            type="button"
+          <span
+            role="button"
+            tabIndex={0}
             onClick={handleCopy}
             onKeyDown={handleCopyKeyDown}
             className="cursor-pointer text-neutral-500 hover:text-neutral-400"
             aria-label="Copy item"
           >
             <Copy className="h-4 w-4" />
-          </button>
+          </span>
         )}
-        <button
-          type="button"
+        <span
+          role="button"
+          tabIndex={0}
           onClick={handleDelete}
           onKeyDown={handleDeleteKeyDown}
           className="cursor-pointer text-neutral-500 hover:text-neutral-400"
           aria-label="Delete item"
         >
           <Trash2 className="h-4 w-4" />
-        </button>
+        </span>
       </div>
     </div>
   );
@@ -166,33 +169,99 @@ export function ScenarioStep({
   aiCharacters,
   isGenerating,
   onIsGeneratingChange,
+  mobileTab,
+  onMobileTabChange,
 }: ScenarioStepProps) {
   const [aiPrompt, setAiPrompt] = useState("");
-  const aiInputRef = useRef<HTMLInputElement>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Track newly added items for animation (IDs that were just added by AI)
   const [newlyAddedIds, setNewlyAddedIds] = useState<Set<string>>(new Set());
 
-  // Auto-focus AI input on mount
+  // Track when background was just updated by AI for animation
+  const [isBackgroundAnimating, setIsBackgroundAnimating] = useState(false);
+
+  // Track initial typing animation state
+  const [isInitialTyping, setIsInitialTyping] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  // Add initial welcome message with typing indicator then streaming text effect
   useEffect(() => {
-    aiInputRef.current?.focus();
-  }, []);
+    if (chatMessages.length === 0) {
+      setIsInitialTyping(true);
+
+      // After typing indicator, start streaming the text
+      const typingTimer = setTimeout(() => {
+        setIsInitialTyping(false);
+        setIsStreaming(true);
+
+        // Add empty message that will be updated with streaming text
+        const welcomeMessage: ChatMessage = {
+          id: "welcome",
+          role: "assistant",
+          content: "",
+        };
+        onChatMessagesChange([welcomeMessage]);
+
+        // Stream characters one by one
+        let charIndex = 0;
+        const streamInterval = setInterval(() => {
+          if (charIndex < WELCOME_MESSAGE_CONTENT.length) {
+            setStreamingText(WELCOME_MESSAGE_CONTENT.slice(0, charIndex + 1));
+            charIndex++;
+          } else {
+            clearInterval(streamInterval);
+            setIsStreaming(false);
+            // Update to final message
+            onChatMessagesChange([
+              {
+                id: "welcome",
+                role: "assistant",
+                content: WELCOME_MESSAGE_CONTENT,
+              },
+            ]);
+          }
+        }, TYPING_SPEED);
+
+        return () => clearInterval(streamInterval);
+      }, 1500); // Show typing indicator for 1.5 seconds
+
+      return () => clearTimeout(typingTimer);
+    }
+  }, []); // Only run on mount
+
+  // Compute messages with streaming text applied
+  const displayMessages = useMemo(() => {
+    if (
+      isStreaming &&
+      chatMessages.length > 0 &&
+      chatMessages[0]?.id === "welcome"
+    ) {
+      return [{ ...chatMessages[0], content: streamingText }];
+    }
+    return chatMessages;
+  }, [chatMessages, isStreaming, streamingText]);
 
   // Clear animation flags after animation completes
   useEffect(() => {
     if (newlyAddedIds.size > 0) {
       const timer = setTimeout(() => {
         setNewlyAddedIds(new Set());
-      }, 500); // Match animation duration
+      }, 1200); // Match animation duration
       return () => clearTimeout(timer);
     }
   }, [newlyAddedIds]);
 
-  // Scroll to bottom when new messages arrive
+  // Clear background animation flag after animation completes
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
+    if (isBackgroundAnimating) {
+      const timer = setTimeout(() => {
+        setIsBackgroundAnimating(false);
+      }, 800); // Match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [isBackgroundAnimating]);
 
   // Track which accordions are open
   const openFirstMessages = firstMessages
@@ -204,10 +273,10 @@ export function ScenarioStep({
 
   // --- First Message Handlers ---
   const addMessage = () => {
-    const newId = Date.now().toString();
+    const newId = crypto.randomUUID();
     onFirstMessagesChange([
       ...firstMessages,
-      { id: newId, title: "New Message", content: "", expanded: true },
+      { id: newId, title: "", content: "", expanded: true },
     ]);
   };
 
@@ -241,12 +310,12 @@ export function ScenarioStep({
 
   // --- Lorebook Handlers ---
   const addLorebook = () => {
-    const newId = Date.now().toString();
+    const newId = crypto.randomUUID();
     onLorebookChange([
       ...lorebook,
       {
         id: newId,
-        title: "New Entry",
+        title: "",
         keys: "",
         desc: "",
         range: 2,
@@ -290,7 +359,7 @@ export function ScenarioStep({
 
     // Add user message to chat
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       role: "user",
       content: aiPrompt,
     };
@@ -301,10 +370,12 @@ export function ScenarioStep({
 
     try {
       // Convert chat messages to scenario builder format
-      const scenarioMessages: ScenarioBuilderMessage[] = updatedMessages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
+      const scenarioMessages: ScenarioBuilderMessage[] = updatedMessages.map(
+        (msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }),
+      );
 
       // Current scenario data for the agent to work with
       const currentScenario = {
@@ -323,7 +394,10 @@ export function ScenarioStep({
         })),
         // Include character context for AI generation
         playerCharacter: playerCharacter
-          ? { name: playerCharacter.name, description: playerCharacter.description }
+          ? {
+              name: playerCharacter.name,
+              description: playerCharacter.description,
+            }
           : undefined,
         aiCharacters: aiCharacters?.map((char) => ({
           name: char.name,
@@ -339,12 +413,18 @@ export function ScenarioStep({
       // Callbacks update UI immediately as each tool executes
       const callbacks = {
         onSetBackground: (bg: string) => {
+          setIsBackgroundAnimating(true);
           onBackgroundChange(bg);
         },
         onEditBackground: (bg: string) => {
+          setIsBackgroundAnimating(true);
           onBackgroundChange(bg);
         },
-        onAddFirstMessage: (message: { id: string; title: string; content: string }) => {
+        onAddFirstMessage: (message: {
+          id: string;
+          title: string;
+          content: string;
+        }) => {
           newIds.push(message.id);
           setNewlyAddedIds((prev) => new Set([...prev, message.id]));
           currentFirstMessages = [
@@ -353,13 +433,16 @@ export function ScenarioStep({
           ];
           onFirstMessagesChange(currentFirstMessages);
         },
-        onAddLorebookEntry: (entry: { id: string; title: string; keys: string; desc: string; range: number }) => {
+        onAddLorebookEntry: (entry: {
+          id: string;
+          title: string;
+          keys: string;
+          desc: string;
+          range: number;
+        }) => {
           newIds.push(entry.id);
           setNewlyAddedIds((prev) => new Set([...prev, entry.id]));
-          currentLorebook = [
-            ...currentLorebook,
-            { ...entry, expanded: true },
-          ];
+          currentLorebook = [...currentLorebook, { ...entry, expanded: true }];
           onLorebookChange(currentLorebook);
         },
       };
@@ -373,11 +456,16 @@ export function ScenarioStep({
 
       // Add AI response to chat
       const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: crypto.randomUUID(),
         role: "assistant",
         content: result.text || "I've made the changes to your scenario.",
       };
       onChatMessagesChange([...updatedMessages, aiResponse]);
+
+      // If tools were executed, switch to builder tab on mobile for better UX
+      if (result.toolResults && result.toolResults.length > 0) {
+        onMobileTabChange("builder");
+      }
 
       logger.info("[ScenarioStep] AI response generated", {
         toolResults: result.toolResults?.length || 0,
@@ -387,11 +475,12 @@ export function ScenarioStep({
 
       // Add error message to chat
       const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: crypto.randomUUID(),
         role: "assistant",
-        content: error instanceof Error
-          ? `Sorry, I encountered an error: ${error.message}`
-          : "Sorry, I encountered an error while generating the scenario. Please check your model settings.",
+        content:
+          error instanceof Error
+            ? `Sorry, I encountered an error: ${error.message}`
+            : "Sorry, I encountered an error while generating the scenario. Please check your model settings.",
       };
       onChatMessagesChange([...updatedMessages, errorMessage]);
 
@@ -414,12 +503,13 @@ export function ScenarioStep({
     playerCharacter,
     aiCharacters,
     onIsGeneratingChange,
+    onMobileTabChange,
   ]);
 
   // Build accordion items for First Messages
   const firstMessageItems = firstMessages.map((msg) => ({
     value: msg.id,
-    className: newlyAddedIds.has(msg.id) ? FADE_IN_ANIMATION : undefined,
+    className: newlyAddedIds.has(msg.id) ? NEW_ITEM_ANIMATION : undefined,
     title: (
       <AccordionItemTitle
         name={msg.title}
@@ -450,7 +540,7 @@ export function ScenarioStep({
   // Build accordion items for Lorebook
   const lorebookItems = lorebook.map((entry) => ({
     value: entry.id,
-    className: newlyAddedIds.has(entry.id) ? FADE_IN_ANIMATION : undefined,
+    className: newlyAddedIds.has(entry.id) ? NEW_ITEM_ANIMATION : undefined,
     title: (
       <AccordionItemTitle
         name={entry.title}
@@ -460,7 +550,7 @@ export function ScenarioStep({
     content: (
       <div className="space-y-4">
         <Input
-          label="Lorebook name"
+          label="Name"
           labelPosition="inner"
           isRequired
           value={entry.title}
@@ -472,7 +562,6 @@ export function ScenarioStep({
           isRequired
           value={entry.keys}
           onChange={(e) => updateLorebook(entry.id, "keys", e.target.value)}
-          placeholder="e.g. City, Rain"
         />
         <Textarea
           label="Description"
@@ -501,216 +590,85 @@ export function ScenarioStep({
     ),
   }));
 
+  // Handle chat submit (wraps generateScenario)
+  const handleChatSubmit = useCallback(() => {
+    if (!aiPrompt.trim()) return;
+    generateScenario();
+  }, [aiPrompt, generateScenario]);
+
+  // Mobile tab configuration
+  const mobileTabs = useMemo<MobileTab<"builder" | "chat">[]>(
+    () => [
+      { value: "builder", label: "Builder", icon: <Globe size={14} /> },
+      { value: "chat", label: "AI", icon: <Sparkles size={14} /> },
+    ],
+    [],
+  );
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-4 overflow-hidden px-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
-        {/* Left Panel: AI Chat (Desktop only) */}
-        <div className="hidden min-w-0 flex-1 flex-col border-border-default md:flex md:max-w-md md:rounded-xl md:border">
-          {/* Header */}
-          <div className="flex flex-shrink-0 items-center gap-3 border-b border-border-default p-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500/10">
-              <Sparkles size={16} className="text-brand-400" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-fg-default">AI Assistant</h2>
-              <p className="font-mono text-xs text-fg-muted">
-                Generate scenario
-              </p>
-            </div>
-          </div>
+      {/* Mobile Tab Nav */}
+      <MobileTabNav
+        value={mobileTab}
+        onValueChange={onMobileTabChange}
+        tabs={mobileTabs}
+      />
 
-          {/* Chat Messages */}
-          <div className="flex-1 space-y-4 overflow-y-auto p-4">
-            {chatMessages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-overlay">
-                  <Sparkles size={20} className="text-fg-subtle" />
-                </div>
-                <p className="text-sm font-medium text-fg-muted">
-                  Start a conversation
-                </p>
-                <p className="mt-1 max-w-[200px] text-xs text-fg-subtle">
-                  Describe your scenario idea and I'll help you create it
-                </p>
-              </div>
-            ) : (
-              chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex gap-3",
-                    msg.role === "user" ? "flex-row-reverse" : "flex-row",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
-                      msg.role === "user"
-                        ? "bg-brand-500/20"
-                        : "bg-surface-overlay",
-                    )}
-                  >
-                    {msg.role === "user" ? (
-                      <User size={14} className="text-brand-400" />
-                    ) : (
-                      <Bot size={14} className="text-fg-muted" />
-                    )}
-                  </div>
-                  <div
-                    className={cn(
-                      "max-w-[80%] rounded-xl px-3 py-2 text-sm",
-                      msg.role === "user"
-                        ? "bg-brand-500/10 text-fg-default"
-                        : "bg-surface-overlay text-fg-default",
-                    )}
-                  >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
-                  </div>
-                </div>
-              ))
-            )}
-            {isGenerating && (
-              <div className="flex gap-3">
-                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-surface-overlay">
-                  <Bot size={14} className="text-fg-muted" />
-                </div>
-                <div className="rounded-xl bg-surface-overlay px-3 py-2">
-                  <Loader2 size={14} className="animate-spin text-fg-muted" />
-                </div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Chat Input */}
-          <div className="flex-shrink-0 border-t border-border-default p-4">
-            <div className="relative">
-              <input
-                ref={aiInputRef}
-                type="text"
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                placeholder="Describe your scenario idea..."
-                className={cn(
-                  "w-full rounded-lg border border-border-default bg-surface-raised py-2.5 pl-3 pr-10 text-sm text-fg-default placeholder:text-fg-subtle",
-                  INPUT_FOCUS_STYLES,
-                )}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    generateScenario();
-                  }
-                }}
-              />
-              <button
-                onClick={generateScenario}
-                disabled={!aiPrompt.trim() || isGenerating}
-                className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md bg-brand-600 text-white transition-colors hover:bg-brand-500 disabled:opacity-50"
-              >
-                {isGenerating ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Send size={14} />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="mx-auto flex h-full w-full max-w-[1600px] flex-1 flex-col gap-4 overflow-hidden px-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
+        {/* Left Panel: AI Chat */}
+        <ChatPanel
+          messages={displayMessages}
+          agent={CHAT_AGENTS.scenario}
+          inputValue={aiPrompt}
+          onInputChange={setAiPrompt}
+          onSubmit={handleChatSubmit}
+          isLoading={isGenerating || isInitialTyping}
+          disabled={isGenerating || isInitialTyping || isStreaming}
+          className={mobileTab === "chat" ? "" : "hidden md:flex"}
+        />
 
         {/* Right Panel: Scenario + First Messages + Lorebook */}
-        <div className="flex min-w-0 flex-1 flex-col border-border-default md:rounded-xl md:border">
-          {/* Header */}
-          <div className="flex flex-shrink-0 flex-col gap-4 border-b border-border-default p-4 md:p-6">
-            <div>
-              <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-fg-default md:text-2xl">
-                <Globe size={20} className="text-brand-400" />
-                Scenario Builder
-              </h1>
-              <p className="mt-1 font-mono text-xs text-fg-muted">
-                Define world and context
-              </p>
-            </div>
-          </div>
+        <div
+          className={cn(
+            "border-border-default flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:rounded-xl md:border",
+            mobileTab === "builder" ? "" : "hidden md:flex",
+          )}
+        >
+          <StepHeader
+            icon={<Globe size={20} />}
+            title="Scenario Builder"
+            subtitle="Define world and context"
+          />
 
           {/* Content */}
           <div className="flex-1 space-y-6 overflow-y-auto p-4 md:p-6">
-            {/* Mobile: AI Generation Prompt */}
-            <section className="space-y-3 md:hidden">
-              <label className="text-xs font-bold text-fg-muted">
-                AI generation prompt
-              </label>
-              <div className="relative">
-                <textarea
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder="Describe your scenario idea and let AI generate it for you..."
-                  className={cn(
-                    "min-h-[100px] w-full resize-none rounded-lg border border-border-default bg-surface-raised px-4 py-3 text-sm text-fg-default placeholder:text-fg-subtle",
-                    INPUT_FOCUS_STYLES,
-                  )}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && e.metaKey) {
-                      generateScenario();
-                    }
-                  }}
-                />
-                <div className="mt-2 flex items-center justify-end">
-                  <Button
-                    onClick={generateScenario}
-                    disabled={!aiPrompt.trim() || isGenerating}
-                    loading={isGenerating}
-                    variant="secondary"
-                    size="sm"
-                    icon={!isGenerating ? <Sparkles size={14} /> : undefined}
-                  >
-                    Generate
-                  </Button>
-                </div>
-              </div>
-            </section>
-
             {/* Scenario Description */}
             <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-fg-muted">
-                  Scenario description
-                </label>
-                <span
-                  className={cn(
-                    "text-xs font-medium",
-                    background.trim().length >= MIN_SCENARIO_LENGTH
-                      ? "text-green-500"
-                      : "text-fg-muted",
-                  )}
-                >
-                  {background.trim().length} / {MIN_SCENARIO_LENGTH} min
-                </span>
-              </div>
-              <textarea
-                value={background}
-                onChange={(e) => onBackgroundChange(e.target.value)}
-                placeholder="Describe Scene, Location, Time Period, Ground Rules...
-
-This sets the stage for your story."
+              <div
                 className={cn(
-                  "min-h-[200px] w-full resize-none rounded-lg border bg-surface-raised px-4 py-3 text-sm text-fg-default placeholder:text-fg-subtle",
-                  INPUT_FOCUS_STYLES,
-                  background.trim().length >= MIN_SCENARIO_LENGTH
-                    ? "border-green-500/50"
-                    : "border-border-default",
+                  "rounded-xl transition-all duration-300",
+                  isBackgroundAnimating && "animate-pulse-highlight",
                 )}
-              />
-              {background.trim().length < MIN_SCENARIO_LENGTH && (
-                <p className="text-xs text-fg-subtle">
-                  Please write at least {MIN_SCENARIO_LENGTH} characters to continue
-                </p>
-              )}
+              >
+                <Textarea
+                  label="Scenario description"
+                  labelPosition="inner"
+                  autoResize
+                  value={background}
+                  onChange={(e) => onBackgroundChange(e.target.value)}
+                  className={cn(
+                    "min-h-[200px]",
+                    background.trim().length >= MIN_SCENARIO_LENGTH &&
+                      "border-green-500/50",
+                  )}
+                />
+              </div>
             </section>
 
             {/* First Messages Section */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-fg-muted">
+                <label className="text-xs font-semibold text-neutral-400">
                   First messages
                 </label>
                 <Button
@@ -725,17 +683,18 @@ This sets the stage for your story."
               </div>
 
               {firstMessages.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border-subtle bg-canvas/50 p-6 text-center">
-                  <MessageSquare
-                    size={28}
-                    className="mx-auto mb-2 text-fg-subtle"
-                  />
-                  <p className="text-xs text-fg-muted">No first messages yet</p>
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-900/30 px-4 py-5 text-center">
+                  <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800">
+                    <MessageSquare size={14} className="text-zinc-400" />
+                  </div>
+                  <p className="text-[11px] font-medium text-zinc-400">
+                    No first messages yet
+                  </p>
                   <button
                     onClick={addMessage}
-                    className="mt-2 text-xs font-bold text-brand-400 hover:text-brand-300"
+                    className="mt-1 text-[10px] text-zinc-500 hover:text-zinc-400"
                   >
-                    Add your first message
+                    Click to add one
                   </button>
                 </div>
               ) : (
@@ -751,7 +710,7 @@ This sets the stage for your story."
             {/* Lorebook Section */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-fg-muted">
+                <label className="text-xs font-semibold text-neutral-400">
                   Lorebook
                 </label>
                 <Button
@@ -766,14 +725,18 @@ This sets the stage for your story."
               </div>
 
               {lorebook.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border-subtle bg-canvas/50 p-6 text-center">
-                  <BookOpen size={28} className="mx-auto mb-2 text-fg-subtle" />
-                  <p className="text-xs text-fg-muted">No lorebook entries</p>
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-900/30 px-4 py-5 text-center">
+                  <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800">
+                    <BookOpen size={14} className="text-zinc-400" />
+                  </div>
+                  <p className="text-[11px] font-medium text-zinc-400">
+                    No lorebook entries yet
+                  </p>
                   <button
                     onClick={addLorebook}
-                    className="mt-2 text-xs font-bold text-brand-400 hover:text-brand-300"
+                    className="mt-1 text-[10px] text-zinc-500 hover:text-zinc-400"
                   >
-                    Add your first entry
+                    Click to add one
                   </button>
                 </div>
               ) : (
