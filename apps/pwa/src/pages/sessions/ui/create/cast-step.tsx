@@ -647,29 +647,25 @@ export function CastStep({
 
   // Show all messages, apply streaming text to welcome message if typing
   const displayMessages = useMemo(() => {
-    // During typing indicator phase, show no messages (typing dots will show)
-    if (isTypingIndicator) {
-      return [];
-    }
-    // Welcome message typing - show streaming text only if we have text to show
+    // Base filter: remove empty assistant messages
+    const filterMessages = (msgs: typeof chatMessages) =>
+      msgs.filter((msg) => {
+        if (msg.role === "user") return true;
+        return msg.content.trim().length > 0;
+      });
+
+    // Welcome message typing - show streaming text
     if (isWelcomeTyping) {
-      return chatMessages
-        .map((m) =>
+      return filterMessages(
+        chatMessages.map((m) =>
           m.id === "cast-welcome" ? { ...m, content: welcomeDisplayText } : m,
-        )
-        .filter((msg) => {
-          // Keep all user messages
-          if (msg.role === "user") return true;
-          // Only show assistant messages that have content
-          return msg.content.trim().length > 0;
-        });
+        ),
+      );
     }
-    // Filter out any empty assistant messages (streaming placeholder before content arrives)
-    return chatMessages.filter((msg) => {
-      if (msg.role === "user") return true;
-      return msg.content.trim().length > 0;
-    });
-  }, [chatMessages, isWelcomeTyping, welcomeDisplayText, isTypingIndicator]);
+
+    // Normal display - filter out empty assistant messages
+    return filterMessages(chatMessages);
+  }, [chatMessages, isWelcomeTyping, welcomeDisplayText]);
 
   // Handle character creation from AI - creates DraftCharacter without DB save
   const handleCharacterCreated = useCallback(
