@@ -52,7 +52,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
         value={currentValue}
         onChange={handleChange}
         className={cn(
-          "h-9 w-full rounded-lg pr-10 pl-10 text-sm text-neutral-100 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-brand-500/50 focus:outline-none md:h-10",
+          "h-10 w-full rounded-lg pr-10 pl-10 text-sm text-neutral-100 placeholder:text-neutral-500 focus:ring-2 focus:ring-inset focus:ring-brand-500/50 focus:outline-none",
           {
             "bg-neutral-800": variant === "default",
             "border border-zinc-700 bg-zinc-900": variant === "dark",

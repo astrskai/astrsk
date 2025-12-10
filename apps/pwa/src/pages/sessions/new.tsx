@@ -1039,7 +1039,7 @@ Ground Rules:`;
         </div>
 
         {/* Mobile Floating Buttons */}
-        <div className="border-border-subtle bg-surface/95 absolute right-0 bottom-0 left-0 z-20 border-t p-3 backdrop-blur-md md:hidden">
+        <div className="absolute right-0 bottom-0 left-0 z-20 bg-gradient-to-t from-black via-black/95 to-transparent px-4 pt-6 pb-4 md:hidden">
           <div className="flex items-center justify-between gap-3">
             {/* Show Previous if: on 2nd+ step OR on Cast step with Roster tab */}
             {showPreviousButton ||

@@ -42,8 +42,8 @@ export interface DraftCharacterData {
  * Draft character - represents a character during session creation
  *
  * Can be either:
- * 1. An existing library character (has existingCardId)
- * 2. A new character from import/chat (has data)
+ * 1. An existing library character (has existingCardId + data copied from card)
+ * 2. A new character from import/chat (has data only)
  */
 export interface DraftCharacter {
   /** Temporary ID for UI rendering (React key) */
@@ -52,7 +52,7 @@ export interface DraftCharacter {
   source: DraftCharacterSource;
   /** ID of existing character in DB (only for source: "library") */
   existingCardId?: string;
-  /** Character data (only for source: "import" | "chat") */
+  /** Character data (populated for all sources - library characters copy name/description from card) */
   data?: DraftCharacterData;
 }
 
