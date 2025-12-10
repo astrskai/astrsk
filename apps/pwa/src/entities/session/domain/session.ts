@@ -20,6 +20,8 @@ export interface SessionConfig {
   // Panel visibility
   isDataPanelOpen?: boolean;
   isSettingsPanelOpen?: boolean;
+  // Character fallback tracking
+  lastNonUserCharacterId?: string;
 }
 
 export interface SessionProps {

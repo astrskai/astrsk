@@ -43,6 +43,7 @@ import {
   generateTempId,
   getDraftCharacterName,
 } from "./draft-character";
+import { type FirstMessage } from "./scenario-step";
 
 interface CastStepProps {
   playerCharacter: DraftCharacter | null;
@@ -62,6 +63,9 @@ interface CastStepProps {
   onChatMessagesChange?: (messages: ChatMessage[]) => void;
   // Callback when a character is created via chat (returns DraftCharacter)
   onCharacterCreatedFromChat?: (character: DraftCharacter) => void;
+  // Scenario context for AI character generation
+  scenarioBackground?: string;
+  firstMessages?: FirstMessage[];
 }
 
 const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
@@ -404,6 +408,8 @@ export function CastStep({
   chatMessages = [],
   onChatMessagesChange,
   onCharacterCreatedFromChat,
+  scenarioBackground,
+  firstMessages,
 }: CastStepProps) {
   const [search, setSearch] = useState("");
   const [selectedDetailsChar, setSelectedDetailsChar] =
@@ -461,7 +467,7 @@ export function CastStep({
     (characterData: CharacterData) => {
       // Create a DraftCharacter with source: "chat" - NOT saved to DB until session creation
       const draftCharacter: DraftCharacter = {
-        tempId: generateTempId(),
+        tempId: characterData.id || generateTempId(), // Use provided ID or generate new one
         source: "chat",
         data: {
           name: characterData.name,
@@ -484,6 +490,34 @@ export function CastStep({
       });
     },
     [onCharacterCreatedFromChat, onMobileTabChange],
+  );
+
+  // Handle character update from AI - updates existing DraftCharacter
+  const handleCharacterUpdated = useCallback(
+    (id: string, updates: Partial<CharacterData>) => {
+      // Find and update the draft character
+      const updatedDrafts = draftCharacters.map((draft) => {
+        if (draft.tempId === id && draft.data) {
+          const existingData = draft.data; // Extract to satisfy TypeScript narrowing
+          return {
+            ...draft,
+            data: {
+              ...existingData,
+              ...updates,
+            },
+          };
+        }
+        return draft;
+      });
+
+      onDraftCharactersChange(updatedDrafts);
+
+      logger.info("[CastStep] Draft character updated from chat", {
+        tempId: id,
+        updates: Object.keys(updates),
+      });
+    },
+    [draftCharacters, onDraftCharactersChange],
   );
 
   // Handle chat submit with AI character generation
@@ -512,10 +546,31 @@ export function CastStep({
         }),
       );
 
+      // Build current characters list for context (only drafts with data)
+      const currentCharacters: CharacterData[] = draftCharacters
+        .filter((draft) => draft.data !== undefined)
+        .map((draft) => ({
+          id: draft.tempId,
+          name: draft.data!.name,
+          description: draft.data!.description,
+          tags: draft.data!.tags,
+          cardSummary: draft.data!.cardSummary,
+          exampleDialogue: draft.data!.exampleDialogue,
+        }));
+
       const response = await generateCharacterResponse({
         messages: builderMessages,
+        scenarioContext: {
+          background: scenarioBackground,
+          firstMessages: firstMessages?.map((msg) => ({
+            title: msg.title,
+            content: msg.content,
+          })),
+        },
+        currentCharacters,
         callbacks: {
           onCreateCharacter: handleCharacterCreated,
+          onUpdateCharacter: handleCharacterUpdated,
         },
         abortSignal: abortControllerRef.current.signal,
       });
@@ -553,6 +608,10 @@ export function CastStep({
     onChatMessagesChange,
     isGenerating,
     handleCharacterCreated,
+    handleCharacterUpdated,
+    scenarioBackground,
+    firstMessages,
+    draftCharacters,
   ]);
 
   // Fetch character cards

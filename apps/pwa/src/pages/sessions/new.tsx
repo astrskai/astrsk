@@ -128,8 +128,8 @@ Ground Rules:`;
   const [flowResponseTemplate, setFlowResponseTemplate] = useState<string>("");
 
   // Workflow generation state
-  const [generatedWorkflow, setGeneratedWorkflow] =
-    useState<WorkflowState | null>(null);
+  const [generatedWorkflow, setGeneratedWorkflow] = useState<WorkflowState | null>(null);
+  const [generatedSessionName, setGeneratedSessionName] = useState<string | null>(null);
   const [isWorkflowGenerating, setIsWorkflowGenerating] = useState(false);
   const workflowGenerationPromiseRef =
     useRef<Promise<WorkflowState | null> | null>(null);
@@ -414,15 +414,17 @@ Ground Rules:`;
           },
         });
 
-        logger.info("[CreateSession] Workflow generated", {
-          template: selectedFlowTemplate?.templateName || "Simple",
-          nodeCount: workflowResult.state.nodes.length,
-          edgeCount: workflowResult.state.edges.length,
-          agentCount: workflowResult.state.agents.size,
-        });
+      logger.info("[CreateSession] Workflow generated", {
+        template: selectedFlowTemplate?.templateName || "Simple",
+        nodeCount: workflowResult.state.nodes.length,
+        edgeCount: workflowResult.state.edges.length,
+        agentCount: workflowResult.state.agents.size,
+        sessionName: workflowResult.sessionName,
+      });
 
-        // Store the generated workflow for use in handleFinish
-        setGeneratedWorkflow(workflowResult.state);
+      // Store the generated workflow and session name for use in handleFinish
+      setGeneratedWorkflow(workflowResult.state);
+      setGeneratedSessionName(workflowResult.sessionName);
 
         toastSuccess("Workflow generated!", {
           description: `Enhanced ${selectedFlowTemplate?.templateName || "Simple"} template with ${workflowResult.state.agents.size} agents`,
@@ -479,18 +481,16 @@ Ground Rules:`;
 
     setIsSaving(true);
     try {
-      // Generate session name from draft character names
-      const resolvedSessionName = playerCharacter
-        ? getDraftCharacterName(playerCharacter)
-        : aiCharacters.length > 0
-          ? getDraftCharacterName(aiCharacters[0])
-          : "New Session";
+      // Use generated session name, or fallback to character names
+      const sessionName =
+        generatedSessionName ||
+        "New Session";
 
       // Step 1: Create session FIRST (without resources) to satisfy foreign key constraints
       // Resources with session_id require the session to exist first
       // Mark as play session so it appears in the sidebar
       const sessionOrError = Session.create({
-        title: resolvedSessionName,
+        title: sessionName,
         flowId: undefined, // Will be set after cloning flow
         allCards: [], // Will be populated after cloning cards
         userCharacterCardId: undefined, // Will be set after cloning player character
@@ -702,8 +702,8 @@ Ground Rules:`;
 
         // Create scenario card with sessionId (session-local)
         const scenarioCardResult = ScenarioCard.create({
-          title: `Scenario - ${resolvedSessionName}`,
-          name: `Scenario - ${resolvedSessionName}`,
+          title: `Scenario - ${sessionName}`,
+          name: `Scenario - ${sessionName}`,
           type: CardType.Scenario,
           description: scenarioBackground,
           firstMessages: firstMessages.length > 0 ? firstMessages : undefined,

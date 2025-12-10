@@ -33,14 +33,28 @@ export function buildSystemPrompt(context: WorkflowBuilderContext, initialState:
     });
   }
 
-  // List template agents that need configuration
+  // List template agents that need configuration with existing prompts
   contextInfo += `\n\n## Template Agents to Configure:`;
   initialState.nodes.forEach((node) => {
     if (node.type === NodeType.AGENT) {
       const agent = initialState.agents.get(node.id);
       if (agent) {
         contextInfo += `\n- **${agent.name}**: \`${node.id}\``;
-        contextInfo += `\n  - Prompts: ${agent.promptMessages.length} messages`;
+        contextInfo += `\n  - Existing prompts: ${agent.promptMessages.length} messages`;
+
+        // Show existing message structure
+        if (agent.promptMessages.length > 0) {
+          contextInfo += `\n  - Current messages:`;
+          agent.promptMessages.forEach((msg, idx) => {
+            if (msg.type === "plain") {
+              const preview = msg.promptBlocks[0]?.template?.substring(0, 60) || "";
+              contextInfo += `\n    ${idx + 1}. [${msg.role}] messageId: \`${msg.id}\` - "${preview}${preview.length >= 60 ? "..." : ""}"`;
+            } else if (msg.type === "history") {
+              contextInfo += `\n    ${idx + 1}. [HISTORY] (auto-included) - Insert new messages BEFORE this using index: ${idx}`;
+            }
+          });
+        }
+
         contextInfo += `\n  - Output fields: ${agent.schemaFields.length} fields`;
       }
     }
@@ -107,12 +121,16 @@ You do NOT need to add any history-related prompts or instructions - the system 
 
 ## Process
 1. **RP Agents** (rp_agent_character, rp_agent_user, rp_agent_scenario):
-   - Use \`upsert_prompt_messages\` to update prompts with scenario theme
-   - Include datastore values in prompts (e.g., "Current mood: {{mood}}")
-   - Reference {{char.name}}, {{char.description}}, {{session.scenario}}
+   - **Minimal updates only** - RP agents work well by default
+   - **Only add datastore field references** to existing prompts if they're missing
+   - Use \`upsert_prompt_messages\` with \`messageId\` to update existing messages
+   - Add variables like "Current mood: {{mood}}", "Health: {{health}}" etc. where appropriate
+   - **Do NOT rewrite or significantly modify existing prompts** - just inject datastore variables
+   - Keep the existing structure and tone of the prompts
    - DO NOT use \`upsert_output_fields\` on these agents
 
 2. **Data Management Agent** (data_management_agent):
+   - **FOCUS ALL UPDATES HERE** - This is the only agent that needs configuration
    - Use \`upsert_prompt_messages\` to explain what state changes to track
    - Use \`upsert_output_fields\` to define DELTA output fields (e.g., \`mood_delta\` not \`mood\`)
    - For numeric fields: use conservative ranges (-1 to +1 for 0-10 fields, -3 to +3 for 0-100 fields)
@@ -129,15 +147,16 @@ export function buildUserPrompt(fieldCount: number): string {
   return `Configure the workflow for this scenario:
 
 1. **RP Agents** (rp_agent_character, rp_agent_user, rp_agent_scenario):
-   - Use \`upsert_prompt_messages\` to add scenario-specific prompts
-   - Include datastore values like "Current mood: {{mood}}"
-   - DO NOT add output fields - they generate plain text
+   - **Minimal updates**: Only add missing datastore field references to existing prompts
+   - Inject variables like "Current mood: {{mood}}", "Health: {{health}}" where appropriate
+   - Do NOT rewrite prompts - just add datastore variables to existing text
+   - Use \`upsert_prompt_messages\` with \`messageId\` to update existing messages
 
 2. **Data Management Agent** (data_management_agent):
-   - Use \`upsert_prompt_messages\` to describe what to analyze
-   - Use \`upsert_output_fields\` to define ${fieldCount} DELTA output fields (e.g., \`health_delta\` not \`health\`)
-   - Use conservative delta ranges: -1 to +1 for 0-10 fields, -3 to +3 for 0-100 fields
-   - Use \`update_data_store_node_fields\` with formulas: \`{{field}}+{{data_management_agent.field_delta}}\`
+- Use \`upsert_prompt_messages\` to describe what state changes to track based on the scenario
+- Use \`upsert_output_fields\` to define ${fieldCount} DELTA output fields (e.g., \`health_delta\` not \`health\`)
+- Use conservative delta ranges: -1 to +1 for 0-10 fields, -3 to +3 for 0-100 fields
+- Use \`update_data_store_node_fields\` with formulas: \`{{field}}+{{data_management_agent.field_delta}}\`
 
 All ${fieldCount} schema fields must be updated via data_management_agent using delta values for gradual changes.`;
 }

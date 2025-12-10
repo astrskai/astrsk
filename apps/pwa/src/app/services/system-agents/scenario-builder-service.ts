@@ -64,6 +64,16 @@ interface AddLorebookEntryResult {
   message: string;
 }
 
+interface UpdateFirstMessageResult {
+  success: boolean;
+  message: string;
+}
+
+interface UpdateLorebookEntryResult {
+  success: boolean;
+  message: string;
+}
+
 /**
  * Build system prompt with current scenario context
  * Note: Character names are intentionally excluded to prevent character-specific scenarios.
@@ -102,14 +112,14 @@ function buildSystemPrompt(currentScenario: ScenarioData): string {
   if (currentScenario.firstMessages.length > 0) {
     scenarioContext += `\n\n## Current First Messages (${currentScenario.firstMessages.length}):`;
     currentScenario.firstMessages.forEach((msg, i) => {
-      scenarioContext += `\n${i + 1}. "${msg.title}": ${msg.content.substring(0, 100)}${msg.content.length > 100 ? "..." : ""}`;
+      scenarioContext += `\n${i + 1}. ID: \`${msg.id}\` - "${msg.title}": ${msg.content.substring(0, 100)}${msg.content.length > 100 ? "..." : ""}`;
     });
   }
 
   if (currentScenario.lorebook.length > 0) {
     scenarioContext += `\n\n## Current Lorebook Entries (${currentScenario.lorebook.length}):`;
     currentScenario.lorebook.forEach((entry, i) => {
-      scenarioContext += `\n${i + 1}. "${entry.title}" [keys: ${entry.keys}]: ${entry.desc.substring(0, 80)}${entry.desc.length > 80 ? "..." : ""}`;
+      scenarioContext += `\n${i + 1}. ID: \`${entry.id}\` - "${entry.title}" [keys: ${entry.keys}]: ${entry.desc.substring(0, 80)}${entry.desc.length > 80 ? "..." : ""}`;
     });
   }
 
@@ -145,7 +155,9 @@ This creates a ready-to-use scenario in one go!
 1. **set_scenario** - Set or replace the entire scenario background
 2. **edit_scenario** - Make targeted edits using SEARCH/REPLACE blocks
 3. **add_first_message** - Add an opening scene option (game master narrator style)
-4. **add_lorebook_entry** - Add world-building entries (locations, factions, items, lore)
+4. **update_first_message** - Edit an existing first message by ID (use this instead of adding duplicates)
+5. **add_lorebook_entry** - Add world-building entries (locations, factions, items, lore)
+6. **update_lorebook_entry** - Edit an existing lorebook entry by ID
 
 ## First Messages:
 First messages are ALTERNATIVE starting options. Users pick ONE to begin. Each should:
@@ -156,11 +168,10 @@ First messages are ALTERNATIVE starting options. Users pick ONE to begin. Each s
 - Use template variables to reference characters dynamically (see below)
 
 ## Template Variables for First Messages:
-Use these variables in first message content to make them dynamic:
+Use these variables in first message content to make them dynamic. The first message must revolve around the characters:
+The character will be defined by the following variables:
 - \`{{user.name}}\` - The player's character name
 - AI character names (excluding user): \`{% for c in cast.all %}{% if c.id != user.id %}{{c.name}}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}\`
-
-**IMPORTANT**: Only use template variables when you cannot describe the situation without referencing characters by name. Prefer generic descriptions like "the stranger", "your companion", "the mysterious figure" when possible.
 
 Example: "{% for c in cast.all %}{% if c.id != user.id %}{{c.name}}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %} watch as {{user.name}} approaches the dimly lit tavern..."
 
@@ -176,6 +187,14 @@ Create diverse entries covering:
 =======
 [Text to replace with]
 +++++++ REPLACE
+
+## Editing vs. Adding:
+When the user asks to modify existing content:
+- **First Messages**: Use **update_first_message** with the existing message's ID (shown in Current First Messages list)
+- **Lorebook**: Use **update_lorebook_entry** with the existing entry's ID (shown in Current Lorebook Entries list)
+- **Background**: Use **edit_scenario** with SEARCH/REPLACE format
+
+DO NOT create duplicates - always update existing items when asked to edit them.
 
 ## After creating:
 Briefly summarize what you made and ask if they want:
@@ -268,7 +287,9 @@ function createScenarioTools(
     onSetBackground: (background: string) => void;
     onEditBackground: (newBackground: string) => void;
     onAddFirstMessage: (message: { id: string; title: string; content: string }) => void;
+    onUpdateFirstMessage: (id: string, updates: { title?: string; content?: string }) => void;
     onAddLorebookEntry: (entry: { id: string; title: string; keys: string; desc: string; range: number }) => void;
+    onUpdateLorebookEntry: (id: string, updates: { title?: string; keys?: string; desc?: string; range?: number }) => void;
   },
 ) {
   // Track current background for sequential edits within same generation
@@ -332,6 +353,34 @@ function createScenarioTools(
       },
     }),
 
+    update_first_message: tool({
+      description: "Update an existing first message by ID. Use this to edit the title or content of a first message option.",
+      inputSchema: z.object({
+        id: z.string().describe("The ID of the first message to update"),
+        title: z.string().optional().describe("New title for this first message (leave empty to keep current)"),
+        content: z.string().optional().describe("New content for this first message (leave empty to keep current)"),
+      }),
+      execute: async ({ id, title, content }) => {
+        const message = currentScenario.firstMessages.find((m) => m.id === id);
+        if (!message) {
+          return {
+            success: false,
+            message: `First message with ID "${id}" not found.`,
+          };
+        }
+
+        const updates: { title?: string; content?: string } = {};
+        if (title !== undefined) updates.title = title;
+        if (content !== undefined) updates.content = content;
+
+        callbacks.onUpdateFirstMessage(id, updates);
+        return {
+          success: true,
+          message: `First message "${message.title}" has been updated.`,
+        };
+      },
+    }),
+
     add_lorebook_entry: tool({
       description: "Add a new lorebook entry for world-building. Lorebook entries are triggered by keywords and provide context to the AI during roleplay.",
       inputSchema: z.object({
@@ -347,6 +396,38 @@ function createScenarioTools(
           success: true,
           id,
           message: `Lorebook entry "${title}" has been added.`,
+        };
+      },
+    }),
+
+    update_lorebook_entry: tool({
+      description: "Update an existing lorebook entry by ID. Use this to edit any field of a lorebook entry.",
+      inputSchema: z.object({
+        id: z.string().describe("The ID of the lorebook entry to update"),
+        title: z.string().optional().describe("New title (leave empty to keep current)"),
+        keys: z.string().optional().describe("New trigger keywords (leave empty to keep current)"),
+        desc: z.string().optional().describe("New description (leave empty to keep current)"),
+        range: z.number().optional().describe("New recall range (leave empty to keep current)"),
+      }),
+      execute: async ({ id, title, keys, desc, range }) => {
+        const entry = currentScenario.lorebook.find((e) => e.id === id);
+        if (!entry) {
+          return {
+            success: false,
+            message: `Lorebook entry with ID "${id}" not found.`,
+          };
+        }
+
+        const updates: { title?: string; keys?: string; desc?: string; range?: number } = {};
+        if (title !== undefined) updates.title = title;
+        if (keys !== undefined) updates.keys = keys;
+        if (desc !== undefined) updates.desc = desc;
+        if (range !== undefined) updates.range = range;
+
+        callbacks.onUpdateLorebookEntry(id, updates);
+        return {
+          success: true,
+          message: `Lorebook entry "${entry.title}" has been updated.`,
         };
       },
     }),
@@ -376,7 +457,9 @@ export async function generateScenarioResponse({
     onSetBackground: (background: string) => void;
     onEditBackground: (newBackground: string) => void;
     onAddFirstMessage: (message: { id: string; title: string; content: string }) => void;
+    onUpdateFirstMessage: (id: string, updates: { title?: string; content?: string }) => void;
     onAddLorebookEntry: (entry: { id: string; title: string; keys: string; desc: string; range: number }) => void;
+    onUpdateLorebookEntry: (id: string, updates: { title?: string; keys?: string; desc?: string; range?: number }) => void;
   };
   abortSignal?: AbortSignal;
 }): Promise<{ text: string; toolResults: unknown[] }> {

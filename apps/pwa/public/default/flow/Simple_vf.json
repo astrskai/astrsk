@@ -623,7 +623,7 @@
           "promptBlocks": [
             {
               "name": "Message 3",
-              "template": "Last last response from character, user, or scenario \n{{char.name}}:  {{rp_agent_character.response}}\n{{rp_agent_user.response}}\n{{rp_agent_scenario.response}}",
+              "template": "Last last response from character, user, or scenario \n{{char.name}}:  {{rp_agent_character.response}}\n{{rp_agent_user.response}}\n{{rp_agent_scenario.response}} For any delta values be very conservative. No change in value is very likely. Only change value if it is really necessary within the message.\n Also for all value updates conservative approach is good.",
               "type": "plain",
               "createdAt": "2025-12-04T12:49:52.605Z",
               "updatedAt": "2025-12-04T12:49:52.605Z",

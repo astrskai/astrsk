@@ -434,6 +434,16 @@ export function ScenarioStep({
           ];
           onFirstMessagesChange(currentFirstMessages);
         },
+        onUpdateFirstMessage: (
+          id: string,
+          updates: { title?: string; content?: string },
+        ) => {
+          setNewlyAddedIds((prev) => new Set([...prev, id]));
+          currentFirstMessages = currentFirstMessages.map((msg) =>
+            msg.id === id ? { ...msg, ...updates } : msg,
+          );
+          onFirstMessagesChange(currentFirstMessages);
+        },
         onAddLorebookEntry: (entry: {
           id: string;
           title: string;
@@ -444,6 +454,21 @@ export function ScenarioStep({
           newIds.push(entry.id);
           setNewlyAddedIds((prev) => new Set([...prev, entry.id]));
           currentLorebook = [...currentLorebook, { ...entry, expanded: true }];
+          onLorebookChange(currentLorebook);
+        },
+        onUpdateLorebookEntry: (
+          id: string,
+          updates: {
+            title?: string;
+            keys?: string;
+            desc?: string;
+            range?: number;
+          },
+        ) => {
+          setNewlyAddedIds((prev) => new Set([...prev, id]));
+          currentLorebook = currentLorebook.map((entry) =>
+            entry.id === id ? { ...entry, ...updates } : entry,
+          );
           onLorebookChange(currentLorebook);
         },
       };

@@ -369,6 +369,34 @@ const makeContext = async ({
     }
   }
 
+  // Ensure context.user always exists with "Unknown User" fallback
+  if (!context.user) {
+    context.user = {
+      id: "",
+      name: "Unknown User",
+      description: "",
+      example_dialog: "",
+      entries: [],
+    };
+  }
+
+  // If char and user are the same (user character is speaking),
+  // reassign context.user to the last non-user character
+  if (
+    context.char &&
+    context.user &&
+    context.char.id === context.user.id &&
+    session.config.lastNonUserCharacterId
+  ) {
+    const lastNonUserChar = allCharacters.find(
+      (char) => char.id === session.config.lastNonUserCharacterId,
+    );
+    if (lastNonUserChar) {
+      context.user = lastNonUserChar;
+    }
+    // else: character was deleted, keep original context.user
+  }
+
   // Set `{{cast.all}}`
   context.cast.all = allCharacters;
 
