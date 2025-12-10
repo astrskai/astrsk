@@ -28,6 +28,7 @@ import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
 import { cn, logger } from "@/shared/lib";
+import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
 import { StepHeader } from "./step-header";
@@ -317,6 +318,7 @@ interface DraftCharacterCardProps {
   isAI: boolean;
   onAssignPlayer: (e: React.MouseEvent) => void;
   onAddAI: (e: React.MouseEvent) => void;
+  onOpenDetails: () => void;
 }
 
 function DraftCharacterCard({
@@ -325,6 +327,7 @@ function DraftCharacterCard({
   isAI,
   onAssignPlayer,
   onAddAI,
+  onOpenDetails,
 }: DraftCharacterCardProps) {
   const isSelected = isPlayer || isAI;
   const name = draft.data?.name || "Unnamed";
@@ -341,6 +344,7 @@ function DraftCharacterCard({
       tags={draft.data?.tags || []}
       badges={badges}
       className="border-dashed border-[#f59e0b]/50"
+      onClick={onOpenDetails}
       renderMetadata={() => null}
       footerActions={
         <>
@@ -403,7 +407,7 @@ export function CastStep({
 }: CastStepProps) {
   const [search, setSearch] = useState("");
   const [selectedDetailsChar, setSelectedDetailsChar] =
-    useState<CharacterCard | null>(null);
+    useState<CharacterDetailsData | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -471,12 +475,15 @@ export function CastStep({
       // Notify parent about the created draft character
       onCharacterCreatedFromChat?.(draftCharacter);
 
+      // On mobile, switch to library tab to show the newly created character
+      onMobileTabChange("library");
+
       logger.info("[CastStep] Draft character created from chat", {
         tempId: draftCharacter.tempId,
         name: characterData.name,
       });
     },
-    [onCharacterCreatedFromChat],
+    [onCharacterCreatedFromChat, onMobileTabChange],
   );
 
   // Handle chat submit with AI character generation
@@ -853,6 +860,13 @@ export function CastStep({
                               triggerFlyingTrail(e, "ai", draft.data?.name || "Character", draft.data?.imageUrl);
                               handleAddDraftAI(draft);
                             }}
+                            onOpenDetails={() => setSelectedDetailsChar({
+                              name: draft.data?.name || "Unnamed",
+                              description: draft.data?.description,
+                              cardSummary: draft.data?.cardSummary,
+                              tags: draft.data?.tags,
+                              imageUrl: draft.data?.imageUrl,
+                            })}
                           />
                         </motion.div>
                       );
@@ -885,7 +899,14 @@ export function CastStep({
                           isLocal={isLocal}
                           onAssignPlayer={() => handleAssignPlayer(card)}
                           onAddAI={() => handleAddAI(card)}
-                          onOpenDetails={() => setSelectedDetailsChar(card)}
+                          onOpenDetails={() => setSelectedDetailsChar({
+                            name: card.props.name || "Unnamed",
+                            description: card.props.description,
+                            cardSummary: card.props.cardSummary,
+                            tags: card.props.tags,
+                            version: card.props.version,
+                            iconAssetId: card.props.iconAssetId,
+                          })}
                           triggerFlyingTrail={triggerFlyingTrail}
                         />
                       </motion.div>
@@ -973,8 +994,15 @@ export function CastStep({
                         <div className="truncate text-sm font-bold text-white">
                           {playerDisplayName}
                         </div>
-                        <div className="mt-1 inline-block rounded border border-[#3b82f6]/20 bg-[#172554]/30 px-1.5 py-0.5 text-[10px] text-[#93c5fd]">
-                          PLAYER
+                        <div className="mt-1 flex gap-1">
+                          <div className="inline-block rounded border border-[#3b82f6]/20 bg-[#172554]/30 px-1.5 py-0.5 text-[10px] text-[#93c5fd]">
+                            PLAYER
+                          </div>
+                          {playerCharacter.source !== "library" && (
+                            <div className="inline-block rounded border border-[#f59e0b]/30 bg-[#451a03]/50 px-1.5 py-0.5 text-[10px] text-[#fcd34d]">
+                              LOCAL
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1157,17 +1185,36 @@ function AIRosterItem({
 }
 
 /**
+ * Unified character data for details modal
+ * Supports both CharacterCard (from DB) and DraftCharacter (local)
+ */
+interface CharacterDetailsData {
+  name: string;
+  description?: string;
+  cardSummary?: string;
+  tags?: string[];
+  version?: string;
+  imageUrl?: string;
+  // For library characters, we need asset ID to load image
+  iconAssetId?: UniqueEntityID;
+}
+
+/**
  * Character Details Modal
  * Shows full character information when clicking on a card
+ * Supports both library characters (CharacterCard) and draft characters (DraftCharacter)
  */
 function CharacterDetailsModal({
   character,
   onClose,
 }: {
-  character: CharacterCard | null;
+  character: CharacterDetailsData | null;
   onClose: () => void;
 }) {
-  const [imageUrl] = useAsset(character?.props.iconAssetId);
+  // Load image from asset if iconAssetId is provided (library characters)
+  const [assetImageUrl] = useAsset(character?.iconAssetId);
+  // Use asset URL if available, otherwise use direct imageUrl (draft characters)
+  const imageUrl = assetImageUrl || character?.imageUrl;
 
   if (!character) return null;
 
@@ -1186,13 +1233,13 @@ function CharacterDetailsModal({
             {imageUrl ? (
               <img
                 src={imageUrl}
-                alt={character.props.name || ""}
+                alt={character.name || ""}
                 className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-6xl font-black text-white/50">
-                  {(character.props.name || "??").substring(0, 2).toUpperCase()}
+                  {(character.name || "??").substring(0, 2).toUpperCase()}
                 </span>
               </div>
             )}
@@ -1206,11 +1253,11 @@ function CharacterDetailsModal({
 
             <div className="relative z-10 p-6">
               <h2 className="text-2xl leading-tight font-bold text-white">
-                {character.props.name || "Unnamed"}
+                {character.name || "Unnamed"}
               </h2>
-              {character.props.version && (
+              {character.version && (
                 <p className="mt-1 font-mono text-sm text-white/70">
-                  v{character.props.version}
+                  v{character.version}
                 </p>
               )}
             </div>
@@ -1235,32 +1282,32 @@ function CharacterDetailsModal({
 
             <div className="flex-1 space-y-6 overflow-y-auto">
               {/* Summary */}
-              {character.props.cardSummary && (
+              {character.cardSummary && (
                 <p className="text-fg-muted border-border-default border-l-2 pl-4 text-sm leading-relaxed">
-                  {character.props.cardSummary}
+                  {character.cardSummary}
                 </p>
               )}
 
               {/* Description */}
-              {character.props.description && (
+              {character.description && (
                 <div>
                   <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
                     Description
                   </h4>
                   <p className="text-fg-muted max-h-40 overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap">
-                    {character.props.description}
+                    {character.description}
                   </p>
                 </div>
               )}
 
               {/* Tags */}
-              {character.props.tags && character.props.tags.length > 0 && (
+              {character.tags && character.tags.length > 0 && (
                 <div>
                   <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
                     Tags
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {character.props.tags.map((tag) => (
+                    {character.tags.map((tag) => (
                       <span
                         key={tag}
                         className="bg-surface-raised text-brand-300 border-border-default rounded border px-2 py-1 text-xs"

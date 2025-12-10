@@ -61,7 +61,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           {
             "border border-brand-600 bg-brand-600 text-white hover:bg-brand-500 hover:border-brand-500":
               variant === "default",
-            "border border-neutral-600 bg-neutral-800 text-neutral-100 hover:bg-neutral-700":
+            "border border-zinc-700 bg-zinc-900 text-neutral-100 hover:bg-zinc-800":
               variant === "secondary",
             "bg-transparent text-brand-500 hover:bg-neutral-800 hover:text-brand-400":
               variant === "ghost",
