@@ -6,7 +6,7 @@
  * (variables, stats, trackers) that would enhance the roleplay experience.
  */
 
-import { generateText, tool, stepCountIs } from "ai";
+import { streamText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
 import { useModelStore, type DefaultModelSelection } from "@/shared/stores/model-store";
@@ -58,16 +58,28 @@ Create GENERAL, REUSABLE trackable variables (data stores) for the scenario. The
    - **If user doesn't specify a number, generate NO MORE than 8 fields**
 
 ## Data Store Types - MIX QUANTITATIVE AND QUALITATIVE:
-- **integer** - Quantitative metrics (e.g., health: 0-10, trust_level: 0-10, energy: 0-10)
+- **integer** - Quantitative metrics (e.g., health: 0-100, trust_level: 0-100, energy: 0-100)
 - **boolean** - Binary states (e.g., has_weapon, is_injured, door_locked)
 - **string** - Qualitative/categorical states (e.g., current_mood: "calm/anxious/angry", location: "forest/cave/village", weather: "sunny/rainy/stormy")
 
-## IMPORTANT: Conservative Ranges for Gradual Progression
-For numeric fields, use SMALL RANGES to ensure gradual, realistic changes:
-- **Prefer 0-10 over 0-100** - Smaller ranges prevent dramatic swings
-- Values change by small increments (1-3 points per interaction)
-- Example: Use "trust: 0-10" instead of "trust: 0-100"
-- This creates more immersive, believable progression
+## IMPORTANT: Recommended Ranges for Gradual Progression
+For integer fields, choose range based on tracking precision needed:
+
+- **0-100 (RECOMMENDED for most fields)** - Best balance of precision and readability
+  - AI uses delta values of ±1 to ±3 for gradual changes
+  - Example: "health: 0-100", "trust_level: 0-100", "stamina: 0-100"
+
+- **0-1000 or 0-10000 (for high-precision tracking)** - Use when fine granularity matters
+  - Allows very precise progression over many interactions
+  - AI uses larger deltas (±5 to ±20 for 0-1000, ±10 to ±50 for 0-10000)
+  - Example: "experience_points: 0-10000", "reputation: 0-1000"
+  - Good for: currency, XP, reputation systems, long-term progression
+
+- **0-10 (for simple scales)** - Only for boolean-like states or simple intensity levels
+  - AI uses delta values of ±1 to ±2
+  - Example: "danger_level: 0-10" (0=safe, 10=deadly), "alertness: 0-10"
+
+Choose the range that best fits the tracking granularity needed for the scenario.
 
 ## IMPORTANT: Balance Both Types
 - Don't create only numeric trackers! Include qualitative states too.
@@ -80,16 +92,16 @@ Fields are updated by AI agents in a workflow with branching. In descriptions, n
 - "Affected by: [fields]" - what influences this field
 
 ## Tools:
-- **add_data_stores** - Add multiple trackers in ONE call (PREFERRED - pass all stores as an array)
+- **add_data_store** - Add a single tracker (call multiple times for multiple stores)
 - **remove_data_store** - Remove by ID
 - **clear_all** - Clear all
 
 **IMPORTANT**:
-- Create ALL data stores in a SINGLE add_data_stores call. Do NOT call the tool multiple times.
+- Call add_data_store once for EACH data store you want to create.
 - Generate MAXIMUM 8 data stores (aim for 4-6) unless user explicitly requests more in their prompt.
-- YOU MUST use the add_data_stores tool to create the data stores. Do NOT just describe them in text.
+- YOU MUST use the add_data_store tool to create the data stores. Do NOT just describe them in text.
 
-Analyze the scenario and create appropriate data stores using the add_data_stores tool. Don't ask for clarification.`;
+Analyze the scenario and create appropriate data stores using the add_data_store tool. Don't ask for clarification.`;
 }
 
 
@@ -153,115 +165,77 @@ function createDataSchemaTools(
   });
 
   return {
-    add_data_stores: tool({
-      description: "Add one or more trackable data stores/variables to the HUD. Creates values that will be displayed to players and tracked by the AI. PREFERRED: Add all data stores in a single call for efficiency.",
-      inputSchema: z.object({
-        stores: z.array(dataStoreEntrySchema).min(1).describe("Array of data stores to add. Add all planned stores in one call."),
-      }),
-      execute: async ({ stores }, { messages }) => {
-        const results: Array<{
-          success: boolean;
-          id: string;
-          name: string;
-          message: string;
-        }> = [];
+    add_data_store: tool({
+      description: "Add a single trackable data store/variable to the HUD. Creates a value that will be displayed to players and tracked by the AI. Call this tool multiple times to add multiple stores.",
+      inputSchema: dataStoreEntrySchema,
+      execute: async (store, { messages }) => {
+        const { name, type, description, initial, min, max } = store;
 
         // Check total limit before processing
         const currentTotal = currentStores.length + createdStores.length;
-        const remainingSlots = MAX_DATA_STORES - currentTotal;
 
-        if (remainingSlots <= 0) {
+        if (currentTotal >= MAX_DATA_STORES) {
           return {
             success: false,
-            results: [],
-            summary: `Cannot add data stores. Maximum limit of ${MAX_DATA_STORES} reached. Current total: ${currentTotal}.`,
-            allCreatedStores: [...currentStores.map(s => s.name), ...createdStores.map(s => s.name)],
+            id: "",
+            name: name,
+            message: `Cannot add data store. Maximum limit of ${MAX_DATA_STORES} reached. Current total: ${currentTotal}.`,
             totalStores: currentTotal,
           };
         }
 
-        // Limit stores to add based on remaining slots
-        const storesToProcess = stores.slice(0, remainingSlots);
-        const skippedDueToLimit = stores.length - storesToProcess.length;
+        // Sanitize name to snake_case and check for duplicates
+        const sanitizedName = sanitizeFileName(name);
+        const existingInCurrent = currentStores.find(
+          (s) => s.name === sanitizedName
+        );
+        const existingInCreated = createdStores.find(
+          (s) => s.name === sanitizedName
+        );
 
-        for (const { name, type, description, initial, min, max } of storesToProcess) {
-          // Sanitize name to snake_case and check for duplicates
-          const sanitizedName = sanitizeFileName(name);
-          const existingInCurrent = currentStores.find(
-            (s) => s.name === sanitizedName
-          );
-          const existingInCreated = createdStores.find(
-            (s) => s.name === sanitizedName
-          );
-
-          if (existingInCurrent || existingInCreated) {
-            const existingStore = existingInCurrent || existingInCreated;
-            results.push({
-              success: false,
-              id: existingStore!.id,
-              name: sanitizedName,
-              message: `Data store "${name}" already exists (ID: ${existingStore!.id}). Skipped.`,
-            });
-            continue;
-          }
-
-          const id = generateUniqueId();
-
-          // Validate initial value matches type
-          let validatedInitial = initial;
-          if (type === "integer" || type === "number") {
-            validatedInitial = typeof initial === "number" ? initial : 0;
-          } else if (type === "boolean") {
-            validatedInitial = typeof initial === "boolean" ? initial : false;
-          } else {
-            validatedInitial = typeof initial === "string" ? initial : "";
-          }
-
-          const store: DataSchemaEntry = {
-            id,
+        if (existingInCurrent || existingInCreated) {
+          const existingStore = existingInCurrent || existingInCreated;
+          return {
+            success: false,
+            id: existingStore!.id,
             name: sanitizedName,
-            type,
-            description,
-            initial: validatedInitial,
-            ...((type === "integer" || type === "number") && min !== undefined && { min }),
-            ...((type === "integer" || type === "number") && max !== undefined && { max }),
+            message: `Data store "${name}" already exists (ID: ${existingStore!.id}). Skipped.`,
+            totalStores: currentTotal,
           };
-
-          // Track for context and notify callback
-          createdStores.push(store);
-          callbacks.onAddStore(store);
-
-          results.push({
-            success: true,
-            id,
-            name: sanitizedName,
-            message: `Added data store "${sanitizedName}" (${type})`,
-          });
         }
 
-        // Get previously created stores from message history (AI SDK provides this)
-        const previousStoreNames = messages ? extractCreatedStoresFromMessages(messages) : [];
-        // Combine with our local tracker for complete list
-        const allStoreNames = [...new Set([...previousStoreNames, ...createdStores.map(s => s.name)])];
+        const id = generateUniqueId();
 
-        const successCount = results.filter(r => r.success).length;
-        const failCount = results.filter(r => !r.success).length;
+        // Validate initial value matches type
+        let validatedInitial = initial;
+        if (type === "integer" || type === "number") {
+          validatedInitial = typeof initial === "number" ? initial : 0;
+        } else if (type === "boolean") {
+          validatedInitial = typeof initial === "boolean" ? initial : false;
+        } else {
+          validatedInitial = typeof initial === "string" ? initial : "";
+        }
 
-        // Build summary with all skip reasons
-        let summary = `Added ${successCount} data store(s)`;
-        if (failCount > 0) {
-          summary += `, ${failCount} skipped (duplicates)`;
-        }
-        if (skippedDueToLimit > 0) {
-          summary += `, ${skippedDueToLimit} skipped (limit of ${MAX_DATA_STORES} reached)`;
-        }
+        const newStore: DataSchemaEntry = {
+          id,
+          name: sanitizedName,
+          type,
+          description,
+          initial: validatedInitial,
+          ...((type === "integer" || type === "number") && min !== undefined && { min }),
+          ...((type === "integer" || type === "number") && max !== undefined && { max }),
+        };
+
+        // Track for context and notify callback
+        createdStores.push(newStore);
+        callbacks.onAddStore(newStore);
 
         return {
-          success: successCount > 0,
-          results,
-          summary,
-          allCreatedStores: allStoreNames,
-          totalStores: allStoreNames.length,
+          success: true,
+          id,
+          name: sanitizedName,
+          message: `Added data store "${sanitizedName}" (${type}). Total stores: ${currentTotal + 1}/${MAX_DATA_STORES}`,
+          totalStores: currentTotal + 1,
         };
       },
     }),
@@ -382,27 +356,35 @@ export async function generateDataSchema({
       return `Generate appropriate data stores for tracking variables in this roleplay scenario.
 
 **IMPORTANT**:
-- YOU MUST use the add_data_stores tool to create the stores. Do NOT just describe them in text.
+- YOU MUST use the add_data_store tool to create the stores. Do NOT just describe them in text.
 - Generate MAXIMUM 8 data stores (recommended: 4-6) unless I explicitly request more. Focus on the most important trackers only.
-- Call add_data_stores with ALL stores in a single call.
+- Call add_data_store once for EACH store you want to create.
 
 ## Scenario Background:
 ${context.scenario}
 
-Now use the add_data_stores tool to create the data stores.`;
+Now use the add_data_store tool to create the data stores.`;
     }
 
     return `Generate data stores for a general roleplay scenario. Consider what trackers would be useful.
 
 **IMPORTANT**:
-- YOU MUST use the add_data_stores tool to create the stores. Do NOT just describe them in text.
+- YOU MUST use the add_data_store tool to create the stores. Do NOT just describe them in text.
 - Generate MAXIMUM 8 data stores (recommended: 4-6). Focus on the most important trackers only.
-- Call add_data_stores with ALL stores in a single call.
+- Call add_data_store once for EACH store you want to create.
 
-Now use the add_data_stores tool to create the data stores.`;
+Now use the add_data_store tool to create the data stores.`;
   };
 
   const userMessage = buildUserMessage();
+
+  // Log the actual user message being sent
+  logger.info("[DataSchemaBuilder] User message", {
+    userMessage: userMessage.substring(0, 200),
+    fullUserMessage: userMessage,
+    hasScenario: !!(context.scenario && context.scenario.trim()),
+    scenarioLength: context.scenario?.length || 0,
+  });
 
   // Helper to build dynamic system prompt with current stores
   const buildDynamicSystemPrompt = (stores: DataSchemaEntry[]): string => {
@@ -430,13 +412,23 @@ Now use the add_data_stores tool to create the data stores.`;
     { role: "user" as const, content: userMessage },
   ];
 
+  logger.info("[DataSchemaBuilder] Initial messages", {
+    messageCount: initialMessages.length,
+    systemPromptLength: baseSystemPrompt.length,
+    userMessageLength: userMessage.length,
+    messages: initialMessages.map(m => ({
+      role: m.role,
+      content: m.content.substring(0, 100),
+    })),
+  });
+
   try {
     // GLM models require thinking to be disabled for tool calling
     const isGlmModel = defaultModel.modelId.toLowerCase().includes("glm");
 
     // Generate response with tools
     // Use prepareStep to update system prompt with newly created stores before each step
-    const result = await generateText({
+    const result = streamText({
       model,
       messages: initialMessages,
       tools,
@@ -447,6 +439,25 @@ Now use the add_data_stores tool to create the data stores.`;
           zhipu: { thinking: { type: "disabled" } },
         },
       }),
+      onStepFinish: (step) => {
+        const { text, toolCalls, toolResults, finishReason, response } = step;
+
+        logger.info("[DataSchemaBuilder] Step finished", {
+          text: text?.substring(0, 100),
+          toolCallsCount: toolCalls?.length || 0,
+          toolResultsCount: toolResults?.length || 0,
+          finishReason,
+          hasResponse: !!response,
+        });
+
+        // If there's an error, try to get more details
+        if (finishReason === 'error') {
+          logger.error("[DataSchemaBuilder] Step finished with error", {
+            fullStep: JSON.stringify(step, null, 2),
+            responseKeys: response ? Object.keys(response) : [],
+          });
+        }
+      },
       // prepareStep allows modifying messages before each step
       prepareStep: ({ stepNumber, steps }) => {
         // After first step, include created stores in the system prompt
@@ -475,46 +486,25 @@ Now use the add_data_stores tool to create the data stores.`;
       },
     });
 
+    // Wait for the stream to complete and get final text
+    const text = await result.text;
+
     // Log detailed response information
     logger.info("[DataSchemaBuilder] Response generated", {
-      text: result.text?.substring(0, 200),
-      fullText: result.text,
+      text: text?.substring(0, 200),
+      fullText: text,
       storesCreated: generatedStores.length,
-      totalSteps: result.steps?.length || 0,
-      usage: result.usage,
-      finishReason: result.finishReason,
-    });
-
-    // Log each step's details
-    result.steps?.forEach((step, idx) => {
-      logger.info(`[DataSchemaBuilder] Step ${idx + 1} details`, {
-        text: step.text?.substring(0, 200),
-        fullText: step.text,
-        toolCallsCount: step.toolCalls?.length || 0,
-        toolNames: step.toolCalls?.map(tc => tc.toolName) || [],
-        toolResults: step.toolResults?.map(tr => ({
-          toolName: tr.toolName,
-          // AI SDK v5: 'result' → 'output'
-          result: typeof (tr as any).output === 'string' ? (tr as any).output : JSON.stringify((tr as any).output),
-        })) || [],
-      });
-
-      // Log each tool call in detail
-      step.toolCalls?.forEach((toolCall, tcIdx) => {
-        logger.info(`[DataSchemaBuilder] Step ${idx + 1} Tool Call ${tcIdx + 1}`, {
-          toolName: toolCall.toolName,
-          // AI SDK v5: 'args' → 'input'
-          args: (toolCall as any).input,
-        });
-      });
     });
 
     return {
-      text: result.text,
+      text,
       stores: generatedStores,
     };
   } catch (error) {
-    logger.error("[DataSchemaBuilder] Error generating data schema", error);
+    logger.error("[DataSchemaBuilder] Error generating data schema", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     throw error;
   }
 }
@@ -599,7 +589,7 @@ export async function refineDataSchema({
     const isGlmModel = defaultModel.modelId.toLowerCase().includes("glm");
 
     // Generate response with tools
-    const result = await generateText({
+    const result = streamText({
       model,
       messages,
       tools,
@@ -610,18 +600,52 @@ export async function refineDataSchema({
           zhipu: { thinking: { type: "disabled" } },
         },
       }),
+      onStepFinish: (step) => {
+        const { text, toolCalls, toolResults, finishReason, response } = step;
+
+        logger.info("[DataSchemaBuilder] Refinement step finished", {
+          text: text?.substring(0, 100),
+          toolCallsCount: toolCalls?.length || 0,
+          toolResultsCount: toolResults?.length || 0,
+          finishReason,
+          hasResponse: !!response,
+        });
+
+        // If there's an error, try to get more details
+        if (finishReason === 'error') {
+          logger.error("[DataSchemaBuilder] Step finished with error", {
+            fullStep: JSON.stringify(step, null, 2),
+            responseKeys: response ? Object.keys(response) : [],
+          });
+        }
+      },
     });
+
+    // Wait for the stream to complete and get final text
+    const text = await result.text;
 
     logger.info("[DataSchemaBuilder] Refinement completed", {
-      text: result.text?.substring(0, 100),
-      toolCalls: result.steps?.flatMap(s => s.toolCalls).length || 0,
+      text: text?.substring(0, 100),
+      fullText: text,
+      textLength: text?.length || 0,
     });
 
+    // If text is empty, log warning with more details
+    if (!text || text.trim().length === 0) {
+      logger.warn("[DataSchemaBuilder] Refinement returned empty text", {
+        messages: messages.map(m => ({ role: m.role, content: m.content?.substring(0, 100) })),
+        storesCount: currentStores.length,
+      });
+    }
+
     return {
-      text: result.text,
+      text,
     };
   } catch (error) {
-    logger.error("[DataSchemaBuilder] Error refining data schema", error);
+    logger.error("[DataSchemaBuilder] Error refining data schema", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     throw error;
   }
 }
