@@ -774,6 +774,22 @@ export function ScenarioStep({
           onSubmit={handleChatSubmit}
           onStop={isGenerating ? handleChatStop : undefined}
           isLoading={isGenerating || isTypingIndicator}
+          showTypingIndicator={(() => {
+            // Show typing indicator for welcome message init
+            if (isTypingIndicator) return true;
+            // When generating, check if we're waiting for AI response
+            if (isGenerating) {
+              const scenarioMessages = displayMessages.filter(m => m.step === "scenario");
+              const lastScenarioMessage = scenarioMessages[scenarioMessages.length - 1];
+              // Show indicator if last message is from user (waiting for AI response)
+              // or if last assistant message has no content yet (streaming not started)
+              if (!lastScenarioMessage) return true;
+              if (lastScenarioMessage.role === "user") return true;
+              if (lastScenarioMessage.role === "assistant" && !lastScenarioMessage.content) return true;
+              return false;
+            }
+            return false;
+          })()}
           disabled={isGenerating || isTypingIndicator || isWelcomeTyping || isBackgroundTyping}
           className={mobileTab === "chat" ? "" : "hidden md:flex"}
         />
