@@ -16,7 +16,7 @@ import {
   getStructuredOutputMode,
   jsonSchemaToZod,
   shouldUseToolFallback,
-  generateWithToolFallback,
+  streamWithToolFallback,
   isJsonSchemaNotSupportedError,
   isRecoverableWithToolMode,
   cacheModelForToolFallback,
@@ -1680,15 +1680,16 @@ async function generateStructuredOutput({
     astrskHeaders["x-dev-key"] = devKey;
   }
 
-  // Helper: Execute tool fallback approach (generateText with tool calling)
-  const executeToolFallback = async () => {
+  // Helper: Execute tool fallback approach (streamText with tool calling - STREAMING!)
+  const executeToolFallback = () => {
     // Convert CoreMessage to simple message format for the fallback
     const simpleMessages = transformedMessages.map((msg) => ({
       role: msg.role as "system" | "user" | "assistant",
       content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
     }));
 
-    const object = await generateWithToolFallback({
+    // Use streaming version that yields partial objects as they arrive
+    const partialObjectStream = streamWithToolFallback({
       model: model as LanguageModel,
       messages: simpleMessages,
       schema: schema.typeDef as JSONSchema7,
@@ -1697,12 +1698,7 @@ async function generateStructuredOutput({
       abortSignal: combinedAbortSignal,
     });
 
-    // Create a generator to return the final object (non-streaming for tool fallback)
-    async function* createObjectStream(finalObject: unknown) {
-      yield finalObject;
-    }
-
-    return { partialObjectStream: createObjectStream(object) };
+    return { partialObjectStream };
   };
 
   // For models that don't support json_schema response_format (like GLM or cached models),
