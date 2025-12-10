@@ -1332,7 +1332,7 @@ Ground Rules:`;
                 isGenerating={isStatsGenerating}
                 onIsGeneratingChange={setIsStatsGenerating}
                 hasAttemptedGeneration={hasAttemptedStatsGeneration}
-                onHasAttemptedGenerationChange={setHasAttemptedStatsGeneration}
+                onHasAttemptedGenerationChange={setStatsAttempted}
                 onStopGeneration={handleStopStatsGeneration}
                 selectedTemplate={selectedFlowTemplate}
                 onSelectedTemplateChange={setSelectedFlowTemplate}

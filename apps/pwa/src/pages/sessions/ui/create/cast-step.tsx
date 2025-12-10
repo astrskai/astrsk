@@ -1857,6 +1857,17 @@ function CharacterEditPanel({
   );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Track created object URL for cleanup
+  const createdObjectUrlRef = useRef<string | null>(null);
+
+  // Cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (createdObjectUrlRef.current) {
+        URL.revokeObjectURL(createdObjectUrlRef.current);
+      }
+    };
+  }, []);
 
   // Auto-save on changes
   useEffect(() => {
@@ -1887,8 +1898,20 @@ function CharacterEditPanel({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type is a safe image MIME type
+      const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        return;
+      }
+
+      // Revoke previous object URL to prevent memory leak
+      if (createdObjectUrlRef.current) {
+        URL.revokeObjectURL(createdObjectUrlRef.current);
+      }
+
       setImageFile(file);
       const url = URL.createObjectURL(file);
+      createdObjectUrlRef.current = url;
       setImageUrl(url);
     }
   };
@@ -1938,11 +1961,18 @@ function CharacterEditPanel({
   };
 
   // Validate image URL to prevent XSS - only allow blob URLs and https URLs
-  const safeImageUrl = useMemo(() => {
+  // Use URL parsing for proper validation instead of string prefix check
+  const safeImageUrl = useMemo((): string | null => {
     if (!imageUrl) return null;
-    // Allow blob URLs (from createObjectURL) and https URLs only
-    if (imageUrl.startsWith("blob:") || imageUrl.startsWith("https://")) {
-      return imageUrl;
+    try {
+      const parsedUrl = new URL(imageUrl);
+      // Only allow blob: and https: protocols
+      if (parsedUrl.protocol === "blob:" || parsedUrl.protocol === "https:") {
+        // Return the sanitized href from URL parser
+        return parsedUrl.href;
+      }
+    } catch {
+      // Invalid URL - return null
     }
     return null;
   }, [imageUrl]);
