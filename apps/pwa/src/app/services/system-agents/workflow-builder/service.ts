@@ -129,7 +129,7 @@ export async function generateWorkflow({
   };
 
   try {
-    sendProgress("initializing", "Starting workflow configuration...");
+    sendProgress("initializing", "Loading AI model...");
 
     // Get lite model
     const modelStore = useModelStore.getState();
@@ -149,18 +149,16 @@ export async function generateWorkflow({
       modelId: modelInfo.modelId,
     });
 
+    sendProgress("initializing", "Preparing workflow tools...");
+
     // Create tools
     const tools = createWorkflowTools(state, context, {
       onStateChange: (updatedState) => {
         callbacks.onStateChange(updatedState);
       },
-      onToolCall: (toolName) => {
-        const description = TOOL_DESCRIPTIONS[toolName] || toolName;
-        sendProgress("building", description, toolName);
-      },
     });
 
-    sendProgress("building", "Configuring workflow for scenario...");
+    sendProgress("building", "Generating workflow with AI...");
 
     const systemPrompt = buildSystemPrompt(context, state);
     const userMessage = buildUserPrompt(context.dataStoreSchema.length);
@@ -192,6 +190,14 @@ export async function generateWorkflow({
             toolNames: toolCalls?.map((tc) => tc.toolName) || [],
             hasText: !!text,
           });
+
+          // Send progress for each tool call
+          if (toolCalls && toolCalls.length > 0) {
+            for (const tc of toolCalls) {
+              const description = TOOL_DESCRIPTIONS[tc.toolName] || tc.toolName;
+              sendProgress("building", description, tc.toolName);
+            }
+          }
         },
       }),
       generateSessionName(context.scenario || "New Session"),

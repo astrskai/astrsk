@@ -10,7 +10,6 @@
 import { tool } from "ai";
 import { z } from "zod";
 
-import { NodeType } from "@/entities/flow/model/node-types";
 import { SchemaFieldType, type SchemaField } from "@/entities/agent/domain/agent";
 import { variableList, VariableGroup } from "@/shared/prompt/domain/variable";
 import { TemplateRenderer } from "@/shared/lib/template-renderer";
@@ -42,8 +41,6 @@ export function createWorkflowTools(
   context: WorkflowBuilderContext,
   callbacks: {
     onStateChange: (state: WorkflowState) => void;
-    onToolCall?: (toolName: string, args: unknown) => void;
-    onToolResult?: (toolName: string, result: unknown) => void;
   }
 ) {
   // Helper to find agent by ID (either agent ID or node ID)

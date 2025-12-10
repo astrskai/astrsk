@@ -1194,7 +1194,6 @@ export function CastStep({
                       setCharacterFilter(e.target.value as CharacterFilterType)
                     }
                     options={CHARACTER_FILTER_OPTIONS}
-                    selectSize="sm"
                     className="w-28 flex-shrink-0 sm:w-32"
                   />
                 </div>
