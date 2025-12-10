@@ -64,8 +64,10 @@ interface ChatPanelProps {
   onSubmit: () => void;
   /** Stop handler - called when user clicks stop during loading */
   onStop?: () => void;
-  /** Whether AI is currently generating */
+  /** Whether AI is currently generating (disables input, shows stop button) */
   isLoading?: boolean;
+  /** Whether to show typing indicator dots (separate from isLoading for streaming control) */
+  showTypingIndicator?: boolean;
   /** Whether submit is disabled */
   disabled?: boolean;
   /** Additional class names */
@@ -84,9 +86,16 @@ export function ChatPanel({
   onSubmit,
   onStop,
   isLoading = false,
+  showTypingIndicator,
   disabled = false,
   className,
 }: ChatPanelProps) {
+  // Determine if typing indicator should show:
+  // - If showTypingIndicator is explicitly set, use that value
+  // - Otherwise, show when loading AND no streaming content (last message is not assistant with content)
+  const shouldShowTypingIndicator = showTypingIndicator !== undefined
+    ? showTypingIndicator
+    : isLoading && !(messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && messages[messages.length - 1]?.content);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -191,7 +200,8 @@ export function ChatPanel({
                 </div>
               );
             })}
-            {isLoading && (
+            {/* Typing indicator - controlled by shouldShowTypingIndicator */}
+            {shouldShowTypingIndicator && (
               <div className="flex gap-3">
                 <div className="bg-surface-overlay flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full">
                   <Bot size={14} className="text-fg-muted" />

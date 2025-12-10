@@ -140,6 +140,7 @@ function createDataSchemaTools(
     onAddStore: (store: DataSchemaEntry) => void;
     onRemoveStore: (id: string) => void;
     onClearAll: () => void;
+    onBatchComplete?: (stores: DataSchemaEntry[]) => void;
   },
 ) {
   // Maximum total data stores allowed
@@ -190,6 +191,9 @@ function createDataSchemaTools(
         const storesToProcess = stores.slice(0, remainingSlots);
         const skippedDueToLimit = stores.length - storesToProcess.length;
 
+        // Track stores added in this batch
+        const batchAddedStores: DataSchemaEntry[] = [];
+
         for (const { name, type, description, initial, min, max } of storesToProcess) {
           // Sanitize name to snake_case and check for duplicates
           const sanitizedName = sanitizeFileName(name);
@@ -235,6 +239,7 @@ function createDataSchemaTools(
 
           // Track for context and notify callback
           createdStores.push(store);
+          batchAddedStores.push(store);
           callbacks.onAddStore(store);
 
           results.push({
@@ -260,6 +265,11 @@ function createDataSchemaTools(
         }
         if (skippedDueToLimit > 0) {
           summary += `, ${skippedDueToLimit} skipped (limit of ${MAX_DATA_STORES} reached)`;
+        }
+
+        // Notify batch completion with stores added in this batch only
+        if (batchAddedStores.length > 0 && callbacks.onBatchComplete) {
+          callbacks.onBatchComplete(batchAddedStores);
         }
 
         return {
@@ -330,6 +340,7 @@ export async function generateDataSchema({
     onAddStore: (store: DataSchemaEntry) => void;
     onRemoveStore: (id: string) => void;
     onClearAll: () => void;
+    onBatchComplete?: (stores: DataSchemaEntry[]) => void;
   };
   abortSignal?: AbortSignal;
 }): Promise<{ text: string; stores: DataSchemaEntry[] }> {
@@ -375,6 +386,7 @@ export async function generateDataSchema({
     },
     onRemoveStore: callbacks.onRemoveStore,
     onClearAll: callbacks.onClearAll,
+    onBatchComplete: callbacks.onBatchComplete,
   };
 
   const tools = createDataSchemaTools(currentStores, trackingCallbacks);

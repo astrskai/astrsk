@@ -119,6 +119,16 @@ Ground Rules:`;
   // Unified chat messages (shared across all steps)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
+  // Functional update helper to add messages (avoids stale closure issues in async callbacks)
+  const addChatMessage = useCallback((message: ChatMessage) => {
+    setChatMessages(prev => [...prev, message]);
+  }, []);
+
+  // Functional update helper to add multiple messages at once
+  const addChatMessages = useCallback((messages: ChatMessage[]) => {
+    setChatMessages(prev => [...prev, ...messages]);
+  }, []);
+
   // Stats state
   const [statsDataStores, setStatsDataStores] = useState<StatsDataStore[]>([]);
   const [isStatsGenerating, setIsStatsGenerating] = useState(false);
@@ -144,6 +154,10 @@ Ground Rules:`;
   // Stats generation refs (for abort control and incremental updates)
   const statsAbortControllerRef = useRef<AbortController | null>(null);
   const generatingStoresRef = useRef<StatsDataStore[]>([]);
+  // Track actually added stat names (to filter batch messages to only show real additions)
+  const addedStatNamesRef = useRef<Set<string>>(new Set());
+  // Track announced stat names to prevent duplicate chat messages
+  const announcedStatNamesRef = useRef<Set<string>>(new Set());
   // Refs mirror state for immediate checks in useCallback (avoids stale closure issues)
   const hasAttemptedStatsGenerationRef = useRef(false);
   const isStatsGeneratingRef = useRef(false);
@@ -360,8 +374,10 @@ Ground Rules:`;
     statsAbortControllerRef.current?.abort();
     statsAbortControllerRef.current = new AbortController();
 
-    // Clear existing stores
+    // Clear existing stores and tracking refs
     generatingStoresRef.current = [];
+    addedStatNamesRef.current = new Set();
+    announcedStatNamesRef.current = new Set();
     setStatsDataStores([]);
 
     try {
@@ -413,6 +429,9 @@ Ground Rules:`;
           max: store.max,
         }));
 
+        // Track if max limit was reached (to show different completion message)
+        let maxLimitReached = false;
+
         await generateDataSchemaAI({
           context: { scenario },
           currentStores: existingStores,
@@ -420,15 +439,7 @@ Ground Rules:`;
             onAddStore: (store) => {
               if (statsAbortControllerRef.current?.signal.aborted) return;
               if (generatingStoresRef.current.length >= MAX_TOTAL_STORES) {
-                // Add max limit message to chat
-                const maxLimitMessage: ChatMessage = {
-                  id: crypto.randomUUID(),
-                  role: "assistant",
-                  content: `All done! Up to ${MAX_TOTAL_STORES} stats are auto-generated. Feel free to add or remove any as you like!`,
-                  step: "stats",
-                  isSystemGenerated: true, // Exclude from AI chat history
-                };
-                setChatMessages((prev) => [...prev, maxLimitMessage]);
+                maxLimitReached = true;
                 statsAbortControllerRef.current?.abort();
                 return;
               }
@@ -437,27 +448,68 @@ Ground Rules:`;
                 dataSchemaEntryToStatsDataStore(store),
               ];
               setStatsDataStores(generatingStoresRef.current);
-
-              // Update progress message in chat (replace previous progress message)
-              const newCount = generatingStoresRef.current.length;
-              const progressMessage: ChatMessage = {
-                id: "stats-progress", // Fixed ID to replace previous progress message
-                role: "assistant",
-                content: `Working on it... ${newCount} stat${newCount > 1 ? "s" : ""} ready!`,
-                step: "stats",
-                isSystemGenerated: true, // Exclude from AI chat history
-              };
-              setChatMessages((prev) => {
-                // Remove previous progress message and add updated one
-                const filtered = prev.filter((m) => m.id !== "stats-progress");
-                return [...filtered, progressMessage];
-              });
+              // Track actually added store names for batch message filtering
+              addedStatNamesRef.current.add(store.name);
             },
             onRemoveStore: () => {},
             onClearAll: () => {},
+            onBatchComplete: (stores) => {
+              // Filter to only stats that were actually added AND not yet announced
+              const newStores = stores.filter(
+                s => addedStatNamesRef.current.has(s.name) && !announcedStatNamesRef.current.has(s.name)
+              );
+              if (newStores.length > 0) {
+                // Mark as announced to prevent duplicate messages
+                newStores.forEach(s => announcedStatNamesRef.current.add(s.name));
+
+                // Format names: remove underscores
+                const formatName = (name: string) => name.replace(/_/g, " ");
+                const statNames = newStores.map(s => formatName(s.name)).join(", ");
+                const batchMessage: ChatMessage = {
+                  id: crypto.randomUUID(),
+                  role: "assistant",
+                  content: `I've added ${newStores.length} new stats: ${statNames}`,
+                  step: "stats",
+                  isSystemGenerated: true,
+                };
+                addChatMessage(batchMessage);
+              }
+            },
           },
           abortSignal: statsAbortControllerRef.current.signal,
         });
+
+        // Add completion message after generation finishes
+        if (maxLimitReached) {
+          const completionMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: `All done! Up to ${MAX_TOTAL_STORES} stats are auto-generated. Feel free to add or remove any as you like!`,
+            step: "stats",
+            isSystemGenerated: true,
+          };
+          addChatMessage(completionMessage);
+        } else if (generatingStoresRef.current.length > 0) {
+          // Normal completion - AI finished on its own
+          const completionMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: `That's all the stats I think would fit this scenario. Feel free to add more or adjust them!`,
+            step: "stats",
+            isSystemGenerated: true,
+          };
+          addChatMessage(completionMessage);
+        } else {
+          // No stats generated
+          const completionMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: `I couldn't find any specific stats to generate for this scenario. You can add custom stats manually!`,
+            step: "stats",
+            isSystemGenerated: true,
+          };
+          addChatMessage(completionMessage);
+        }
       }
 
       logger.info("[CreateSession] Stats generation complete", {
@@ -1271,6 +1323,7 @@ Ground Rules:`;
               onMobileTabChange={setMobileCastTab}
               chatMessages={chatMessages}
               onChatMessagesChange={setChatMessages}
+              addChatMessage={addChatMessage}
               onCharacterCreatedFromChat={(draftCharacter) => {
                 // Add new draft character at the front of library (not directly to roster)
                 setDraftCharacters((prev) => [draftCharacter, ...prev]);

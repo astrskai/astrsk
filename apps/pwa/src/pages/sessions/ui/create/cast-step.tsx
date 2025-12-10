@@ -73,6 +73,8 @@ interface CastStepProps {
   // Chat messages (lifted to parent for persistence across step navigation)
   chatMessages?: ChatMessage[];
   onChatMessagesChange?: (messages: ChatMessage[]) => void;
+  // Functional update helper to add a single message (avoids stale closure)
+  addChatMessage?: (message: ChatMessage) => void;
   // Callback when a character is created via chat (returns DraftCharacter)
   onCharacterCreatedFromChat?: (character: DraftCharacter) => void;
   // Scenario context for AI character generation
@@ -482,6 +484,7 @@ export function CastStep({
   onMobileTabChange,
   chatMessages = [],
   onChatMessagesChange,
+  addChatMessage,
   onCharacterCreatedFromChat,
   scenarioBackground,
   firstMessages,
@@ -787,7 +790,7 @@ export function CastStep({
         return;
       }
 
-      // Add assistant response to chat
+      // Add assistant response to chat using functional update (avoids stale closure)
       if (response.text) {
         const assistantMessage: ChatMessage = {
           id: crypto.randomUUID(),
@@ -795,7 +798,7 @@ export function CastStep({
           content: response.text,
           step: currentStep,
         };
-        onChatMessagesChange?.([...newMessages, assistantMessage]);
+        addChatMessage?.(assistantMessage);
       }
     } catch (error) {
       // Check if this was an abort - don't show error for user-initiated abort
@@ -807,7 +810,7 @@ export function CastStep({
         return;
       } else {
         logger.error("[CastStep] Character generation failed", error);
-        // Add error message to chat
+        // Add error message to chat using functional update (avoids stale closure)
         const errorMessage: ChatMessage = {
           id: crypto.randomUUID(),
           role: "assistant",
@@ -815,7 +818,7 @@ export function CastStep({
             "Sorry, I encountered an error while generating the character. Please try again.",
           step: currentStep,
         };
-        onChatMessagesChange?.([...newMessages, errorMessage]);
+        addChatMessage?.(errorMessage);
       }
     } finally {
       setIsGenerating(false);
@@ -1109,6 +1112,22 @@ export function CastStep({
           onSubmit={handleChatSubmit}
           onStop={isGenerating ? handleChatStop : undefined}
           isLoading={isGenerating || isTypingIndicator}
+          showTypingIndicator={(() => {
+            // Show typing indicator for welcome message init
+            if (isTypingIndicator) return true;
+            // When generating, check if we're waiting for AI response
+            if (isGenerating) {
+              const castMessages = displayMessages.filter(m => m.step === "cast");
+              const lastCastMessage = castMessages[castMessages.length - 1];
+              // Show indicator if last message is from user (waiting for AI response)
+              // or if last assistant message has no content yet (streaming not started)
+              if (!lastCastMessage) return true;
+              if (lastCastMessage.role === "user") return true;
+              if (lastCastMessage.role === "assistant" && !lastCastMessage.content) return true;
+              return false;
+            }
+            return false;
+          })()}
           disabled={isGenerating || isTypingIndicator || isWelcomeTyping}
           className={mobileTab === "chat" ? "" : "hidden md:flex"}
         />
