@@ -16,7 +16,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib";
 import { sanitizeFileName } from "@/shared/lib/file-utils";
 
-// Types for data schema - matches HudDataStore from hud-step.tsx
+// Types for data schema - matches HudDataStore from stats-step.tsx
 export type DataStoreType = "integer" | "number" | "boolean" | "string";
 
 export interface DataSchemaEntry {

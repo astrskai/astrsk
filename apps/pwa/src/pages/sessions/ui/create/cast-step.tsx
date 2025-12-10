@@ -28,11 +28,14 @@ import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
 import { cn, logger } from "@/shared/lib";
+import { SESSION_STORAGE_KEYS } from "@/shared/storage";
 import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { useTypingEffect } from "@/shared/hooks/use-typing-effect";
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
 import { StepHeader } from "./step-header";
 import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
+import type { SessionStep } from "./session-stepper";
 import {
   generateCharacterResponse,
   type CharacterBuilderMessage,
@@ -46,6 +49,8 @@ import {
 import { type FirstMessage } from "./scenario-step";
 
 interface CastStepProps {
+  // Current step for tagging chat messages
+  currentStep: SessionStep;
   playerCharacter: DraftCharacter | null;
   aiCharacters: DraftCharacter[];
   onPlayerCharacterChange: (character: DraftCharacter | null) => void;
@@ -70,6 +75,10 @@ interface CastStepProps {
 
 const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
 
+// Initial welcome message for character creation
+const WELCOME_MESSAGE_CONTENT =
+  "Need a character? Describe who you're looking for — their personality, role, or vibe — and I'll help bring them to life. You can also browse existing characters in the library.";
+
 // Flying trail animation constants
 const TRAIL_ICON_SIZE = 48; // 12 * 4 = h-12 w-12
 const TRAIL_ICON_OFFSET = TRAIL_ICON_SIZE / 2; // Center the icon on cursor
@@ -92,7 +101,7 @@ function buildCharacterBadges(
             label: "LOCAL",
             variant: "default" as const,
             position: "left" as const,
-            className: "border-[#f59e0b]/30 bg-[#451a03]/50 text-[#fcd34d]",
+            className: "border-amber-500/30 bg-amber-950/50 text-amber-300",
           },
         ]
       : []),
@@ -103,7 +112,7 @@ function buildCharacterBadges(
             label: "PLAYER",
             variant: "default" as const,
             position: "right" as const,
-            className: "border-[#3b82f6]/30 bg-[#172554]/50 text-[#93c5fd]",
+            className: "border-blue-500/30 bg-blue-950/50 text-blue-300",
           },
         ]
       : isAI
@@ -112,7 +121,7 @@ function buildCharacterBadges(
               label: "AI",
               variant: "default" as const,
               position: "right" as const,
-              className: "border-[#a855f7]/30 bg-[#3b0764]/50 text-[#d8b4fe]",
+              className: "border-purple-500/30 bg-purple-950/50 text-purple-300",
             },
           ]
         : []),
@@ -190,7 +199,7 @@ function FlyingTrailOverlay({
             <div
               className={cn(
                 "flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl font-bold text-white shadow-lg",
-                trail.targetType === "player" ? "bg-[#3b82f6]" : "bg-[#a855f7]",
+                trail.targetType === "player" ? "bg-blue-500" : "bg-purple-500",
               )}
             >
               {trail.imageUrl ? (
@@ -208,8 +217,8 @@ function FlyingTrailOverlay({
               className={cn(
                 "absolute inset-0 rounded-xl blur-md",
                 trail.targetType === "player"
-                  ? "bg-[#3b82f6]/50"
-                  : "bg-[#a855f7]/50",
+                  ? "bg-blue-500/50"
+                  : "bg-purple-500/50",
               )}
               initial={{ scale: 1 }}
               animate={{ scale: 1.5, opacity: 0 }}
@@ -273,7 +282,12 @@ function LibraryCharacterCard({
             onClick={(e) => {
               e.stopPropagation();
               if (!isSelected) {
-                triggerFlyingTrail?.(e, "player", card.props.name || "Character", imageUrl ?? undefined);
+                triggerFlyingTrail?.(
+                  e,
+                  "player",
+                  card.props.name || "Character",
+                  imageUrl ?? undefined,
+                );
                 onAssignPlayer();
               }
             }}
@@ -292,7 +306,12 @@ function LibraryCharacterCard({
             onClick={(e) => {
               e.stopPropagation();
               if (!isSelected) {
-                triggerFlyingTrail?.(e, "ai", card.props.name || "Character", imageUrl ?? undefined);
+                triggerFlyingTrail?.(
+                  e,
+                  "ai",
+                  card.props.name || "Character",
+                  imageUrl ?? undefined,
+                );
                 onAddAI();
               }
             }}
@@ -347,7 +366,7 @@ function DraftCharacterCard({
       summary={draft.data?.cardSummary}
       tags={draft.data?.tags || []}
       badges={badges}
-      className="border-dashed border-[#f59e0b]/50"
+      className="border-dashed border-amber-500/50"
       onClick={onOpenDetails}
       renderMetadata={() => null}
       footerActions={
@@ -395,6 +414,7 @@ function DraftCharacterCard({
  * Two-panel layout: Character Library (left) + Session Roster (right)
  */
 export function CastStep({
+  currentStep,
   playerCharacter,
   aiCharacters,
   onPlayerCharacterChange,
@@ -416,6 +436,19 @@ export function CastStep({
     useState<CharacterDetailsData | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isTypingIndicator, setIsTypingIndicator] = useState(false);
+  const [showInfoBanner, setShowInfoBanner] = useState(
+    () =>
+      sessionStorage.getItem(
+        SESSION_STORAGE_KEYS.CAST_STEP_INFO_BANNER_DISMISSED,
+      ) !== "true",
+  );
+  const [showWarningBanner, setShowWarningBanner] = useState(
+    () =>
+      sessionStorage.getItem(
+        SESSION_STORAGE_KEYS.CAST_STEP_WARNING_BANNER_DISMISSED,
+      ) !== "true",
+  );
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Flying trail animation state
@@ -461,6 +494,67 @@ export function CastStep({
       abortControllerRef.current?.abort();
     };
   }, []);
+
+  // Welcome message typing effect using custom hook
+  const {
+    displayText: welcomeDisplayText,
+    isTyping: isWelcomeTyping,
+    startTyping: startWelcomeTyping,
+  } = useTypingEffect({
+    onComplete: () => {
+      // Update to final message when typing completes
+      const existingMessages = chatMessages.filter(
+        (m) => m.id !== "cast-welcome",
+      );
+      onChatMessagesChange?.([
+        ...existingMessages,
+        {
+          id: "cast-welcome",
+          role: "assistant",
+          content: WELCOME_MESSAGE_CONTENT,
+          step: "cast",
+        },
+      ]);
+    },
+  });
+
+  // Add initial welcome message with typing indicator then streaming text effect
+  // Only show if no cast-step messages exist yet
+  useEffect(() => {
+    const hasCastMessages = chatMessages.some((m) => m.step === "cast");
+    if (hasCastMessages) return;
+
+    setIsTypingIndicator(true);
+
+    // After typing indicator, start streaming the text
+    const typingTimer = setTimeout(() => {
+      setIsTypingIndicator(false);
+
+      // Add welcome message that will be updated with streaming text
+      const welcomeMessage: ChatMessage = {
+        id: "cast-welcome",
+        role: "assistant",
+        content: "",
+        step: "cast",
+      };
+      onChatMessagesChange?.([...chatMessages, welcomeMessage]);
+
+      // Start typing effect
+      startWelcomeTyping(WELCOME_MESSAGE_CONTENT);
+    }, 1500); // Show typing indicator for 1.5 seconds
+
+    return () => clearTimeout(typingTimer);
+  }, []); // Only run on mount
+
+  // Show all messages, apply streaming text to welcome message if typing
+  const displayMessages = useMemo(() => {
+    if (isWelcomeTyping) {
+      return chatMessages.map((m) =>
+        m.id === "cast-welcome" ? { ...m, content: welcomeDisplayText } : m,
+      );
+    }
+    return chatMessages;
+  }, [chatMessages, isWelcomeTyping, welcomeDisplayText]);
 
   // Handle character creation from AI - creates DraftCharacter without DB save
   const handleCharacterCreated = useCallback(
@@ -528,6 +622,7 @@ export function CastStep({
       id: crypto.randomUUID(),
       role: "user",
       content: chatInput,
+      step: currentStep,
     };
     const newMessages = [...chatMessages, userMessage];
     onChatMessagesChange?.(newMessages);
@@ -575,18 +670,26 @@ export function CastStep({
         abortSignal: abortControllerRef.current.signal,
       });
 
+      // Check if aborted before applying results
+      if (abortControllerRef.current?.signal.aborted) {
+        return;
+      }
+
       // Add assistant response to chat
       if (response.text) {
         const assistantMessage: ChatMessage = {
           id: crypto.randomUUID(),
           role: "assistant",
           content: response.text,
+          step: currentStep,
         };
         onChatMessagesChange?.([...newMessages, assistantMessage]);
       }
     } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
+      // Check if this was an abort - don't show error for user-initiated abort
+      if ((error as Error).name === "AbortError" || abortControllerRef.current?.signal.aborted) {
         logger.info("[CastStep] Character generation aborted");
+        return;
       } else {
         logger.error("[CastStep] Character generation failed", error);
         // Add error message to chat
@@ -595,12 +698,19 @@ export function CastStep({
           role: "assistant",
           content:
             "Sorry, I encountered an error while generating the character. Please try again.",
+          step: currentStep,
         };
         onChatMessagesChange?.([...newMessages, errorMessage]);
       }
     } finally {
       setIsGenerating(false);
-      abortControllerRef.current = null;
+      // Defer clearing the controller to the next tick to ensure the catch block
+      // can complete its signal.aborted check before the reference is nullified.
+      // This prevents a race condition where handleChatStop sets abort but the
+      // catch block hasn't finished checking the signal yet.
+      setTimeout(() => {
+        abortControllerRef.current = null;
+      }, 0);
     }
   }, [
     chatInput,
@@ -612,7 +722,27 @@ export function CastStep({
     scenarioBackground,
     firstMessages,
     draftCharacters,
+    currentStep,
   ]);
+
+  // Handle chat stop (abort generation and show cancelled message)
+  const handleChatStop = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      // Keep the reference so catch block can check signal.aborted
+    }
+    setIsGenerating(false);
+
+    // Add cancelled message to chat
+    const cancelledMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: "Response generation was stopped by user.",
+      step: currentStep,
+      variant: "cancelled",
+    };
+    onChatMessagesChange?.([...chatMessages, cancelledMessage]);
+  }, [currentStep, onChatMessagesChange, chatMessages]);
 
   // Fetch character cards
   const { data: characterCards } = useQuery({
@@ -689,7 +819,9 @@ export function CastStep({
     // If already AI, remove from AI list
     const inAI = aiCharacters.find((c) => c.tempId === draft.tempId);
     if (inAI) {
-      onAiCharactersChange(aiCharacters.filter((c) => c.tempId !== draft.tempId));
+      onAiCharactersChange(
+        aiCharacters.filter((c) => c.tempId !== draft.tempId),
+      );
     }
     // Set as player (draft stays in draftCharacters for consistent UX with library)
     onPlayerCharacterChange(draft);
@@ -738,6 +870,23 @@ export function CastStep({
       getDraftCharacterName(playerCharacter)
     : undefined;
 
+  // Banner dismiss handlers
+  const handleDismissInfoBanner = useCallback(() => {
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEYS.CAST_STEP_INFO_BANNER_DISMISSED,
+      "true",
+    );
+    setShowInfoBanner(false);
+  }, []);
+
+  const handleDismissWarningBanner = useCallback(() => {
+    sessionStorage.setItem(
+      SESSION_STORAGE_KEYS.CAST_STEP_WARNING_BANNER_DISMISSED,
+      "true",
+    );
+    setShowWarningBanner(false);
+  }, []);
+
   // Mobile tab configuration
   const mobileTabs = useMemo<MobileTab<"library" | "cast" | "chat">[]>(
     () => [
@@ -783,13 +932,14 @@ export function CastStep({
       <div className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 overflow-hidden px-0 pb-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
         {/* Left Panel: AI Chat */}
         <ChatPanel
-          messages={chatMessages}
+          messages={displayMessages}
           agent={CHAT_AGENTS.cast}
           inputValue={chatInput}
           onInputChange={setChatInput}
           onSubmit={handleChatSubmit}
-          isLoading={isGenerating}
-          disabled={isGenerating}
+          onStop={isGenerating ? handleChatStop : undefined}
+          isLoading={isGenerating || isTypingIndicator}
+          disabled={isGenerating || isTypingIndicator || isWelcomeTyping}
           className={mobileTab === "chat" ? "" : "hidden md:flex"}
         />
 
@@ -805,67 +955,95 @@ export function CastStep({
             title="Character Library"
             subtitle="SELECT PERSONAS FOR SIMULATION"
             actions={
-              <Button
-                onClick={onCreateCharacter}
-                variant="default"
-                size="sm"
-                icon={<Plus size={16} />}
-              >
-                <span className="hidden sm:inline">New Character</span>
-              </Button>
+              <div className="flex gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={onImportCharacter}
+                        variant="secondary"
+                        size="sm"
+                        icon={<Import size={16} />}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent variant="button" side="bottom">
+                      Import V2, V3 character cards
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Button
+                  onClick={onCreateCharacter}
+                  variant="default"
+                  size="sm"
+                  icon={<Plus size={16} />}
+                >
+                  <span className="hidden sm:inline">New Character</span>
+                </Button>
+              </div>
             }
           >
             {/* Search */}
-            <div className="flex gap-2">
-              <SearchInput
-                placeholder="Search characters..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                variant="dark"
-                className="flex-1"
-              />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={onImportCharacter}
-                      variant="secondary"
-                      size="md"
-                      icon={<Import size={16} />}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent variant="button" side="bottom">
-                    Import V2, V3 character cards
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+            <SearchInput
+              placeholder="Search characters..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              variant="dark"
+              className="w-full"
+            />
           </StepHeader>
 
           {/* Info & Warning Banners */}
-          <div className="mx-3 mt-1 space-y-1 sm:mx-6 sm:mt-2">
-            <div className="flex items-start gap-2 rounded-lg border border-[#3b82f6]/20 bg-[#172554]/20 px-3 py-2">
-              <Info size={14} className="mt-0.5 flex-shrink-0 text-[#60a5fa]" />
-              <p className="text-[11px] leading-relaxed text-zinc-400">
-                Browsing{" "}
-                <span className="font-semibold text-[#93c5fd]">Global Library</span>.
-                New characters are{" "}
-                <span className="font-semibold text-[#fcd34d]">Local</span> to this scenario.
-              </p>
-            </div>
+          {(showInfoBanner ||
+            (draftCharacters.length > 0 && showWarningBanner)) && (
+            <div className="mx-3 mt-1 space-y-1 sm:mx-6 sm:mt-2">
+              {showInfoBanner && (
+                <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-950/20 px-3 py-2">
+                  <Info
+                    size={14}
+                    className="mt-0.5 flex-shrink-0 text-blue-400"
+                  />
+                  <p className="flex-1 text-[11px] leading-relaxed text-zinc-400">
+                    Browsing{" "}
+                    <span className="font-semibold text-blue-300">
+                      Global Assets
+                    </span>
+                    . New characters are{" "}
+                    <span className="font-semibold text-amber-300">Local</span>{" "}
+                    to this scenario.
+                  </p>
+                  <button
+                    onClick={handleDismissInfoBanner}
+                    className="flex-shrink-0 p-0.5 text-blue-400 transition-colors hover:text-blue-300"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
 
-            {draftCharacters.length > 0 && (
-              <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2">
-                <AlertTriangle size={14} className="mt-0.5 flex-shrink-0 text-red-400" />
-                <p className="text-[11px] leading-relaxed text-red-300">
-                  <span className="font-semibold">Warning:</span> Local characters will be lost if you leave without creating a session.
-                </p>
-              </div>
-            )}
-          </div>
+              {draftCharacters.length > 0 && showWarningBanner && (
+                <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2">
+                  <AlertTriangle
+                    size={14}
+                    className="mt-0.5 flex-shrink-0 text-red-400"
+                  />
+                  <p className="flex-1 text-[11px] leading-relaxed text-red-300">
+                    <span className="font-semibold">Warning:</span> Local
+                    characters will be lost if you leave without creating a
+                    session.
+                  </p>
+                  <button
+                    onClick={handleDismissWarningBanner}
+                    className="flex-shrink-0 p-0.5 text-red-400 transition-colors hover:text-red-300"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Character Grid */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+          <div className="flex-1 overflow-y-auto px-4 py-2 sm:px-6 sm:py-4">
             <LayoutGroup>
               <motion.div
                 layout
@@ -882,7 +1060,9 @@ export function CastStep({
                     .map((draft) => {
                       // Check if this draft is already assigned to roster
                       const isPlayer = playerCharacter?.tempId === draft.tempId;
-                      const isAI = aiCharacters.some((c) => c.tempId === draft.tempId);
+                      const isAI = aiCharacters.some(
+                        (c) => c.tempId === draft.tempId,
+                      );
 
                       return (
                         <motion.div
@@ -891,28 +1071,48 @@ export function CastStep({
                           data-card-wrapper
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          exit={{
+                            opacity: 0,
+                            scale: 0.8,
+                            transition: { duration: 0.2 },
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
+                          }}
                         >
                           <DraftCharacterCard
                             draft={draft}
                             isPlayer={isPlayer}
                             isAI={isAI}
                             onAssignPlayer={(e) => {
-                              triggerFlyingTrail(e, "player", draft.data?.name || "Character", draft.data?.imageUrl);
+                              triggerFlyingTrail(
+                                e,
+                                "player",
+                                draft.data?.name || "Character",
+                                draft.data?.imageUrl,
+                              );
                               handleAssignDraftPlayer(draft);
                             }}
                             onAddAI={(e) => {
-                              triggerFlyingTrail(e, "ai", draft.data?.name || "Character", draft.data?.imageUrl);
+                              triggerFlyingTrail(
+                                e,
+                                "ai",
+                                draft.data?.name || "Character",
+                                draft.data?.imageUrl,
+                              );
                               handleAddDraftAI(draft);
                             }}
-                            onOpenDetails={() => setSelectedDetailsChar({
-                              name: draft.data?.name || "Unnamed",
-                              description: draft.data?.description,
-                              cardSummary: draft.data?.cardSummary,
-                              tags: draft.data?.tags,
-                              imageUrl: draft.data?.imageUrl,
-                            })}
+                            onOpenDetails={() =>
+                              setSelectedDetailsChar({
+                                name: draft.data?.name || "Unnamed",
+                                description: draft.data?.description,
+                                cardSummary: draft.data?.cardSummary,
+                                tags: draft.data?.tags,
+                                imageUrl: draft.data?.imageUrl,
+                              })
+                            }
                           />
                         </motion.div>
                       );
@@ -935,8 +1135,16 @@ export function CastStep({
                         data-card-wrapper
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.8,
+                          transition: { duration: 0.2 },
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 30,
+                        }}
                       >
                         <LibraryCharacterCard
                           card={card}
@@ -945,14 +1153,16 @@ export function CastStep({
                           isLocal={isLocal}
                           onAssignPlayer={() => handleAssignPlayer(card)}
                           onAddAI={() => handleAddAI(card)}
-                          onOpenDetails={() => setSelectedDetailsChar({
-                            name: card.props.name || "Unnamed",
-                            description: card.props.description,
-                            cardSummary: card.props.cardSummary,
-                            tags: card.props.tags,
-                            version: card.props.version,
-                            iconAssetId: card.props.iconAssetId,
-                          })}
+                          onOpenDetails={() =>
+                            setSelectedDetailsChar({
+                              name: card.props.name || "Unnamed",
+                              description: card.props.description,
+                              cardSummary: card.props.cardSummary,
+                              tags: card.props.tags,
+                              version: card.props.version,
+                              iconAssetId: card.props.iconAssetId,
+                            })
+                          }
                           triggerFlyingTrail={triggerFlyingTrail}
                         />
                       </motion.div>
@@ -963,14 +1173,15 @@ export function CastStep({
             </LayoutGroup>
 
             {/* Empty State */}
-            {filteredCharacters.length === 0 && draftCharacters.length === 0 && (
-              <div className="flex h-64 flex-col items-center justify-center text-zinc-600">
-                <div className="mb-3 rounded-full bg-zinc-900/50 p-4">
-                  <Users size={32} />
+            {filteredCharacters.length === 0 &&
+              draftCharacters.length === 0 && (
+                <div className="flex h-64 flex-col items-center justify-center text-zinc-600">
+                  <div className="mb-3 rounded-full bg-zinc-900/50 p-4">
+                    <Users size={32} />
+                  </div>
+                  <p className="text-sm">No data found in archives.</p>
                 </div>
-                <p className="text-sm">No data found in archives.</p>
-              </div>
-            )}
+              )}
           </div>
         </div>
 
@@ -985,7 +1196,7 @@ export function CastStep({
           {/* Roster Header */}
           <div className="flex-shrink-0 p-4">
             <div className="flex items-center gap-2.5 rounded-lg bg-zinc-800/40 px-3.5 py-2.5">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-brand-500/20">
+              <div className="bg-brand-500/20 flex h-6 w-6 items-center justify-center rounded-md">
                 <Users size={14} className="text-brand-400" />
               </div>
               <h2 className="text-sm font-semibold tracking-wide text-zinc-200">
@@ -1020,10 +1231,10 @@ export function CastStep({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 10 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className="group relative overflow-hidden rounded-xl border border-[#3b82f6]/30 bg-[#172554]/20"
+                    className="group relative overflow-hidden rounded-xl border border-blue-500/30 bg-blue-950/20"
                   >
-                    <div className="relative flex items-center gap-3 rounded-xl bg-[#172554]/40 p-3">
-                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-[#3b82f6] font-bold text-white">
+                    <div className="relative flex items-center gap-3 rounded-xl bg-blue-950/40 p-3">
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-blue-500 font-bold text-white">
                         {playerDisplayImageUrl ? (
                           <img
                             src={playerDisplayImageUrl}
@@ -1041,11 +1252,11 @@ export function CastStep({
                           {playerDisplayName}
                         </div>
                         <div className="mt-1 flex gap-1">
-                          <div className="inline-block rounded border border-[#3b82f6]/20 bg-[#172554]/30 px-1.5 py-0.5 text-[10px] text-[#93c5fd]">
+                          <div className="inline-block rounded border border-blue-500/20 bg-blue-950/30 px-1.5 py-0.5 text-[10px] text-blue-300">
                             PLAYER
                           </div>
                           {playerCharacter.source !== "library" && (
-                            <div className="inline-block rounded border border-[#f59e0b]/30 bg-[#451a03]/50 px-1.5 py-0.5 text-[10px] text-[#fcd34d]">
+                            <div className="inline-block rounded border border-amber-500/30 bg-amber-950/50 px-1.5 py-0.5 text-[10px] text-amber-300">
                               LOCAL
                             </div>
                           )}
@@ -1060,15 +1271,15 @@ export function CastStep({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.15 }}
-                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#3b82f6]/40 bg-[#172554]/20 px-4 py-5 text-center"
+                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-blue-500/40 bg-blue-950/20 px-4 py-5 text-center"
                   >
-                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#3b82f6]/20">
-                      <User size={14} className="text-[#60a5fa]" />
+                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/20">
+                      <User size={14} className="text-blue-400" />
                     </div>
-                    <p className="text-[11px] font-medium text-[#93c5fd]">
+                    <p className="text-[11px] font-medium text-blue-300">
                       No persona selected
                     </p>
-                    <p className="mt-0.5 text-[10px] text-[#60a5fa]">
+                    <p className="mt-0.5 text-[10px] text-blue-400">
                       Use PLAY AS to assign
                     </p>
                   </motion.div>
@@ -1099,7 +1310,11 @@ export function CastStep({
                       initial={{ opacity: 0, scale: 0.9, x: -20 }}
                       animate={{ opacity: 1, scale: 1, x: 0 }}
                       exit={{ opacity: 0, scale: 0.9, x: 20 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
+                      }}
                       className="mb-2 last:mb-0"
                     >
                       <AIRosterItem
@@ -1116,15 +1331,15 @@ export function CastStep({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.15 }}
-                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#a855f7]/40 bg-[#3b0764]/20 px-4 py-5 text-center"
+                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-purple-500/40 bg-purple-950/20 px-4 py-5 text-center"
                   >
-                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#a855f7]/20">
-                      <Cpu size={14} className="text-[#c084fc]" />
+                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/20">
+                      <Cpu size={14} className="text-purple-400" />
                     </div>
-                    <p className="text-[11px] font-medium text-[#d8b4fe]">
+                    <p className="text-[11px] font-medium text-purple-300">
                       No AI companions selected
                     </p>
-                    <p className="mt-0.5 text-[10px] text-[#c084fc]">
+                    <p className="mt-0.5 text-[10px] text-purple-400">
                       Use ADD AS AI to assign
                     </p>
                   </motion.div>
@@ -1137,7 +1352,10 @@ export function CastStep({
           <div className="flex-shrink-0 p-4">
             {totalSelected === 0 ? (
               <div className="flex items-center justify-center gap-2 rounded-lg border border-amber-500/30 bg-amber-950/20 px-3 py-2.5">
-                <AlertTriangle size={14} className="flex-shrink-0 text-amber-400" />
+                <AlertTriangle
+                  size={14}
+                  className="flex-shrink-0 text-amber-400"
+                />
                 <p className="text-[11px] font-medium text-amber-300">
                   Select at least one character
                 </p>
@@ -1193,8 +1411,8 @@ function AIRosterItem({
   const isLocal = draft.source !== "library";
 
   return (
-    <div className="group relative flex items-center gap-3 rounded-xl border border-[#a855f7]/30 bg-[#3b0764]/40 p-3 transition-all hover:border-[#a855f7]/40">
-      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-[#a855f7] text-xs font-bold text-white">
+    <div className="group relative flex items-center gap-3 rounded-xl border border-purple-500/30 bg-purple-950/40 p-3 transition-all hover:border-purple-500/40">
+      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-purple-500 text-xs font-bold text-white">
         {displayImageUrl ? (
           <img
             src={displayImageUrl}
@@ -1210,11 +1428,11 @@ function AIRosterItem({
           {displayName}
         </div>
         <div className="mt-0.5 flex gap-1">
-          <div className="inline-block rounded border border-[#a855f7]/30 bg-[#3b0764]/30 px-1.5 py-0.5 text-[10px] text-[#d8b4fe]">
+          <div className="inline-block rounded border border-purple-500/30 bg-purple-950/30 px-1.5 py-0.5 text-[10px] text-purple-300">
             AI
           </div>
           {isLocal && (
-            <div className="inline-block rounded border border-[#f59e0b]/30 bg-[#451a03]/50 px-1.5 py-0.5 text-[10px] text-[#fcd34d]">
+            <div className="inline-block rounded border border-amber-500/30 bg-amber-950/50 px-1.5 py-0.5 text-[10px] text-amber-300">
               LOCAL
             </div>
           )}

@@ -6,18 +6,17 @@ import { toastError, toastSuccess } from "@/shared/ui/toast";
 import {
   CastStep,
   ScenarioStep,
-  HudStep,
+  StatsStep,
   CharacterCreateDialog,
   SessionStepper,
   SESSION_STEPS,
   type SessionStep,
   type FirstMessage,
   type LorebookEntry,
-  type HudDataStore,
+  type StatsDataStore,
   type ChatMessage,
 } from "./ui/create";
-import { logger, cn } from "@/shared/lib";
-import { CharacterCard } from "@/entities/card/domain/character-card";
+import { logger } from "@/shared/lib";
 import {
   DraftCharacter,
   needsCreation,
@@ -29,12 +28,10 @@ import { CardType, Lorebook, Entry } from "@/entities/card/domain";
 import { Session, CardListItem } from "@/entities/session/domain";
 import { defaultChatStyles } from "@/entities/session/domain/chat-styles";
 import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
-import { useAppStore } from "@/shared/stores/app-store";
 import { useModelStore } from "@/shared/stores/model-store";
 import { SessionService } from "@/app/services/session-service";
 import { CardService } from "@/app/services/card-service";
 import { FlowService } from "@/app/services/flow-service";
-import { cardQueries } from "@/entities/card/api/card-queries";
 import { queryClient } from "@/shared/api/query-client";
 import { TableName } from "@/db/schema/table-name";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
@@ -45,11 +42,11 @@ import {
   generateWorkflow,
   workflowStateToFlowData,
   type WorkflowBuilderContext,
-  type HudDataStoreField,
+  type StatsDataStoreField,
   type WorkflowState,
   ModelTier,
 } from "@/app/services/system-agents/workflow-builder";
-import type { TemplateSelectionResult } from "./ui/create/hud-step";
+import type { TemplateSelectionResult } from "./ui/create/stats-step";
 import { Sparkles, Loader2 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 
@@ -73,11 +70,11 @@ export function CreateSessionPage() {
   >("library");
 
   // Mobile scenario tab state (lifted from ScenarioStep for navigation control)
-  const [mobileScenarioTab, setMobileScenarioTab] = useState<"chat" | "builder">(
-    "builder",
-  );
+  const [mobileScenarioTab, setMobileScenarioTab] = useState<
+    "chat" | "builder"
+  >("builder");
 
-  // Mobile HUD tab state (lifted from HudStep for navigation control)
+  // Mobile HUD tab state (lifted from StatsStep for navigation control)
   const [mobileHudTab, setMobileHudTab] = useState<"editor" | "chat">("editor");
 
   // Character create dialog state
@@ -116,11 +113,12 @@ Ground Rules:`;
   // Unified chat messages (shared across all steps)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
-  // HUD state
-  const [hudDataStores, setHudDataStores] = useState<HudDataStore[]>([]);
+  // Stats state
+  const [statsDataStores, setStatsDataStores] = useState<StatsDataStore[]>([]);
   const [isHudGenerating, setIsHudGenerating] = useState(false);
   // Track if HUD generation has been attempted (persists across step navigation)
-  const [hasAttemptedHudGeneration, setHasAttemptedHudGeneration] = useState(false);
+  const [hasAttemptedHudGeneration, setHasAttemptedHudGeneration] =
+    useState(false);
   // Selected flow template from HUD step (determined by AI based on scenario)
   const [selectedFlowTemplate, setSelectedFlowTemplate] =
     useState<TemplateSelectionResult | null>(null);
@@ -155,7 +153,7 @@ Ground Rules:`;
     scenarioBackground !== defaultScenarioTemplate ||
     scenarioFirstMessages.length > 0 ||
     scenarioLorebook.length > 0 ||
-    hudDataStores.length > 0;
+    statsDataStores.length > 0;
 
   // Block navigation when there are unsaved changes (but not during save)
   const { proceed, reset, status } = useBlocker({
@@ -197,7 +195,9 @@ Ground Rules:`;
 
       try {
         // Parse file to extract character data WITHOUT saving to DB
-        const result = await CardService.parseCharacterFromFile.execute({ file });
+        const result = await CardService.parseCharacterFromFile.execute({
+          file,
+        });
 
         if (result.isFailure) {
           toastError("Failed to import character", {
@@ -293,7 +293,7 @@ Ground Rules:`;
       setIsWorkflowGenerating(true);
       logger.info("[CreateSession] Starting workflow generation...", {
         template: templateFilename,
-        dataStoreCount: hudDataStores.length,
+        dataStoreCount: statsDataStores.length,
       });
 
       try {
@@ -304,8 +304,8 @@ Ground Rules:`;
         }
         const flowJson = await response.json();
 
-        // Convert HudDataStore to HudDataStoreField for workflow context
-        const dataStoreSchema: HudDataStoreField[] = hudDataStores.map(
+        // Convert StatsDataStore to StatsDataStoreField for workflow context
+        const dataStoreSchema: StatsDataStoreField[] = statsDataStores.map(
           (store) => ({
             id: store.id,
             name: store.name,
@@ -448,7 +448,7 @@ Ground Rules:`;
       } finally {
         setIsWorkflowGenerating(false);
       }
-    }, [hudDataStores, scenarioBackground, selectedFlowTemplate]);
+    }, [statsDataStores, scenarioBackground, selectedFlowTemplate]);
 
   const handleFinish = useCallback(async () => {
     // Must have at least one character
@@ -815,8 +815,8 @@ Ground Rules:`;
 
     // When leaving HUD step, start workflow generation in background
     if (
-      currentStep === "hud" &&
-      hudDataStores.length > 0 &&
+      currentStep === "stats" &&
+      statsDataStores.length > 0 &&
       !generatedWorkflow &&
       !isWorkflowGenerating
     ) {
@@ -848,8 +848,8 @@ Ground Rules:`;
       return scenarioBackground.trim().length >= MIN_SCENARIO_LENGTH;
     }
 
-    if (currentStep === "hud") {
-      // HUD step is optional
+    if (currentStep === "stats") {
+      // Stats step is optional
       return true;
     }
 
@@ -941,12 +941,16 @@ Ground Rules:`;
         </div>
 
         {/* Stepper */}
-        <SessionStepper currentStep={currentStep} onStepClick={setCurrentStep} />
+        <SessionStepper
+          currentStep={currentStep}
+          onStepClick={setCurrentStep}
+        />
 
         {/* Content */}
         <div className="relative z-10 mb-16 flex-1 overflow-hidden md:mb-0">
           {currentStep === "cast" && (
             <CastStep
+              currentStep={currentStep}
               playerCharacter={playerCharacter}
               aiCharacters={aiCharacters}
               onPlayerCharacterChange={setPlayerCharacter}
@@ -972,6 +976,7 @@ Ground Rules:`;
 
           {currentStep === "scenario" && (
             <ScenarioStep
+              currentStep={currentStep}
               background={scenarioBackground}
               onBackgroundChange={setScenarioBackground}
               firstMessages={scenarioFirstMessages}
@@ -1001,11 +1006,12 @@ Ground Rules:`;
             />
           )}
 
-          {currentStep === "hud" && (
+          {currentStep === "stats" && (
             <div className="h-full overflow-hidden">
-              <HudStep
-                dataStores={hudDataStores}
-                onDataStoresChange={setHudDataStores}
+              <StatsStep
+                currentStep={currentStep}
+                dataStores={statsDataStores}
+                onDataStoresChange={setStatsDataStores}
                 sessionContext={{
                   scenario: scenarioBackground,
                   character: playerCharacter
@@ -1133,7 +1139,6 @@ Ground Rules:`;
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-
     </div>
   );
 }
