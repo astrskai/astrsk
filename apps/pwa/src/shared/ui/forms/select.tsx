@@ -82,11 +82,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             className={cn(
               // Base styles
               "w-full appearance-none rounded-lg border bg-neutral-800 text-neutral-100 transition-colors focus:ring-2 focus:outline-none",
-              // Size styles
+              // Size styles (h-10 = 40px matches SearchInput default)
               {
-                "py-1.5 text-sm": selectSize === "sm",
-                "py-3 text-base": selectSize === "md",
-                "py-4 text-lg": selectSize === "lg",
+                "h-8 text-sm": selectSize === "sm",
+                "h-10 text-sm": selectSize === "md",
+                "h-12 text-base": selectSize === "lg",
               },
               // Left padding adjustment for icon
               SelectedIcon
@@ -100,10 +100,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     "pr-10 pl-4": selectSize === "md",
                     "pr-12 pl-5": selectSize === "lg",
                   },
-              // Border and focus styles
+              // Border and focus styles (border-zinc-700 matches SearchInput)
               error
                 ? "border-status-error focus:border-status-error focus:ring-status-error/20"
-                : "border-neutral-600 focus:border-brand-500 focus:ring-brand-500/20",
+                : "border-zinc-700 focus:border-brand-500 focus:ring-brand-500/20",
               // Disabled styles
               "disabled:cursor-not-allowed disabled:opacity-50",
               // Placeholder styles

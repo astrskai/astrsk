@@ -44,6 +44,7 @@ import {
   type WorkflowBuilderContext,
   type StatsDataStoreField,
   type WorkflowState,
+  type WorkflowBuilderProgress,
   ModelTier,
 } from "@/app/services/system-agents/workflow-builder";
 import {
@@ -134,6 +135,7 @@ Ground Rules:`;
   const [generatedWorkflow, setGeneratedWorkflow] = useState<WorkflowState | null>(null);
   const [generatedSessionName, setGeneratedSessionName] = useState<string | null>(null);
   const [isWorkflowGenerating, setIsWorkflowGenerating] = useState(false);
+  const [workflowProgress, setWorkflowProgress] = useState<WorkflowBuilderProgress | null>(null);
   const workflowGenerationPromiseRef =
     useRef<Promise<WorkflowState | null> | null>(null);
   // Show waiting dialog only when user tries to create session and workflow is still generating
@@ -674,6 +676,7 @@ Ground Rules:`;
             },
             onProgress: (progress) => {
               logger.info("[CreateSession] Workflow progress", progress);
+              setWorkflowProgress(progress);
             },
           },
         });
@@ -1437,9 +1440,56 @@ Ground Rules:`;
               <Dialog.Description className="text-fg-muted text-center text-sm">
                 Please wait while we finish building your workflow...
               </Dialog.Description>
-              <div className="text-fg-subtle flex items-center gap-2 text-xs">
-                <Sparkles size={14} className="text-brand-400" />
-                <span>AI is building your workflow...</span>
+
+              {/* Progress Steps */}
+              <div className="w-full space-y-2 rounded-lg bg-black/20 p-3">
+                {/* Phase indicator */}
+                <div className="flex items-center gap-2">
+                  {workflowProgress?.phase === "initializing" && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-yellow-400" />
+                      <span className="text-xs text-yellow-400">Initializing...</span>
+                    </>
+                  )}
+                  {workflowProgress?.phase === "building" && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-brand-400" />
+                      <span className="text-xs text-brand-400">Building workflow...</span>
+                    </>
+                  )}
+                  {workflowProgress?.phase === "validating" && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
+                      <span className="text-xs text-blue-400">Validating...</span>
+                    </>
+                  )}
+                  {workflowProgress?.phase === "fixing" && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-orange-400" />
+                      <span className="text-xs text-orange-400">Fixing issues...</span>
+                    </>
+                  )}
+                  {workflowProgress?.phase === "complete" && (
+                    <>
+                      <div className="h-2 w-2 rounded-full bg-green-400" />
+                      <span className="text-xs text-green-400">Complete!</span>
+                    </>
+                  )}
+                  {!workflowProgress && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-fg-subtle" />
+                      <span className="text-xs text-fg-subtle">Preparing...</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Current action message */}
+                {workflowProgress?.message && (
+                  <div className="flex items-center gap-2 text-fg-muted">
+                    <Sparkles size={12} className="text-brand-400 flex-shrink-0" />
+                    <span className="text-xs truncate">{workflowProgress.message}</span>
+                  </div>
+                )}
               </div>
             </div>
           </Dialog.Content>
