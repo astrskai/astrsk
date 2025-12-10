@@ -270,8 +270,8 @@ Ground Rules:`;
             },
           };
 
-          // Add to draft characters in library (user can select to assign to roster)
-          setDraftCharacters((prev) => [...prev, draftCharacter]);
+          // Add to draft characters at the front of library (user can select to assign to roster)
+          setDraftCharacters((prev) => [draftCharacter, ...prev]);
         }
 
         toastSuccess("Character imported!", {
@@ -1272,8 +1272,8 @@ Ground Rules:`;
               chatMessages={chatMessages}
               onChatMessagesChange={setChatMessages}
               onCharacterCreatedFromChat={(draftCharacter) => {
-                // Add new draft character to library (not directly to roster)
-                setDraftCharacters((prev) => [...prev, draftCharacter]);
+                // Add new draft character at the front of library (not directly to roster)
+                setDraftCharacters((prev) => [draftCharacter, ...prev]);
               }}
             />
           )}
@@ -1420,8 +1420,8 @@ Ground Rules:`;
               lorebook: pendingData.lorebookEntries,
             },
           };
-          // Add to draft characters in library (user can select to assign to roster)
-          setDraftCharacters((prev) => [...prev, draftCharacter]);
+          // Add to draft characters at the front of library (user can select to assign to roster)
+          setDraftCharacters((prev) => [draftCharacter, ...prev]);
         }}
       />
 
