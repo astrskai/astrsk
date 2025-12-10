@@ -14,6 +14,7 @@ import { Input, Textarea, Button } from "@/shared/ui/forms";
 import { AccordionBase } from "@/shared/ui";
 import { toastWarning, toastError } from "@/shared/ui/toast";
 import { cn, logger } from "@/shared/lib";
+import { useTypingEffect } from "@/shared/hooks/use-typing-effect";
 import {
   generateScenarioResponse,
   type ScenarioBuilderMessage,
@@ -21,6 +22,7 @@ import {
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
 import { StepHeader } from "./step-header";
 import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
+import type { SessionStep } from "./session-stepper";
 
 // Animation for newly added items - highlight effect that fades out
 const NEW_ITEM_ANIMATION = "animate-new-item-highlight";
@@ -41,10 +43,9 @@ const MIN_SCENARIO_LENGTH = 400;
 const WELCOME_MESSAGE_CONTENT =
   "Hi! I'm here to help you build your scenario. Tell me about the world, setting, or story you'd like to create, and I'll help you craft the background, first messages, and lorebook entries.";
 
-// Typing speed (ms per character)
-const TYPING_SPEED = 15;
-
 interface ScenarioStepProps {
+  // Current step for tagging chat messages
+  currentStep: SessionStep;
   // Scenario data
   background: string;
   onBackgroundChange: (background: string) => void;
@@ -158,6 +159,7 @@ const AccordionItemTitle = ({
  * Second step in new session stepper for creating/editing scenario context
  */
 export function ScenarioStep({
+  currentStep,
   background,
   onBackgroundChange,
   firstMessages,
@@ -182,20 +184,58 @@ export function ScenarioStep({
   // Track when background was just updated by AI for animation
   const [isBackgroundAnimating, setIsBackgroundAnimating] = useState(false);
 
-  // Track initial typing animation state
-  const [isInitialTyping, setIsInitialTyping] = useState(false);
-  const [streamingText, setStreamingText] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
+  // Track initial typing indicator state (before text streaming starts)
+  const [isTypingIndicator, setIsTypingIndicator] = useState(false);
+
+  // Welcome message typing effect
+  const {
+    displayText: welcomeDisplayText,
+    isTyping: isWelcomeTyping,
+    startTyping: startWelcomeTyping,
+  } = useTypingEffect({
+    onComplete: () => {
+      // Update to final message when typing completes
+      onChatMessagesChange([
+        {
+          id: "welcome",
+          role: "assistant",
+          content: WELCOME_MESSAGE_CONTENT,
+        },
+      ]);
+    },
+  });
+
+  // Background typing effect (faster for long scenario descriptions)
+  const {
+    displayText: backgroundDisplayText,
+    isTyping: isBackgroundTyping,
+    startTyping: startBackgroundTyping,
+  } = useTypingEffect({
+    speed: 8, // Faster base speed
+    minSpeed: 2, // Very fast minimum for long text
+    maxSpeed: 10,
+    speedThreshold: 100, // Start speeding up earlier
+  });
+
+  // Track the final background text (for when typing completes)
+  const [pendingBackground, setPendingBackground] = useState<string | null>(null);
+
+  // Update actual background when typing completes
+  useEffect(() => {
+    if (!isBackgroundTyping && pendingBackground !== null) {
+      onBackgroundChange(pendingBackground);
+      setPendingBackground(null);
+    }
+  }, [isBackgroundTyping, pendingBackground, onBackgroundChange]);
 
   // Add initial welcome message with typing indicator then streaming text effect
   useEffect(() => {
     if (chatMessages.length === 0) {
-      setIsInitialTyping(true);
+      setIsTypingIndicator(true);
 
       // After typing indicator, start streaming the text
       const typingTimer = setTimeout(() => {
-        setIsInitialTyping(false);
-        setIsStreaming(true);
+        setIsTypingIndicator(false);
 
         // Add empty message that will be updated with streaming text
         const welcomeMessage: ChatMessage = {
@@ -205,27 +245,8 @@ export function ScenarioStep({
         };
         onChatMessagesChange([welcomeMessage]);
 
-        // Stream characters one by one
-        let charIndex = 0;
-        const streamInterval = setInterval(() => {
-          if (charIndex < WELCOME_MESSAGE_CONTENT.length) {
-            setStreamingText(WELCOME_MESSAGE_CONTENT.slice(0, charIndex + 1));
-            charIndex++;
-          } else {
-            clearInterval(streamInterval);
-            setIsStreaming(false);
-            // Update to final message
-            onChatMessagesChange([
-              {
-                id: "welcome",
-                role: "assistant",
-                content: WELCOME_MESSAGE_CONTENT,
-              },
-            ]);
-          }
-        }, TYPING_SPEED);
-
-        return () => clearInterval(streamInterval);
+        // Start typing effect
+        startWelcomeTyping(WELCOME_MESSAGE_CONTENT);
       }, 1500); // Show typing indicator for 1.5 seconds
 
       return () => clearTimeout(typingTimer);
@@ -234,15 +255,12 @@ export function ScenarioStep({
 
   // Compute messages with streaming text applied
   const displayMessages = useMemo(() => {
-    if (
-      isStreaming &&
-      chatMessages.length > 0 &&
-      chatMessages[0]?.id === "welcome"
-    ) {
-      return [{ ...chatMessages[0], content: streamingText }];
+    // Welcome message typing
+    if (isWelcomeTyping && chatMessages.length > 0 && chatMessages[0]?.id === "welcome") {
+      return [{ ...chatMessages[0], content: welcomeDisplayText }];
     }
     return chatMessages;
-  }, [chatMessages, isStreaming, streamingText]);
+  }, [chatMessages, isWelcomeTyping, welcomeDisplayText]);
 
   // Clear animation flags after animation completes
   useEffect(() => {
@@ -358,11 +376,18 @@ export function ScenarioStep({
       return;
     }
 
+    // Cancel any previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     // Add user message to chat
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
       content: aiPrompt,
+      step: currentStep,
     };
     const updatedMessages = [...chatMessages, userMessage];
     onChatMessagesChange(updatedMessages);
@@ -415,11 +440,13 @@ export function ScenarioStep({
       const callbacks = {
         onSetBackground: (bg: string) => {
           setIsBackgroundAnimating(true);
-          onBackgroundChange(bg);
+          setPendingBackground(bg);
+          startBackgroundTyping(bg);
         },
         onEditBackground: (bg: string) => {
           setIsBackgroundAnimating(true);
-          onBackgroundChange(bg);
+          setPendingBackground(bg);
+          startBackgroundTyping(bg);
         },
         onAddFirstMessage: (message: {
           id: string;
@@ -453,13 +480,20 @@ export function ScenarioStep({
         messages: scenarioMessages,
         currentScenario,
         callbacks,
+        abortSignal: abortControllerRef.current.signal,
       });
+
+      // Check if aborted before applying results
+      if (abortControllerRef.current?.signal.aborted) {
+        return;
+      }
 
       // Add AI response to chat
       const aiResponse: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
         content: result.text || "I've made the changes to your scenario.",
+        step: currentStep,
       };
       onChatMessagesChange([...updatedMessages, aiResponse]);
 
@@ -472,6 +506,11 @@ export function ScenarioStep({
         toolResults: result.toolResults?.length || 0,
       });
     } catch (error) {
+      // Check if this was an abort - don't show error for user-initiated abort
+      if ((error as Error).name === "AbortError" || abortControllerRef.current?.signal.aborted) {
+        return;
+      }
+
       logger.error("[ScenarioStep] Error generating scenario", error);
 
       // Add error message to chat
@@ -482,6 +521,7 @@ export function ScenarioStep({
           error instanceof Error
             ? `Sorry, I encountered an error: ${error.message}`
             : "Sorry, I encountered an error while generating the scenario. Please check your model settings.",
+        step: currentStep,
       };
       onChatMessagesChange([...updatedMessages, errorMessage]);
 
@@ -505,6 +545,7 @@ export function ScenarioStep({
     aiCharacters,
     onIsGeneratingChange,
     onMobileTabChange,
+    currentStep,
   ]);
 
   // Build accordion items for First Messages
@@ -597,6 +638,25 @@ export function ScenarioStep({
     generateScenario();
   }, [aiPrompt, generateScenario]);
 
+  // Handle chat stop (abort generation and show cancelled message)
+  const handleChatStop = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      // Keep the reference so catch block can check signal.aborted
+    }
+    onIsGeneratingChange(false);
+
+    // Add cancelled message to chat
+    const cancelledMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: "Response generation was stopped by user.",
+      step: currentStep,
+      variant: "cancelled",
+    };
+    onChatMessagesChange([...chatMessages, cancelledMessage]);
+  }, [currentStep, onChatMessagesChange, chatMessages, onIsGeneratingChange]);
+
   // Mobile tab configuration
   const mobileTabs = useMemo<MobileTab<"builder" | "chat">[]>(
     () => [
@@ -623,8 +683,9 @@ export function ScenarioStep({
           inputValue={aiPrompt}
           onInputChange={setAiPrompt}
           onSubmit={handleChatSubmit}
-          isLoading={isGenerating || isInitialTyping}
-          disabled={isGenerating || isInitialTyping || isStreaming}
+          onStop={isGenerating ? handleChatStop : undefined}
+          isLoading={isGenerating || isTypingIndicator}
+          disabled={isGenerating || isTypingIndicator || isWelcomeTyping || isBackgroundTyping}
           className={mobileTab === "chat" ? "" : "hidden md:flex"}
         />
 
@@ -647,7 +708,7 @@ export function ScenarioStep({
             <section className="space-y-3">
               <div
                 className={cn(
-                  "relative rounded-xl transition-all duration-300",
+                  "rounded-xl transition-all duration-300",
                   isBackgroundAnimating && "animate-pulse-highlight",
                 )}
               >
@@ -655,16 +716,41 @@ export function ScenarioStep({
                   label="Scenario description"
                   labelPosition="inner"
                   autoResize
-                  value={background}
+                  value={isBackgroundTyping ? backgroundDisplayText : background}
                   onChange={(e) => onBackgroundChange(e.target.value)}
+                  disabled={isBackgroundTyping}
                   className="min-h-[200px]"
+                  caption={(() => {
+                    const displayedText = isBackgroundTyping ? backgroundDisplayText : background;
+                    const textLength = displayedText.trim().length;
+                    return (
+                      <div className="flex items-center justify-end gap-2">
+                        <span
+                          className={cn(
+                            "tabular-nums transition-colors",
+                            textLength >= MIN_SCENARIO_LENGTH
+                              ? "text-green-500"
+                              : textLength >= MIN_SCENARIO_LENGTH * 0.75
+                                ? "text-yellow-500"
+                                : "text-neutral-500",
+                          )}
+                        >
+                          {textLength}
+                        </span>
+                        <span className="text-neutral-600">/</span>
+                        <span className="text-neutral-500">
+                          {MIN_SCENARIO_LENGTH}
+                        </span>
+                        {textLength < MIN_SCENARIO_LENGTH && (
+                          <span className="text-neutral-500">min</span>
+                        )}
+                        {textLength >= MIN_SCENARIO_LENGTH && (
+                          <Check size={12} className="text-green-500" />
+                        )}
+                      </div>
+                    );
+                  })()}
                 />
-                {/* Check icon when minimum length is met */}
-                {background.trim().length >= MIN_SCENARIO_LENGTH && (
-                  <span className="absolute left-[148px] top-0 -translate-y-1/2 rounded-sm bg-canvas px-1">
-                    <Check size={12} className="text-green-500" />
-                  </span>
-                )}
               </div>
             </section>
 

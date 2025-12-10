@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { Users, Globe, Database } from "lucide-react";
 import { cn } from "@/shared/lib";
 
-export type SessionStep = "scenario" | "hud" | "cast";
+export type SessionStep = "scenario" | "stats" | "cast";
 
 export interface StepConfig {
   id: SessionStep;
@@ -13,7 +13,7 @@ export interface StepConfig {
 
 export const SESSION_STEPS: StepConfig[] = [
   { id: "scenario", label: "Scenario", number: 1, icon: Globe },
-  { id: "hud", label: "HUD", number: 2, icon: Database },
+  { id: "stats", label: "Stats", number: 2, icon: Database },
   { id: "cast", label: "Cast", number: 3, icon: Users },
 ];
 

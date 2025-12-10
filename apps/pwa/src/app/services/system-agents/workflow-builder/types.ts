@@ -9,29 +9,11 @@ import type { SchemaField } from "@/entities/agent/domain/agent";
 import type { IfCondition } from "@/features/flow/nodes/if-node";
 import { ModelTier } from "@/entities/agent/domain/agent";
 
+// Re-export shared types
+export type { StatsDataStoreField, WorkflowBuilderContext } from "../workflow-builder-shared-types";
+
 // Re-export ModelTier for convenience
 export { ModelTier };
-
-/**
- * Data store schema field for context (from HUD step)
- */
-export interface HudDataStoreField {
-  id: string;
-  name: string;
-  type: "integer" | "number" | "boolean" | "string";
-  description: string;
-  initial: number | boolean | string;
-  min?: number;
-  max?: number;
-}
-
-/**
- * Context passed to the workflow builder agent
- */
-export interface WorkflowBuilderContext {
-  scenario?: string;
-  dataStoreSchema: HudDataStoreField[];
-}
 
 /**
  * Prompt block structure (used in prompt messages)

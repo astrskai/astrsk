@@ -31,7 +31,7 @@ export function StepHeader({
   return (
     <div
       className={cn(
-        "flex flex-shrink-0 flex-col gap-4 px-4 py-2 md:px-6 md:py-4",
+        "flex flex-shrink-0 flex-col gap-4 px-4 py-2 md:px-6 md:py-3",
         className,
       )}
     >
