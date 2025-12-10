@@ -228,12 +228,13 @@ export function createProvider({
         throw new Error("VITE_CLOUD_LLM_URL is not configured");
       }
 
-      // Create custom fetch wrapper to add x-dev-key header
+      // Create custom fetch wrapper to add x-dev-key header (only in development)
       const devKey = import.meta.env.VITE_DEV_KEY;
       const baseFetch = getAISDKFetch();
       const astrskFetch: typeof fetch = async (url, options) => {
         const headers = new Headers(options?.headers);
-        if (devKey) {
+        // Only add dev key if targeting localhost (development environment)
+        if (devKey && astrskBaseUrl.includes("localhost")) {
           headers.set("x-dev-key", devKey);
         }
         return baseFetch(url, { ...options, headers });
