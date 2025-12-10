@@ -2,13 +2,42 @@ import * as React from 'react';
 import { cn } from '../../lib/utils';
 
 export interface TextareaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  /** Enable auto-resize based on content */
+  autoResize?: boolean;
+}
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, ...props }, ref) => {
+  ({ className, autoResize = false, ...props }, ref) => {
+    const internalRef = React.useRef<HTMLTextAreaElement>(null);
+
+    // Expose the internal ref to the parent via forwardRef
+    React.useImperativeHandle(ref, () => internalRef.current!);
+
+    // Auto-resize logic
+    React.useEffect(() => {
+      if (!autoResize || !internalRef.current) return;
+
+      const textarea = internalRef.current;
+
+      const adjustHeight = () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
+      };
+
+      adjustHeight();
+      textarea.addEventListener('input', adjustHeight);
+      textarea.addEventListener('focus', adjustHeight);
+
+      return () => {
+        textarea.removeEventListener('input', adjustHeight);
+        textarea.removeEventListener('focus', adjustHeight);
+      };
+    }, [autoResize, props.value]);
+
     return (
       <textarea
-        ref={ref}
+        ref={internalRef}
         data-slot="textarea"
         className={cn(
           // Base styles
@@ -24,7 +53,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           // Invalid state (aria-invalid)
           'aria-invalid:border-[var(--color-status-error)] aria-invalid:ring-[var(--color-status-error)]/20',
           // Resize
-          'resize-y',
+          autoResize ? 'resize-none overflow-hidden' : 'resize-y',
           className
         )}
         {...props}

@@ -16,13 +16,12 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
-import { cn, logger } from "@/shared/lib";
+import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Button } from "@/shared/ui/forms";
 import { Switch } from "@/shared/ui/switch";
-import { toastError, toastSuccess } from "@/shared/ui/toast";
+import { toastError } from "@/shared/ui/toast";
 import {
-  generateDataSchema as generateDataSchemaAI,
   refineDataSchema,
   type DataSchemaEntry,
   type DataSchemaContext,
@@ -31,27 +30,11 @@ import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
 import type { SessionStep } from "./session-stepper";
 import { StepHeader } from "./step-header";
 
-// Simple template is the only template - no AI selection needed
-const SIMPLE_TEMPLATE = {
-  templateName: "Simple" as const,
-  filename: "Simple_vf.json",
-  reason: "Default template",
-};
-
 export type FlowTemplateName = "Simple";
 export interface TemplateSelectionResult {
   templateName: FlowTemplateName;
   filename: string;
   reason: string;
-}
-
-async function loadFlowTemplate(filename: string): Promise<any> {
-  const path = `/default/flow/${filename}`;
-  const response = await fetch(path);
-  if (!response.ok) {
-    throw new Error(`Failed to load flow template: ${filename}`);
-  }
-  return response.json();
 }
 
 // Shared input styles matching the design system
@@ -98,6 +81,8 @@ interface StatsStepProps {
   // Track if generation has been attempted (lifted to parent to persist across step navigation)
   hasAttemptedGeneration: boolean;
   onHasAttemptedGenerationChange: (attempted: boolean) => void;
+  // Callback to stop stats generation (handled by parent) - required since parent controls abort controller
+  onStopGeneration: () => void;
   // Selected flow template (lifted to parent for workflow generation)
   selectedTemplate?: TemplateSelectionResult | null;
   onSelectedTemplateChange?: (template: TemplateSelectionResult | null) => void;
@@ -142,6 +127,7 @@ export function StatsStep({
   onIsGeneratingChange,
   hasAttemptedGeneration,
   onHasAttemptedGenerationChange,
+  onStopGeneration,
   selectedTemplate,
   onSelectedTemplateChange,
   onResponseTemplateChange,
@@ -183,216 +169,19 @@ export function StatsStep({
     [],
   );
 
-  // Convert flow template dataStoreSchema field to StatsDataStore
-  const templateFieldToStatsDataStore = useCallback(
-    (field: { id: string; name: string; type: string; initialValue?: string }): StatsDataStore => {
-      // Map type from template (could be "string", "number", "integer", "boolean")
-      let type: DataStoreType = "string";
-      if (field.type === "integer") {
-        type = "integer";
-      } else if (field.type === "number") {
-        type = "number";
-      } else if (field.type === "boolean") {
-        type = "boolean";
-      }
+  // NOTE: generateDataSchema moved to parent (new.tsx) for early triggering
+  // Stats generation now starts when leaving Scenario step, not when entering Stats step
 
-      // Parse initial value based on type
-      let initial: number | boolean | string = "";
-      if (type === "integer") {
-        initial = parseInt(field.initialValue || "0", 10) || 0;
-      } else if (type === "number") {
-        initial = parseFloat(field.initialValue || "0") || 0;
-      } else if (type === "boolean") {
-        initial = field.initialValue === "true";
-      } else {
-        initial = field.initialValue || "";
-      }
-
-      return {
-        id: field.id,
-        name: field.name,
-        type,
-        description: `From ${selectedTemplate?.templateName || "template"} template`,
-        initial,
-        isFromTemplate: true, // Mark as template field - cannot be deleted
-      };
-    },
-    [selectedTemplate?.templateName],
-  );
-
-  // Ref to store latest sessionContext for use in callbacks
-  const sessionContextRef = useRef(sessionContext);
-  sessionContextRef.current = sessionContext;
-
-  // Ref to track stores being generated (for incremental updates)
-  const generatingStoresRef = useRef<StatsDataStore[]>([]);
-  // Ref to track if generation was stopped due to max limit
-  const reachedMaxLimitRef = useRef(false);
-
-  // Generate data stores using AI based on context
-  // 1. First select a flow template using AI
-  // 2. Load template's dataStoreSchema fields (fixed)
-  // 3. Generate additional fields using AI
-  const generateDataSchema = useCallback(async () => {
-    onIsGeneratingChange(true);
-
-    // Cancel any previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-
-    // Clear existing stores and reset tracking refs
-    generatingStoresRef.current = [];
-    reachedMaxLimitRef.current = false;
-    onDataStoresChange([]);
-
-    try {
-      const ctx = sessionContextRef.current;
-      const scenario = ctx?.scenario || "";
-
-      // Step 1: Use Simple template (only template available)
-      setTemplateStatus("Loading workflow template...");
-      logger.info("[HudStep] Using Simple template");
-
-      const templateResult = SIMPLE_TEMPLATE;
-      onSelectedTemplateChange?.(templateResult);
-
-      // Step 2: Load template and extract dataStoreSchema fields
-      setTemplateStatus(`Loading ${templateResult.templateName} template...`);
-      const templateJson = await loadFlowTemplate(templateResult.filename);
-
-      // Extract responseTemplate from template and pass to parent
-      if (templateJson.responseTemplate && typeof templateJson.responseTemplate === "string") {
-        onResponseTemplateChange?.(templateJson.responseTemplate);
-      }
-
-      // Extract dataStoreSchema fields from template
-      const templateFields: StatsDataStore[] = [];
-      if (templateJson.dataStoreSchema?.fields && Array.isArray(templateJson.dataStoreSchema.fields)) {
-        for (const field of templateJson.dataStoreSchema.fields) {
-          const hudStore = templateFieldToStatsDataStore(field);
-          templateFields.push(hudStore);
-        }
-      }
-
-      // Add template fields immediately
-      if (templateFields.length > 0) {
-        generatingStoresRef.current = [...templateFields];
-        onDataStoresChange(generatingStoresRef.current);
-        setExpandedId(templateFields[0].id);
-
-        toastSuccess(`Using ${templateResult.templateName} template`, {
-          description: `Loaded ${templateFields.length} pre-defined variables`,
-        });
-      }
-
-      // Step 3: Generate additional fields using AI (if scenario is substantial)
-      if (scenario.length >= 200) {
-        setTemplateStatus("Generating additional variables...");
-
-        // Build context for AI - include template fields so it doesn't duplicate
-        const context: DataSchemaContext = {
-          scenario,
-        };
-
-        // Convert template fields to DataSchemaEntry format for the AI
-        const existingStores: DataSchemaEntry[] = templateFields.map((store) => ({
-          id: store.id,
-          name: store.name,
-          type: store.type,
-          description: store.description,
-          initial: store.initial,
-          min: store.min,
-          max: store.max,
-        }));
-
-        // Max total stores (template + AI generated)
-        const MAX_TOTAL_STORES = 10;
-
-        await generateDataSchemaAI({
-          context,
-          currentStores: existingStores,
-          callbacks: {
-            onAddStore: (store) => {
-              // Check if we've reached the limit
-              if (generatingStoresRef.current.length >= MAX_TOTAL_STORES) {
-                // Mark that we hit the limit and abort generation
-                reachedMaxLimitRef.current = true;
-                abortControllerRef.current?.abort();
-                return;
-              }
-
-              // Add AI-generated store incrementally
-              const hudStore = dataSchemaEntryToStatsDataStore(store);
-              generatingStoresRef.current = [...generatingStoresRef.current, hudStore];
-              onDataStoresChange(generatingStoresRef.current);
-            },
-            onRemoveStore: () => {},
-            onClearAll: () => {},
-          },
-          abortSignal: abortControllerRef.current.signal,
-        });
-      }
-
-      setTemplateStatus("");
-    } catch (e) {
-      if ((e as Error).name === "AbortError") {
-        // Request was cancelled, ignore
-        setTemplateStatus("");
-        return;
-      }
-      console.error("Failed to generate data schema:", e);
-      toastError("Failed to generate data schema", {
-        description: e instanceof Error ? e.message : "An unknown error occurred",
-      });
-      setTemplateStatus("");
-    } finally {
-      onIsGeneratingChange(false);
-      // Mark generation as attempted (prevents infinite retry on empty result)
-      onHasAttemptedGenerationChange(true);
-
-      // Add chat message about generation result (use ref to get latest messages)
-      const finalStoreCount = generatingStoresRef.current.length;
-      if (finalStoreCount === 0) {
-        // No trackers were generated - notify user via chat
-        const noResultMessage: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: "I couldn't find suitable trackers from your scenario. You can add them manually using the 'New Tracker' button above, or tell me what trackers you need!",
-          step: currentStep,
-        };
-        onChatMessagesChange?.([...chatMessagesRef.current, noResultMessage]);
-      } else if (reachedMaxLimitRef.current) {
-        // Trackers were generated but hit the limit
-        const limitMessage: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: `I've generated ${finalStoreCount} trackers (maximum reached). You can remove some trackers and ask me for more if needed!`,
-          step: currentStep,
-        };
-        onChatMessagesChange?.([...chatMessagesRef.current, limitMessage]);
-      } else {
-        // Trackers were generated - summarize what was found
-        const successMessage: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: `I've generated ${finalStoreCount} tracker${finalStoreCount > 1 ? 's' : ''}. Let me know if you'd like to add or modify any trackers!`,
-          step: currentStep,
-        };
-        onChatMessagesChange?.([...chatMessagesRef.current, successMessage]);
-      }
-    }
-  }, [onDataStoresChange, dataSchemaEntryToStatsDataStore, templateFieldToStatsDataStore, onIsGeneratingChange, onHasAttemptedGenerationChange, onSelectedTemplateChange, onChatMessagesChange, currentStep]);
-
-  // Stop generation
+  // Stop generation - delegates to parent's handler
   const handleStopGeneration = useCallback(() => {
+    // Call parent's stop handler (which has the actual abort controller)
+    onStopGeneration();
+    // Also abort local refine controller if active
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    onIsGeneratingChange(false);
-  }, [onIsGeneratingChange]);
+  }, [onStopGeneration]);
 
   // Regenerate trackers (clears existing and generates new ones)
   const handleRegenerate = useCallback(() => {
@@ -412,45 +201,8 @@ export function StatsStep({
     };
   }, []);
 
-  // Auto-generate data schema ONLY on first entry when no data stores exist
-  // Once generated (or user manually added), don't auto-regenerate
-  useEffect(() => {
-    // Only generate if:
-    // 1. No data stores exist AND
-    // 2. Generation hasn't been attempted yet AND
-    // 3. Not currently generating
-    const needsInitialGeneration = dataStores.length === 0 && !isGenerating && !hasAttemptedGeneration;
-
-    logger.info("[HudStep] useEffect triggered", {
-      dataStoresLength: dataStores.length,
-      isGenerating,
-      hasAttemptedGeneration,
-      needsInitialGeneration,
-    });
-
-    if (needsInitialGeneration) {
-      logger.info("[HudStep] Conditions met, will generate data schema");
-
-      // Delay slightly to avoid StrictMode double-mount issues
-      const timeoutId = setTimeout(() => {
-        logger.info("[HudStep] Timeout fired, checking if mounted", {
-          isMounted: isMountedRef.current,
-        });
-        if (isMountedRef.current) {
-          logger.info("[HudStep] Calling generateDataSchema");
-          generateDataSchema();
-        }
-      }, 150); // Slightly longer timeout to survive StrictMode
-
-      return () => {
-        logger.info("[HudStep] Cleanup - clearing timeout");
-        clearTimeout(timeoutId);
-      };
-    } else {
-      logger.info("[HudStep] Conditions NOT met, skipping generation");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataStores.length, isGenerating, hasAttemptedGeneration]); // Re-run when stores change or generation completes
+  // NOTE: Auto-generation removed - now triggered by parent (new.tsx) when leaving Scenario step
+  // This allows stats to be pre-generated while user is on Cast step
 
   // Toggle accordion expansion
   const toggleExpand = (id: string) => {
@@ -540,9 +292,8 @@ export function StatsStep({
 
       try {
         // Build context for AI - only scenario (no character names to avoid character-specific trackers)
-        const ctx = sessionContextRef.current;
         const context: DataSchemaContext = {
-          scenario: ctx?.scenario,
+          scenario: sessionContext?.scenario,
         };
 
         // Convert StatsDataStore to DataSchemaEntry for the service

@@ -96,9 +96,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 
       adjustHeight();
       textarea.addEventListener("input", adjustHeight);
+      textarea.addEventListener("focus", adjustHeight);
 
       return () => {
         textarea.removeEventListener("input", adjustHeight);
+        textarea.removeEventListener("focus", adjustHeight);
       };
     }, [autoResize, props.value]);
 
