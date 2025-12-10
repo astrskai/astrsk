@@ -374,6 +374,18 @@ export function createProvider({
  * This is a lightweight factory for simple use cases (scenario builder, data schema builder).
  * For full session playback with streaming and advanced features, use createProvider directly.
  */
+/**
+ * Parse model ID for AstrskAi provider
+ * AstrskAi model IDs are stored with "openai-compatible:" prefix but need to be used without it
+ * Example: "openai-compatible:deepseek/deepseek-chat" -> "deepseek/deepseek-chat"
+ */
+function parseAstrskAiModelId(modelId: string): string {
+  if (modelId.startsWith("openai-compatible:")) {
+    return modelId.substring("openai-compatible:".length);
+  }
+  return modelId;
+}
+
 export function createLiteModel(
   source: ApiSource,
   modelId: string,
@@ -382,26 +394,36 @@ export function createLiteModel(
 ): LanguageModel {
   const provider = createProvider({ source, apiKey, baseUrl });
 
+  // Parse model ID for AstrskAi - strip "openai-compatible:" prefix
+  const parsedModelId = source === ApiSource.AstrskAi
+    ? parseAstrskAiModelId(modelId)
+    : modelId;
+
+  logger.info(`[createLiteModel] Creating model for ${source}`, {
+    originalModelId: modelId,
+    parsedModelId,
+  });
+
   // Get the model from the provider
   // Different providers have different methods for getting models
   // Using type assertion since provider types vary significantly
   const p = provider as unknown as Record<string, unknown>;
 
   if ("chat" in p && typeof p.chat === "function") {
-    return p.chat(modelId) as LanguageModel;
+    return p.chat(parsedModelId) as LanguageModel;
   }
 
   if ("languageModel" in p && typeof p.languageModel === "function") {
-    return p.languageModel(modelId) as LanguageModel;
+    return p.languageModel(parsedModelId) as LanguageModel;
   }
 
   if ("chatModel" in p && typeof p.chatModel === "function") {
-    return p.chatModel(modelId) as LanguageModel;
+    return p.chatModel(parsedModelId) as LanguageModel;
   }
 
   // For providers that are callable (like Anthropic, Google)
   if (typeof provider === "function") {
-    return (provider as (modelId: string) => LanguageModel)(modelId);
+    return (provider as (modelId: string) => LanguageModel)(parsedModelId);
   }
 
   throw new Error(`Unable to create model for source: ${source}`);

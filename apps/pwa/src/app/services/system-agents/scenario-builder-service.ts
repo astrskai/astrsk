@@ -443,9 +443,9 @@ export interface ScenarioBuilderMessage {
 }
 
 /**
- * Generate a response from the scenario builder agent
+ * Generate a response from the scenario builder agent (streaming)
  */
-export async function generateScenarioResponse({
+export async function* generateScenarioResponse({
   messages,
   currentScenario,
   callbacks,
@@ -462,7 +462,7 @@ export async function generateScenarioResponse({
     onUpdateLorebookEntry: (id: string, updates: { title?: string; keys?: string; desc?: string; range?: number }) => void;
   };
   abortSignal?: AbortSignal;
-}): Promise<{ text: string; toolResults: unknown[] }> {
+}): AsyncGenerator<{ textDelta?: string; text: string; toolResults: unknown[] }, void, unknown> {
   // Get the default lite model from store
   const modelStore = useModelStore.getState();
   const defaultModel: DefaultModelSelection | null = modelStore.defaultLiteModel;
@@ -529,16 +529,25 @@ export async function generateScenarioResponse({
       },
     });
 
-    // Wait for the stream to complete and get final text
-    const text = await result.text;
+    // Stream text deltas as they arrive
+    let accumulatedText = "";
+    for await (const chunk of result.textStream) {
+      accumulatedText += chunk;
+      yield {
+        textDelta: chunk,
+        text: accumulatedText,
+        toolResults: allToolResults,
+      };
+    }
 
     logger.info("[ScenarioBuilder] Response generated", {
-      text: text?.substring(0, 100),
+      text: accumulatedText?.substring(0, 100),
       totalToolResults: allToolResults.length,
     });
 
-    return {
-      text,
+    // Yield final result with complete text
+    yield {
+      text: accumulatedText,
       toolResults: allToolResults,
     };
   } catch (error) {

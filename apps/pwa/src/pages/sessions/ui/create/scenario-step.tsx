@@ -500,35 +500,54 @@ export function ScenarioStep({
         },
       };
 
-      // Generate AI response with tool calling
-      const result = await generateScenarioResponse({
+      // Generate AI response with tool calling (streaming)
+      const responseStream = generateScenarioResponse({
         messages: scenarioMessages,
         currentScenario,
         callbacks,
         abortSignal: abortControllerRef.current.signal,
       });
 
-      // Check if aborted before applying results
-      if (abortControllerRef.current?.signal.aborted) {
-        return;
-      }
-
-      // Add AI response to chat
+      // Create AI response message that will be updated as stream arrives
+      const aiResponseId = crypto.randomUUID();
       const aiResponse: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: aiResponseId,
         role: "assistant",
-        content: result.text || "I've made the changes to your scenario.",
+        content: "",
         step: currentStep,
       };
-      onChatMessagesChange([...updatedMessages, aiResponse]);
+
+      // Add initial empty message
+      let currentMessages = [...updatedMessages, aiResponse];
+      onChatMessagesChange(currentMessages);
+
+      let finalResult: { text: string; toolResults: unknown[] } | null = null;
+
+      // Stream text updates
+      for await (const chunk of responseStream) {
+        // Check if aborted
+        if (abortControllerRef.current?.signal.aborted) {
+          return;
+        }
+
+        // Update the AI message with accumulated text
+        currentMessages = currentMessages.map((msg) =>
+          msg.id === aiResponseId
+            ? { ...msg, content: chunk.text || "I've made the changes to your scenario." }
+            : msg
+        );
+        onChatMessagesChange(currentMessages);
+
+        finalResult = chunk;
+      }
 
       // If tools were executed, switch to builder tab on mobile for better UX
-      if (result.toolResults && result.toolResults.length > 0) {
+      if (finalResult && finalResult.toolResults && finalResult.toolResults.length > 0) {
         onMobileTabChange("builder");
       }
 
       logger.info("[ScenarioStep] AI response generated", {
-        toolResults: result.toolResults?.length || 0,
+        toolResults: finalResult?.toolResults?.length || 0,
       });
     } catch (error) {
       // Check if this was an abort - don't show error for user-initiated abort

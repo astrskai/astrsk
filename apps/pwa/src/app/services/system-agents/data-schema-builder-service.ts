@@ -494,7 +494,8 @@ Now use the add_data_stores tool to create the data stores.`;
         toolNames: step.toolCalls?.map(tc => tc.toolName) || [],
         toolResults: step.toolResults?.map(tr => ({
           toolName: tr.toolName,
-          result: typeof tr.result === 'string' ? tr.result : JSON.stringify(tr.result),
+          // AI SDK v5: 'result' → 'output'
+          result: typeof (tr as any).output === 'string' ? (tr as any).output : JSON.stringify((tr as any).output),
         })) || [],
       });
 
@@ -502,7 +503,8 @@ Now use the add_data_stores tool to create the data stores.`;
       step.toolCalls?.forEach((toolCall, tcIdx) => {
         logger.info(`[DataSchemaBuilder] Step ${idx + 1} Tool Call ${tcIdx + 1}`, {
           toolName: toolCall.toolName,
-          args: toolCall.args,
+          // AI SDK v5: 'args' → 'input'
+          args: (toolCall as any).input,
         });
       });
     });
