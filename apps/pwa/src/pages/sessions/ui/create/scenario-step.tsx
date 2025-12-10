@@ -8,6 +8,7 @@ import {
   MessageSquare,
   BookOpen,
   Globe,
+  Check,
 } from "lucide-react";
 import { Input, Textarea, Button } from "@/shared/ui/forms";
 import { AccordionBase } from "@/shared/ui";
@@ -646,7 +647,7 @@ export function ScenarioStep({
             <section className="space-y-3">
               <div
                 className={cn(
-                  "rounded-xl transition-all duration-300",
+                  "relative rounded-xl transition-all duration-300",
                   isBackgroundAnimating && "animate-pulse-highlight",
                 )}
               >
@@ -656,12 +657,14 @@ export function ScenarioStep({
                   autoResize
                   value={background}
                   onChange={(e) => onBackgroundChange(e.target.value)}
-                  className={cn(
-                    "min-h-[200px]",
-                    background.trim().length >= MIN_SCENARIO_LENGTH &&
-                      "border-green-500/50",
-                  )}
+                  className="min-h-[200px]"
                 />
+                {/* Check icon when minimum length is met */}
+                {background.trim().length >= MIN_SCENARIO_LENGTH && (
+                  <span className="absolute left-[148px] top-0 -translate-y-1/2 rounded-sm bg-canvas px-1">
+                    <Check size={12} className="text-green-500" />
+                  </span>
+                )}
               </div>
             </section>
 
