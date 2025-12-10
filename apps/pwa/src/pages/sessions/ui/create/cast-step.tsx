@@ -14,10 +14,17 @@ import {
   Info,
   Sparkles,
   AlertTriangle,
+  Globe,
+  Lock,
+  Pencil,
+  ArrowLeft,
+  ImagePlus,
+  Trash2,
+  BookOpen,
 } from "lucide-react";
 import { CharacterCard as DesignSystemCharacterCard } from "@astrsk/design-system/character-card";
 import { Badge } from "@/shared/ui/badge";
-import { SearchInput, Button } from "@/shared/ui/forms";
+import { SearchInput, Button, Select, Input, Textarea } from "@/shared/ui/forms";
 import {
   Tooltip,
   TooltipContent,
@@ -75,6 +82,15 @@ interface CastStepProps {
 
 const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
 
+// Character filter types
+type CharacterFilterType = "all" | "library" | "session";
+
+const CHARACTER_FILTER_OPTIONS = [
+  { value: "all", label: "All Types" },
+  { value: "library", label: "Library" },
+  { value: "session", label: "Session" },
+];
+
 // Initial welcome message for character creation
 const WELCOME_MESSAGE_CONTENT =
   "Need a character? Describe who you're looking for — their personality, role, or vibe — and I'll help bring them to life. You can also browse existing characters in the library.";
@@ -86,33 +102,57 @@ const PLAYER_SECTION_Y_OFFSET = 120; // Distance from roster top to player secti
 const AI_SECTION_Y_OFFSET = 300; // Distance from roster top to AI section
 
 /**
- * Build character card badges based on selection state
+ * Build character card badges based on selection state and source type
  */
 function buildCharacterBadges(
   isPlayer: boolean,
   isAI: boolean,
   isLocal: boolean,
+  isLibrary: boolean = false,
 ) {
   return [
-    // Local badge (left position) - amber color
+    // Source badge (left position)
     ...(isLocal
       ? [
           {
-            label: "LOCAL",
+            label: "SESSION",
             variant: "default" as const,
             position: "left" as const,
             className: "border-amber-500/30 bg-amber-950/50 text-amber-300",
+            icon: <Sparkles size={10} />,
+          },
+        ]
+      : isLibrary
+        ? [
+            {
+              label: "LIBRARY",
+              variant: "default" as const,
+              position: "left" as const,
+              className: "border-blue-500/30 bg-blue-950/50 text-blue-300",
+              icon: <Globe size={10} />,
+            },
+          ]
+        : []),
+    // Lock badge for library characters (right position when not selected) - icon only
+    ...(isLibrary && !isPlayer && !isAI
+      ? [
+          {
+            label: "",
+            variant: "default" as const,
+            position: "right" as const,
+            className: "border-zinc-500/30 bg-zinc-800/50 text-zinc-400 px-1.5",
+            icon: <Lock size={12} />,
           },
         ]
       : []),
-    // Selection badge (right position)
+    // Selection badge (right position) - overrides lock badge when selected
     ...(isPlayer
       ? [
           {
             label: "PLAYER",
             variant: "default" as const,
             position: "right" as const,
-            className: "border-blue-500/30 bg-blue-950/50 text-blue-300",
+            className: "border-emerald-500/30 bg-emerald-950/50 text-emerald-300",
           },
         ]
       : isAI
@@ -200,7 +240,7 @@ function FlyingTrailOverlay({
             <div
               className={cn(
                 "flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl font-bold text-white shadow-lg",
-                trail.targetType === "player" ? "bg-blue-500" : "bg-purple-500",
+                trail.targetType === "player" ? "bg-emerald-500" : "bg-purple-500",
               )}
             >
               {trail.imageUrl ? (
@@ -218,7 +258,7 @@ function FlyingTrailOverlay({
               className={cn(
                 "absolute inset-0 rounded-xl blur-md",
                 trail.targetType === "player"
-                  ? "bg-blue-500/50"
+                  ? "bg-emerald-500/50"
                   : "bg-purple-500/50",
               )}
               initial={{ scale: 1 }}
@@ -265,7 +305,8 @@ function LibraryCharacterCard({
 }: LibraryCharacterCardProps) {
   const [imageUrl] = useAsset(card.props.iconAssetId);
   const isSelected = isPlayer || isAI;
-  const badges = buildCharacterBadges(isPlayer, isAI, isLocal);
+  // Library cards: isLocal=false, isLibrary=true
+  const badges = buildCharacterBadges(isPlayer, isAI, isLocal, true);
 
   return (
     <DesignSystemCharacterCard
@@ -298,7 +339,7 @@ function LibraryCharacterCard({
               "border-r border-zinc-800",
               isSelected
                 ? "cursor-not-allowed text-zinc-600"
-                : "text-zinc-400 hover:bg-blue-600/10 hover:text-blue-300",
+                : "text-zinc-400 hover:bg-emerald-600/10 hover:text-emerald-300",
             )}
           >
             <User size={10} className="sm:h-3 sm:w-3" /> PLAY AS
@@ -321,7 +362,7 @@ function LibraryCharacterCard({
               "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
               isSelected
                 ? "cursor-not-allowed text-zinc-600"
-                : "text-zinc-400 hover:bg-amber-600/10 hover:text-amber-300",
+                : "text-zinc-400 hover:bg-purple-600/10 hover:text-purple-300",
             )}
           >
             <Cpu size={10} className="sm:h-3 sm:w-3" /> ADD AS AI
@@ -334,7 +375,8 @@ function LibraryCharacterCard({
 
 /**
  * Draft Character Card for Library
- * Displays import/chat/create characters in the library with LOCAL badge
+ * Displays import/chat/create characters in the library with SESSION badge
+ * Includes edit action on hover (session characters are editable)
  */
 interface DraftCharacterCardProps {
   draft: DraftCharacter;
@@ -343,6 +385,7 @@ interface DraftCharacterCardProps {
   onAssignPlayer: (e: React.MouseEvent) => void;
   onAddAI: (e: React.MouseEvent) => void;
   onOpenDetails: () => void;
+  onEdit: () => void;
 }
 
 function DraftCharacterCard({
@@ -352,12 +395,22 @@ function DraftCharacterCard({
   onAssignPlayer,
   onAddAI,
   onOpenDetails,
+  onEdit,
 }: DraftCharacterCardProps) {
   const isSelected = isPlayer || isAI;
   const name = draft.data?.name || "Unnamed";
   const imageUrl = draft.data?.imageUrl;
-  // Draft characters are always local
+  // Draft characters are always local (session)
   const badges = buildCharacterBadges(isPlayer, isAI, true);
+
+  // Edit action for session characters (shown on hover)
+  const actions = [
+    {
+      icon: Pencil,
+      label: "Edit",
+      onClick: onEdit,
+    },
+  ];
 
   return (
     <DesignSystemCharacterCard
@@ -367,6 +420,7 @@ function DraftCharacterCard({
       summary={draft.data?.cardSummary}
       tags={draft.data?.tags || []}
       badges={badges}
+      actions={actions}
       className="border-dashed border-amber-500/50"
       onClick={onOpenDetails}
       renderMetadata={() => null}
@@ -383,7 +437,7 @@ function DraftCharacterCard({
               "border-r border-zinc-800",
               isSelected
                 ? "cursor-not-allowed text-zinc-600"
-                : "text-zinc-400 hover:bg-blue-600/10 hover:text-blue-300",
+                : "text-zinc-400 hover:bg-emerald-600/10 hover:text-emerald-300",
             )}
           >
             <User size={10} className="sm:h-3 sm:w-3" /> PLAY AS
@@ -398,7 +452,7 @@ function DraftCharacterCard({
               "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
               isSelected
                 ? "cursor-not-allowed text-zinc-600"
-                : "text-zinc-400 hover:bg-amber-600/10 hover:text-amber-300",
+                : "text-zinc-400 hover:bg-purple-600/10 hover:text-purple-300",
             )}
           >
             <Cpu size={10} className="sm:h-3 sm:w-3" /> ADD AS AI
@@ -433,6 +487,8 @@ export function CastStep({
   firstMessages,
 }: CastStepProps) {
   const [search, setSearch] = useState("");
+  const [characterFilter, setCharacterFilter] =
+    useState<CharacterFilterType>("all");
   const [selectedDetailsChar, setSelectedDetailsChar] =
     useState<CharacterDetailsData | null>(null);
   const [chatInput, setChatInput] = useState("");
@@ -450,6 +506,8 @@ export function CastStep({
         SESSION_STORAGE_KEYS.CAST_STEP_WARNING_BANNER_DISMISSED,
       ) !== "true",
   );
+  // Character being edited (null = library view, DraftCharacter = edit view)
+  const [editingCharacter, setEditingCharacter] = useState<DraftCharacter | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const onChatMessagesChangeRef = useRef(onChatMessagesChange);
 
@@ -502,6 +560,9 @@ export function CastStep({
     };
   }, []);
 
+  // Use ref to track typing state for cleanup
+  const isWelcomeTypingRef = useRef(false);
+
   // Welcome message typing effect using custom hook
   const {
     displayText: welcomeDisplayText,
@@ -520,10 +581,36 @@ export function CastStep({
           role: "assistant",
           content: WELCOME_MESSAGE_CONTENT,
           step: "cast",
+          isSystemGenerated: true, // Exclude from AI chat history
         },
       ]);
     },
   });
+
+  // Keep ref in sync with typing state
+  isWelcomeTypingRef.current = isWelcomeTyping;
+
+  // Finalize welcome message on unmount if still typing
+  useEffect(() => {
+    return () => {
+      if (isWelcomeTypingRef.current) {
+        // Directly update chat messages with final content on unmount
+        const existingMessages = chatMessages.filter(
+          (m) => m.id !== "cast-welcome",
+        );
+        onChatMessagesChangeRef.current?.([
+          ...existingMessages,
+          {
+            id: "cast-welcome",
+            role: "assistant",
+            content: WELCOME_MESSAGE_CONTENT,
+            step: "cast",
+            isSystemGenerated: true, // Exclude from AI chat history
+          },
+        ]);
+      }
+    };
+  }, [chatMessages]);
 
   // Add initial welcome message with typing indicator then streaming text effect
   // Only show if no cast-step messages exist yet
@@ -543,6 +630,7 @@ export function CastStep({
         role: "assistant",
         content: "",
         step: "cast",
+        isSystemGenerated: true, // Exclude from AI chat history
       };
       // Prepend welcome message to existing messages (from other steps)
       // Use ref to get current messages without stale closure
@@ -559,12 +647,24 @@ export function CastStep({
 
   // Show all messages, apply streaming text to welcome message if typing
   const displayMessages = useMemo(() => {
+    // Base filter: remove empty assistant messages
+    const filterMessages = (msgs: typeof chatMessages) =>
+      msgs.filter((msg) => {
+        if (msg.role === "user") return true;
+        return msg.content.trim().length > 0;
+      });
+
+    // Welcome message typing - show streaming text
     if (isWelcomeTyping) {
-      return chatMessages.map((m) =>
-        m.id === "cast-welcome" ? { ...m, content: welcomeDisplayText } : m,
+      return filterMessages(
+        chatMessages.map((m) =>
+          m.id === "cast-welcome" ? { ...m, content: welcomeDisplayText } : m,
+        ),
       );
     }
-    return chatMessages;
+
+    // Normal display - filter out empty assistant messages
+    return filterMessages(chatMessages);
   }, [chatMessages, isWelcomeTyping, welcomeDisplayText]);
 
   // Handle character creation from AI - creates DraftCharacter without DB save
@@ -645,12 +745,13 @@ export function CastStep({
 
     try {
       // Convert ChatMessage to CharacterBuilderMessage format
-      const builderMessages: CharacterBuilderMessage[] = newMessages.map(
-        (msg) => ({
+      // Filter out system-generated messages (welcome, etc.) from AI context
+      const builderMessages: CharacterBuilderMessage[] = newMessages
+        .filter((msg) => !msg.isSystemGenerated)
+        .map((msg) => ({
           role: msg.role as "user" | "assistant",
           content: msg.content,
-        }),
-      );
+        }));
 
       // Build current characters list for context (only drafts with data)
       const currentCharacters: CharacterData[] = draftCharacters
@@ -754,6 +855,7 @@ export function CastStep({
       content: "Response generation was stopped by user.",
       step: currentStep,
       variant: "cancelled",
+      isSystemGenerated: true, // Exclude from AI chat history
     };
     onChatMessagesChange?.([...chatMessages, cancelledMessage]);
   }, [currentStep, onChatMessagesChange, chatMessages]);
@@ -763,17 +865,38 @@ export function CastStep({
     ...cardQueries.list({ type: [CardType.Character] }),
   });
 
-  // Filter by search
-  const filteredCharacters = useMemo(() => {
+  // Filter library characters by search
+  const filteredLibraryCharacters = useMemo(() => {
     if (!characterCards) return [];
-    if (!search.trim()) return characterCards;
+    // If filter is "session", hide all library characters
+    if (characterFilter === "session") return [];
 
-    const keyword = search.toLowerCase();
-    return characterCards.filter((card: CharacterCard) => {
-      const name = card.props.name?.toLowerCase() || "";
-      return name.includes(keyword);
-    });
-  }, [characterCards, search]);
+    let filtered = characterCards;
+    if (search.trim()) {
+      const keyword = search.toLowerCase();
+      filtered = filtered.filter((card: CharacterCard) => {
+        const name = card.props.name?.toLowerCase() || "";
+        return name.includes(keyword);
+      });
+    }
+    return filtered;
+  }, [characterCards, search, characterFilter]);
+
+  // Filter draft characters by search and filter type
+  const filteredDraftCharacters = useMemo(() => {
+    // If filter is "library", hide all draft (session) characters
+    if (characterFilter === "library") return [];
+
+    let filtered = draftCharacters;
+    if (search.trim()) {
+      const keyword = search.toLowerCase();
+      filtered = filtered.filter((draft) => {
+        const name = draft.data?.name?.toLowerCase() || "";
+        return name.includes(keyword);
+      });
+    }
+    return filtered;
+  }, [draftCharacters, search, characterFilter]);
 
   // Handlers for library characters (from DB)
   const handleAssignPlayer = (card: CharacterCard) => {
@@ -861,6 +984,39 @@ export function CastStep({
     // Simply clear player - draft stays in draftCharacters
     onPlayerCharacterChange(null);
   };
+
+  // Handle save from CharacterEditPanel - updates the draft in draftCharacters list
+  const handleSaveEditedCharacter = useCallback(
+    (updatedCharacter: DraftCharacter) => {
+      // Update the character in draftCharacters list
+      const updatedDrafts = draftCharacters.map((draft) =>
+        draft.tempId === updatedCharacter.tempId ? updatedCharacter : draft
+      );
+      onDraftCharactersChange(updatedDrafts);
+
+      // Also update if this character is assigned to roster
+      if (playerCharacter?.tempId === updatedCharacter.tempId) {
+        onPlayerCharacterChange(updatedCharacter);
+      }
+
+      // Update in AI characters if present
+      if (aiCharacters.some((c) => c.tempId === updatedCharacter.tempId)) {
+        onAiCharactersChange(
+          aiCharacters.map((c) =>
+            c.tempId === updatedCharacter.tempId ? updatedCharacter : c
+          )
+        );
+      }
+    },
+    [
+      draftCharacters,
+      onDraftCharactersChange,
+      playerCharacter,
+      onPlayerCharacterChange,
+      aiCharacters,
+      onAiCharactersChange,
+    ]
+  );
 
   const totalSelected = (playerCharacter ? 1 : 0) + aiCharacters.length;
 
@@ -957,54 +1113,92 @@ export function CastStep({
           className={mobileTab === "chat" ? "" : "hidden md:flex"}
         />
 
-        {/* Middle Panel: Character Library - border provides visual distinction */}
+        {/* Middle Panel: Character Library OR Edit Panel */}
         <div
           className={cn(
-            "flex min-w-0 flex-1 flex-col overflow-hidden border border-zinc-800 md:rounded-xl",
+            "relative flex min-w-0 flex-1 flex-col overflow-hidden border border-zinc-800 md:rounded-xl",
             mobileTab === "library" ? "flex" : "hidden md:flex",
           )}
         >
-          <StepHeader
-            icon={<LayoutGrid size={20} />}
-            title="Character Library"
-            subtitle="SELECT PERSONAS FOR SIMULATION"
-            actions={
-              <div className="flex gap-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        onClick={onImportCharacter}
-                        variant="secondary"
-                        size="sm"
-                        icon={<Import size={16} />}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent variant="button" side="bottom">
-                      Import V2, V3 character cards
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <Button
-                  onClick={onCreateCharacter}
-                  variant="default"
-                  size="sm"
-                  icon={<Plus size={16} />}
-                >
-                  <span className="hidden sm:inline">New Character</span>
-                </Button>
-              </div>
-            }
-          >
-            {/* Search */}
-            <SearchInput
-              placeholder="Search characters..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              variant="dark"
-              className="w-full"
-            />
-          </StepHeader>
+          <AnimatePresence mode="popLayout" initial={false}>
+            {editingCharacter ? (
+              /* Character Edit Panel - shown when editing a session character */
+              <motion.div
+                key="edit-panel"
+                initial={{ x: "100%", opacity: 0.5 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: "100%", opacity: 0.5 }}
+                transition={{ type: "spring", stiffness: 500, damping: 35, mass: 0.8 }}
+                className="absolute inset-0 z-10 flex flex-col bg-zinc-950"
+              >
+                <CharacterEditPanel
+                  character={editingCharacter}
+                  onBack={() => setEditingCharacter(null)}
+                  onSave={handleSaveEditedCharacter}
+                />
+              </motion.div>
+            ) : (
+              /* Character Library - default view */
+              <motion.div
+                key="library-panel"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex h-full flex-col"
+              >
+                <StepHeader
+                icon={<LayoutGrid size={20} />}
+                title="Character Library"
+                subtitle="SELECT PERSONAS FOR SIMULATION"
+                actions={
+                  <div className="flex gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={onImportCharacter}
+                            variant="secondary"
+                            size="sm"
+                            icon={<Import size={16} />}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent variant="button" side="bottom">
+                          Import V2, V3 character cards
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <Button
+                      onClick={onCreateCharacter}
+                      variant="default"
+                      size="sm"
+                      icon={<Plus size={16} />}
+                    >
+                      <span className="hidden sm:inline">New Character</span>
+                    </Button>
+                  </div>
+                }
+              >
+                {/* Search and Filter */}
+                <div className="flex w-full gap-2">
+                  <SearchInput
+                    placeholder="Search characters..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    variant="dark"
+                    className="min-w-0 flex-1"
+                  />
+                  <Select
+                    value={characterFilter}
+                    onChange={(e) =>
+                      setCharacterFilter(e.target.value as CharacterFilterType)
+                    }
+                    options={CHARACTER_FILTER_OPTIONS}
+                    selectSize="sm"
+                    className="w-28 flex-shrink-0 sm:w-32"
+                  />
+                </div>
+              </StepHeader>
 
           {/* Info & Warning Banners */}
           {(showInfoBanner ||
@@ -1039,7 +1233,7 @@ export function CastStep({
                     className="mt-0.5 flex-shrink-0 text-red-400"
                   />
                   <p className="flex-1 text-[11px] leading-relaxed text-red-300">
-                    <span className="font-semibold">Warning:</span> Local
+                    <span className="font-semibold">Warning:</span> Session
                     characters will be lost if you leave without creating a
                     session.
                   </p>
@@ -1062,75 +1256,70 @@ export function CastStep({
                 className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3"
               >
                 <AnimatePresence mode="popLayout">
-                  {/* Draft characters first (LOCAL - from import/chat/create) */}
-                  {draftCharacters
-                    .filter((draft) => {
-                      if (!search) return true;
-                      const name = draft.data?.name?.toLowerCase() || "";
-                      return name.includes(search.toLowerCase());
-                    })
-                    .map((draft) => {
-                      // Check if this draft is already assigned to roster
-                      const isPlayer = playerCharacter?.tempId === draft.tempId;
-                      const isAI = aiCharacters.some(
-                        (c) => c.tempId === draft.tempId,
-                      );
+                  {/* Draft characters first (SESSION - from import/chat/create) */}
+                  {filteredDraftCharacters.map((draft) => {
+                    // Check if this draft is already assigned to roster
+                    const isPlayer = playerCharacter?.tempId === draft.tempId;
+                    const isAI = aiCharacters.some(
+                      (c) => c.tempId === draft.tempId,
+                    );
 
-                      return (
-                        <motion.div
-                          key={draft.tempId}
-                          layout
-                          data-card-wrapper
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{
-                            opacity: 0,
-                            scale: 0.8,
-                            transition: { duration: 0.2 },
+                    return (
+                      <motion.div
+                        key={draft.tempId}
+                        layout
+                        data-card-wrapper
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.8,
+                          transition: { duration: 0.2 },
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 30,
+                        }}
+                      >
+                        <DraftCharacterCard
+                          draft={draft}
+                          isPlayer={isPlayer}
+                          isAI={isAI}
+                          onAssignPlayer={(e) => {
+                            triggerFlyingTrail(
+                              e,
+                              "player",
+                              draft.data?.name || "Character",
+                              draft.data?.imageUrl,
+                            );
+                            handleAssignDraftPlayer(draft);
                           }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 500,
-                            damping: 30,
+                          onAddAI={(e) => {
+                            triggerFlyingTrail(
+                              e,
+                              "ai",
+                              draft.data?.name || "Character",
+                              draft.data?.imageUrl,
+                            );
+                            handleAddDraftAI(draft);
                           }}
-                        >
-                          <DraftCharacterCard
-                            draft={draft}
-                            isPlayer={isPlayer}
-                            isAI={isAI}
-                            onAssignPlayer={(e) => {
-                              triggerFlyingTrail(
-                                e,
-                                "player",
-                                draft.data?.name || "Character",
-                                draft.data?.imageUrl,
-                              );
-                              handleAssignDraftPlayer(draft);
-                            }}
-                            onAddAI={(e) => {
-                              triggerFlyingTrail(
-                                e,
-                                "ai",
-                                draft.data?.name || "Character",
-                                draft.data?.imageUrl,
-                              );
-                              handleAddDraftAI(draft);
-                            }}
-                            onOpenDetails={() =>
-                              setSelectedDetailsChar({
-                                name: draft.data?.name || "Unnamed",
-                                description: draft.data?.description,
-                                cardSummary: draft.data?.cardSummary,
-                                tags: draft.data?.tags,
-                                imageUrl: draft.data?.imageUrl,
-                              })
-                            }
-                          />
-                        </motion.div>
-                      );
-                    })}
+                          onOpenDetails={() =>
+                            setSelectedDetailsChar({
+                              name: draft.data?.name || "Unnamed",
+                              description: draft.data?.description,
+                              cardSummary: draft.data?.cardSummary,
+                              tags: draft.data?.tags,
+                              imageUrl: draft.data?.imageUrl,
+                            })
+                          }
+                          onEdit={() => setEditingCharacter(draft)}
+                        />
+                      </motion.div>
+                    );
+                  })}
                   {/* Library characters (from DB) */}
-                  {filteredCharacters.map((card: CharacterCard) => {
+                  {filteredLibraryCharacters.map((card: CharacterCard) => {
                     const cardId = card.id.toString();
                     // Check if this library card is selected (by existingCardId)
                     const isPlayer = playerCharacter?.existingCardId === cardId;
@@ -1185,16 +1374,25 @@ export function CastStep({
             </LayoutGroup>
 
             {/* Empty State */}
-            {filteredCharacters.length === 0 &&
-              draftCharacters.length === 0 && (
+            {filteredLibraryCharacters.length === 0 &&
+              filteredDraftCharacters.length === 0 && (
                 <div className="flex h-64 flex-col items-center justify-center text-zinc-600">
                   <div className="mb-3 rounded-full bg-zinc-900/50 p-4">
                     <Users size={32} />
                   </div>
-                  <p className="text-sm">No data found in archives.</p>
+                  <p className="text-sm">
+                    {characterFilter === "all"
+                      ? "No data found in archives."
+                      : characterFilter === "library"
+                        ? "No library characters found."
+                        : "No session characters found."}
+                  </p>
                 </div>
               )}
-          </div>
+            </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Right Panel: Session Roster - border provides visual distinction */}
@@ -1235,10 +1433,10 @@ export function CastStep({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 10 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className="group relative overflow-hidden rounded-xl border border-blue-500/30 bg-blue-950/20"
+                    className="group relative overflow-hidden rounded-xl border border-emerald-500/30 bg-emerald-950/20"
                   >
-                    <div className="relative flex items-center gap-3 rounded-xl bg-blue-950/40 p-3">
-                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-blue-500 font-bold text-white">
+                    <div className="relative flex items-center gap-3 rounded-xl bg-emerald-950/40 p-3">
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-emerald-500 font-bold text-white">
                         {playerDisplayImageUrl ? (
                           <img
                             src={playerDisplayImageUrl}
@@ -1256,12 +1454,12 @@ export function CastStep({
                           {playerDisplayName}
                         </div>
                         <div className="mt-1 flex gap-1">
-                          <div className="inline-block rounded border border-blue-500/20 bg-blue-950/30 px-1.5 py-0.5 text-[10px] text-blue-300">
+                          <div className="inline-block rounded border border-emerald-500/20 bg-emerald-950/30 px-1.5 py-0.5 text-[10px] text-emerald-300">
                             PLAYER
                           </div>
                           {playerCharacter.source !== "library" && (
                             <div className="inline-block rounded border border-amber-500/30 bg-amber-950/50 px-1.5 py-0.5 text-[10px] text-amber-300">
-                              LOCAL
+                              SESSION
                             </div>
                           )}
                         </div>
@@ -1281,15 +1479,15 @@ export function CastStep({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.15 }}
-                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-blue-500/40 bg-blue-950/20 px-4 py-5 text-center"
+                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-emerald-500/40 bg-emerald-950/20 px-4 py-5 text-center"
                   >
-                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/20">
-                      <User size={14} className="text-blue-400" />
+                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20">
+                      <User size={14} className="text-emerald-400" />
                     </div>
-                    <p className="text-[11px] font-medium text-blue-300">
+                    <p className="text-[11px] font-medium text-emerald-300">
                       No persona selected
                     </p>
-                    <p className="mt-0.5 text-[10px] text-blue-400">
+                    <p className="mt-0.5 text-[10px] text-emerald-400">
                       Use PLAY AS to assign
                     </p>
                   </motion.div>
@@ -1443,7 +1641,7 @@ function AIRosterItem({
           </div>
           {isLocal && (
             <div className="inline-block rounded border border-amber-500/30 bg-amber-950/50 px-1.5 py-0.5 text-[10px] text-amber-300">
-              LOCAL
+              SESSION
             </div>
           )}
         </div>
@@ -1600,6 +1798,418 @@ function CharacterDetailsModal({
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Character Edit Panel
+ * Full-panel editor for session characters (draft characters)
+ * Replaces the Character Library when editing
+ */
+interface CharacterEditPanelProps {
+  character: DraftCharacter;
+  onBack: () => void;
+  onSave: (updatedCharacter: DraftCharacter) => void;
+}
+
+/**
+ * Local lorebook entry state for editing
+ * Maps to LorebookEntryData on save
+ */
+interface EditableLorebookEntry {
+  id: string;
+  name: string;
+  enabled: boolean;
+  keys: string;  // comma-separated string for easier editing
+  recallRange: number;
+  content: string;
+}
+
+function CharacterEditPanel({
+  character,
+  onBack,
+  onSave,
+}: CharacterEditPanelProps) {
+  // Form state initialized from character data
+  const [name, setName] = useState(character.data?.name || "");
+  const [summary, setSummary] = useState(character.data?.cardSummary || "");
+  const [description, setDescription] = useState(character.data?.description || "");
+  const [tags, setTags] = useState<string[]>(character.data?.tags || []);
+  const [tagInput, setTagInput] = useState("");
+  const [imageUrl, setImageUrl] = useState(character.data?.imageUrl || "");
+  const [imageFile, setImageFile] = useState<File | undefined>(character.data?.imageFile);
+  const [lorebook, setLorebook] = useState<EditableLorebookEntry[]>(
+    character.data?.lorebook?.map((entry) => ({
+      id: entry.id || crypto.randomUUID(),
+      name: entry.name || "",
+      enabled: entry.enabled ?? true,
+      keys: entry.keys?.join(", ") || "",
+      recallRange: entry.recallRange ?? 1000,
+      content: entry.content || "",
+    })) || []
+  );
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Track created object URL for cleanup
+  const createdObjectUrlRef = useRef<string | null>(null);
+
+  // Cleanup object URL on unmount
+  useEffect(() => {
+    return () => {
+      if (createdObjectUrlRef.current) {
+        URL.revokeObjectURL(createdObjectUrlRef.current);
+      }
+    };
+  }, []);
+
+  // Auto-save on changes
+  useEffect(() => {
+    const updatedCharacter: DraftCharacter = {
+      ...character,
+      data: {
+        ...character.data,
+        name,
+        cardSummary: summary,
+        description,
+        tags,
+        imageUrl,
+        imageFile,
+        lorebook: lorebook.map((entry) => ({
+          id: entry.id,
+          name: entry.name,
+          enabled: entry.enabled,
+          keys: entry.keys.split(",").map((k: string) => k.trim()).filter(Boolean),
+          recallRange: entry.recallRange,
+          content: entry.content,
+        })),
+      },
+    };
+    onSave(updatedCharacter);
+  }, [name, summary, description, tags, imageUrl, imageFile, lorebook]);
+
+  // Handle image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type is a safe image MIME type
+      const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        return;
+      }
+
+      // Revoke previous object URL to prevent memory leak
+      if (createdObjectUrlRef.current) {
+        URL.revokeObjectURL(createdObjectUrlRef.current);
+      }
+
+      setImageFile(file);
+      const url = URL.createObjectURL(file);
+      createdObjectUrlRef.current = url;
+      setImageUrl(url);
+    }
+  };
+
+  // Handle tag add
+  const handleAddTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput("");
+    }
+  };
+
+  // Handle tag remove
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((tag) => tag !== tagToRemove));
+  };
+
+  // Handle lorebook entry add
+  const handleAddLorebookEntry = () => {
+    const newEntry: EditableLorebookEntry = {
+      id: crypto.randomUUID(),
+      name: "",
+      enabled: true,
+      keys: "",
+      recallRange: 1000,
+      content: "",
+    };
+    setLorebook([...lorebook, newEntry]);
+  };
+
+  // Handle lorebook entry remove
+  const handleRemoveLorebookEntry = (index: number) => {
+    setLorebook(lorebook.filter((_, i) => i !== index));
+  };
+
+  // Handle lorebook entry update
+  const handleUpdateLorebookEntry = (
+    index: number,
+    field: keyof EditableLorebookEntry,
+    value: string | number | boolean
+  ) => {
+    setLorebook(
+      lorebook.map((entry, i) =>
+        i === index ? { ...entry, [field]: value } : entry
+      )
+    );
+  };
+
+  // Validate image URL to prevent XSS - only allow blob URLs and https URLs
+  // Use URL parsing for proper validation instead of string prefix check
+  const safeImageUrl = useMemo((): string | null => {
+    if (!imageUrl) return null;
+    try {
+      const parsedUrl = new URL(imageUrl);
+      // Only allow blob: and https: protocols
+      if (parsedUrl.protocol === "blob:" || parsedUrl.protocol === "https:") {
+        // Return the sanitized href from URL parser
+        return parsedUrl.href;
+      }
+    } catch {
+      // Invalid URL - return null
+    }
+    return null;
+  }, [imageUrl]);
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex-shrink-0 border-b border-zinc-800 px-4 py-3 sm:px-6 sm:py-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-200">
+              Edit Character
+            </h2>
+            <p className="text-[10px] font-medium tracking-widest text-amber-400 uppercase">
+              SESSION CHARACTER
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Content - Scrollable */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+        <div className="space-y-6">
+          {/* Image Upload */}
+          <div className="flex flex-col items-center">
+            {safeImageUrl ? (
+              <div className="relative max-w-[160px]">
+                <img
+                  src={safeImageUrl}
+                  alt={name || "Character"}
+                  className="h-full w-full rounded-lg object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full border border-zinc-600 bg-zinc-900 text-white shadow-md transition-colors hover:bg-zinc-700"
+                  aria-label="Edit image"
+                >
+                  <Pencil size={14} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-[160px] w-[160px] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-600 bg-zinc-800 text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-700 hover:text-zinc-300"
+              >
+                <ImagePlus size={32} />
+                <span className="text-sm">Add image</span>
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </div>
+
+          {/* Metadata Section */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold text-zinc-200">Metadata</h2>
+
+            <Input
+              label="Character Name"
+              labelPosition="inner"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={50}
+              isRequired
+            />
+
+            <div className="space-y-1">
+              <Input
+                label="Character Summary"
+                labelPosition="inner"
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                maxLength={50}
+              />
+              <div className="px-2 text-left text-xs text-zinc-400">
+                {`(${summary.length}/50)`}
+              </div>
+            </div>
+          </section>
+
+          {/* Tags Section */}
+          <section className="space-y-2">
+            <h3 className="text-xs text-zinc-200">Tags</h3>
+
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-brand-500/20 text-brand-400 flex items-center gap-2 rounded-md px-2 py-1 text-xs font-medium"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="hover:text-brand-300"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="relative">
+              <Input
+                labelPosition="inner"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                className="pr-16"
+              />
+              <Button
+                type="button"
+                onClick={handleAddTag}
+                variant="secondary"
+                size="sm"
+                disabled={!tagInput.trim()}
+                className="absolute top-1/2 right-2 -translate-y-1/2"
+              >
+                Add
+              </Button>
+            </div>
+          </section>
+
+          {/* Character Info Section */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold text-zinc-200">Character Info</h2>
+
+            <Textarea
+              label="Character Description"
+              labelPosition="inner"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              autoResize
+              isRequired
+            />
+          </section>
+
+          {/* Lorebook Section */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-zinc-200">Lorebook</h2>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleAddLorebookEntry}
+              >
+                <Plus size={14} />
+                Add lorebook
+              </Button>
+            </div>
+
+            {lorebook.length === 0 ? (
+              <p className="text-sm text-zinc-400">No lorebook entries</p>
+            ) : (
+              <div className="space-y-3">
+                {lorebook.map((entry, index) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 space-y-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-zinc-400">
+                        {entry.name || `Entry ${index + 1}`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLorebookEntry(index)}
+                        className="text-zinc-500 hover:text-zinc-400"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+
+                    <Input
+                      label="Lorebook name"
+                      labelPosition="inner"
+                      value={entry.name}
+                      onChange={(e) =>
+                        handleUpdateLorebookEntry(index, "name", e.target.value)
+                      }
+                    />
+
+                    <div className="space-y-2">
+                      <Input
+                        label="Trigger keywords"
+                        labelPosition="inner"
+                        value={entry.keys}
+                        onChange={(e) =>
+                          handleUpdateLorebookEntry(index, "keys", e.target.value)
+                        }
+                        placeholder="Comma-separated keywords"
+                      />
+                      {entry.keys && (
+                        <ul className="flex flex-wrap gap-2">
+                          {entry.keys.split(",").filter(k => k.trim()).map((key, keyIndex) => (
+                            <li
+                              key={`${entry.id}-${keyIndex}`}
+                              className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200"
+                            >
+                              {key.trim()}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    <Textarea
+                      label="Description"
+                      labelPosition="inner"
+                      value={entry.content}
+                      onChange={(e) =>
+                        handleUpdateLorebookEntry(index, "content", e.target.value)
+                      }
+                      autoResize
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </div>
