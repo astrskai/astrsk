@@ -5,6 +5,22 @@ import { cn } from "@/shared/lib";
 import type { SessionStep } from "./session-stepper";
 
 /**
+ * Get assistant name and color based on step
+ */
+function getAssistantLabel(step?: SessionStep): { name: string; colorClass: string } {
+  switch (step) {
+    case "scenario":
+      return { name: "Scenario AI", colorClass: "text-violet-400" };
+    case "cast":
+      return { name: "Cast AI", colorClass: "text-emerald-400" };
+    case "stats":
+      return { name: "Stats AI", colorClass: "text-amber-400" };
+    default:
+      return { name: "AI", colorClass: "text-fg-muted" };
+  }
+}
+
+/**
  * Chat message type for AI conversations
  */
 export interface ChatMessage {
@@ -130,41 +146,51 @@ export function ChatPanel({
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={cn(
-                  "flex gap-3",
-                  msg.role === "user" ? "flex-row-reverse" : "flex-row",
-                )}
-              >
+            {messages.map((msg) => {
+              const assistantLabel = msg.role === "assistant" ? getAssistantLabel(msg.step) : null;
+              return (
                 <div
+                  key={msg.id}
                   className={cn(
-                    "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
-                    msg.role === "user"
-                      ? "bg-brand-500/20"
-                      : "bg-surface-overlay",
+                    "flex gap-3",
+                    msg.role === "user" ? "flex-row-reverse" : "flex-row",
                   )}
                 >
-                  {msg.role === "user" ? (
-                    <User size={14} className="text-brand-400" />
-                  ) : (
-                    <Bot size={14} className="text-fg-muted" />
-                  )}
+                  <div
+                    className={cn(
+                      "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
+                      msg.role === "user"
+                        ? "bg-brand-500/20"
+                        : "bg-surface-overlay",
+                    )}
+                  >
+                    {msg.role === "user" ? (
+                      <User size={14} className="text-brand-400" />
+                    ) : (
+                      <Bot size={14} className="text-fg-muted" />
+                    )}
+                  </div>
+                  <div className="flex max-w-[80%] flex-col">
+                    {assistantLabel && (
+                      <span className={cn("mb-0.5 text-[10px] font-medium", assistantLabel.colorClass)}>
+                        {assistantLabel.name}
+                      </span>
+                    )}
+                    <div
+                      className={cn(
+                        "rounded-xl px-3 py-2 text-sm",
+                        msg.role === "user"
+                          ? "bg-brand-500/30 text-fg-default"
+                          : "bg-surface-overlay text-fg-default",
+                        msg.variant === "cancelled" && "text-fg-subtle italic",
+                      )}
+                    >
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    </div>
+                  </div>
                 </div>
-                <div
-                  className={cn(
-                    "max-w-[80%] rounded-xl px-3 py-2 text-sm",
-                    msg.role === "user"
-                      ? "bg-brand-500/30 text-fg-default"
-                      : "bg-surface-overlay text-fg-default",
-                    msg.variant === "cancelled" && "text-fg-subtle italic",
-                  )}
-                >
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {isLoading && (
               <div className="flex gap-3">
                 <div className="bg-surface-overlay flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full">

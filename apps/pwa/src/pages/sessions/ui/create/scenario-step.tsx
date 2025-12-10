@@ -203,6 +203,7 @@ export function ScenarioStep({
           id: "welcome",
           role: "assistant",
           content: WELCOME_MESSAGE_CONTENT,
+          step: "scenario",
           isSystemGenerated: true, // Exclude from AI chat history
         },
       ]);
@@ -222,6 +223,7 @@ export function ScenarioStep({
             id: "welcome",
             role: "assistant",
             content: WELCOME_MESSAGE_CONTENT,
+            step: "scenario",
             isSystemGenerated: true, // Exclude from AI chat history
           },
         ]);
@@ -266,6 +268,7 @@ export function ScenarioStep({
           id: "welcome",
           role: "assistant",
           content: "",
+          step: "scenario",
           isSystemGenerated: true, // Exclude from AI chat history
         };
         onChatMessagesChange([welcomeMessage]);
