@@ -625,19 +625,14 @@ export function CastStep({
   };
 
   // Handlers for draft characters (from import/chat/create - shown in library with LOCAL badge)
+  // Draft characters stay in draftCharacters list (like library characters) - only badge changes
   const handleAssignDraftPlayer = (draft: DraftCharacter) => {
     // If already AI, remove from AI list
     const inAI = aiCharacters.find((c) => c.tempId === draft.tempId);
     if (inAI) {
       onAiCharactersChange(aiCharacters.filter((c) => c.tempId !== draft.tempId));
     }
-    // If there's an existing player character that is a draft (and different from new one), return it to draft list
-    let updatedDraftList = draftCharacters.filter((c) => c.tempId !== draft.tempId);
-    if (playerCharacter && playerCharacter.source !== "library" && playerCharacter.tempId !== draft.tempId) {
-      updatedDraftList = [...updatedDraftList, playerCharacter];
-    }
-    // Remove from draft list and set as player
-    onDraftCharactersChange(updatedDraftList);
+    // Set as player (draft stays in draftCharacters for consistent UX with library)
     onPlayerCharacterChange(draft);
   };
 
@@ -646,27 +641,19 @@ export function CastStep({
     if (playerCharacter?.tempId === draft.tempId) {
       onPlayerCharacterChange(null);
     }
-    // Add to AI if not already there
+    // Add to AI if not already there (draft stays in draftCharacters for consistent UX)
     if (!aiCharacters.find((c) => c.tempId === draft.tempId)) {
-      onDraftCharactersChange(draftCharacters.filter((c) => c.tempId !== draft.tempId));
       onAiCharactersChange([...aiCharacters, draft]);
     }
   };
 
   const handleRemoveAI = (tempId: string) => {
-    const removed = aiCharacters.find((c) => c.tempId === tempId);
+    // Simply remove from AI list - draft stays in draftCharacters
     onAiCharactersChange(aiCharacters.filter((c) => c.tempId !== tempId));
-    // If it's a draft character (not library), return it to draft list
-    if (removed && removed.source !== "library") {
-      onDraftCharactersChange([...draftCharacters, removed]);
-    }
   };
 
   const handleRemovePlayer = () => {
-    // If player is a draft character, return it to draft list
-    if (playerCharacter && playerCharacter.source !== "library") {
-      onDraftCharactersChange([...draftCharacters, playerCharacter]);
-    }
+    // Simply clear player - draft stays in draftCharacters
     onPlayerCharacterChange(null);
   };
 
