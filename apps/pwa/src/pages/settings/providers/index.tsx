@@ -73,6 +73,13 @@ const showApiKey = new Map<ApiSource, boolean>([
 
 const descriptionBySource = new Map<ApiSource, React.ReactNode>([
   [
+    ApiSource.AstrskAi,
+    <>
+      Astrsk Cloud LLM provides access to AI models without requiring an API key.
+      Sign in to your astrsk account to use this provider.
+    </>,
+  ],
+  [
     ApiSource.GoogleGenerativeAI,
     <>
       If you do not have an API key, 1){" "}
@@ -232,20 +239,24 @@ const renderProviderListItem = ({
     }
   }
 
+  // AstrskAi is always active (uses JWT auth, no configuration needed)
+  const isAstrskAi = source === ApiSource.AstrskAi;
+
   return (
     <ProviderDisplay
       key={apiConnection?.id.toString() ?? source.toString()}
       apiSource={source}
       details={details}
-      isActive={!!apiConnection}
-      onOpenEdit={onOpenEdit}
-      onDisconnect={onDisconnect}
+      isActive={isAstrskAi || !!apiConnection}
+      onOpenEdit={isAstrskAi ? undefined : onOpenEdit}
+      onDisconnect={isAstrskAi ? undefined : onDisconnect}
+      hideButton={isAstrskAi}
     />
   );
 };
 
 const providerOrder: ApiSource[] = [
-  // ApiSource.AstrskAi,
+  ApiSource.AstrskAi,
   ApiSource.OpenAI,
   ApiSource.GoogleGenerativeAI,
   ApiSource.Anthropic,
@@ -621,22 +632,14 @@ export default function ProvidersPage() {
         {/* Provider list */}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {apiConnections
-              ?.filter(
-                (apiConnection: ApiConnection) =>
-                  apiConnection.source !== ApiSource.AstrskAi,
-              )
               ?.map((apiConnection: ApiConnection) =>
                 renderProviderListItem({
                   apiConnection,
                   onOpenEdit: () => {
-                    if (apiConnection.source !== ApiSource.AstrskAi) {
-                      handleOnOpenEdit({ apiConnection });
-                    }
+                    handleOnOpenEdit({ apiConnection });
                   },
                   onDisconnect: (usedResourceIds) => {
-                    if (apiConnection.source !== ApiSource.AstrskAi) {
-                      handleOnDisconnect(apiConnection, usedResourceIds);
-                    }
+                    handleOnDisconnect(apiConnection, usedResourceIds);
                   },
                 }),
               )}

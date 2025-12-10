@@ -51,9 +51,11 @@ Create GENERAL, REUSABLE trackable variables (data stores) for the scenario. The
 2. **SNAKE_CASE NAMES ONLY** - Use lowercase letters, numbers, and underscores only (e.g., "physical_condition", "alert_level", "health_points"). No spaces, apostrophes, or special characters.
 3. **QUALITY OVER QUANTITY** - Only create meaningful trackers for this scenario
 4. **GENRE-APPROPRIATE** - Match the setting's theme
-5. **RECOMMENDED COUNT: 4-6 data stores** - Aim for this range per scenario
+5. **FIELD LIMIT: Generate MAXIMUM 8 data stores** unless the user explicitly requests more
+   - **RECOMMENDED: 4-6 data stores** - Aim for this range per scenario
    - Too few (<3): Missing important tracking dimensions
    - Too many (>8): Overwhelming for players and AI to manage
+   - **If user doesn't specify a number, generate NO MORE than 8 fields**
 
 ## Data Store Types - MIX QUANTITATIVE AND QUALITATIVE:
 - **integer** - Quantitative metrics (e.g., health: 0-10, trust_level: 0-10, energy: 0-10)
@@ -82,9 +84,12 @@ Fields are updated by AI agents in a workflow with branching. In descriptions, n
 - **remove_data_store** - Remove by ID
 - **clear_all** - Clear all
 
-**IMPORTANT**: Create ALL data stores in a SINGLE add_data_stores call. Do NOT call the tool multiple times.
+**IMPORTANT**:
+- Create ALL data stores in a SINGLE add_data_stores call. Do NOT call the tool multiple times.
+- Generate MAXIMUM 8 data stores (aim for 4-6) unless user explicitly requests more in their prompt.
+- YOU MUST use the add_data_stores tool to create the data stores. Do NOT just describe them in text.
 
-Analyze the scenario and create appropriate data stores. Don't ask for clarification.`;
+Analyze the scenario and create appropriate data stores using the add_data_stores tool. Don't ask for clarification.`;
 }
 
 
@@ -374,10 +379,27 @@ export async function generateDataSchema({
   // Build user message with scenario context only (no character names to avoid character-specific trackers)
   const buildUserMessage = (): string => {
     if (context.scenario && context.scenario.trim()) {
-      return `Generate appropriate data stores for tracking variables in this roleplay scenario.\n\n## Scenario Background:\n${context.scenario}`;
+      return `Generate appropriate data stores for tracking variables in this roleplay scenario.
+
+**IMPORTANT**:
+- YOU MUST use the add_data_stores tool to create the stores. Do NOT just describe them in text.
+- Generate MAXIMUM 8 data stores (recommended: 4-6) unless I explicitly request more. Focus on the most important trackers only.
+- Call add_data_stores with ALL stores in a single call.
+
+## Scenario Background:
+${context.scenario}
+
+Now use the add_data_stores tool to create the data stores.`;
     }
 
-    return `Generate data stores for a general roleplay scenario. Consider what trackers would be useful.`;
+    return `Generate data stores for a general roleplay scenario. Consider what trackers would be useful.
+
+**IMPORTANT**:
+- YOU MUST use the add_data_stores tool to create the stores. Do NOT just describe them in text.
+- Generate MAXIMUM 8 data stores (recommended: 4-6). Focus on the most important trackers only.
+- Call add_data_stores with ALL stores in a single call.
+
+Now use the add_data_stores tool to create the data stores.`;
   };
 
   const userMessage = buildUserMessage();
@@ -453,10 +475,38 @@ export async function generateDataSchema({
       },
     });
 
+    // Log detailed response information
     logger.info("[DataSchemaBuilder] Response generated", {
-      text: result.text?.substring(0, 100),
-      toolCalls: result.steps?.flatMap(s => s.toolCalls).length || 0,
+      text: result.text?.substring(0, 200),
+      fullText: result.text,
       storesCreated: generatedStores.length,
+      totalSteps: result.steps?.length || 0,
+      usage: result.usage,
+      finishReason: result.finishReason,
+    });
+
+    // Log each step's details
+    result.steps?.forEach((step, idx) => {
+      logger.info(`[DataSchemaBuilder] Step ${idx + 1} details`, {
+        text: step.text?.substring(0, 200),
+        fullText: step.text,
+        toolCallsCount: step.toolCalls?.length || 0,
+        toolNames: step.toolCalls?.map(tc => tc.toolName) || [],
+        toolResults: step.toolResults?.map(tr => ({
+          toolName: tr.toolName,
+          // AI SDK v5: 'result' → 'output'
+          result: typeof (tr as any).output === 'string' ? (tr as any).output : JSON.stringify((tr as any).output),
+        })) || [],
+      });
+
+      // Log each tool call in detail
+      step.toolCalls?.forEach((toolCall, tcIdx) => {
+        logger.info(`[DataSchemaBuilder] Step ${idx + 1} Tool Call ${tcIdx + 1}`, {
+          toolName: toolCall.toolName,
+          // AI SDK v5: 'args' → 'input'
+          args: (toolCall as any).input,
+        });
+      });
     });
 
     return {

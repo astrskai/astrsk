@@ -24,6 +24,7 @@ import {
   buildUserPrompt,
 } from "./system-prompt";
 import { createWorkflowTools, TOOL_DESCRIPTIONS } from "./tools";
+import { generateSessionName } from "../session-name-generator";
 
 // ============================================================================
 // Helper: Get model from store settings
@@ -94,7 +95,7 @@ export async function generateWorkflow({
     onProgress?: (progress: WorkflowBuilderProgress) => void;
   };
   abortSignal?: AbortSignal;
-}): Promise<{ state: WorkflowState; text: string }> {
+}): Promise<{ state: WorkflowState; text: string; sessionName: string }> {
   const MAX_STEPS = 50;
   const startTime = performance.now();
 
@@ -172,31 +173,36 @@ export async function generateWorkflow({
     // GLM models require thinking to be disabled for tool calling
     const isGlmModel = modelInfo.modelId.toLowerCase().includes("glm");
 
-    const result = await generateText({
-      model: modelInfo.model,
-      messages,
-      tools,
-      stopWhen: stepCountIs(MAX_STEPS),
-      abortSignal,
-      ...(isGlmModel && {
-        providerOptions: {
-          zhipu: { thinking: { type: "disabled" } },
+    // Run workflow generation and session name generation in parallel
+    const [result, sessionName] = await Promise.all([
+      generateText({
+        model: modelInfo.model,
+        messages,
+        tools,
+        stopWhen: stepCountIs(MAX_STEPS),
+        abortSignal,
+        ...(isGlmModel && {
+          providerOptions: {
+            zhipu: { thinking: { type: "disabled" } },
+          },
+        }),
+        onStepFinish: ({ toolCalls, text }) => {
+          logger.info(`[WorkflowBuilder] Step completed`, {
+            toolCallCount: toolCalls?.length || 0,
+            toolNames: toolCalls?.map((tc) => tc.toolName) || [],
+            hasText: !!text,
+          });
         },
       }),
-      onStepFinish: ({ toolCalls, text }) => {
-        logger.info(`[WorkflowBuilder] Step completed`, {
-          toolCallCount: toolCalls?.length || 0,
-          toolNames: toolCalls?.map((tc) => tc.toolName) || [],
-          hasText: !!text,
-        });
-      },
-    });
+      generateSessionName(context.scenario || "New Session"),
+    ]);
 
     const totalTime = ((performance.now() - startTime) / 1000).toFixed(2);
     logger.info("[WorkflowBuilder] Configuration complete", {
       totalTime: `${totalTime}s`,
       agentCount: state.agents.size,
       dataStoreNodeCount: state.dataStoreNodes.size,
+      sessionName,
     });
 
     sendProgress("complete", "Workflow configuration complete!");
@@ -204,6 +210,7 @@ export async function generateWorkflow({
     return {
       state,
       text: result.text || "Workflow configured successfully.",
+      sessionName,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
