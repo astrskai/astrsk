@@ -1466,12 +1466,13 @@ async function generateTextOutput({
   // Extra headers and body for Astrsk Cloud LLM
   const jwt = useAppStore.getState().jwt;
   const devKey = import.meta.env.VITE_DEV_KEY;
+  const cloudLlmUrl = import.meta.env.VITE_CLOUD_LLM_URL;
   const astrskHeaders: Record<string, string> = {
     Authorization: `Bearer ${jwt}`,
     "x-astrsk-credit-log": JSON.stringify(creditLog),
   };
-  // Add x-dev-key header if available (for development environment)
-  if (devKey) {
+  // Add x-dev-key header only for localhost (development environment)
+  if (devKey && cloudLlmUrl && cloudLlmUrl.includes("localhost")) {
     astrskHeaders["x-dev-key"] = devKey;
   }
 
@@ -1671,12 +1672,13 @@ async function generateStructuredOutput({
   // Extra headers and body for Astrsk Cloud LLM
   const jwt = useAppStore.getState().jwt;
   const devKey = import.meta.env.VITE_DEV_KEY;
+  const cloudLlmUrl = import.meta.env.VITE_CLOUD_LLM_URL;
   const astrskHeaders: Record<string, string> = {
     Authorization: `Bearer ${jwt}`,
     "x-astrsk-credit-log": JSON.stringify(creditLog),
   };
-  // Add x-dev-key header if available (for development environment)
-  if (devKey) {
+  // Add x-dev-key header only for localhost (development environment)
+  if (devKey && cloudLlmUrl && cloudLlmUrl.includes("localhost")) {
     astrskHeaders["x-dev-key"] = devKey;
   }
 
