@@ -40,7 +40,7 @@ export class ListApiModel
     this.strategies = new Map();
     this.strategies.set(
       ApiSource.AstrskAi,
-      new ListAstrskaiModelStrategy(this.httpClient),
+      new ListAstrskaiModelStrategy(),
     );
     this.strategies.set(
       ApiSource.OpenAI,

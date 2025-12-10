@@ -74,17 +74,16 @@ import { getTokenizer } from "@/shared/lib/tokenizer/tokenizer";
 import { translate } from "@/shared/lib/translate-utils";
 
 // Model mapping configuration for automatic fallback
-// When using AstrskAi, format must be "ApiSource:modelId"
-// where ApiSource is a valid value from ApiSource enum that makeProvider can handle
+// When using AstrskAi, format must be "openai-compatible:modelId"
+// The modelId is what gets sent to the Cloud LLM backend
 const MODEL_TIER_MAPPING = {
-  [ModelTier.Light]: "openai-compatible:google/gemini-2.5-flash",
-  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat-v3.1",
+  [ModelTier.Light]: "openai-compatible:deepseek/deepseek-chat",
+  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat",
 } as const;
 
 // Display names for the fallback models
 const MODEL_DISPLAY_NAMES: Record<string, string> = {
-  "openai-compatible:google/gemini-2.5-flash": "Gemini 2.5 Flash",
-  "openai-compatible:deepseek/deepseek-chat-v3.1": "DeepSeek v3.1",
+  "openai-compatible:deepseek/deepseek-chat": "DeepSeek V3.2",
 };
 
 // Helper function to check if user is logged in
@@ -1381,19 +1380,15 @@ async function generateTextOutput({
   // Request by API source
   let provider;
   let parsedModelId = modelId;
+  let isAstrskAi = false;
   switch (apiConnection.source) {
-    // Route by model provider
+    // Astrsk Cloud LLM - unified /chat endpoint (OpenAI-compatible)
     case ApiSource.AstrskAi: {
+      isAstrskAi = true;
+      // Model ID format: "provider:modelId" (e.g., "openai-compatible:deepseek-ai/DeepSeek-V3.1")
       const modelIdSplitted = modelId.split(":");
-      const astrskSource = modelIdSplitted.at(0) as ApiSource;
       parsedModelId = modelIdSplitted.at(1) ?? modelId;
-      const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${astrskSource}`;
-      provider = makeProvider({
-        source: modelIdSplitted.at(0) as ApiSource,
-        apiKey: "DUMMY",
-        baseUrl: astrskBaseUrl,
-      });
-      break;
+      // Fall through to use makeProvider
     }
 
     // Request by AI SDK
@@ -1468,12 +1463,23 @@ async function generateTextOutput({
     ? model.provider.split(".").at(0)
     : undefined;
 
-  // Extra headers for astrsk
+  // Extra headers and body for Astrsk Cloud LLM
   const jwt = useAppStore.getState().jwt;
-  const headers = {
+  const devKey = import.meta.env.VITE_DEV_KEY;
+  const astrskHeaders: Record<string, string> = {
     Authorization: `Bearer ${jwt}`,
     "x-astrsk-credit-log": JSON.stringify(creditLog),
   };
+  // Add x-dev-key header if available (for development environment)
+  if (devKey) {
+    astrskHeaders["x-dev-key"] = devKey;
+  }
+
+  // Check if thinking should be enabled (if thinking_budget or reasoning_effort is set)
+  const thinkingBudget = parameters.get("thinking_budget");
+  const reasoningEffort = parameters.get("reasoning_effort");
+  const enableThinking = (thinkingBudget !== undefined && thinkingBudget !== null && thinkingBudget > 0) ||
+    (reasoningEffort !== undefined && reasoningEffort !== null && reasoningEffort !== "");
 
   // Request to LLM endpoint
   if (streaming) {
@@ -1496,8 +1502,9 @@ async function generateTextOutput({
       onError: (error) => {
         throw error.error;
       },
-      ...(apiConnection.source === ApiSource.AstrskAi && {
-        headers: headers,
+      ...(isAstrskAi && {
+        headers: astrskHeaders,
+        experimental_extraBody: { thinking: enableThinking },
       }),
     });
   } else {
@@ -1513,8 +1520,9 @@ async function generateTextOutput({
           },
         }
         : {}),
-      ...(apiConnection.source === ApiSource.AstrskAi && {
-        headers: headers,
+      ...(isAstrskAi && {
+        headers: astrskHeaders,
+        experimental_extraBody: { thinking: enableThinking },
       }),
     });
 
@@ -1565,20 +1573,15 @@ async function generateStructuredOutput({
   // Request by API source
   let provider;
   let parsedModelId = modelId;
+  let isAstrskAi = false;
   switch (apiConnection.source) {
-    // Route by model provider
+    // Astrsk Cloud LLM - unified /chat endpoint (OpenAI-compatible)
     case ApiSource.AstrskAi: {
+      isAstrskAi = true;
+      // Model ID format: "provider:modelId" (e.g., "openai-compatible:deepseek-ai/DeepSeek-V3.1")
       const modelIdSplitted = modelId.split(":");
-      const astrskSource = modelIdSplitted.at(0) as ApiSource;
       parsedModelId = modelIdSplitted.at(1) ?? modelId;
-      const astrskBaseUrl = `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/${astrskSource}`;
-      provider = makeProvider({
-        source: modelIdSplitted.at(0) as ApiSource,
-        apiKey: "DUMMY",
-        baseUrl: astrskBaseUrl,
-        isStructuredOutput: true,
-      });
-      break;
+      // Fall through to use makeProvider
     }
 
     // Request by AI SDK
@@ -1659,17 +1662,23 @@ async function generateStructuredOutput({
 
   // Determine structured output mode based on API connection and model name
   const mode = getStructuredOutputMode(apiConnection.source, parsedModelId);
+  logger.info(`[StructuredOutput] Determined mode for ${apiConnection.source} / ${parsedModelId}: ${mode}`);
 
   // Check if we should use generateText with tool fallback (for models like GLM or cached models)
   // GLM models don't support json_schema response_format, but support tool calling
   const useToolFallback = shouldUseToolFallback(apiConnection.source, parsedModelId);
 
-  // Extra headers for astrsk
+  // Extra headers and body for Astrsk Cloud LLM
   const jwt = useAppStore.getState().jwt;
-  const headers = {
+  const devKey = import.meta.env.VITE_DEV_KEY;
+  const astrskHeaders: Record<string, string> = {
     Authorization: `Bearer ${jwt}`,
     "x-astrsk-credit-log": JSON.stringify(creditLog),
   };
+  // Add x-dev-key header if available (for development environment)
+  if (devKey) {
+    astrskHeaders["x-dev-key"] = devKey;
+  }
 
   // Helper: Execute tool fallback approach (generateText with tool calling)
   const executeToolFallback = async () => {
@@ -1701,6 +1710,11 @@ async function generateStructuredOutput({
   if (useToolFallback) {
     return executeToolFallback();
   }
+  // Check if thinking should be enabled (if thinking_budget or reasoning_effort is set)
+  const thinkingBudget = parameters.get("thinking_budget");
+  const reasoningEffort = parameters.get("reasoning_effort");
+  const enableThinking = (thinkingBudget !== undefined && thinkingBudget !== null && thinkingBudget > 0) ||
+    (reasoningEffort !== undefined && reasoningEffort !== null && reasoningEffort !== "");
 
   // Check if provider supports tool calling (for fallback)
   const canUseFallback = providerSupportsToolCalling(apiConnection.source);
@@ -1731,8 +1745,9 @@ async function generateStructuredOutput({
         logger.error(`[StructuredOutput] streamObject error (mode: ${targetMode}):`, error);
         throw error.error;
       },
-      ...(apiConnection.source === ApiSource.AstrskAi && {
-        headers: headers,
+      ...(isAstrskAi && {
+        headers: astrskHeaders,
+        experimental_extraBody: { thinking: enableThinking },
       }),
     });
   };
@@ -1759,8 +1774,9 @@ async function generateStructuredOutput({
           },
         }
         : {}),
-      ...(apiConnection.source === ApiSource.AstrskAi && {
-        headers: headers,
+      ...(isAstrskAi && {
+        headers: astrskHeaders,
+        experimental_extraBody: { thinking: enableThinking },
       }),
     });
 

@@ -1,48 +1,50 @@
 import { Result } from "@/shared/core/result";
-import { HttpClient } from "@/shared/infra/http-client";
-import { formatFail } from "@/shared/lib/error-utils";
 
-import { ApiConnection, ApiSource } from "@/entities/api/domain/api-connection";
+import { ApiConnection } from "@/entities/api/domain/api-connection";
 import { ApiModel } from "@/entities/api/domain/api-model";
 import { ListApiModelStrategy } from "@/entities/api/usecases/list-api-model/list-api-model-strategy";
 
+// Hardcoded available models for Astrsk Cloud LLM
+const ASTRSK_CLOUD_MODELS = [
+  {
+    id: "openai-compatible:deepseek/deepseek-chat",
+    name: "DeepSeek Official (Default)",
+  },
+  {
+    id: "openai-compatible:deepseek-ai/DeepSeek-V3.1",
+    name: "DeepSeek V3.1 (Friendli)",
+  },
+  {
+    id: "openai-compatible:zai-org/GLM-4.6",
+    name: "GLM-4.6 (Friendli)",
+  },
+  {
+    id: "openai-compatible:glm-4.6",
+    name: "GLM-4.6 (Official API)",
+  },
+  {
+    id: "openai-compatible:byteplus/deepseek-v3-1",
+    name: "DeepSeek V3.1 (BytePlus)",
+  },
+  {
+    id: "openai-compatible:byteplus/oss-120b",
+    name: "OSS 120B (BytePlus)",
+  },
+];
+
 export class ListAstrskaiModelStrategy implements ListApiModelStrategy {
-  constructor(private httpClient: HttpClient) {}
-
   async listApiModel(
-    apiConnection: ApiConnection,
+    _apiConnection: ApiConnection,
   ): Promise<Result<ApiModel[]>> {
-    // TEMPORARY: Hide all astrsk models from users
-    // TODO: Remove this when ready to show astrsk models again
-    return Result.ok([]);
-
-    /* COMMENTED OUT - Original implementation
-    try {
-      // Request models
-      const response = await this.httpClient.get(
-        `${import.meta.env.VITE_CONVEX_SITE_URL}/serveModel/listServeModel`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      if (response.status !== 200) {
-        throw new Error("Failed to fetch model list");
-      }
-
-      // Parse response and return
-      return Result.ok(
-        response.data.map((model: any) =>
-          ApiModel.create({
-            id: `${model.provider}:${model.model_id}`,
-            name: model.model_name,
-          }).getValue(),
-        ),
-      );
-    } catch (error) {
-      return formatFail("Failed to list astrsk model", error);
-    }
-    */
+    // Always return hardcoded models - if the astrsk.ai connection exists,
+    // it means the provider is enabled. Runtime URL check happens in session-play-service.
+    return Result.ok(
+      ASTRSK_CLOUD_MODELS.map((model) =>
+        ApiModel.create({
+          id: model.id,
+          name: model.name,
+        }).getValue(),
+      ),
+    );
   }
 }

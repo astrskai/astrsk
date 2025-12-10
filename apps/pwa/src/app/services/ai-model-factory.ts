@@ -17,7 +17,7 @@ import {
   createOpenRouter,
   type OpenRouterProviderSettings,
 } from "@openrouter/ai-sdk-provider";
-import { type LanguageModel, generateText, tool } from "ai";
+import { type LanguageModel, generateText, streamText, tool } from "ai";
 import { merge } from "lodash-es";
 import { z } from "zod";
 import { JSONSchema7 } from "json-schema";
@@ -221,6 +221,32 @@ export function createProvider({
       break;
     }
 
+    case ApiSource.AstrskAi: {
+      // Astrsk Cloud LLM - uses environment variable for base URL
+      const astrskBaseUrl = import.meta.env.VITE_CLOUD_LLM_URL;
+      if (!astrskBaseUrl) {
+        throw new Error("VITE_CLOUD_LLM_URL is not configured");
+      }
+
+      // Create custom fetch wrapper to add x-dev-key header
+      const devKey = import.meta.env.VITE_DEV_KEY;
+      const baseFetch = getAISDKFetch();
+      const astrskFetch: typeof fetch = async (url, options) => {
+        const headers = new Headers(options?.headers);
+        if (devKey) {
+          headers.set("x-dev-key", devKey);
+        }
+        return baseFetch(url, { ...options, headers });
+      };
+
+      provider = createOpenAICompatible({
+        name: "astrsk-cloud",
+        baseURL: astrskBaseUrl,
+        fetch: astrskFetch,
+      });
+      break;
+    }
+
     case ApiSource.Anthropic:
       provider = createAnthropic({
         apiKey: apiKey,
@@ -399,6 +425,9 @@ export function getStructuredOutputMode(
   apiSource: ApiSource,
   modelId: string,
 ): "auto" | "json" | "tool" {
+  // Log input parameters for debugging
+  logger.info(`[StructuredOutput] getStructuredOutputMode called with apiSource: ${apiSource}, modelId: ${modelId}`);
+
   // Check for model-specific exceptions first
   const modelIdLower = modelId.toLowerCase();
 
@@ -406,6 +435,19 @@ export function getStructuredOutputMode(
   if (modelIdLower.includes("glm")) {
     logger.info(`[StructuredOutput] GLM model detected (${modelId}) - switching to tool mode`);
     return "tool";
+  }
+
+  // For AstrskAi: Friendli models need json mode, others support tool calling
+  // - Friendli models (deepseek-ai/*, zai-org/*): no tool calling, use json mode
+  // - BytePlus models (byteplus/*): supports tool calling, use tool mode
+  // - GLM Official (glm-4.6): supports tool calling, use tool mode
+  if (apiSource === ApiSource.AstrskAi) {
+    // Extract the model ID after "openai-compatible:" prefix if present
+    const parsedModelId = modelId.includes(":") ? modelId.split(":")[1] : modelId;
+    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
+    const mode = isFriendliModel ? "json" : "tool";
+    logger.info(`[StructuredOutput] AstrskAi model (${parsedModelId}) - using ${mode} mode`);
+    return mode;
   }
 
   // Provider-based mode selection
@@ -416,10 +458,12 @@ export function getStructuredOutputMode(
     apiSource === ApiSource.KoboldCPP ||
     apiSource === ApiSource.OpenAICompatible
   ) {
+    logger.info(`[StructuredOutput] Provider-based mode: json for ${apiSource}`);
     return "json";
   }
 
   // Default: let AI SDK automatically select the best mode
+  logger.info(`[StructuredOutput] Using default auto mode for ${apiSource}`);
   return "auto";
 }
 
@@ -442,6 +486,19 @@ export function shouldUseToolFallback(apiSource: ApiSource, modelId: string): bo
   if (modelIdLower.includes("glm")) {
     logger.info(`[StructuredOutput] GLM model detected (${modelId}) - using generateText with tool fallback`);
     return true;
+  }
+
+  // AstrskAi: All models that use "tool" mode need fallback (backend issue)
+  // Only Friendli models (deepseek-ai/*, zai-org/*) use "json" mode and don't need fallback
+  if (apiSource === ApiSource.AstrskAi) {
+    const parsedModelId = modelId.includes(":") ? modelId.split(":")[1] : modelId;
+    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
+
+    // If NOT Friendli, use tool fallback
+    if (!isFriendliModel) {
+      logger.info(`[StructuredOutput] AstrskAi non-Friendli model detected (${parsedModelId}) - using generateText with tool fallback`);
+      return true;
+    }
   }
 
   // Check dynamic cache for models that previously failed with json_schema errors
