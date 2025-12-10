@@ -38,7 +38,7 @@ const STYLES = {
     secondary: "text-neutral-400",
     required: "text-accent-purple ml-1",
     small: "mt-1 text-xs",
-    caption: "mt-1 pl-2 text-xs",
+    caption: "mt-1 pl-2 text-xs text-neutral-300",
   },
 } as const;
 
@@ -96,9 +96,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 
       adjustHeight();
       textarea.addEventListener("input", adjustHeight);
+      textarea.addEventListener("focus", adjustHeight);
 
       return () => {
         textarea.removeEventListener("input", adjustHeight);
+        textarea.removeEventListener("focus", adjustHeight);
       };
     }, [autoResize, props.value]);
 

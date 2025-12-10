@@ -117,7 +117,8 @@ function buildCharacterBadges(
               label: "AI",
               variant: "default" as const,
               position: "right" as const,
-              className: "border-purple-500/30 bg-purple-950/50 text-purple-300",
+              className:
+                "border-purple-500/30 bg-purple-950/50 text-purple-300",
             },
           ]
         : []),
@@ -444,6 +445,12 @@ export function CastStep({
       ) !== "true",
   );
   const abortControllerRef = useRef<AbortController | null>(null);
+  const onChatMessagesChangeRef = useRef(onChatMessagesChange);
+
+  // Keep ref in sync with prop
+  useEffect(() => {
+    onChatMessagesChangeRef.current = onChatMessagesChange;
+  }, [onChatMessagesChange]);
 
   // Flying trail animation state
   const [flyingTrails, setFlyingTrails] = useState<FlyingTrail[]>([]);
@@ -531,14 +538,18 @@ export function CastStep({
         content: "",
         step: "cast",
       };
-      onChatMessagesChange?.([...chatMessages, welcomeMessage]);
+      // Prepend welcome message to existing messages (from other steps)
+      // Use ref to get current messages without stale closure
+      const currentMessages = chatMessages.filter((m) => m.step !== "cast");
+      onChatMessagesChangeRef.current?.([...currentMessages, welcomeMessage]);
 
       // Start typing effect
       startWelcomeTyping(WELCOME_MESSAGE_CONTENT);
     }, 1500); // Show typing indicator for 1.5 seconds
 
     return () => clearTimeout(typingTimer);
-  }, []); // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run on mount, uses ref for callback
+  }, []);
 
   // Show all messages, apply streaming text to welcome message if typing
   const displayMessages = useMemo(() => {
@@ -632,7 +643,10 @@ export function CastStep({
       }
     } catch (error) {
       // Check if this was an abort - don't show error for user-initiated abort
-      if ((error as Error).name === "AbortError" || abortControllerRef.current?.signal.aborted) {
+      if (
+        (error as Error).name === "AbortError" ||
+        abortControllerRef.current?.signal.aborted
+      ) {
         logger.info("[CastStep] Character generation aborted");
         return;
       } else {
@@ -943,14 +957,12 @@ export function CastStep({
                     size={14}
                     className="mt-0.5 flex-shrink-0 text-blue-400"
                   />
-                  <p className="flex-1 text-[11px] leading-relaxed text-zinc-400">
-                    Browsing{" "}
-                    <span className="font-semibold text-blue-300">
-                      Global Assets
-                    </span>
-                    . New characters are{" "}
-                    <span className="font-semibold text-amber-300">Local</span>{" "}
-                    to this scenario.
+                  <p className="flex-1 text-[11px] leading-relaxed text-blue-300">
+                    <span className="font-semibold">LIBRARY</span>{" "}
+                    characters are read-only templates. To customize one, use{" "}
+                    <span className="inline-block rounded border border-blue-500/30 bg-blue-950/50 px-1 text-[11px] font-semibold text-blue-300">Clone to Edit</span>.{" "}
+                    <span className="font-semibold text-amber-300">SESSION</span>{" "}
+                    characters are fully editable.
                   </p>
                   <button
                     onClick={handleDismissInfoBanner}
@@ -1154,14 +1166,6 @@ export function CastStep({
                 <label className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
                   <User size={12} /> User Persona
                 </label>
-                {playerCharacter && (
-                  <button
-                    onClick={handleRemovePlayer}
-                    className="text-[10px] text-red-400 transition-colors hover:text-red-300"
-                  >
-                    DISMISS
-                  </button>
-                )}
               </div>
 
               <AnimatePresence mode="wait">
@@ -1203,6 +1207,12 @@ export function CastStep({
                           )}
                         </div>
                       </div>
+                      <button
+                        onClick={handleRemovePlayer}
+                        className="rounded-lg p-1.5 text-zinc-500 transition-all hover:bg-red-500/10 hover:text-rose-400 md:opacity-0 md:group-hover:opacity-100"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
                   </motion.div>
                 ) : (

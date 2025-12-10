@@ -46,7 +46,12 @@ import {
   type WorkflowState,
   ModelTier,
 } from "@/app/services/system-agents/workflow-builder";
-import type { TemplateSelectionResult } from "./ui/create/stats-step";
+import {
+  generateDataSchema as generateDataSchemaAI,
+  type DataSchemaContext,
+  type DataSchemaEntry,
+} from "@/app/services/system-agents";
+import type { TemplateSelectionResult, DataStoreType } from "./ui/create/stats-step";
 import { Sparkles, Loader2 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 
@@ -115,9 +120,9 @@ Ground Rules:`;
 
   // Stats state
   const [statsDataStores, setStatsDataStores] = useState<StatsDataStore[]>([]);
-  const [isHudGenerating, setIsHudGenerating] = useState(false);
-  // Track if HUD generation has been attempted (persists across step navigation)
-  const [hasAttemptedHudGeneration, setHasAttemptedHudGeneration] =
+  const [isStatsGenerating, setIsStatsGenerating] = useState(false);
+  // Track if stats generation has been attempted (persists across step navigation)
+  const [hasAttemptedStatsGeneration, setHasAttemptedStatsGeneration] =
     useState(false);
   // Selected flow template from HUD step (determined by AI based on scenario)
   const [selectedFlowTemplate, setSelectedFlowTemplate] =
@@ -133,6 +138,10 @@ Ground Rules:`;
     useRef<Promise<WorkflowState | null> | null>(null);
   // Show waiting dialog only when user tries to create session and workflow is still generating
   const [isWaitingForWorkflow, setIsWaitingForWorkflow] = useState(false);
+
+  // Stats generation refs (for abort control and incremental updates)
+  const statsAbortControllerRef = useRef<AbortController | null>(null);
+  const generatingStoresRef = useRef<StatsDataStore[]>([]);
 
   const selectSession = useSessionStore.use.selectSession();
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -280,6 +289,192 @@ Ground Rules:`;
       }
     }
   };
+
+  // Simple template constant (only template available)
+  const SIMPLE_TEMPLATE: TemplateSelectionResult = {
+    templateName: "Simple",
+    filename: "Simple_vf.json",
+    reason: "Default template",
+  };
+
+  // Helper: Convert flow template field to StatsDataStore
+  const templateFieldToStatsDataStore = useCallback(
+    (field: {
+      id: string;
+      name: string;
+      type: string;
+      initialValue?: string;
+    }): StatsDataStore => {
+      let type: DataStoreType = "string";
+      if (field.type === "integer") type = "integer";
+      else if (field.type === "number") type = "number";
+      else if (field.type === "boolean") type = "boolean";
+
+      let initial: number | boolean | string = "";
+      if (type === "integer") initial = parseInt(field.initialValue || "0", 10) || 0;
+      else if (type === "number") initial = parseFloat(field.initialValue || "0") || 0;
+      else if (type === "boolean") initial = field.initialValue === "true";
+      else initial = field.initialValue || "";
+
+      return {
+        id: field.id,
+        name: field.name,
+        type,
+        description: `From ${selectedFlowTemplate?.templateName || "template"} template`,
+        initial,
+        isFromTemplate: true,
+      };
+    },
+    [selectedFlowTemplate?.templateName],
+  );
+
+  // Helper: Convert DataSchemaEntry to StatsDataStore
+  const dataSchemaEntryToStatsDataStore = useCallback(
+    (entry: DataSchemaEntry): StatsDataStore => ({
+      id: entry.id,
+      name: entry.name,
+      type: entry.type,
+      description: entry.description,
+      initial: entry.initial,
+      min: entry.min,
+      max: entry.max,
+    }),
+    [],
+  );
+
+  // Generate stats data stores from scenario
+  // Called when transitioning from Scenario → Cast step
+  const handleGenerateStats = useCallback(async () => {
+    // Skip if already generating or already attempted
+    if (isStatsGenerating || hasAttemptedStatsGeneration) return;
+
+    setIsStatsGenerating(true);
+
+    // Cancel any previous request
+    if (statsAbortControllerRef.current) {
+      statsAbortControllerRef.current.abort();
+    }
+    statsAbortControllerRef.current = new AbortController();
+
+    // Clear existing stores
+    generatingStoresRef.current = [];
+    setStatsDataStores([]);
+
+    try {
+      const scenario = scenarioBackground;
+
+      // Step 1: Use Simple template
+      logger.info("[CreateSession] Starting stats generation with Simple template");
+      setSelectedFlowTemplate(SIMPLE_TEMPLATE);
+
+      // Step 2: Load template and extract dataStoreSchema fields
+      const response = await fetch(`/default/flow/${SIMPLE_TEMPLATE.filename}`);
+      if (!response.ok) {
+        throw new Error(`Failed to load flow template: ${SIMPLE_TEMPLATE.filename}`);
+      }
+      const templateJson = await response.json();
+
+      // Extract responseTemplate from template
+      if (templateJson.responseTemplate && typeof templateJson.responseTemplate === "string") {
+        setFlowResponseTemplate(templateJson.responseTemplate);
+      }
+
+      // Extract dataStoreSchema fields from template
+      const templateFields: StatsDataStore[] = [];
+      if (templateJson.dataStoreSchema?.fields && Array.isArray(templateJson.dataStoreSchema.fields)) {
+        for (const field of templateJson.dataStoreSchema.fields) {
+          const statsStore = templateFieldToStatsDataStore(field);
+          templateFields.push(statsStore);
+        }
+      }
+
+      // Add template fields immediately
+      if (templateFields.length > 0) {
+        generatingStoresRef.current = [...templateFields];
+        setStatsDataStores(generatingStoresRef.current);
+
+        toastSuccess(`Using ${SIMPLE_TEMPLATE.templateName} template`, {
+          description: `Loaded ${templateFields.length} pre-defined variables`,
+        });
+      }
+
+      // Step 3: Generate additional fields using AI (if scenario is substantial)
+      // Minimum length for AI to generate meaningful data schema
+      const MIN_SCENARIO_LENGTH_FOR_AI_STATS = 200;
+      if (scenario.length >= MIN_SCENARIO_LENGTH_FOR_AI_STATS) {
+        const context: DataSchemaContext = { scenario };
+
+        // Convert template fields for AI context
+        const existingStores: DataSchemaEntry[] = templateFields.map((store) => ({
+          id: store.id,
+          name: store.name,
+          type: store.type,
+          description: store.description,
+          initial: store.initial,
+          min: store.min,
+          max: store.max,
+        }));
+
+        const MAX_TOTAL_STORES = 10;
+
+        await generateDataSchemaAI({
+          context,
+          currentStores: existingStores,
+          callbacks: {
+            onAddStore: (store) => {
+              // Check if aborted before adding
+              if (statsAbortControllerRef.current?.signal.aborted) return;
+              if (generatingStoresRef.current.length >= MAX_TOTAL_STORES) {
+                statsAbortControllerRef.current?.abort();
+                return;
+              }
+              const statsStore = dataSchemaEntryToStatsDataStore(store);
+              generatingStoresRef.current = [...generatingStoresRef.current, statsStore];
+              setStatsDataStores(generatingStoresRef.current);
+            },
+            onRemoveStore: () => {},
+            onClearAll: () => {},
+          },
+          abortSignal: statsAbortControllerRef.current.signal,
+        });
+      }
+
+      logger.info("[CreateSession] Stats generation complete", {
+        count: generatingStoresRef.current.length,
+      });
+
+      // Mark as attempted only on successful completion
+      setHasAttemptedStatsGeneration(true);
+    } catch (e) {
+      if ((e as Error).name === "AbortError") {
+        logger.info("[CreateSession] Stats generation aborted");
+        // Don't mark as attempted on abort - allow retry
+        return;
+      }
+      logger.error("[CreateSession] Stats generation failed", e);
+      toastError("Failed to generate data schema", {
+        description: e instanceof Error ? e.message : "An unknown error occurred",
+      });
+      // Don't mark as attempted on error - allow retry by navigating back and forward
+    } finally {
+      setIsStatsGenerating(false);
+    }
+  }, [
+    isStatsGenerating,
+    hasAttemptedStatsGeneration,
+    scenarioBackground,
+    templateFieldToStatsDataStore,
+    dataSchemaEntryToStatsDataStore,
+  ]);
+
+  // Stop stats generation
+  const handleStopStatsGeneration = useCallback(() => {
+    if (statsAbortControllerRef.current) {
+      statsAbortControllerRef.current.abort();
+      statsAbortControllerRef.current = null;
+    }
+    setIsStatsGenerating(false);
+  }, []);
 
   // Generate workflow handler (separate from session creation for testing)
   // Returns a promise that resolves when workflow is generated
@@ -461,9 +656,9 @@ Ground Rules:`;
       return;
     }
 
-    // Wait for workflow generation if still in progress
+    // Wait for workflow generation if still in progress or just started
     let workflowToUse = generatedWorkflow;
-    if (isWorkflowGenerating && workflowGenerationPromiseRef.current) {
+    if (workflowGenerationPromiseRef.current && !generatedWorkflow) {
       setIsWaitingForWorkflow(true);
       workflowToUse = await workflowGenerationPromiseRef.current;
       setIsWaitingForWorkflow(false);
@@ -813,50 +1008,75 @@ Ground Rules:`;
 
     const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
 
-    // When leaving HUD step, start workflow generation in background
-    if (
-      currentStep === "stats" &&
-      statsDataStores.length > 0 &&
-      !generatedWorkflow &&
-      !isWorkflowGenerating
-    ) {
-      // Start workflow generation (don't await - runs in background)
-      const promise = handleGenerateWorkflow();
-      workflowGenerationPromiseRef.current = promise;
+    // When leaving Scenario step, start stats generation in background
+    // New step order: Scenario → Cast → Stats
+    if (currentStep === "scenario" && !hasAttemptedStatsGeneration && !isStatsGenerating) {
+      // Start stats generation (don't await - runs in background)
+      handleGenerateStats();
+    }
+
+    // When on last step (Stats), start workflow generation and then finish
+    if (currentStep === "stats") {
+      // Start workflow generation if needed, then finish
+      if (statsDataStores.length > 0 && !generatedWorkflow && !isWorkflowGenerating) {
+        // Start workflow generation and store promise immediately (avoid race condition)
+        workflowGenerationPromiseRef.current = handleGenerateWorkflow();
+      }
+      // handleFinish will await the workflow generation if in progress
+      handleFinish();
+      return;
     }
 
     if (currentIndex < SESSION_STEPS.length - 1) {
-      setCurrentStep(SESSION_STEPS[currentIndex + 1].id as SessionStep);
+      const nextIndex = currentIndex + 1;
+      setCurrentStep(SESSION_STEPS[nextIndex].id as SessionStep);
       // Reset mobile tab to library when moving to a new step
       if (isMobile) {
         setMobileCastTab("library");
       }
-    } else {
-      // Last step (cast) - finish and create session
-      // Player character is optional, proceed directly
-      handleFinish();
     }
   };
 
   // Minimum scenario description length required to proceed
   const MIN_SCENARIO_LENGTH = 400;
 
+  // Step requirement validation functions
+  // Returns true if the step's requirements are met
+  const isStepComplete = useCallback(
+    (stepId: SessionStep): boolean => {
+      switch (stepId) {
+        case "scenario":
+          // Scenario step: requires minimum 400 characters
+          return scenarioBackground.trim().length >= MIN_SCENARIO_LENGTH;
+        case "cast":
+          // Cast step: needs at least one character (player or AI)
+          return playerCharacter !== null || aiCharacters.length > 0;
+        case "stats":
+          // Stats step: optional, always complete
+          return true;
+        default:
+          return false;
+      }
+    },
+    [scenarioBackground, playerCharacter, aiCharacters],
+  );
+
+  // Calculate which steps are accessible (all previous steps must be complete)
+  // Returns array of step indices that can be navigated to
+  const getAccessibleStepIndex = useCallback((): number => {
+    // Always can access step 0 (Scenario)
+    // Can access step N only if steps 0 to N-1 are all complete
+    for (let i = 0; i < SESSION_STEPS.length; i++) {
+      if (!isStepComplete(SESSION_STEPS[i].id)) {
+        return i; // Can only access up to this step (inclusive)
+      }
+    }
+    return SESSION_STEPS.length - 1; // All steps complete
+  }, [isStepComplete]);
+
   // Determine when Next button should be enabled based on current step
-  const canProceed = (() => {
-    if (currentStep === "scenario") {
-      // Scenario step: requires minimum 400 characters
-      return scenarioBackground.trim().length >= MIN_SCENARIO_LENGTH;
-    }
-
-    if (currentStep === "stats") {
-      // Stats step is optional
-      return true;
-    }
-
-    // Cast step: needs at least one character (player or AI)
-    // If no player character, user will be prompted with confirmation dialog
-    return playerCharacter !== null || aiCharacters.length > 0;
-  })();
+  // Step order: Scenario → Cast → Stats
+  const canProceed = isStepComplete(currentStep);
 
   // Show Previous button only from 2nd step onwards
   const currentStepIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
@@ -905,6 +1125,13 @@ Ground Rules:`;
             <h1 className="text-fg-default text-sm font-semibold">
               {SESSION_STEPS.find((s) => s.id === currentStep)?.label}
             </h1>
+            {/* Stats generation indicator for mobile */}
+            {isStatsGenerating && currentStep !== "stats" && (
+              <div className="flex items-center gap-1 text-[10px] text-brand-400">
+                <Loader2 size={10} className="animate-spin" />
+                <span>Generating stats...</span>
+              </div>
+            )}
           </div>
 
           {/* Desktop: Previous + Next buttons */}
@@ -914,7 +1141,7 @@ Ground Rules:`;
                 variant="ghost"
                 size="sm"
                 onClick={handlePrevious}
-                disabled={isScenarioGenerating || isHudGenerating}
+                disabled={isScenarioGenerating}
                 icon={<ChevronLeft size={16} />}
               >
                 Previous
@@ -923,7 +1150,11 @@ Ground Rules:`;
             <Button
               size="sm"
               onClick={handleNext}
-              disabled={!canProceed || isScenarioGenerating || isHudGenerating}
+              disabled={
+                !canProceed ||
+                isScenarioGenerating ||
+                (currentStep === "stats" && isStatsGenerating)
+              }
               loading={isSaving || isWaitingForWorkflow}
             >
               {isLastStep ? "Create Session" : "Next"}
@@ -944,6 +1175,8 @@ Ground Rules:`;
         <SessionStepper
           currentStep={currentStep}
           onStepClick={setCurrentStep}
+          isStatsGenerating={isStatsGenerating}
+          maxAccessibleStepIndex={getAccessibleStepIndex()}
         />
 
         {/* Content */}
@@ -1028,10 +1261,11 @@ Ground Rules:`;
                     desc: l.desc,
                   })),
                 }}
-                isGenerating={isHudGenerating}
-                onIsGeneratingChange={setIsHudGenerating}
-                hasAttemptedGeneration={hasAttemptedHudGeneration}
-                onHasAttemptedGenerationChange={setHasAttemptedHudGeneration}
+                isGenerating={isStatsGenerating}
+                onIsGeneratingChange={setIsStatsGenerating}
+                hasAttemptedGeneration={hasAttemptedStatsGeneration}
+                onHasAttemptedGenerationChange={setHasAttemptedStatsGeneration}
+                onStopGeneration={handleStopStatsGeneration}
                 selectedTemplate={selectedFlowTemplate}
                 onSelectedTemplateChange={setSelectedFlowTemplate}
                 onResponseTemplateChange={setFlowResponseTemplate}
@@ -1053,7 +1287,7 @@ Ground Rules:`;
               <Button
                 variant="outline"
                 onClick={handlePrevious}
-                disabled={isScenarioGenerating || isHudGenerating}
+                disabled={isScenarioGenerating}
                 className="flex-1"
                 icon={<ChevronLeft size={16} />}
               >
@@ -1064,7 +1298,11 @@ Ground Rules:`;
             )}
             <Button
               onClick={handleNext}
-              disabled={!canProceed || isScenarioGenerating || isHudGenerating}
+              disabled={
+                !canProceed ||
+                isScenarioGenerating ||
+                (currentStep === "stats" && isStatsGenerating)
+              }
               loading={isSaving || isWaitingForWorkflow}
               className="flex-1"
             >
