@@ -81,7 +81,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const internalRef = useRef<HTMLTextAreaElement>(null);
 
     // Expose the internal ref to the parent via forwardRef
-    useImperativeHandle(ref, () => internalRef.current!);
+    // Note: internalRef.current is guaranteed to be set during commit phase when useImperativeHandle runs
+    useImperativeHandle(ref, () => internalRef.current!, []);
 
     // Auto-resize logic
     useEffect(() => {

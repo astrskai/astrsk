@@ -142,6 +142,16 @@ Ground Rules:`;
   // Stats generation refs (for abort control and incremental updates)
   const statsAbortControllerRef = useRef<AbortController | null>(null);
   const generatingStoresRef = useRef<StatsDataStore[]>([]);
+  // Refs to track stats generation state (avoids stale closure issues in useCallback)
+  const hasAttemptedStatsGenerationRef = useRef(false);
+  const isStatsGeneratingRef = useRef(false);
+  // Flag to distinguish user-initiated stop vs max-limit abort
+  const isUserStoppedRef = useRef(false);
+  // Ref to access latest scenarioBackground without triggering useCallback recreation
+  const scenarioBackgroundRef = useRef(scenarioBackground);
+  scenarioBackgroundRef.current = scenarioBackground;
+  // Ref to store handleGenerateStats function (avoids dependency chain issues)
+  const handleGenerateStatsRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   const selectSession = useSessionStore.use.selectSession();
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -272,24 +282,6 @@ Ground Rules:`;
     [],
   );
 
-  const handlePrevious = () => {
-    // On mobile, in cast step, if on roster tab -> go back to library tab first
-    const isMobile = window.innerWidth < 768; // md breakpoint
-    if (isMobile && currentStep === "cast" && mobileCastTab === "cast") {
-      setMobileCastTab("library");
-      return;
-    }
-
-    const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
-    if (currentIndex > 0) {
-      setCurrentStep(SESSION_STEPS[currentIndex - 1].id as SessionStep);
-      // Reset mobile tab to roster when going back (so Previous from Scenario goes to Roster)
-      if (isMobile) {
-        setMobileCastTab("cast");
-      }
-    }
-  };
-
   // Simple template constant (only template available)
   const SIMPLE_TEMPLATE: TemplateSelectionResult = {
     templateName: "Simple",
@@ -345,9 +337,16 @@ Ground Rules:`;
   // Generate stats data stores from scenario
   // Called when transitioning from Scenario → Cast step
   const handleGenerateStats = useCallback(async () => {
-    // Skip if already generating or already attempted
-    if (isStatsGenerating || hasAttemptedStatsGeneration) return;
+    // Skip if already generating or already attempted (use refs for immediate check)
+    if (isStatsGeneratingRef.current || hasAttemptedStatsGenerationRef.current) {
+      return;
+    }
 
+    // Mark as attempted IMMEDIATELY using refs to prevent duplicate calls
+    // This avoids stale closure issues with useCallback
+    hasAttemptedStatsGenerationRef.current = true;
+    isStatsGeneratingRef.current = true;
+    setHasAttemptedStatsGeneration(true);
     setIsStatsGenerating(true);
 
     // Cancel any previous request
@@ -361,7 +360,8 @@ Ground Rules:`;
     setStatsDataStores([]);
 
     try {
-      const scenario = scenarioBackground;
+      // Use ref to get latest value without causing useCallback recreation
+      const scenario = scenarioBackgroundRef.current;
 
       // Step 1: Use Simple template
       logger.info("[CreateSession] Starting stats generation with Simple template");
@@ -442,39 +442,102 @@ Ground Rules:`;
       logger.info("[CreateSession] Stats generation complete", {
         count: generatingStoresRef.current.length,
       });
-
-      // Mark as attempted only on successful completion
-      setHasAttemptedStatsGeneration(true);
+      // hasAttemptedStatsGeneration already set at start
     } catch (e) {
       if ((e as Error).name === "AbortError") {
-        logger.info("[CreateSession] Stats generation aborted");
-        // Don't mark as attempted on abort - allow retry
+        // Only reset hasAttemptedStatsGeneration if user explicitly stopped
+        // Max-limit abort is a successful completion, not a retry scenario
+        if (isUserStoppedRef.current) {
+          logger.info("[CreateSession] Stats generation stopped by user");
+          hasAttemptedStatsGenerationRef.current = false;
+          setHasAttemptedStatsGeneration(false);
+          isUserStoppedRef.current = false; // Reset flag
+        } else {
+          logger.info("[CreateSession] Stats generation completed (max limit)");
+        }
+        isStatsGeneratingRef.current = false;
+        setIsStatsGenerating(false);
         return;
       }
       logger.error("[CreateSession] Stats generation failed", e);
       toastError("Failed to generate data schema", {
         description: e instanceof Error ? e.message : "An unknown error occurred",
       });
-      // Don't mark as attempted on error - allow retry by navigating back and forward
+      // Reset flags on error - allow retry by navigating back and forward
+      hasAttemptedStatsGenerationRef.current = false;
+      isStatsGeneratingRef.current = false;
+      setHasAttemptedStatsGeneration(false);
+      setIsStatsGenerating(false);
     } finally {
+      isStatsGeneratingRef.current = false;
       setIsStatsGenerating(false);
     }
   }, [
-    isStatsGenerating,
-    hasAttemptedStatsGeneration,
-    scenarioBackground,
+    // Note: scenarioBackground removed from deps - using scenarioBackgroundRef instead
+    // This prevents function recreation when scenario text changes
     templateFieldToStatsDataStore,
     dataSchemaEntryToStatsDataStore,
   ]);
 
-  // Stop stats generation
+  // Keep ref updated to latest handleGenerateStats (avoids dependency chain in handleStepChange)
+  handleGenerateStatsRef.current = handleGenerateStats;
+
+  // Stop stats generation (user-initiated)
   const handleStopStatsGeneration = useCallback(() => {
     if (statsAbortControllerRef.current) {
+      // Mark as user-stopped so catch block knows to allow retry
+      isUserStoppedRef.current = true;
       statsAbortControllerRef.current.abort();
       statsAbortControllerRef.current = null;
     }
+    isStatsGeneratingRef.current = false;
     setIsStatsGenerating(false);
   }, []);
+
+  // Centralized step change handler - handles both Next button and Stepper clicks
+  // Ensures stats generation is triggered exactly once when leaving Scenario step
+  const handleStepChange = useCallback(
+    (targetStep: SessionStep) => {
+      const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
+      const targetIndex = SESSION_STEPS.findIndex((s) => s.id === targetStep);
+
+      // Don't navigate to the same step
+      if (currentStep === targetStep) return;
+
+      // When leaving Scenario step (going forward), trigger stats generation once
+      // Use ref for immediate check to avoid stale closure issues
+      if (
+        currentStep === "scenario" &&
+        targetIndex > currentIndex &&
+        !hasAttemptedStatsGenerationRef.current
+      ) {
+        // Call via ref to avoid dependency chain issues
+        handleGenerateStatsRef.current();
+      }
+
+      setCurrentStep(targetStep);
+    },
+    [currentStep], // handleGenerateStats removed - using ref instead
+  );
+
+  const handlePrevious = useCallback(() => {
+    // On mobile, in cast step, if on roster tab -> go back to library tab first
+    const isMobile = window.innerWidth < 768; // md breakpoint
+    if (isMobile && currentStep === "cast" && mobileCastTab === "cast") {
+      setMobileCastTab("library");
+      return;
+    }
+
+    const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
+    if (currentIndex > 0) {
+      const prevStep = SESSION_STEPS[currentIndex - 1].id as SessionStep;
+      handleStepChange(prevStep);
+      // Reset mobile tab to roster when going back (so Previous from Scenario goes to Roster)
+      if (isMobile) {
+        setMobileCastTab("cast");
+      }
+    }
+  }, [currentStep, mobileCastTab, handleStepChange]);
 
   // Generate workflow handler (separate from session creation for testing)
   // Returns a promise that resolves when workflow is generated
@@ -1008,13 +1071,6 @@ Ground Rules:`;
 
     const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
 
-    // When leaving Scenario step, start stats generation in background
-    // New step order: Scenario → Cast → Stats
-    if (currentStep === "scenario" && !hasAttemptedStatsGeneration && !isStatsGenerating) {
-      // Start stats generation (don't await - runs in background)
-      handleGenerateStats();
-    }
-
     // When on last step (Stats), start workflow generation and then finish
     if (currentStep === "stats") {
       // Start workflow generation if needed, then finish
@@ -1028,8 +1084,9 @@ Ground Rules:`;
     }
 
     if (currentIndex < SESSION_STEPS.length - 1) {
-      const nextIndex = currentIndex + 1;
-      setCurrentStep(SESSION_STEPS[nextIndex].id as SessionStep);
+      const nextStep = SESSION_STEPS[currentIndex + 1].id as SessionStep;
+      // Use centralized handler (triggers stats generation when leaving Scenario)
+      handleStepChange(nextStep);
       // Reset mobile tab to library when moving to a new step
       if (isMobile) {
         setMobileCastTab("library");
@@ -1062,9 +1119,14 @@ Ground Rules:`;
   );
 
   // Calculate which steps are accessible (all previous steps must be complete)
-  // Returns array of step indices that can be navigated to
+  // Returns the maximum step index that can be navigated to
+  // Also considers generating states to sync with Next button disabled conditions
   const getAccessibleStepIndex = useCallback((): number => {
-    // Always can access step 0 (Scenario)
+    // Block all navigation during scenario generation
+    if (isScenarioGenerating) {
+      return SESSION_STEPS.findIndex((s) => s.id === currentStep);
+    }
+
     // Can access step N only if steps 0 to N-1 are all complete
     for (let i = 0; i < SESSION_STEPS.length; i++) {
       if (!isStepComplete(SESSION_STEPS[i].id)) {
@@ -1072,7 +1134,7 @@ Ground Rules:`;
       }
     }
     return SESSION_STEPS.length - 1; // All steps complete
-  }, [isStepComplete]);
+  }, [isStepComplete, isScenarioGenerating, currentStep]);
 
   // Determine when Next button should be enabled based on current step
   // Step order: Scenario → Cast → Stats
@@ -1174,7 +1236,7 @@ Ground Rules:`;
         {/* Stepper */}
         <SessionStepper
           currentStep={currentStep}
-          onStepClick={setCurrentStep}
+          onStepClick={handleStepChange}
           isStatsGenerating={isStatsGenerating}
           maxAccessibleStepIndex={getAccessibleStepIndex()}
         />

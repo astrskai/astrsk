@@ -97,10 +97,11 @@ export function SessionStepper({
                       "border-border-default bg-surface-overlay text-fg-muted hover:border-brand-500/50",
                     // Locked: can't navigate yet (more visible locked state)
                     isLocked &&
+                      !showLoading &&
                       "border-zinc-700 bg-zinc-800/50 text-zinc-600",
-                    // Stats generating: special highlight
+                    // Stats generating: gray tone to distinguish from active (brand)
                     showLoading &&
-                      "border-brand-500/50 bg-brand-500/10 text-brand-400",
+                      "border-zinc-500/50 bg-zinc-500/10 text-zinc-400",
                   )}
                 >
                   {showLoading ? (
@@ -121,9 +122,9 @@ export function SessionStepper({
                     // Accessible: normal text
                     !isActive && !isCompleted && isAccessible && "text-fg-muted",
                     // Locked: more visible locked text
-                    isLocked && "text-zinc-600",
-                    // Stats generating: brand color
-                    showLoading && "text-brand-400",
+                    isLocked && !showLoading && "text-zinc-600",
+                    // Stats generating: gray tone to distinguish from active
+                    showLoading && "text-zinc-400",
                   )}
                 >
                   {step.label}
