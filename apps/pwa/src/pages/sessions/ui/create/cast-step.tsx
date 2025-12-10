@@ -1120,21 +1120,38 @@ export function CastStep({
         {/* Middle Panel: Character Library OR Edit Panel */}
         <div
           className={cn(
-            "flex min-w-0 flex-1 flex-col overflow-hidden border border-zinc-800 md:rounded-xl",
+            "relative flex min-w-0 flex-1 flex-col overflow-hidden border border-zinc-800 md:rounded-xl",
             mobileTab === "library" ? "flex" : "hidden md:flex",
           )}
         >
-          {editingCharacter ? (
-            /* Character Edit Panel - shown when editing a session character */
-            <CharacterEditPanel
-              character={editingCharacter}
-              onBack={() => setEditingCharacter(null)}
-              onSave={handleSaveEditedCharacter}
-            />
-          ) : (
-            /* Character Library - default view */
-            <>
-              <StepHeader
+          <AnimatePresence mode="popLayout" initial={false}>
+            {editingCharacter ? (
+              /* Character Edit Panel - shown when editing a session character */
+              <motion.div
+                key="edit-panel"
+                initial={{ x: "100%", opacity: 0.5 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: "100%", opacity: 0.5 }}
+                transition={{ type: "spring", stiffness: 500, damping: 35, mass: 0.8 }}
+                className="absolute inset-0 z-10 flex flex-col bg-zinc-950"
+              >
+                <CharacterEditPanel
+                  character={editingCharacter}
+                  onBack={() => setEditingCharacter(null)}
+                  onSave={handleSaveEditedCharacter}
+                />
+              </motion.div>
+            ) : (
+              /* Character Library - default view */
+              <motion.div
+                key="library-panel"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex h-full flex-col"
+              >
+                <StepHeader
                 icon={<LayoutGrid size={20} />}
                 title="Character Library"
                 subtitle="SELECT PERSONAS FOR SIMULATION"
@@ -1377,8 +1394,9 @@ export function CastStep({
                 </div>
               )}
             </div>
-          </>
-        )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Right Panel: Session Roster - border provides visual distinction */}
