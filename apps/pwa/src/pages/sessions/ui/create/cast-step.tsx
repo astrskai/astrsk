@@ -1937,6 +1937,16 @@ function CharacterEditPanel({
     );
   };
 
+  // Validate image URL to prevent XSS - only allow blob URLs and https URLs
+  const safeImageUrl = useMemo(() => {
+    if (!imageUrl) return null;
+    // Allow blob URLs (from createObjectURL) and https URLs only
+    if (imageUrl.startsWith("blob:") || imageUrl.startsWith("https://")) {
+      return imageUrl;
+    }
+    return null;
+  }, [imageUrl]);
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
@@ -1964,10 +1974,10 @@ function CharacterEditPanel({
         <div className="space-y-6">
           {/* Image Upload */}
           <div className="flex flex-col items-center">
-            {imageUrl ? (
+            {safeImageUrl ? (
               <div className="relative max-w-[160px]">
                 <img
-                  src={imageUrl}
+                  src={safeImageUrl}
                   alt={name || "Character"}
                   className="h-full w-full rounded-lg object-cover"
                 />
