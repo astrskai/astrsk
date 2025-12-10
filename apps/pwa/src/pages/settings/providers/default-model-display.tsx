@@ -42,11 +42,6 @@ const buildModelOptions = (
   for (const apiConnectionWithModels of apiConnectionsWithModels) {
     const { apiConnection, models } = apiConnectionWithModels;
 
-    // Skip AstrskAi from user selection
-    if (apiConnection.source === ApiSource.AstrskAi) {
-      continue;
-    }
-
     const providerLabel = apiSourceLabel.get(apiConnection.source) || "";
     const displayLabel =
       apiConnection.title && apiConnection.title !== apiConnection.source

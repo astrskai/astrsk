@@ -18,11 +18,20 @@ import { logger } from "@/shared/lib";
  * Character data structure for creation
  */
 export interface CharacterData {
+  id?: string; // ID for locally created characters that can be edited
   name: string;
   description: string;
   tags?: string[];
   cardSummary?: string;
   exampleDialogue?: string;
+}
+
+/**
+ * Scenario context for character generation
+ */
+export interface ScenarioContext {
+  background?: string;
+  firstMessages?: Array<{ title: string; content: string }>;
 }
 
 /**
@@ -34,10 +43,44 @@ interface CreateCharacterResult {
   message: string;
 }
 
+interface UpdateCharacterResult {
+  success: boolean;
+  message: string;
+}
+
+interface QueryCharacterResult {
+  success: boolean;
+  character?: CharacterData;
+  message: string;
+}
+
 /**
- * Build system prompt for character generation
+ * Build system prompt for character generation with scenario context
  */
-function buildSystemPrompt(): string {
+function buildSystemPrompt(scenarioContext: ScenarioContext, currentCharacters: CharacterData[]): string {
+  let contextSection = "";
+
+  // Add scenario context if available
+  if (scenarioContext.background && scenarioContext.background.trim()) {
+    contextSection += `\n\n## Scenario Context:\n${scenarioContext.background.substring(0, 500)}${scenarioContext.background.length > 500 ? "..." : ""}`;
+  }
+
+  if (scenarioContext.firstMessages && scenarioContext.firstMessages.length > 0) {
+    contextSection += `\n\n## Starting Situations:`;
+    scenarioContext.firstMessages.slice(0, 3).forEach((msg, i) => {
+      contextSection += `\n${i + 1}. "${msg.title}": ${msg.content.substring(0, 100)}${msg.content.length > 100 ? "..." : ""}`;
+    });
+  }
+
+  // Add current characters list (IDs and names only - use query tool for details)
+  if (currentCharacters.length > 0) {
+    contextSection += `\n\n## Current Characters (${currentCharacters.length}):`;
+    currentCharacters.forEach((char, i) => {
+      const idInfo = char.id ? ` - ID: \`${char.id}\`` : "";
+      contextSection += `\n${i + 1}${idInfo} - "${char.name}"`;
+    });
+  }
+
   return `You are a creative character builder assistant for roleplay and storytelling.
 
 ## Your Role:
@@ -60,6 +103,11 @@ Immediately create a complete character using the create_character tool.
 - "A kind grandmother who secretly fights crime" → Enough! Create it.
 - "Create a character" → Too vague, ask what type/personality.
 - "Someone cool" → Too vague, ask for more details.
+
+## Your Tools:
+1. **query_character_details** - Get full details of a character by ID (description, tags, etc.)
+2. **create_character** - Create a new character with specified details
+3. **update_character** - Update an existing character's details (name, description, tags, summary, dialogue)
 
 ## Character Creation Guidelines:
 
@@ -88,19 +136,54 @@ Immediately create a complete character using the create_character tool.
 - Format: "Character Name: Dialogue here"
 - Show their personality through speech patterns
 
+## Querying Character Details:
+When you need to see full details of a character (to edit):
+- Use **query_character_details** with the character's ID
+- This returns: name, description, tags, cardSummary, exampleDialogue
+
+## Editing vs. Creating:
+When the user asks to modify an existing character:
+- First use **query_character_details** to see current state
+- Use **update_character** with the existing character's ID (shown in Current Characters list)
+- DO NOT create duplicates - always update existing characters when asked to edit them
+
 ## After creating:
-Briefly summarize the character and ask if they want any changes.`;
+Briefly summarize the character and ask if they want any changes.${contextSection}`;
 }
 
 /**
  * Create character builder tools with callbacks
  */
 function createCharacterTools(
+  currentCharacters: CharacterData[],
   callbacks: {
     onCreateCharacter: (character: CharacterData) => void;
+    onUpdateCharacter: (id: string, updates: Partial<CharacterData>) => void;
   },
 ) {
   return {
+    query_character_details: tool({
+      description: "Get full details of a character by ID. Use this to see the complete character before editing or adding lorebook entries.",
+      inputSchema: z.object({
+        id: z.string().describe("The ID of the character to query"),
+      }),
+      execute: async ({ id }): Promise<QueryCharacterResult> => {
+        const character = currentCharacters.find((c) => c.id === id);
+        if (!character) {
+          return {
+            success: false,
+            message: `Character with ID "${id}" not found.`,
+          };
+        }
+
+        return {
+          success: true,
+          character,
+          message: `Retrieved details for "${character.name}".`,
+        };
+      },
+    }),
+
     create_character: tool({
       description: "Create a new character with the specified details. Use this when you have enough information to generate a complete character.",
       inputSchema: z.object({
@@ -112,6 +195,7 @@ function createCharacterTools(
       }),
       execute: async ({ name, description, tags, cardSummary, exampleDialogue }): Promise<CreateCharacterResult> => {
         const character: CharacterData = {
+          id: crypto.randomUUID(), // Generate ID for locally created character
           name,
           description,
           tags,
@@ -125,6 +209,40 @@ function createCharacterTools(
           success: true,
           character,
           message: `Character "${name}" has been created.`,
+        };
+      },
+    }),
+
+    update_character: tool({
+      description: "Update an existing locally-created character by ID. Use this to edit a character's details instead of creating a duplicate.",
+      inputSchema: z.object({
+        id: z.string().describe("The ID of the character to update"),
+        name: z.string().optional().describe("New name for the character (leave empty to keep current)"),
+        description: z.string().optional().describe("New description (leave empty to keep current)"),
+        tags: z.array(z.string()).optional().describe("New tags (leave empty to keep current)"),
+        cardSummary: z.string().optional().describe("New summary (leave empty to keep current)"),
+        exampleDialogue: z.string().optional().describe("New example dialogue (leave empty to keep current)"),
+      }),
+      execute: async ({ id, name, description, tags, cardSummary, exampleDialogue }): Promise<UpdateCharacterResult> => {
+        const character = currentCharacters.find((c) => c.id === id);
+        if (!character) {
+          return {
+            success: false,
+            message: `Character with ID "${id}" not found.`,
+          };
+        }
+
+        const updates: Partial<CharacterData> = {};
+        if (name !== undefined) updates.name = name;
+        if (description !== undefined) updates.description = description;
+        if (tags !== undefined) updates.tags = tags;
+        if (cardSummary !== undefined) updates.cardSummary = cardSummary;
+        if (exampleDialogue !== undefined) updates.exampleDialogue = exampleDialogue;
+
+        callbacks.onUpdateCharacter(id, updates);
+        return {
+          success: true,
+          message: `Character "${character.name}" has been updated.`,
         };
       },
     }),
@@ -144,12 +262,17 @@ export interface CharacterBuilderMessage {
  */
 export async function generateCharacterResponse({
   messages,
+  scenarioContext = {},
+  currentCharacters = [],
   callbacks,
   abortSignal,
 }: {
   messages: CharacterBuilderMessage[];
+  scenarioContext?: ScenarioContext;
+  currentCharacters?: CharacterData[];
   callbacks: {
     onCreateCharacter: (character: CharacterData) => void;
+    onUpdateCharacter: (id: string, updates: Partial<CharacterData>) => void;
   };
   abortSignal?: AbortSignal;
 }): Promise<{ text: string; toolResults: unknown[] }> {
@@ -185,10 +308,10 @@ export async function generateCharacterResponse({
   );
 
   // Create tools
-  const tools = createCharacterTools(callbacks);
+  const tools = createCharacterTools(currentCharacters, callbacks);
 
   // Format messages for AI SDK
-  const systemPrompt = buildSystemPrompt();
+  const systemPrompt = buildSystemPrompt(scenarioContext, currentCharacters);
   const formattedMessages = [
     { role: "system" as const, content: systemPrompt },
     ...messages.map((msg) => ({

@@ -10,8 +10,10 @@
 import { tool } from "ai";
 import { z } from "zod";
 
+import { NodeType } from "@/entities/flow/model/node-types";
 import { SchemaFieldType, type SchemaField } from "@/entities/agent/domain/agent";
 import { variableList, VariableGroup } from "@/shared/prompt/domain/variable";
+import { TemplateRenderer } from "@/shared/lib/template-renderer";
 
 import {
   type WorkflowBuilderContext,
@@ -32,6 +34,7 @@ export const TOOL_DESCRIPTIONS: Record<string, string> = {
   upsert_prompt_messages: "Configuring prompt messages",
   upsert_output_fields: "Configuring output fields",
   update_data_store_node_fields: "Configuring data store fields",
+  mock_render_workflow: "Testing workflow rendering with mock values",
 };
 
 export function createWorkflowTools(
@@ -475,6 +478,275 @@ export function createWorkflowTools(
             agentOutputs: agentOutputVariables.length,
             builtIn: builtInVariables.length,
           },
+        };
+      },
+    }),
+
+
+    mock_render_workflow: tool({
+      description: "Test all workflow templates (agent prompts, data store logic) with mock values to catch rendering errors before the workflow runs. This validates Jinja syntax, variable references, and JavaScript expressions.",
+      inputSchema: z.object({
+        include_successful: z.boolean().optional().describe("Include successful renders in output (default: false, only shows errors)"),
+      }),
+      execute: async ({ include_successful }) => {
+        const results: Array<{
+          location: string;
+          template: string;
+          status: "success" | "error";
+          rendered?: string;
+          error?: string;
+        }> = [];
+
+        // Build mock context with sample values for all known variables
+        const mockCharacter = {
+          id: "mock-char-id",
+          name: "TestCharacter",
+          description: "A brave adventurer",
+          example_dialog: "<START>\n{{user}}: Hi\n{{char}}: Hello!",
+          entries: ["Character lore entry 1", "Character lore entry 2"],
+          personality: "Friendly and curious",
+          first_mes: "Hello there, traveler!",
+          mes_example: "<START>\n{{user}}: Hi\n{{char}}: Hello!",
+          creator_notes: "Test character for workflow validation",
+          system_prompt: "You are TestCharacter.",
+        };
+
+        const mockUser = {
+          id: "mock-user-id",
+          name: "TestUser",
+          description: "The player character",
+          persona: "A curious explorer",
+        };
+
+        const mockContext: Record<string, any> = {
+          char: mockCharacter,
+          user: mockUser,
+          cast: {
+            all: [mockCharacter, mockUser],
+            active: mockCharacter,
+          },
+          session: {
+            id: "mock-session-id",
+            scenario: "A test scenario in a fantasy world",
+          },
+          history_count: 5,
+          history: [
+            { char_id: "mock-char-id", char_name: "TestCharacter", content: "Hello, adventurer!", variables: {} },
+            { char_id: "mock-user-id", char_name: "TestUser", content: "Hi there!", variables: {} },
+            { char_id: "mock-char-id", char_name: "TestCharacter", content: "I'm looking for quests.", variables: {} },
+            { char_id: "mock-user-id", char_name: "TestUser", content: "I have just the thing!", variables: {} },
+            { char_id: "mock-char-id", char_name: "TestCharacter", content: "Tell me more.", variables: {} },
+          ],
+          response: "This is a mock model response for testing.",
+          now: new Date().toISOString(),
+          scenario: "A test scenario in a fantasy world",
+        };
+
+        // Add data store schema fields with mock values
+        for (const field of context.dataStoreSchema) {
+          const varName = toSnakeCase(field.name);
+          const initialValue = field.initial;
+          let mockValue: string | number | boolean;
+
+          switch (field.type) {
+            case "integer":
+              mockValue = initialValue !== undefined && initialValue !== ""
+                ? parseInt(String(initialValue))
+                : 50;
+              break;
+            case "number":
+              mockValue = initialValue !== undefined && initialValue !== ""
+                ? parseFloat(String(initialValue))
+                : 50.0;
+              break;
+            case "boolean":
+              mockValue = initialValue === "true" || initialValue === true;
+              break;
+            case "string":
+            default:
+              mockValue = initialValue !== undefined && initialValue !== ""
+                ? String(initialValue)
+                : `mock_${varName}`;
+              break;
+          }
+
+          mockContext[varName] = mockValue;
+        }
+
+        // Helper to execute JavaScript code safely
+        const executeJavaScriptCode = (code: string, ctx: Record<string, any>): unknown => {
+          try {
+            const contextKeys = Object.keys(ctx);
+            const contextValues = Object.values(ctx);
+            const func = new Function(...contextKeys, `"use strict"; return (${code})`);
+            return func(...contextValues);
+          } catch (error) {
+            throw new Error(`JavaScript execution failed: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        };
+
+        // Helper to generate mock agent output values
+        const generateMockAgentOutput = (agent: WorkflowAgent): Record<string, any> => {
+          const agentOutputs: Record<string, any> = {};
+          for (const field of agent.schemaFields) {
+            switch (field.type) {
+              case SchemaFieldType.Integer:
+                agentOutputs[field.name] = 10;
+                break;
+              case SchemaFieldType.Number:
+                agentOutputs[field.name] = 10.5;
+                break;
+              case SchemaFieldType.Boolean:
+                agentOutputs[field.name] = true;
+                break;
+              case SchemaFieldType.String:
+              default:
+                agentOutputs[field.name] = `mock_${field.name}`;
+                break;
+            }
+          }
+          return agentOutputs;
+        };
+
+        // Helper to try rendering a Jinja template
+        const tryRenderTemplate = (template: string, location: string): boolean => {
+          try {
+            const rendered = TemplateRenderer.render(template, mockContext);
+            results.push({
+              location,
+              template: template.length > 100 ? template.substring(0, 100) + "..." : template,
+              status: "success",
+              rendered: rendered.length > 200 ? rendered.substring(0, 200) + "..." : rendered,
+            });
+            return true;
+          } catch (error) {
+            results.push({
+              location,
+              template: template.length > 100 ? template.substring(0, 100) + "..." : template,
+              status: "error",
+              error: error instanceof Error ? error.message : String(error),
+            });
+            return false;
+          }
+        };
+
+        // Helper to try rendering data store logic (Jinja + optional JS execution)
+        const tryRenderDataStoreLogic = (logic: string, location: string): unknown => {
+          try {
+            const renderedValue = TemplateRenderer.render(logic, mockContext);
+            const jsOperatorPattern = /[+\-*/%<>=?:&|!]/;
+            const needsJsExecution = jsOperatorPattern.test(renderedValue);
+
+            let finalValue: unknown;
+            if (needsJsExecution) {
+              finalValue = executeJavaScriptCode(renderedValue, mockContext);
+            } else {
+              finalValue = renderedValue;
+            }
+
+            results.push({
+              location,
+              template: logic.length > 100 ? logic.substring(0, 100) + "..." : logic,
+              status: "success",
+              rendered: `${String(finalValue)}${needsJsExecution ? " (JS executed)" : ""}`,
+            });
+
+            return finalValue;
+          } catch (error) {
+            results.push({
+              location,
+              template: logic.length > 100 ? logic.substring(0, 100) + "..." : logic,
+              status: "error",
+              error: error instanceof Error ? error.message : String(error),
+            });
+            return undefined;
+          }
+        };
+
+        // Process all agents and data store nodes
+        let stepCounter = 0;
+
+        // Add agent outputs to context first
+        for (const agent of state.agents.values()) {
+          if (agent.enabledStructuredOutput && agent.schemaFields.length > 0) {
+            const agentSnakeName = toSnakeCase(agent.name);
+            mockContext[agentSnakeName] = generateMockAgentOutput(agent);
+          }
+        }
+
+        // Test agent prompts
+        for (const agent of state.agents.values()) {
+          const currentStep = stepCounter++;
+
+          for (let i = 0; i < agent.promptMessages.length; i++) {
+            const msg = agent.promptMessages[i];
+            if (msg.type === "plain") {
+              for (let j = 0; j < msg.promptBlocks.length; j++) {
+                const block = msg.promptBlocks[j];
+                if (block.template) {
+                  tryRenderTemplate(
+                    block.template,
+                    `[Step ${currentStep}] Agent "${agent.name}" → ${msg.role} message → block[${j}]`
+                  );
+                }
+              }
+            }
+          }
+        }
+
+        // Test data store node logic
+        for (const dsNode of state.dataStoreNodes.values()) {
+          const currentStep = stepCounter++;
+
+          for (let i = 0; i < dsNode.fields.length; i++) {
+            const field = dsNode.fields[i];
+            if (field.logic) {
+              const schemaField = context.dataStoreSchema.find((f) => f.id === field.schemaFieldId);
+              const fieldName = schemaField?.name || field.schemaFieldId;
+              const varName = schemaField ? toSnakeCase(schemaField.name) : undefined;
+
+              const computedValue = tryRenderDataStoreLogic(
+                field.logic,
+                `[Step ${currentStep}] DataStore "${dsNode.name}" → field "${fieldName}"`
+              );
+
+              if (varName && computedValue !== undefined) {
+                mockContext[varName] = computedValue;
+              }
+            }
+          }
+        }
+
+        // Test schema initial values
+        for (const field of context.dataStoreSchema) {
+          if (field.initial && String(field.initial).includes("{{")) {
+            tryRenderDataStoreLogic(
+              String(field.initial),
+              `[Init] Schema field "${field.name}" → initial value`
+            );
+          }
+        }
+
+        const errorResults = results.filter((r) => r.status === "error");
+        const successResults = results.filter((r) => r.status === "success");
+
+        return {
+          success: errorResults.length === 0,
+          totalRendered: results.length,
+          errorCount: errorResults.length,
+          successCount: successResults.length,
+          errors: errorResults.map((r) => ({
+            location: r.location,
+            template: r.template,
+            error: r.error,
+          })),
+          successful: include_successful ? successResults.map((r) => ({
+            location: r.location,
+            rendered: r.rendered,
+          })) : undefined,
+          summary: errorResults.length === 0
+            ? `All ${results.length} workflow expression(s) rendered successfully with mock values`
+            : `${errorResults.length} of ${results.length} workflow expression(s) failed to render. Fix the errors before the workflow can run.`,
         };
       },
     }),

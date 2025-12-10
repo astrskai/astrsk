@@ -49,7 +49,7 @@ export const useDefaultInitialized = () => {
         // Create astrsk.ai provider
         const astrskaiProvider = ApiConnection.create({
           source: ApiSource.AstrskAi,
-          title: "astrsk.ai free",
+          title: "astrsk.ai",
           apiKey: import.meta.env.VITE_ASTRSK_FREE_API_KEY,
           baseUrl: import.meta.env.VITE_ASTRSK_FREE_BASE_URL,
           updatedAt: new Date(),

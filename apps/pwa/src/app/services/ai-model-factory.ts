@@ -17,7 +17,7 @@ import {
   createOpenRouter,
   type OpenRouterProviderSettings,
 } from "@openrouter/ai-sdk-provider";
-import { type LanguageModel, generateText, tool } from "ai";
+import { type LanguageModel, generateText, streamText, tool, parsePartialJson, isDeepEqualData } from "ai";
 import { merge } from "lodash-es";
 import { z } from "zod";
 import { JSONSchema7 } from "json-schema";
@@ -221,6 +221,33 @@ export function createProvider({
       break;
     }
 
+    case ApiSource.AstrskAi: {
+      // Astrsk Cloud LLM - uses environment variable for base URL
+      const astrskBaseUrl = import.meta.env.VITE_CLOUD_LLM_URL;
+      if (!astrskBaseUrl) {
+        throw new Error("VITE_CLOUD_LLM_URL is not configured");
+      }
+
+      // Create custom fetch wrapper to add x-dev-key header (only in development)
+      const devKey = import.meta.env.VITE_DEV_KEY;
+      const baseFetch = getAISDKFetch();
+      const astrskFetch: typeof fetch = async (url, options) => {
+        const headers = new Headers(options?.headers);
+        // Only add dev key if targeting localhost (development environment)
+        if (devKey && astrskBaseUrl.includes("localhost")) {
+          headers.set("x-dev-key", devKey);
+        }
+        return baseFetch(url, { ...options, headers });
+      };
+
+      provider = createOpenAICompatible({
+        name: "astrsk-cloud",
+        baseURL: astrskBaseUrl,
+        fetch: astrskFetch,
+      });
+      break;
+    }
+
     case ApiSource.Anthropic:
       provider = createAnthropic({
         apiKey: apiKey,
@@ -348,6 +375,18 @@ export function createProvider({
  * This is a lightweight factory for simple use cases (scenario builder, data schema builder).
  * For full session playback with streaming and advanced features, use createProvider directly.
  */
+/**
+ * Parse model ID for AstrskAi provider
+ * AstrskAi model IDs are stored with "openai-compatible:" prefix but need to be used without it
+ * Example: "openai-compatible:deepseek/deepseek-chat" -> "deepseek/deepseek-chat"
+ */
+function parseAstrskAiModelId(modelId: string): string {
+  if (modelId.startsWith("openai-compatible:")) {
+    return modelId.substring("openai-compatible:".length);
+  }
+  return modelId;
+}
+
 export function createLiteModel(
   source: ApiSource,
   modelId: string,
@@ -356,26 +395,36 @@ export function createLiteModel(
 ): LanguageModel {
   const provider = createProvider({ source, apiKey, baseUrl });
 
+  // Parse model ID for AstrskAi - strip "openai-compatible:" prefix
+  const parsedModelId = source === ApiSource.AstrskAi
+    ? parseAstrskAiModelId(modelId)
+    : modelId;
+
+  logger.info(`[createLiteModel] Creating model for ${source}`, {
+    originalModelId: modelId,
+    parsedModelId,
+  });
+
   // Get the model from the provider
   // Different providers have different methods for getting models
   // Using type assertion since provider types vary significantly
   const p = provider as unknown as Record<string, unknown>;
 
   if ("chat" in p && typeof p.chat === "function") {
-    return p.chat(modelId) as LanguageModel;
+    return p.chat(parsedModelId) as LanguageModel;
   }
 
   if ("languageModel" in p && typeof p.languageModel === "function") {
-    return p.languageModel(modelId) as LanguageModel;
+    return p.languageModel(parsedModelId) as LanguageModel;
   }
 
   if ("chatModel" in p && typeof p.chatModel === "function") {
-    return p.chatModel(modelId) as LanguageModel;
+    return p.chatModel(parsedModelId) as LanguageModel;
   }
 
   // For providers that are callable (like Anthropic, Google)
   if (typeof provider === "function") {
-    return (provider as (modelId: string) => LanguageModel)(modelId);
+    return (provider as (modelId: string) => LanguageModel)(parsedModelId);
   }
 
   throw new Error(`Unable to create model for source: ${source}`);
@@ -399,6 +448,9 @@ export function getStructuredOutputMode(
   apiSource: ApiSource,
   modelId: string,
 ): "auto" | "json" | "tool" {
+  // Log input parameters for debugging
+  logger.info(`[StructuredOutput] getStructuredOutputMode called with apiSource: ${apiSource}, modelId: ${modelId}`);
+
   // Check for model-specific exceptions first
   const modelIdLower = modelId.toLowerCase();
 
@@ -406,6 +458,19 @@ export function getStructuredOutputMode(
   if (modelIdLower.includes("glm")) {
     logger.info(`[StructuredOutput] GLM model detected (${modelId}) - switching to tool mode`);
     return "tool";
+  }
+
+  // For AstrskAi: Friendli models need json mode, others support tool calling
+  // - Friendli models (deepseek-ai/*, zai-org/*): no tool calling, use json mode
+  // - BytePlus models (byteplus/*): supports tool calling, use tool mode
+  // - GLM Official (glm-4.6): supports tool calling, use tool mode
+  if (apiSource === ApiSource.AstrskAi) {
+    // Extract the model ID after "openai-compatible:" prefix if present
+    const parsedModelId = modelId.includes(":") ? modelId.split(":")[1] : modelId;
+    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
+    const mode = isFriendliModel ? "json" : "tool";
+    logger.info(`[StructuredOutput] AstrskAi model (${parsedModelId}) - using ${mode} mode`);
+    return mode;
   }
 
   // Provider-based mode selection
@@ -416,10 +481,12 @@ export function getStructuredOutputMode(
     apiSource === ApiSource.KoboldCPP ||
     apiSource === ApiSource.OpenAICompatible
   ) {
+    logger.info(`[StructuredOutput] Provider-based mode: json for ${apiSource}`);
     return "json";
   }
 
   // Default: let AI SDK automatically select the best mode
+  logger.info(`[StructuredOutput] Using default auto mode for ${apiSource}`);
   return "auto";
 }
 
@@ -442,6 +509,19 @@ export function shouldUseToolFallback(apiSource: ApiSource, modelId: string): bo
   if (modelIdLower.includes("glm")) {
     logger.info(`[StructuredOutput] GLM model detected (${modelId}) - using generateText with tool fallback`);
     return true;
+  }
+
+  // AstrskAi: All models that use "tool" mode need fallback (backend issue)
+  // Only Friendli models (deepseek-ai/*, zai-org/*) use "json" mode and don't need fallback
+  if (apiSource === ApiSource.AstrskAi) {
+    const parsedModelId = modelId.includes(":") ? modelId.split(":")[1] : modelId;
+    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
+
+    // If NOT Friendli, use tool fallback
+    if (!isFriendliModel) {
+      logger.info(`[StructuredOutput] AstrskAi non-Friendli model detected (${parsedModelId}) - using generateText with tool fallback`);
+      return true;
+    }
   }
 
   // Check dynamic cache for models that previously failed with json_schema errors
@@ -597,4 +677,125 @@ export async function generateWithToolFallback<T>({
   logger.info("[ToolFallback] Successfully extracted structured output from tool call");
   // AI SDK uses 'input' property for tool call parameters (not 'args')
   return (outputCall as unknown as { input: T }).input;
+}
+
+/**
+ * Stream structured output using streamText with tool calling (AI SDK v5).
+ * This uses streamText's tool-input-delta events to stream partial objects.
+ *
+ * @returns Async generator that yields partial objects as they stream
+ */
+export async function* streamWithToolFallback<T>({
+  model,
+  messages,
+  schema,
+  schemaName = "output",
+  schemaDescription = "Generate the structured output",
+  abortSignal,
+}: GenerateWithToolFallbackOptions): AsyncGenerator<T, void, unknown> {
+  // Convert JSON schema to Zod for tool parameter validation
+  const zodSchema = jsonSchemaToZod(schema);
+
+  // Create a tool that accepts the schema as its parameter
+  const outputTool = tool({
+    description: schemaDescription,
+    inputSchema: zodSchema as z.ZodObject<z.ZodRawShape>,
+    execute: async (input: Record<string, unknown>) => input,
+  });
+
+  // Add instruction to use the tool
+  const messagesWithInstruction = [
+    ...messages,
+    {
+      role: "user" as const,
+      content: `Please use the "${schemaName}" tool to provide your response in the required structured format.`,
+    },
+  ];
+
+  logger.info(`[ToolFallback] Using streamText with tool for structured output (STREAMING)`);
+
+  const result = streamText({
+    model,
+    messages: messagesWithInstruction,
+    tools: { [schemaName]: outputTool },
+    toolChoice: { type: "tool", toolName: schemaName },
+    abortSignal,
+  });
+
+  let accumulatedArgs = "";
+  let deltaCount = 0;
+  let yieldCount = 0;
+  let latestObjectJson: any = undefined; // Track raw JSON
+  let latestObject: Partial<T> = {}; // Track validated object
+
+  // Stream the tool call parameters as they arrive
+  for await (const chunk of result.fullStream) {
+    // Accumulate tool input deltas
+    if (chunk.type === "tool-input-delta" && chunk.id) {
+      deltaCount++;
+      accumulatedArgs += chunk.delta;
+
+      // Use AI SDK's parsePartialJson to intelligently parse incomplete JSON
+      const { value: currentObjectJson, state: parseState } =
+        await parsePartialJson(accumulatedArgs);
+
+      // Only process if we got valid JSON and it's different from before
+      if (
+        currentObjectJson !== undefined &&
+        !isDeepEqualData(latestObjectJson, currentObjectJson)
+      ) {
+        // Validate the partial result with the schema
+        try {
+          const validationResult = zodSchema.safeParse(currentObjectJson);
+
+          if (validationResult.success) {
+            const partialObject = validationResult.data as T;
+
+            // Check if the validated object is different
+            if (!isDeepEqualData(latestObject, partialObject)) {
+              latestObjectJson = currentObjectJson;
+              latestObject = partialObject;
+              yieldCount++;
+
+              logger.info(
+                `[ToolFallback] Yielding partial object #${yieldCount} ` +
+                `(after ${deltaCount} deltas, parseState: ${parseState})`
+              );
+
+              yield partialObject;
+            }
+          } else {
+            // For partial parsing, validation might fail during streaming
+            // This is expected as the object is being built incrementally
+            logger.debug(
+              `[ToolFallback] Partial validation failed (expected during streaming)`
+            );
+          }
+        } catch (error) {
+          logger.debug(`[ToolFallback] Validation error: ${error}`);
+        }
+      }
+    }
+
+    // Final tool call with complete data
+    if (chunk.type === "tool-call" && chunk.toolName === schemaName) {
+      logger.info(
+        `[ToolFallback] Stream complete! Total deltas: ${deltaCount}, ` +
+        `Total yields: ${yieldCount}`
+      );
+
+      // AI SDK v5 uses 'input' property for tool call parameters
+      const finalObject = (chunk as any).input as T;
+
+      // Only yield final if different from last partial
+      if (!isDeepEqualData(finalObject, latestObject)) {
+        yieldCount++;
+        logger.info(`[ToolFallback] Yielding final object #${yieldCount}`);
+        yield finalObject;
+      }
+      return;
+    }
+  }
+
+  throw new Error("Model did not produce structured output via tool call");
 }
