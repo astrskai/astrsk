@@ -7,7 +7,7 @@ interface TextareaProps
   error?: string;
   labelPosition?: "top" | "left" | "inner";
   autoResize?: boolean;
-  caption?: string;
+  caption?: React.ReactNode;
   isRequired?: boolean; // For display purposes only (shows * indicator)
 }
 
@@ -50,16 +50,14 @@ const FeedbackMessages = ({
   caption,
 }: {
   error?: string;
-  caption?: string;
+  caption?: React.ReactNode;
 }) => (
   <>
     {error && (
       <p className={cn(STYLES.text.error, STYLES.text.small)}>{error}</p>
     )}
     {!error && caption && (
-      <p className={cn(STYLES.text.secondary, STYLES.text.caption)}>
-        {caption}
-      </p>
+      <div className={cn(STYLES.text.caption)}>{caption}</div>
     )}
   </>
 );

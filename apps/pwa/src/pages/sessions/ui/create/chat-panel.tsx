@@ -1,6 +1,8 @@
 import { useRef, useEffect } from "react";
-import { User, Bot, Sparkles, Send, Loader2 } from "lucide-react";
+import { User, Bot, Sparkles, Send, Square } from "lucide-react";
 import { cn } from "@/shared/lib";
+
+import type { SessionStep } from "./session-stepper";
 
 /**
  * Chat message type for AI conversations
@@ -9,6 +11,10 @@ export interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  /** Which step this message was created in */
+  step?: SessionStep;
+  /** Message variant for special styling */
+  variant?: "default" | "cancelled";
 }
 
 /**
@@ -38,6 +44,8 @@ interface ChatPanelProps {
   onInputChange: (value: string) => void;
   /** Submit handler */
   onSubmit: () => void;
+  /** Stop handler - called when user clicks stop during loading */
+  onStop?: () => void;
   /** Whether AI is currently generating */
   isLoading?: boolean;
   /** Whether submit is disabled */
@@ -56,6 +64,7 @@ export function ChatPanel({
   inputValue,
   onInputChange,
   onSubmit,
+  onStop,
   isLoading = false,
   disabled = false,
   className,
@@ -147,6 +156,7 @@ export function ChatPanel({
                     msg.role === "user"
                       ? "bg-brand-500/30 text-fg-default"
                       : "bg-surface-overlay text-fg-default",
+                    msg.variant === "cancelled" && "text-fg-subtle italic",
                   )}
                 >
                   <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -186,22 +196,29 @@ export function ChatPanel({
             )}
             onKeyDown={handleKeyDown}
           />
-          <button
-            type="submit"
-            disabled={!inputValue.trim() || disabled}
-            className={cn(
-              "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200",
-              inputValue.trim() && !disabled
-                ? "bg-brand-600 hover:bg-brand-500 text-white hover:scale-105"
-                : "bg-surface-overlay text-fg-subtle",
-            )}
-          >
-            {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
+          {isLoading && onStop ? (
+            <button
+              type="button"
+              onClick={onStop}
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-red-500/20 text-red-400 transition-all duration-200 hover:bg-red-500/30 hover:scale-105"
+              title="Stop generating"
+            >
+              <Square size={14} className="fill-current" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!inputValue.trim() || disabled}
+              className={cn(
+                "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200",
+                inputValue.trim() && !disabled
+                  ? "bg-brand-600 hover:bg-brand-500 text-white hover:scale-105"
+                  : "bg-surface-overlay text-fg-subtle",
+              )}
+            >
               <Send size={16} />
-            )}
-          </button>
+            </button>
+          )}
         </form>
       </div>
     </div>

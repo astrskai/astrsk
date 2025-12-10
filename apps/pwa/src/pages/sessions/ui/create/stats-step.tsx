@@ -28,6 +28,7 @@ import {
   type DataSchemaContext,
 } from "@/app/services/system-agents";
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
+import type { SessionStep } from "./session-stepper";
 import { StepHeader } from "./step-header";
 
 // Simple template is the only template - no AI selection needed
@@ -61,11 +62,11 @@ const formatDisplayName = (name: string) => name.replace(/_/g, " ");
 
 /**
  * Data Store Type
- * Represents a trackable variable in the HUD
+ * Represents a trackable variable in the Stats step
  */
 export type DataStoreType = "integer" | "number" | "boolean" | "string";
 
-export interface HudDataStore {
+export interface StatsDataStore {
   id: string;
   name: string;
   type: DataStoreType;
@@ -79,9 +80,11 @@ export interface HudDataStore {
 
 // ChatMessage type imported from scenario-step.tsx for unified chat
 
-interface HudStepProps {
-  dataStores: HudDataStore[];
-  onDataStoresChange: (stores: HudDataStore[]) => void;
+interface StatsStepProps {
+  // Current step for tagging chat messages
+  currentStep: SessionStep;
+  dataStores: StatsDataStore[];
+  onDataStoresChange: (stores: StatsDataStore[]) => void;
   sessionContext?: {
     scenario?: string;
     character?: string;
@@ -127,10 +130,11 @@ function TypeIcon({ type, className }: { type: DataStoreType; className?: string
 }
 
 /**
- * HUD Step Component
+ * Stats Step Component
  * Third step for configuring session data stores/trackers
  */
-export function HudStep({
+export function StatsStep({
+  currentStep,
   dataStores,
   onDataStoresChange,
   sessionContext,
@@ -145,7 +149,7 @@ export function HudStep({
   onChatMessagesChange,
   mobileTab,
   onMobileTabChange,
-}: HudStepProps) {
+}: StatsStepProps) {
   const [expandedId, setExpandedId] = useState<string | null>(
     dataStores[0]?.id || null,
   );
@@ -165,9 +169,9 @@ export function HudStep({
   // Abort controller for AI generation
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Convert DataSchemaEntry to HudDataStore (they're compatible)
-  const dataSchemaEntryToHudDataStore = useCallback(
-    (entry: DataSchemaEntry): HudDataStore => ({
+  // Convert DataSchemaEntry to StatsDataStore (they're compatible)
+  const dataSchemaEntryToStatsDataStore = useCallback(
+    (entry: DataSchemaEntry): StatsDataStore => ({
       id: entry.id,
       name: entry.name,
       type: entry.type,
@@ -179,9 +183,9 @@ export function HudStep({
     [],
   );
 
-  // Convert flow template dataStoreSchema field to HudDataStore
-  const templateFieldToHudDataStore = useCallback(
-    (field: { id: string; name: string; type: string; initialValue?: string }): HudDataStore => {
+  // Convert flow template dataStoreSchema field to StatsDataStore
+  const templateFieldToStatsDataStore = useCallback(
+    (field: { id: string; name: string; type: string; initialValue?: string }): StatsDataStore => {
       // Map type from template (could be "string", "number", "integer", "boolean")
       let type: DataStoreType = "string";
       if (field.type === "integer") {
@@ -221,7 +225,7 @@ export function HudStep({
   sessionContextRef.current = sessionContext;
 
   // Ref to track stores being generated (for incremental updates)
-  const generatingStoresRef = useRef<HudDataStore[]>([]);
+  const generatingStoresRef = useRef<StatsDataStore[]>([]);
   // Ref to track if generation was stopped due to max limit
   const reachedMaxLimitRef = useRef(false);
 
@@ -264,10 +268,10 @@ export function HudStep({
       }
 
       // Extract dataStoreSchema fields from template
-      const templateFields: HudDataStore[] = [];
+      const templateFields: StatsDataStore[] = [];
       if (templateJson.dataStoreSchema?.fields && Array.isArray(templateJson.dataStoreSchema.fields)) {
         for (const field of templateJson.dataStoreSchema.fields) {
-          const hudStore = templateFieldToHudDataStore(field);
+          const hudStore = templateFieldToStatsDataStore(field);
           templateFields.push(hudStore);
         }
       }
@@ -320,7 +324,7 @@ export function HudStep({
               }
 
               // Add AI-generated store incrementally
-              const hudStore = dataSchemaEntryToHudDataStore(store);
+              const hudStore = dataSchemaEntryToStatsDataStore(store);
               generatingStoresRef.current = [...generatingStoresRef.current, hudStore];
               onDataStoresChange(generatingStoresRef.current);
             },
@@ -356,6 +360,7 @@ export function HudStep({
           id: crypto.randomUUID(),
           role: "assistant",
           content: "I couldn't find suitable trackers from your scenario. You can add them manually using the 'New Tracker' button above, or tell me what trackers you need!",
+          step: currentStep,
         };
         onChatMessagesChange?.([...chatMessagesRef.current, noResultMessage]);
       } else if (reachedMaxLimitRef.current) {
@@ -364,6 +369,7 @@ export function HudStep({
           id: crypto.randomUUID(),
           role: "assistant",
           content: `I've generated ${finalStoreCount} trackers (maximum reached). You can remove some trackers and ask me for more if needed!`,
+          step: currentStep,
         };
         onChatMessagesChange?.([...chatMessagesRef.current, limitMessage]);
       } else {
@@ -372,11 +378,12 @@ export function HudStep({
           id: crypto.randomUUID(),
           role: "assistant",
           content: `I've generated ${finalStoreCount} tracker${finalStoreCount > 1 ? 's' : ''}. Let me know if you'd like to add or modify any trackers!`,
+          step: currentStep,
         };
         onChatMessagesChange?.([...chatMessagesRef.current, successMessage]);
       }
     }
-  }, [onDataStoresChange, dataSchemaEntryToHudDataStore, templateFieldToHudDataStore, onIsGeneratingChange, onHasAttemptedGenerationChange, onSelectedTemplateChange, onChatMessagesChange]);
+  }, [onDataStoresChange, dataSchemaEntryToStatsDataStore, templateFieldToStatsDataStore, onIsGeneratingChange, onHasAttemptedGenerationChange, onSelectedTemplateChange, onChatMessagesChange, currentStep]);
 
   // Stop generation
   const handleStopGeneration = useCallback(() => {
@@ -453,7 +460,7 @@ export function HudStep({
   // Add new data store
   const handleAddStore = useCallback(() => {
     const newId = new UniqueEntityID().toString();
-    const newStore: HudDataStore = {
+    const newStore: StatsDataStore = {
       id: newId,
       name: "New Tracker",
       type: "string",
@@ -466,7 +473,7 @@ export function HudStep({
 
   // Update a data store
   const updateStore = useCallback(
-    (id: string, field: keyof HudDataStore, value: any) => {
+    (id: string, field: keyof StatsDataStore, value: any) => {
       onDataStoresChange(
         dataStores.map((store) => {
           if (store.id !== id) return store;
@@ -516,6 +523,7 @@ export function HudStep({
         id: crypto.randomUUID(),
         role: "user",
         content: refinePrompt,
+        step: currentStep,
       };
       const currentMessages = chatMessagesRef.current;
       onChatMessagesChange?.([...currentMessages, userMessage]);
@@ -537,7 +545,7 @@ export function HudStep({
           scenario: ctx?.scenario,
         };
 
-        // Convert HudDataStore to DataSchemaEntry for the service
+        // Convert StatsDataStore to DataSchemaEntry for the service
         const currentStores: DataSchemaEntry[] = dataStores.map((store) => ({
           id: store.id,
           name: store.name,
@@ -559,17 +567,23 @@ export function HudStep({
           currentStores,
           callbacks: {
             onAddStore: (store) => {
+              // Check if aborted before applying
+              if (abortControllerRef.current?.signal.aborted) return;
               addedStoreNames.push(store.name);
-              updatedStores = [...updatedStores, dataSchemaEntryToHudDataStore(store)];
+              updatedStores = [...updatedStores, dataSchemaEntryToStatsDataStore(store)];
               onDataStoresChange(updatedStores);
             },
             onRemoveStore: (id) => {
+              // Check if aborted before applying
+              if (abortControllerRef.current?.signal.aborted) return;
               const removedStore = updatedStores.find(s => s.id === id);
               if (removedStore) removedStoreNames.push(removedStore.name);
               updatedStores = updatedStores.filter((s) => s.id !== id);
               onDataStoresChange(updatedStores);
             },
             onClearAll: () => {
+              // Check if aborted before applying
+              if (abortControllerRef.current?.signal.aborted) return;
               removedStoreNames.push(...updatedStores.map(s => s.name));
               updatedStores = [];
               onDataStoresChange([]);
@@ -577,6 +591,11 @@ export function HudStep({
           },
           abortSignal: abortControllerRef.current.signal,
         });
+
+        // Check if aborted before showing result message
+        if (abortControllerRef.current?.signal.aborted) {
+          return;
+        }
 
         // Build AI response message
         let responseText = "Done!";
@@ -595,11 +614,12 @@ export function HudStep({
           id: crypto.randomUUID(),
           role: "assistant",
           content: responseText,
+          step: currentStep,
         };
         onChatMessagesChange?.([...chatMessagesRef.current, aiResponse]);
       } catch (e) {
-        if ((e as Error).name === "AbortError") {
-          // Request was cancelled, ignore
+        // Check if this was an abort - don't show error for user-initiated abort
+        if ((e as Error).name === "AbortError" || abortControllerRef.current?.signal.aborted) {
           return;
         }
         console.error("Failed to refine schema:", e);
@@ -611,6 +631,7 @@ export function HudStep({
           content: e instanceof Error
             ? `Sorry, I encountered an error: ${e.message}`
             : "Sorry, I encountered an error. Please try again.",
+          step: currentStep,
         };
         onChatMessagesChange?.([...chatMessagesRef.current, errorMessage]);
 
@@ -621,7 +642,7 @@ export function HudStep({
         setIsRefining(false);
       }
     },
-    [refinePrompt, dataStores, onDataStoresChange, dataSchemaEntryToHudDataStore, onChatMessagesChange],
+    [refinePrompt, dataStores, onDataStoresChange, dataSchemaEntryToStatsDataStore, onChatMessagesChange, currentStep],
   );
 
   // Handle chat submit (wraps handleRefine)
@@ -631,6 +652,25 @@ export function HudStep({
     const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
     handleRefine(syntheticEvent);
   }, [refinePrompt, handleRefine]);
+
+  // Handle chat stop (abort refining and show cancelled message)
+  const handleChatStop = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      // Keep the reference so catch block can check signal.aborted
+    }
+    setIsRefining(false);
+
+    // Add cancelled message to chat
+    const cancelledMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: "Response generation was stopped by user.",
+      step: currentStep,
+      variant: "cancelled",
+    };
+    onChatMessagesChange?.([...chatMessagesRef.current, cancelledMessage]);
+  }, [currentStep, onChatMessagesChange]);
 
   // Mobile tab configuration
   const mobileTabs = useMemo<MobileTab<"editor" | "chat">[]>(
@@ -658,6 +698,7 @@ export function HudStep({
           inputValue={refinePrompt}
           onInputChange={setRefinePrompt}
           onSubmit={handleChatSubmit}
+          onStop={isRefining ? handleChatStop : undefined}
           isLoading={isRefining}
           disabled={isRefining}
           className={mobileTab === "chat" ? "" : "hidden md:flex"}
@@ -676,7 +717,7 @@ export function HudStep({
             subtitle="Define variables for AI to track"
             actions={
               <>
-                {hasAttemptedGeneration && !isGenerating && (
+                {hasAttemptedGeneration && !isGenerating && dataStores.length === 0 && (
                   <Button
                     onClick={handleRegenerate}
                     variant="secondary"

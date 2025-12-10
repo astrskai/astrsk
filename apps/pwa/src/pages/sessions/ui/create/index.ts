@@ -10,7 +10,7 @@ export {
   type LorebookEntry,
   type CharacterContext,
 } from "./scenario-step";
-export { HudStep, type HudDataStore, type DataStoreType } from "./hud-step";
+export { StatsStep, type StatsDataStore, type DataStoreType } from "./stats-step";
 export {
   CharacterCreateDialog,
   type PendingCharacterData,
