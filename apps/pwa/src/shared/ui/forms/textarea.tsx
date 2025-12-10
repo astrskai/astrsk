@@ -38,7 +38,7 @@ const STYLES = {
     secondary: "text-neutral-400",
     required: "text-accent-purple ml-1",
     small: "mt-1 text-xs",
-    caption: "mt-1 pl-2 text-xs",
+    caption: "mt-1 pl-2 text-xs text-neutral-300",
   },
 } as const;
 

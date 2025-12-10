@@ -444,6 +444,12 @@ export function CastStep({
       ) !== "true",
   );
   const abortControllerRef = useRef<AbortController | null>(null);
+  const onChatMessagesChangeRef = useRef(onChatMessagesChange);
+
+  // Keep ref in sync with prop
+  useEffect(() => {
+    onChatMessagesChangeRef.current = onChatMessagesChange;
+  }, [onChatMessagesChange]);
 
   // Flying trail animation state
   const [flyingTrails, setFlyingTrails] = useState<FlyingTrail[]>([]);
@@ -531,14 +537,18 @@ export function CastStep({
         content: "",
         step: "cast",
       };
-      onChatMessagesChange?.([...chatMessages, welcomeMessage]);
+      // Prepend welcome message to existing messages (from other steps)
+      // Use ref to get current messages without stale closure
+      const currentMessages = chatMessages.filter((m) => m.step !== "cast");
+      onChatMessagesChangeRef.current?.([...currentMessages, welcomeMessage]);
 
       // Start typing effect
       startWelcomeTyping(WELCOME_MESSAGE_CONTENT);
     }, 1500); // Show typing indicator for 1.5 seconds
 
     return () => clearTimeout(typingTimer);
-  }, []); // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run on mount, uses ref for callback
+  }, []);
 
   // Show all messages, apply streaming text to welcome message if typing
   const displayMessages = useMemo(() => {
