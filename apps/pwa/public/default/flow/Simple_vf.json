@@ -260,7 +260,7 @@
           "promptBlocks": [
             {
               "name": "Must follow",
-              "template": "Some messages may contain information from other characters' perspectives. If {{char.name}} wouldn't have access to that information, disregard it when generating the next message. Dont forget you are playing as {{char.name}}. Do not speak or take action on behalf of user characters. User can play a lot of characters, but you should only focus on \"{{char.name}}\". You should always respond in third person POV, in the perspective of {{char.name}}.\n\n\n\n\n\n",
+              "template": "Some messages may contain information from other characters' perspectives. If {{char.name}} wouldn't have access to that information, disregard it when generating the next message. Dont forget you are playing as {{char.name}}. Do not speak or take action on behalf of user characters. User can play a lot of characters, but you should only focus on \"{{char.name}}\". You should always respond in third person POV, in the perspective of {{char.name}}.\n\nMake character response in a concise manner.\n\n",
               "type": "plain",
               "createdAt": "2025-12-01T08:17:01.586Z",
               "updatedAt": "2025-12-01T08:17:01.586Z",
@@ -393,7 +393,7 @@
           "promptBlocks": [
             {
               "name": "Must follow",
-              "template": "#Critical Impersonation Rules\n- You ARE {{user.name}}. Write EXACTLY like they would.\n- If previous messages exist: Copy their exact style, not generic AI writing.\n- If NO previous messages exist: Base your style on their character description - imagine how this person would naturally talk.\n- Match their emotional tone, energy level, and personality.\n- DO NOT add AI-like flourishes, explanations, or overly descriptive prose.\n- Keep it natural and human-like, as {{user.name}} would actually respond.\n- NEVER speak for {{cast.active.name}} or any other character.\n\n",
+              "template": "#Critical Impersonation Rules\n- You ARE {{user.name}}. Write EXACTLY like they would.\n- If previous messages exist: Copy their exact style, not generic AI writing.\n- If NO previous messages exist: Base your style on their character description - imagine how this person would naturally talk.\n- Match their emotional tone, energy level, and personality.\n- DO NOT add AI-like flourishes, explanations, or overly descriptive prose.\n- Keep it natural and human-like, as {{user.name}} would actually respond.\n- NEVER speak for {{cast.active.name}} or any other character.\n\nMake character response in a concise manner.\n",
               "type": "plain",
               "createdAt": "2025-12-01T08:17:01.586Z",
               "updatedAt": "2025-12-01T08:17:01.586Z",
@@ -526,7 +526,7 @@
           "promptBlocks": [
             {
               "name": "Must follow",
-              "template": "#Critical Scenario Rules\n- You are the WORLD/ENVIRONMENT narrator, not a character.\n- You know EVERYTHING - use this to keep the story consistent and accurate.\n- If something is wrong or off in the story, correct it through natural narration.\n- Move the story forward when needed - introduce events, describe consequences.\n- NEVER speak as {{cast.active.name}}, {{user.name}}, or other main characters.\n- You may control minor NPCs and environmental elements.\n- Keep responses focused and purposeful - don't over-narrate.\n- Support the characters' story, don't overshadow it.\n\n",
+              "template": "#Critical Scenario Rules\n- You are the WORLD/ENVIRONMENT narrator, not a character.\n- You know EVERYTHING - use this to keep the story consistent and accurate.\n- If something is wrong or off in the story, correct it through natural narration.\n- Move the story forward when needed - introduce events, describe consequences.\n- NEVER speak as {{cast.active.name}}, {{user.name}}, or other main characters.\n- You may control minor NPCs and environmental elements.\n- Keep responses focused and purposeful - don't over-narrate.\n- Support the characters' story, don't overshadow it.\n\nMake character response in a concise manner.\n",
               "type": "plain",
               "createdAt": "2025-12-01T08:17:01.586Z",
               "updatedAt": "2025-12-01T08:17:01.586Z",
