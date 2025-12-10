@@ -15,6 +15,8 @@ export interface ChatMessage {
   step?: SessionStep;
   /** Message variant for special styling */
   variant?: "default" | "cancelled";
+  /** If true, this message is system-generated (welcome, max limit, etc.) and should NOT be included in AI chat history */
+  isSystemGenerated?: boolean;
 }
 
 /**

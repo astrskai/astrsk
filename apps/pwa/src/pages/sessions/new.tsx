@@ -142,16 +142,24 @@ Ground Rules:`;
   // Stats generation refs (for abort control and incremental updates)
   const statsAbortControllerRef = useRef<AbortController | null>(null);
   const generatingStoresRef = useRef<StatsDataStore[]>([]);
-  // Refs to track stats generation state (avoids stale closure issues in useCallback)
+  // Refs mirror state for immediate checks in useCallback (avoids stale closure issues)
   const hasAttemptedStatsGenerationRef = useRef(false);
   const isStatsGeneratingRef = useRef(false);
-  // Flag to distinguish user-initiated stop vs max-limit abort
-  const isUserStoppedRef = useRef(false);
-  // Ref to access latest scenarioBackground without triggering useCallback recreation
+  const isUserStoppedRef = useRef(false); // Track user-initiated stop
   const scenarioBackgroundRef = useRef(scenarioBackground);
   scenarioBackgroundRef.current = scenarioBackground;
-  // Ref to store handleGenerateStats function (avoids dependency chain issues)
   const handleGenerateStatsRef = useRef<() => Promise<void>>(() => Promise.resolve());
+
+  // Helpers to sync state + ref together (single source of truth pattern)
+  const setStatsGenerating = useCallback((value: boolean) => {
+    isStatsGeneratingRef.current = value;
+    setIsStatsGenerating(value);
+  }, []);
+
+  const setStatsAttempted = useCallback((value: boolean) => {
+    hasAttemptedStatsGenerationRef.current = value;
+    setHasAttemptedStatsGeneration(value);
+  }, []);
 
   const selectSession = useSessionStore.use.selectSession();
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -337,22 +345,17 @@ Ground Rules:`;
   // Generate stats data stores from scenario
   // Called when transitioning from Scenario → Cast step
   const handleGenerateStats = useCallback(async () => {
-    // Skip if already generating or already attempted (use refs for immediate check)
+    // Skip if already generating or already attempted (refs for immediate check)
     if (isStatsGeneratingRef.current || hasAttemptedStatsGenerationRef.current) {
       return;
     }
 
-    // Mark as attempted IMMEDIATELY using refs to prevent duplicate calls
-    // This avoids stale closure issues with useCallback
-    hasAttemptedStatsGenerationRef.current = true;
-    isStatsGeneratingRef.current = true;
-    setHasAttemptedStatsGeneration(true);
-    setIsStatsGenerating(true);
+    // Mark as started immediately to prevent duplicate calls
+    setStatsAttempted(true);
+    setStatsGenerating(true);
 
-    // Cancel any previous request
-    if (statsAbortControllerRef.current) {
-      statsAbortControllerRef.current.abort();
-    }
+    // Cancel any previous request and create new abort controller
+    statsAbortControllerRef.current?.abort();
     statsAbortControllerRef.current = new AbortController();
 
     // Clear existing stores
@@ -360,51 +363,44 @@ Ground Rules:`;
     setStatsDataStores([]);
 
     try {
-      // Use ref to get latest value without causing useCallback recreation
       const scenario = scenarioBackgroundRef.current;
 
-      // Step 1: Use Simple template
+      // Step 1: Load template
       logger.info("[CreateSession] Starting stats generation with Simple template");
       setSelectedFlowTemplate(SIMPLE_TEMPLATE);
 
-      // Step 2: Load template and extract dataStoreSchema fields
       const response = await fetch(`/default/flow/${SIMPLE_TEMPLATE.filename}`);
       if (!response.ok) {
         throw new Error(`Failed to load flow template: ${SIMPLE_TEMPLATE.filename}`);
       }
       const templateJson = await response.json();
 
-      // Extract responseTemplate from template
+      // Extract responseTemplate
       if (templateJson.responseTemplate && typeof templateJson.responseTemplate === "string") {
         setFlowResponseTemplate(templateJson.responseTemplate);
       }
 
-      // Extract dataStoreSchema fields from template
+      // Step 2: Extract template fields
       const templateFields: StatsDataStore[] = [];
       if (templateJson.dataStoreSchema?.fields && Array.isArray(templateJson.dataStoreSchema.fields)) {
         for (const field of templateJson.dataStoreSchema.fields) {
-          const statsStore = templateFieldToStatsDataStore(field);
-          templateFields.push(statsStore);
+          templateFields.push(templateFieldToStatsDataStore(field));
         }
       }
 
-      // Add template fields immediately
       if (templateFields.length > 0) {
         generatingStoresRef.current = [...templateFields];
         setStatsDataStores(generatingStoresRef.current);
-
         toastSuccess(`Using ${SIMPLE_TEMPLATE.templateName} template`, {
           description: `Loaded ${templateFields.length} pre-defined variables`,
         });
       }
 
-      // Step 3: Generate additional fields using AI (if scenario is substantial)
-      // Minimum length for AI to generate meaningful data schema
+      // Step 3: Generate AI fields (if scenario is substantial)
       const MIN_SCENARIO_LENGTH_FOR_AI_STATS = 200;
-      if (scenario.length >= MIN_SCENARIO_LENGTH_FOR_AI_STATS) {
-        const context: DataSchemaContext = { scenario };
+      const MAX_TOTAL_STORES = 10;
 
-        // Convert template fields for AI context
+      if (scenario.length >= MIN_SCENARIO_LENGTH_FOR_AI_STATS) {
         const existingStores: DataSchemaEntry[] = templateFields.map((store) => ({
           id: store.id,
           name: store.name,
@@ -415,22 +411,45 @@ Ground Rules:`;
           max: store.max,
         }));
 
-        const MAX_TOTAL_STORES = 10;
-
         await generateDataSchemaAI({
-          context,
+          context: { scenario },
           currentStores: existingStores,
           callbacks: {
             onAddStore: (store) => {
-              // Check if aborted before adding
               if (statsAbortControllerRef.current?.signal.aborted) return;
               if (generatingStoresRef.current.length >= MAX_TOTAL_STORES) {
+                // Add max limit message to chat
+                const maxLimitMessage: ChatMessage = {
+                  id: crypto.randomUUID(),
+                  role: "assistant",
+                  content: `All done! Up to ${MAX_TOTAL_STORES} stats are auto-generated. Feel free to add or remove any as you like!`,
+                  step: "stats",
+                  isSystemGenerated: true, // Exclude from AI chat history
+                };
+                setChatMessages((prev) => [...prev, maxLimitMessage]);
                 statsAbortControllerRef.current?.abort();
                 return;
               }
-              const statsStore = dataSchemaEntryToStatsDataStore(store);
-              generatingStoresRef.current = [...generatingStoresRef.current, statsStore];
+              generatingStoresRef.current = [
+                ...generatingStoresRef.current,
+                dataSchemaEntryToStatsDataStore(store),
+              ];
               setStatsDataStores(generatingStoresRef.current);
+
+              // Update progress message in chat (replace previous progress message)
+              const newCount = generatingStoresRef.current.length;
+              const progressMessage: ChatMessage = {
+                id: "stats-progress", // Fixed ID to replace previous progress message
+                role: "assistant",
+                content: `Working on it... ${newCount} stat${newCount > 1 ? "s" : ""} ready!`,
+                step: "stats",
+                isSystemGenerated: true, // Exclude from AI chat history
+              };
+              setChatMessages((prev) => {
+                // Remove previous progress message and add updated one
+                const filtered = prev.filter((m) => m.id !== "stats-progress");
+                return [...filtered, progressMessage];
+              });
             },
             onRemoveStore: () => {},
             onClearAll: () => {},
@@ -442,42 +461,31 @@ Ground Rules:`;
       logger.info("[CreateSession] Stats generation complete", {
         count: generatingStoresRef.current.length,
       });
-      // hasAttemptedStatsGeneration already set at start
     } catch (e) {
       if ((e as Error).name === "AbortError") {
-        // Only reset hasAttemptedStatsGeneration if user explicitly stopped
-        // Max-limit abort is a successful completion, not a retry scenario
+        // User stop: allow retry. Max-limit: treat as success.
         if (isUserStoppedRef.current) {
           logger.info("[CreateSession] Stats generation stopped by user");
-          hasAttemptedStatsGenerationRef.current = false;
-          setHasAttemptedStatsGeneration(false);
-          isUserStoppedRef.current = false; // Reset flag
+          setStatsAttempted(false);
+          isUserStoppedRef.current = false;
         } else {
           logger.info("[CreateSession] Stats generation completed (max limit)");
         }
-        isStatsGeneratingRef.current = false;
-        setIsStatsGenerating(false);
+        setStatsGenerating(false);
         return;
       }
+
       logger.error("[CreateSession] Stats generation failed", e);
       toastError("Failed to generate data schema", {
         description: e instanceof Error ? e.message : "An unknown error occurred",
       });
-      // Reset flags on error - allow retry by navigating back and forward
-      hasAttemptedStatsGenerationRef.current = false;
-      isStatsGeneratingRef.current = false;
-      setHasAttemptedStatsGeneration(false);
-      setIsStatsGenerating(false);
+      // Allow retry on error
+      setStatsAttempted(false);
+      setStatsGenerating(false);
     } finally {
-      isStatsGeneratingRef.current = false;
-      setIsStatsGenerating(false);
+      setStatsGenerating(false);
     }
-  }, [
-    // Note: scenarioBackground removed from deps - using scenarioBackgroundRef instead
-    // This prevents function recreation when scenario text changes
-    templateFieldToStatsDataStore,
-    dataSchemaEntryToStatsDataStore,
-  ]);
+  }, [templateFieldToStatsDataStore, dataSchemaEntryToStatsDataStore, setStatsAttempted, setStatsGenerating]);
 
   // Keep ref updated to latest handleGenerateStats (avoids dependency chain in handleStepChange)
   handleGenerateStatsRef.current = handleGenerateStats;
@@ -485,14 +493,12 @@ Ground Rules:`;
   // Stop stats generation (user-initiated)
   const handleStopStatsGeneration = useCallback(() => {
     if (statsAbortControllerRef.current) {
-      // Mark as user-stopped so catch block knows to allow retry
       isUserStoppedRef.current = true;
       statsAbortControllerRef.current.abort();
       statsAbortControllerRef.current = null;
     }
-    isStatsGeneratingRef.current = false;
-    setIsStatsGenerating(false);
-  }, []);
+    setStatsGenerating(false);
+  }, [setStatsGenerating]);
 
   // Centralized step change handler - handles both Next button and Stepper clicks
   // Ensures stats generation is triggered exactly once when leaving Scenario step

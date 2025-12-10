@@ -502,6 +502,9 @@ export function CastStep({
     };
   }, []);
 
+  // Use ref to track typing state for cleanup
+  const isWelcomeTypingRef = useRef(false);
+
   // Welcome message typing effect using custom hook
   const {
     displayText: welcomeDisplayText,
@@ -520,10 +523,36 @@ export function CastStep({
           role: "assistant",
           content: WELCOME_MESSAGE_CONTENT,
           step: "cast",
+          isSystemGenerated: true, // Exclude from AI chat history
         },
       ]);
     },
   });
+
+  // Keep ref in sync with typing state
+  isWelcomeTypingRef.current = isWelcomeTyping;
+
+  // Finalize welcome message on unmount if still typing
+  useEffect(() => {
+    return () => {
+      if (isWelcomeTypingRef.current) {
+        // Directly update chat messages with final content on unmount
+        const existingMessages = chatMessages.filter(
+          (m) => m.id !== "cast-welcome",
+        );
+        onChatMessagesChangeRef.current?.([
+          ...existingMessages,
+          {
+            id: "cast-welcome",
+            role: "assistant",
+            content: WELCOME_MESSAGE_CONTENT,
+            step: "cast",
+            isSystemGenerated: true, // Exclude from AI chat history
+          },
+        ]);
+      }
+    };
+  }, [chatMessages]);
 
   // Add initial welcome message with typing indicator then streaming text effect
   // Only show if no cast-step messages exist yet
@@ -543,6 +572,7 @@ export function CastStep({
         role: "assistant",
         content: "",
         step: "cast",
+        isSystemGenerated: true, // Exclude from AI chat history
       };
       // Prepend welcome message to existing messages (from other steps)
       // Use ref to get current messages without stale closure
@@ -559,13 +589,29 @@ export function CastStep({
 
   // Show all messages, apply streaming text to welcome message if typing
   const displayMessages = useMemo(() => {
-    if (isWelcomeTyping) {
-      return chatMessages.map((m) =>
-        m.id === "cast-welcome" ? { ...m, content: welcomeDisplayText } : m,
-      );
+    // During typing indicator phase, show no messages (typing dots will show)
+    if (isTypingIndicator) {
+      return [];
     }
-    return chatMessages;
-  }, [chatMessages, isWelcomeTyping, welcomeDisplayText]);
+    // Welcome message typing - show streaming text only if we have text to show
+    if (isWelcomeTyping) {
+      return chatMessages
+        .map((m) =>
+          m.id === "cast-welcome" ? { ...m, content: welcomeDisplayText } : m,
+        )
+        .filter((msg) => {
+          // Keep all user messages
+          if (msg.role === "user") return true;
+          // Only show assistant messages that have content
+          return msg.content.trim().length > 0;
+        });
+    }
+    // Filter out any empty assistant messages (streaming placeholder before content arrives)
+    return chatMessages.filter((msg) => {
+      if (msg.role === "user") return true;
+      return msg.content.trim().length > 0;
+    });
+  }, [chatMessages, isWelcomeTyping, welcomeDisplayText, isTypingIndicator]);
 
   // Handle character creation from AI - creates DraftCharacter without DB save
   const handleCharacterCreated = useCallback(
@@ -645,12 +691,13 @@ export function CastStep({
 
     try {
       // Convert ChatMessage to CharacterBuilderMessage format
-      const builderMessages: CharacterBuilderMessage[] = newMessages.map(
-        (msg) => ({
+      // Filter out system-generated messages (welcome, etc.) from AI context
+      const builderMessages: CharacterBuilderMessage[] = newMessages
+        .filter((msg) => !msg.isSystemGenerated)
+        .map((msg) => ({
           role: msg.role as "user" | "assistant",
           content: msg.content,
-        }),
-      );
+        }));
 
       // Build current characters list for context (only drafts with data)
       const currentCharacters: CharacterData[] = draftCharacters
@@ -754,6 +801,7 @@ export function CastStep({
       content: "Response generation was stopped by user.",
       step: currentStep,
       variant: "cancelled",
+      isSystemGenerated: true, // Exclude from AI chat history
     };
     onChatMessagesChange?.([...chatMessages, cancelledMessage]);
   }, [currentStep, onChatMessagesChange, chatMessages]);
