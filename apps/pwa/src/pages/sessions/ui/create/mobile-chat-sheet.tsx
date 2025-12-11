@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import { useFormContext } from "react-hook-form";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronUp, ChevronDown, Maximize2, Minimize2, Sparkles, Send, Square } from "lucide-react";
 import { cn } from "@/shared/lib";
@@ -11,24 +12,16 @@ import { useTypingIndicator } from "./use-typing-indicator";
 interface MobileChatSheetProps {
   /** Chat messages to display */
   messages: ChatMessage[];
-  /** Agent configuration */
+  /** Agent configuration for the current step */
   agent: ChatAgentConfig;
   /** Current step - used for typing indicator avatar */
   currentStep?: SessionStep;
-  /** Current input value */
-  inputValue: string;
-  /** Input change handler */
-  onInputChange: (value: string) => void;
-  /** Submit handler */
-  onSubmit: () => void;
-  /** Stop handler */
+  /** Submit handler - called with form data when validation passes */
+  onSubmit: (data: { message: string }) => void;
+  /** Stop handler (optional, only when generation can be stopped) */
   onStop?: () => void;
   /** Whether AI is currently generating */
   isLoading?: boolean;
-  /** Whether to show typing indicator */
-  showTypingIndicator?: boolean;
-  /** Whether submit is disabled */
-  disabled?: boolean;
 }
 
 type SheetState = "collapsed" | "peek" | "expanded";
@@ -47,17 +40,15 @@ export function MobileChatSheet({
   messages,
   agent,
   currentStep,
-  inputValue,
-  onInputChange,
   onSubmit,
   onStop,
   isLoading = false,
-  showTypingIndicator,
-  disabled = false,
 }: MobileChatSheetProps) {
   const [sheetState, setSheetState] = useState<SheetState>("collapsed");
-  const inputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Use form context from parent (FormProvider in new.tsx)
+  const { register, handleSubmit, formState: { isValid } } = useFormContext<{ message: string }>();
 
   const {
     visibleMessages,
@@ -68,7 +59,6 @@ export function MobileChatSheet({
     messages,
     isLoading,
     currentStep,
-    showTypingIndicator,
   });
 
   // Scroll to bottom when visible messages change (in expanded/peek state)
@@ -77,13 +67,6 @@ export function MobileChatSheet({
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [visibleMessages, sheetState]);
-
-  // Handle form submit
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim() || disabled) return;
-    onSubmit();
-  };
 
   // Header tap: always collapse, or open to peek if collapsed
   const handleHeaderClick = () => {
@@ -277,13 +260,15 @@ export function MobileChatSheet({
 
         {/* Input Bar (always visible) */}
         <div className="flex-shrink-0 border-t border-zinc-800 px-3 py-2">
-          <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex items-center gap-2"
+          >
             <input
-              ref={inputRef}
               type="text"
-              value={inputValue}
-              onChange={(e) => onInputChange(e.target.value)}
+              {...register("message", { required: true })}
               placeholder={agent.inputPlaceholder || "Ask AI..."}
+              disabled={isLoading}
               className={cn(
                 "bg-zinc-800 text-fg-default placeholder:text-fg-subtle flex-1 rounded-full border-0 px-4 py-2 text-sm",
                 "focus:ring-brand-500/30 ring-1 ring-transparent outline-none",
@@ -300,12 +285,12 @@ export function MobileChatSheet({
             ) : (
               <button
                 type="submit"
-                disabled={!inputValue.trim() || disabled}
+                disabled={isLoading || !isValid}
                 className={cn(
                   "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-all",
-                  inputValue.trim() && !disabled
-                    ? "bg-brand-600 text-white"
-                    : "bg-zinc-800 text-fg-subtle",
+                  isLoading || !isValid
+                    ? "bg-zinc-800 text-fg-subtle"
+                    : "bg-brand-600 text-white",
                 )}
               >
                 <Send size={14} />

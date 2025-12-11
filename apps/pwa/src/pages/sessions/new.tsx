@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
+import { useForm, FormProvider } from "react-hook-form";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { ChevronRight, ChevronLeft, X } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
@@ -10,11 +11,15 @@ import {
   CharacterCreateDialog,
   SessionStepper,
   SESSION_STEPS,
+  ChatPanel,
+  MobileChatSheet,
+  CHAT_AGENTS,
   type SessionStep,
   type FirstMessage,
   type LorebookEntry,
   type StatsDataStore,
   type ChatMessage,
+  type ChatHandlers,
 } from "./ui/create";
 import { logger } from "@/shared/lib";
 import {
@@ -53,7 +58,10 @@ import {
   type DataSchemaContext,
   type DataSchemaEntry,
 } from "@/app/services/system-agents";
-import type { TemplateSelectionResult, DataStoreType } from "./ui/create/stats-step";
+import type {
+  TemplateSelectionResult,
+  DataStoreType,
+} from "./ui/create/stats-step";
 import { Sparkles, Loader2 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 
@@ -123,7 +131,57 @@ Ground Rules:`;
 
   // Functional update helper to add messages (avoids stale closure issues in async callbacks)
   const addChatMessage = useCallback((message: ChatMessage) => {
-    setChatMessages(prev => [...prev, message]);
+    setChatMessages((prev) => [...prev, message]);
+  }, []);
+
+  // Chat forms - separate instances for Desktop and Mobile to avoid form context conflicts
+  // Using react-hook-form for uncontrolled input (no re-renders on typing)
+  // mode: "onChange" enables real-time validation for isValid state
+  const desktopChatForm = useForm<{ message: string }>({
+    defaultValues: { message: "" },
+    mode: "onChange",
+  });
+  const mobileChatForm = useForm<{ message: string }>({
+    defaultValues: { message: "" },
+    mode: "onChange",
+  });
+
+  // Step-specific chat handlers (registered by each step via ref)
+  // Using ref to avoid re-renders when handlers change
+  const chatHandlersRef = useRef<{
+    onSubmit: (prompt: string) => void;
+    onStop: () => void;
+  } | null>(null);
+
+  // Chat UI state (controlled by current step)
+  // isLoading = AI is generating (blocks input until response complete)
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
+  // Desktop chat submit handler
+  const handleDesktopChatSubmit = useCallback(
+    (data: { message: string }) => {
+      const prompt = data.message.trim();
+      if (!prompt) return;
+      chatHandlersRef.current?.onSubmit(prompt);
+      desktopChatForm.reset();
+    },
+    [desktopChatForm],
+  );
+
+  // Mobile chat submit handler
+  const handleMobileChatSubmit = useCallback(
+    (data: { message: string }) => {
+      const prompt = data.message.trim();
+      if (!prompt) return;
+      chatHandlersRef.current?.onSubmit(prompt);
+      mobileChatForm.reset();
+    },
+    [mobileChatForm],
+  );
+
+  // Unified chat stop handler - delegates to current step's handler
+  const handleChatStop = useCallback(() => {
+    chatHandlersRef.current?.onStop();
   }, []);
 
   // Stats state
@@ -139,12 +197,18 @@ Ground Rules:`;
   const [flowResponseTemplate, setFlowResponseTemplate] = useState<string>("");
 
   // Workflow generation state
-  const [generatedWorkflow, setGeneratedWorkflow] = useState<WorkflowState | null>(null);
-  const [generatedSessionName, setGeneratedSessionName] = useState<string | null>(null);
+  const [generatedWorkflow, setGeneratedWorkflow] =
+    useState<WorkflowState | null>(null);
+  const [generatedSessionName, setGeneratedSessionName] = useState<
+    string | null
+  >(null);
   const [isWorkflowGenerating, setIsWorkflowGenerating] = useState(false);
-  const [workflowProgress, setWorkflowProgress] = useState<WorkflowBuilderProgress | null>(null);
-  const workflowGenerationPromiseRef =
-    useRef<Promise<{ state: WorkflowState; sessionName: string } | null> | null>(null);
+  const [workflowProgress, setWorkflowProgress] =
+    useState<WorkflowBuilderProgress | null>(null);
+  const workflowGenerationPromiseRef = useRef<Promise<{
+    state: WorkflowState;
+    sessionName: string;
+  } | null> | null>(null);
   // Show waiting dialog only when user tries to create session and workflow is still generating
   const [isWaitingForWorkflow, setIsWaitingForWorkflow] = useState(false);
 
@@ -162,13 +226,18 @@ Ground Rules:`;
 
   // Callback to update both state and ref when stats data stores change
   // This ensures workflow generation always has access to current data via ref
-  const handleStatsDataStoresChange = useCallback((stores: StatsDataStore[]) => {
-    setStatsDataStores(stores);
-    generatingStoresRef.current = stores;
-  }, []);
+  const handleStatsDataStoresChange = useCallback(
+    (stores: StatsDataStore[]) => {
+      setStatsDataStores(stores);
+      generatingStoresRef.current = stores;
+    },
+    [],
+  );
   const currentStepRef = useRef(currentStep);
   currentStepRef.current = currentStep;
-  const handleGenerateStatsRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const handleGenerateStatsRef = useRef<() => Promise<void>>(() =>
+    Promise.resolve(),
+  );
 
   // Helpers to sync state + ref together (single source of truth pattern)
   const setStatsGenerating = useCallback((value: boolean) => {
@@ -340,8 +409,10 @@ Ground Rules:`;
       else if (field.type === "boolean") type = "boolean";
 
       let initial: number | boolean | string = "";
-      if (type === "integer") initial = parseInt(field.initialValue || "0", 10) || 0;
-      else if (type === "number") initial = parseFloat(field.initialValue || "0") || 0;
+      if (type === "integer")
+        initial = parseInt(field.initialValue || "0", 10) || 0;
+      else if (type === "number")
+        initial = parseFloat(field.initialValue || "0") || 0;
       else if (type === "boolean") initial = field.initialValue === "true";
       else initial = field.initialValue || "";
 
@@ -375,7 +446,10 @@ Ground Rules:`;
   // Called when transitioning from Scenario → Cast step
   const handleGenerateStats = useCallback(async () => {
     // Skip if already generating or already attempted (refs for immediate check)
-    if (isStatsGeneratingRef.current || hasAttemptedStatsGenerationRef.current) {
+    if (
+      isStatsGeneratingRef.current ||
+      hasAttemptedStatsGenerationRef.current
+    ) {
       return;
     }
 
@@ -399,18 +473,26 @@ Ground Rules:`;
 
       const response = await fetch(`/default/flow/${SIMPLE_TEMPLATE.filename}`);
       if (!response.ok) {
-        throw new Error(`Failed to load flow template: ${SIMPLE_TEMPLATE.filename}`);
+        throw new Error(
+          `Failed to load flow template: ${SIMPLE_TEMPLATE.filename}`,
+        );
       }
       const templateJson = await response.json();
 
       // Extract responseTemplate
-      if (templateJson.responseTemplate && typeof templateJson.responseTemplate === "string") {
+      if (
+        templateJson.responseTemplate &&
+        typeof templateJson.responseTemplate === "string"
+      ) {
         setFlowResponseTemplate(templateJson.responseTemplate);
       }
 
       // Step 2: Extract template fields
       const templateFields: StatsDataStore[] = [];
-      if (templateJson.dataStoreSchema?.fields && Array.isArray(templateJson.dataStoreSchema.fields)) {
+      if (
+        templateJson.dataStoreSchema?.fields &&
+        Array.isArray(templateJson.dataStoreSchema.fields)
+      ) {
         for (const field of templateJson.dataStoreSchema.fields) {
           templateFields.push(templateFieldToStatsDataStore(field));
         }
@@ -431,15 +513,17 @@ Ground Rules:`;
       const RETRY_DELAY_MS = 2000; // 2 seconds
 
       if (scenario.length >= MIN_SCENARIO_LENGTH_FOR_AI_STATS) {
-        const existingStores: DataSchemaEntry[] = templateFields.map((store) => ({
-          id: store.id,
-          name: store.name,
-          type: store.type,
-          description: store.description,
-          initial: store.initial,
-          min: store.min,
-          max: store.max,
-        }));
+        const existingStores: DataSchemaEntry[] = templateFields.map(
+          (store) => ({
+            id: store.id,
+            name: store.name,
+            type: store.type,
+            description: store.description,
+            initial: store.initial,
+            min: store.min,
+            max: store.max,
+          }),
+        );
 
         // Track if max limit was reached (to show different completion message)
         let maxLimitReached = false;
@@ -480,24 +564,29 @@ Ground Rules:`;
             retryCount++;
 
             // Check if it's an abort error (user stopped) - don't retry
-            if (statsAbortControllerRef.current?.signal.aborted || isUserStoppedRef.current) {
+            if (
+              statsAbortControllerRef.current?.signal.aborted ||
+              isUserStoppedRef.current
+            ) {
               throw error;
             }
 
             // If we already generated at least one field, don't retry - we got some useful data
-            const generatedAnyFields = generatingStoresRef.current.length > templateFields.length;
+            const generatedAnyFields =
+              generatingStoresRef.current.length > templateFields.length;
             if (generatedAnyFields) {
               break; // Exit retry loop - we have partial success
             }
 
             // Check if it's a Gemini API error that should be retried
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            const isRetryableError = errorMessage.includes("Invalid JSON response") ||
-                                     errorMessage.includes("candidates") ||
-                                     errorMessage.includes("API");
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            const isRetryableError =
+              errorMessage.includes("Invalid JSON response") ||
+              errorMessage.includes("candidates") ||
+              errorMessage.includes("API");
 
             if (isRetryableError && retryCount <= MAX_RETRIES) {
-
               // Show user-friendly message for first retry
               if (retryCount === 1) {
                 addChatMessage({
@@ -510,7 +599,9 @@ Ground Rules:`;
               }
 
               // Wait before retrying (exponential backoff)
-              await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * retryCount));
+              await new Promise((resolve) =>
+                setTimeout(resolve, RETRY_DELAY_MS * retryCount),
+              );
             } else {
               // Not retryable or max retries reached
               throw error;
@@ -525,11 +616,11 @@ Ground Rules:`;
 
         // Completion message is now handled by stats-step.tsx when isGenerating changes to false
       }
-
     } catch (e) {
       const errorName = (e as Error).name;
       // Handle abort-related errors (AbortError, AI SDK errors, or user-initiated stop)
-      const isAbortRelated = errorName === "AbortError" ||
+      const isAbortRelated =
+        errorName === "AbortError" ||
         errorName === "AI_NoOutputGeneratedError" ||
         isUserStoppedRef.current;
 
@@ -544,7 +635,8 @@ Ground Rules:`;
 
       logger.error("[CreateSession] Stats generation failed", e);
       toastError("Failed to generate data schema", {
-        description: e instanceof Error ? e.message : "An unknown error occurred",
+        description:
+          e instanceof Error ? e.message : "An unknown error occurred",
       });
       // Allow retry on error
       setStatsAttempted(false);
@@ -552,7 +644,12 @@ Ground Rules:`;
     } finally {
       setStatsGenerating(false);
     }
-  }, [templateFieldToStatsDataStore, dataSchemaEntryToStatsDataStore, setStatsAttempted, setStatsGenerating, generatedWorkflow]);
+  }, [
+    templateFieldToStatsDataStore,
+    dataSchemaEntryToStatsDataStore,
+    setStatsAttempted,
+    setStatsGenerating,
+  ]);
 
   // Keep ref updated to latest handleGenerateStats (avoids dependency chain in handleStepChange)
   handleGenerateStatsRef.current = handleGenerateStats;
@@ -606,154 +703,153 @@ Ground Rules:`;
   // Generate workflow handler (separate from session creation for testing)
   // Returns a promise that resolves when workflow is generated
   // Uses the selected template from HUD step as the initial state for AI to enhance
-  const handleGenerateWorkflow =
-    useCallback(async (): Promise<{ state: WorkflowState; sessionName: string } | null> => {
-      // Use the selected template from HUD step, or fall back to Simple_vf.json
-      const templateFilename =
-        selectedFlowTemplate?.filename || "Simple_vf.json";
+  const handleGenerateWorkflow = useCallback(async (): Promise<{
+    state: WorkflowState;
+    sessionName: string;
+  } | null> => {
+    // Use the selected template from HUD step, or fall back to Simple_vf.json
+    const templateFilename = selectedFlowTemplate?.filename || "Simple_vf.json";
 
-      setIsWorkflowGenerating(true);
+    setIsWorkflowGenerating(true);
 
-      // IMPORTANT: Use ref instead of state to get current stats data stores
-      // State can be stale due to closure capture in useCallback
-      const currentStatsDataStores = generatingStoresRef.current;
+    // IMPORTANT: Use ref instead of state to get current stats data stores
+    // State can be stale due to closure capture in useCallback
+    const currentStatsDataStores = generatingStoresRef.current;
 
-      try {
-        // Convert StatsDataStore to StatsDataStoreField for workflow context
-        const dataStoreSchema: StatsDataStoreField[] = currentStatsDataStores.map(
-          (store) => ({
-            id: store.id,
-            name: store.name,
-            type: store.type,
-            description: store.description,
-            initial: store.initial,
-            min: store.min,
-            max: store.max,
-          }),
-        );
+    try {
+      // Convert StatsDataStore to StatsDataStoreField for workflow context
+      const dataStoreSchema: StatsDataStoreField[] = currentStatsDataStores.map(
+        (store) => ({
+          id: store.id,
+          name: store.name,
+          type: store.type,
+          description: store.description,
+          initial: store.initial,
+          min: store.min,
+          max: store.max,
+        }),
+      );
 
-        const currentScenario = scenarioBackgroundRef.current;
-        const workflowContext: WorkflowBuilderContext = {
-          scenario: currentScenario,
-          dataStoreSchema,
-        };
+      const currentScenario = scenarioBackgroundRef.current;
+      const workflowContext: WorkflowBuilderContext = {
+        scenario: currentScenario,
+        dataStoreSchema,
+      };
 
-        // Load template and build initial state
-        const response = await fetch(`/default/flow/${templateFilename}`);
-        if (!response.ok) {
-          throw new Error(`Failed to load flow template: ${templateFilename}`);
+      // Load template and build initial state
+      const response = await fetch(`/default/flow/${templateFilename}`);
+      if (!response.ok) {
+        throw new Error(`Failed to load flow template: ${templateFilename}`);
+      }
+      const flowJson = await response.json();
+
+      // Build initial state from the selected flow template
+      // This preserves the entire template structure for AI to enhance
+      // Mark all template nodes with isFromTemplate: true so they can't be deleted
+      const initialState: WorkflowState = {
+        nodes: (flowJson.nodes || []).map((node: any) => ({
+          ...node,
+          data: { ...node.data, isFromTemplate: true },
+        })),
+        edges: flowJson.edges || [],
+        agents: new Map(),
+        ifNodes: new Map(),
+        dataStoreNodes: new Map(),
+        // Use the HUD data stores (which include template fields + user additions)
+        dataStoreSchema: dataStoreSchema.map((field) => ({
+          id: field.id,
+          name: field.name,
+          type: field.type,
+          description: field.description,
+          initialValue: String(field.initial),
+        })),
+      };
+
+      // Convert agents from template (keyed by node ID)
+      if (flowJson.agents) {
+        for (const [nodeId, agentConfig] of Object.entries(flowJson.agents)) {
+          const config = agentConfig as any;
+          initialState.agents.set(nodeId, {
+            id: nodeId,
+            nodeId: nodeId,
+            name: config.name || "Agent",
+            description: config.description || "",
+            modelTier:
+              config.modelTier === "heavy" ? ModelTier.Heavy : ModelTier.Light,
+            promptMessages: config.promptMessages || [],
+            historyEnabled: config.historyEnabled ?? true,
+            historyCount: config.historyCount ?? 10,
+            enabledStructuredOutput: config.enabledStructuredOutput || false,
+            schemaFields: config.schemaFields || [],
+          });
         }
-        const flowJson = await response.json();
+      }
 
-        // Build initial state from the selected flow template
-        // This preserves the entire template structure for AI to enhance
-        // Mark all template nodes with isFromTemplate: true so they can't be deleted
-        const initialState: WorkflowState = {
-          nodes: (flowJson.nodes || []).map((node: any) => ({
-            ...node,
-            data: { ...node.data, isFromTemplate: true },
-          })),
-          edges: flowJson.edges || [],
-          agents: new Map(),
-          ifNodes: new Map(),
-          dataStoreNodes: new Map(),
-          // Use the HUD data stores (which include template fields + user additions)
-          dataStoreSchema: dataStoreSchema.map((field) => ({
-            id: field.id,
-            name: field.name,
-            type: field.type,
-            description: field.description,
-            initialValue: String(field.initial),
-          })),
-          };
+      // Extract if nodes from template nodes
+      for (const node of flowJson.nodes || []) {
+        if (node.type === "if" && node.data) {
+          initialState.ifNodes.set(node.id, {
+            id: node.id,
+            nodeId: node.id,
+            name: node.data.name || "Condition",
+            logicOperator: node.data.logicOperator || "AND",
+            conditions: node.data.conditions || [],
+          });
+        }
+      }
 
-          // Convert agents from template (keyed by node ID)
-          if (flowJson.agents) {
-            for (const [nodeId, agentConfig] of Object.entries(flowJson.agents)) {
-              const config = agentConfig as any;
-              initialState.agents.set(nodeId, {
-                id: nodeId,
-                nodeId: nodeId,
-                name: config.name || "Agent",
-                description: config.description || "",
-                modelTier:
-                  config.modelTier === "heavy"
-                    ? ModelTier.Heavy
-                    : ModelTier.Light,
-                promptMessages: config.promptMessages || [],
-                historyEnabled: config.historyEnabled ?? true,
-                historyCount: config.historyCount ?? 10,
-                enabledStructuredOutput: config.enabledStructuredOutput || false,
-                schemaFields: config.schemaFields || [],
-              });
-            }
-          }
+      // Extract data store nodes from template nodes
+      for (const node of flowJson.nodes || []) {
+        if (node.type === "dataStore" && node.data) {
+          initialState.dataStoreNodes.set(node.id, {
+            id: node.id,
+            nodeId: node.id,
+            name: node.data.name || "Data Store",
+            fields: node.data.dataStoreFields || [],
+          });
+        }
+      }
 
-          // Extract if nodes from template nodes
-          for (const node of flowJson.nodes || []) {
-            if (node.type === "if" && node.data) {
-              initialState.ifNodes.set(node.id, {
-                id: node.id,
-                nodeId: node.id,
-                name: node.data.name || "Condition",
-                logicOperator: node.data.logicOperator || "AND",
-                conditions: node.data.conditions || [],
-              });
-            }
-          }
-
-          // Extract data store nodes from template nodes
-          for (const node of flowJson.nodes || []) {
-            if (node.type === "dataStore" && node.data) {
-              initialState.dataStoreNodes.set(node.id, {
-                id: node.id,
-                nodeId: node.id,
-                name: node.data.name || "Data Store",
-                fields: node.data.dataStoreFields || [],
-              });
-            }
-          }
-
-        // Generate workflow using AI, starting from the template's initial state
-        const workflowResult = await generateWorkflow({
-          context: workflowContext,
-          initialState,
-          callbacks: {
-            onStateChange: () => {
-              // State changes are logged via console.log in service
-            },
-            onProgress: (progress) => {
-              setWorkflowProgress(progress);
-            },
+      // Generate workflow using AI, starting from the template's initial state
+      const workflowResult = await generateWorkflow({
+        context: workflowContext,
+        initialState,
+        callbacks: {
+          onStateChange: () => {
+            // State changes are logged via console.log in service
           },
-        });
+          onProgress: (progress) => {
+            setWorkflowProgress(progress);
+          },
+        },
+      });
 
       // Store the generated workflow and session name for use in handleFinish
       setGeneratedWorkflow(workflowResult.state);
       setGeneratedSessionName(workflowResult.sessionName);
 
-        return {
-          state: workflowResult.state,
-          sessionName: workflowResult.sessionName,
-        };
-      } catch (workflowError) {
-        logger.error("Workflow generation failed", workflowError);
-        toastError("Workflow generation failed", {
-          description:
-            workflowError instanceof Error
-              ? workflowError.message
-              : "Unknown error",
-        });
-        return null;
-      } finally {
-        setIsWorkflowGenerating(false);
-      }
-    }, [
-      selectedFlowTemplate,
-      defaultLiteModel,
-      defaultStrongModel,
-      flowResponseTemplate,
-    ]);
+      return {
+        state: workflowResult.state,
+        sessionName: workflowResult.sessionName,
+      };
+    } catch (workflowError) {
+      logger.error("Workflow generation failed", workflowError);
+      toastError("Workflow generation failed", {
+        description:
+          workflowError instanceof Error
+            ? workflowError.message
+            : "Unknown error",
+      });
+      return null;
+    } finally {
+      setIsWorkflowGenerating(false);
+    }
+  }, [
+    selectedFlowTemplate,
+    defaultLiteModel,
+    defaultStrongModel,
+    flowResponseTemplate,
+  ]);
 
   const handleFinish = useCallback(async () => {
     // Set local loading state immediately (synchronous) - MUST be first!
@@ -781,7 +877,9 @@ Ground Rules:`;
       // If we still don't have a session name (e.g., no data stores = no workflow generation),
       // generate it directly from the scenario
       if (!sessionNameToUse && scenarioBackground.trim().length >= 50) {
-        const { generateSessionName } = await import("@/app/services/system-agents/session-name-generator");
+        const { generateSessionName } = await import(
+          "@/app/services/system-agents/session-name-generator"
+        );
         sessionNameToUse = await generateSessionName(scenarioBackground);
       }
 
@@ -806,16 +904,18 @@ Ground Rules:`;
         defaultLiteModel,
         defaultStrongModel,
         createCharacterMutation,
-      }).then((result) => {
-        setIsCreatingSession(false);
-        if (result) {
-          // Navigate back to sessions list after creation completes
-          navigate({ to: "/sessions" });
-        }
-      }).catch((error) => {
-        setIsCreatingSession(false);
-        logger.error("[CreateSession] Error in createSession", error);
-      });
+      })
+        .then((result) => {
+          setIsCreatingSession(false);
+          if (result) {
+            // Navigate back to sessions list after creation completes
+            navigate({ to: "/sessions" });
+          }
+        })
+        .catch((error) => {
+          setIsCreatingSession(false);
+          logger.error("[CreateSession] Error in createSession", error);
+        });
     } catch (error) {
       // Handle any errors in the synchronous part (before createSession call)
       setIsCreatingSession(false);
@@ -992,8 +1092,12 @@ Ground Rules:`;
               }
               loading={isCreatingSession || isSaving || isWaitingForWorkflow}
             >
-              <span className="md:hidden">{isLastStep ? "Create" : "Next"}</span>
-              <span className="hidden md:inline">{isLastStep ? "Create Session" : "Next"}</span>
+              <span className="md:hidden">
+                {isLastStep ? "Create" : "Next"}
+              </span>
+              <span className="hidden md:inline">
+                {isLastStep ? "Create Session" : "Next"}
+              </span>
               {!isLastStep && <ChevronRight size={16} />}
             </Button>
           </div>
@@ -1007,8 +1111,26 @@ Ground Rules:`;
           maxAccessibleStepIndex={getAccessibleStepIndex()}
         />
 
-        {/* Content */}
-        <div className="relative z-10 flex-1 overflow-hidden">
+        {/* Content - pb-[100px] on mobile for MobileChatSheet space */}
+        {/* Desktop: ChatPanel(left) + StepContent(right) layout */}
+        <div className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 overflow-hidden px-0 pb-[100px] md:flex-row md:gap-6 md:px-6 md:pb-6">
+          {/* Desktop Chat Panel (rendered once, configured by current step) */}
+          <FormProvider {...desktopChatForm}>
+            <form
+              onSubmit={desktopChatForm.handleSubmit(handleDesktopChatSubmit)}
+              className="hidden h-full w-full max-w-md md:flex"
+            >
+              <ChatPanel
+                messages={chatMessages}
+                agent={CHAT_AGENTS[currentStep]}
+                currentStep={currentStep}
+                onStop={isChatLoading ? handleChatStop : undefined}
+                isLoading={isChatLoading}
+              />
+            </form>
+          </FormProvider>
+
+          {/* Step Content */}
           {currentStep === "cast" && (
             <CastStep
               currentStep={currentStep}
@@ -1033,6 +1155,8 @@ Ground Rules:`;
                 // Add new draft character at the front of library (not directly to roster)
                 setDraftCharacters((prev) => [draftCharacter, ...prev]);
               }}
+              chatHandlersRef={chatHandlersRef}
+              onChatLoadingChange={setIsChatLoading}
               scenarioBackground={scenarioBackground}
               firstMessages={scenarioFirstMessages}
             />
@@ -1065,13 +1189,13 @@ Ground Rules:`;
               }))}
               isGenerating={isScenarioGenerating}
               onIsGeneratingChange={setIsScenarioGenerating}
-              mobileTab={mobileScenarioTab}
-              onMobileTabChange={setMobileScenarioTab}
+              chatHandlersRef={chatHandlersRef}
+              onChatLoadingChange={setIsChatLoading}
             />
           )}
 
           {currentStep === "stats" && (
-            <div className="h-full overflow-hidden">
+            <div className="flex h-full min-w-0 flex-1 overflow-hidden">
               <StatsStep
                 currentStep={currentStep}
                 dataStores={statsDataStores}
@@ -1103,13 +1227,25 @@ Ground Rules:`;
                 onResponseTemplateChange={setFlowResponseTemplate}
                 chatMessages={chatMessages}
                 onChatMessagesChange={setChatMessages}
-                mobileTab={mobileHudTab}
-                onMobileTabChange={setMobileHudTab}
+                chatHandlersRef={chatHandlersRef}
+                onChatLoadingChange={setIsChatLoading}
               />
             </div>
           )}
         </div>
 
+        {/* Mobile Chat Bottom Sheet (rendered once, configured by current step) */}
+        {/* Separate FormProvider to avoid form context conflicts with Desktop */}
+        <FormProvider {...mobileChatForm}>
+          <MobileChatSheet
+            messages={chatMessages}
+            agent={CHAT_AGENTS[currentStep]}
+            currentStep={currentStep}
+            onSubmit={handleMobileChatSubmit}
+            onStop={isChatLoading ? handleChatStop : undefined}
+            isLoading={isChatLoading}
+          />
+        </FormProvider>
       </>
 
       {/* Navigation Confirmation Dialog */}
@@ -1176,25 +1312,33 @@ Ground Rules:`;
                   {workflowProgress?.phase === "initializing" && (
                     <>
                       <div className="h-2 w-2 animate-pulse rounded-full bg-yellow-400" />
-                      <span className="text-xs text-yellow-400">Initializing...</span>
+                      <span className="text-xs text-yellow-400">
+                        Initializing...
+                      </span>
                     </>
                   )}
                   {workflowProgress?.phase === "building" && (
                     <>
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-brand-400" />
-                      <span className="text-xs text-brand-400">Building workflow...</span>
+                      <div className="bg-brand-400 h-2 w-2 animate-pulse rounded-full" />
+                      <span className="text-brand-400 text-xs">
+                        Building workflow...
+                      </span>
                     </>
                   )}
                   {workflowProgress?.phase === "validating" && (
                     <>
                       <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
-                      <span className="text-xs text-blue-400">Validating...</span>
+                      <span className="text-xs text-blue-400">
+                        Validating...
+                      </span>
                     </>
                   )}
                   {workflowProgress?.phase === "fixing" && (
                     <>
                       <div className="h-2 w-2 animate-pulse rounded-full bg-orange-400" />
-                      <span className="text-xs text-orange-400">Fixing issues...</span>
+                      <span className="text-xs text-orange-400">
+                        Fixing issues...
+                      </span>
                     </>
                   )}
                   {workflowProgress?.phase === "complete" && (
@@ -1205,17 +1349,24 @@ Ground Rules:`;
                   )}
                   {!workflowProgress && (
                     <>
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-fg-subtle" />
-                      <span className="text-xs text-fg-subtle">Preparing...</span>
+                      <div className="bg-fg-subtle h-2 w-2 animate-pulse rounded-full" />
+                      <span className="text-fg-subtle text-xs">
+                        Preparing...
+                      </span>
                     </>
                   )}
                 </div>
 
                 {/* Current action message */}
                 {workflowProgress?.message && (
-                  <div className="flex items-center gap-2 text-fg-muted">
-                    <Sparkles size={12} className="text-brand-400 flex-shrink-0" />
-                    <span className="text-xs truncate">{workflowProgress.message}</span>
+                  <div className="text-fg-muted flex items-center gap-2">
+                    <Sparkles
+                      size={12}
+                      className="text-brand-400 flex-shrink-0"
+                    />
+                    <span className="truncate text-xs">
+                      {workflowProgress.message}
+                    </span>
                   </div>
                 )}
               </div>

@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { useFormContext } from "react-hook-form";
 import { User, Sparkles, Send, Square } from "lucide-react";
 import { cn } from "@/shared/lib";
 
@@ -17,17 +18,37 @@ export const ASSISTANT_AVATARS: Record<SessionStep, string> = {
 /**
  * Get assistant info based on step
  */
-function getAssistantInfo(step?: SessionStep): { name: string; colorClass: string; avatarUrl: string } {
+function getAssistantInfo(step?: SessionStep): {
+  name: string;
+  colorClass: string;
+  avatarUrl: string;
+} {
   const defaultAvatar = ASSISTANT_AVATARS.scenario;
   switch (step) {
     case "scenario":
-      return { name: "Scenario AI", colorClass: "text-brand-400", avatarUrl: ASSISTANT_AVATARS.scenario };
+      return {
+        name: "Scenario AI",
+        colorClass: "text-brand-400",
+        avatarUrl: ASSISTANT_AVATARS.scenario,
+      };
     case "cast":
-      return { name: "Cast AI", colorClass: "text-brand-400", avatarUrl: ASSISTANT_AVATARS.cast };
+      return {
+        name: "Cast AI",
+        colorClass: "text-brand-400",
+        avatarUrl: ASSISTANT_AVATARS.cast,
+      };
     case "stats":
-      return { name: "Stats AI", colorClass: "text-brand-400", avatarUrl: ASSISTANT_AVATARS.stats };
+      return {
+        name: "Stats AI",
+        colorClass: "text-brand-400",
+        avatarUrl: ASSISTANT_AVATARS.stats,
+      };
     default:
-      return { name: "AI", colorClass: "text-brand-400", avatarUrl: defaultAvatar };
+      return {
+        name: "AI",
+        colorClass: "text-brand-400",
+        avatarUrl: defaultAvatar,
+      };
   }
 }
 
@@ -46,6 +67,8 @@ export interface ChatMessage {
   isSystemGenerated?: boolean;
   /** If set, show typing indicator for this duration (ms) before displaying the message */
   typingIndicatorDuration?: number;
+  /** If true, animate the message content with typewriter effect after typing indicator */
+  typingAnimation?: boolean;
 }
 
 /**
@@ -67,20 +90,10 @@ interface ChatPanelProps {
   agent: ChatAgentConfig;
   /** Current step - used for typing indicator avatar */
   currentStep?: SessionStep;
-  /** Current input value */
-  inputValue: string;
-  /** Input change handler */
-  onInputChange: (value: string) => void;
-  /** Submit handler */
-  onSubmit: () => void;
   /** Stop handler - called when user clicks stop during loading */
   onStop?: () => void;
   /** Whether AI is currently generating (disables input, shows stop button) */
   isLoading?: boolean;
-  /** Whether to show typing indicator dots (separate from isLoading for streaming control) */
-  showTypingIndicator?: boolean;
-  /** Whether submit is disabled */
-  disabled?: boolean;
   /** Additional class names */
   className?: string;
 }
@@ -93,17 +106,17 @@ export function ChatPanel({
   messages,
   agent,
   currentStep,
-  inputValue,
-  onInputChange,
-  onSubmit,
   onStop,
   isLoading = false,
-  showTypingIndicator,
-  disabled = false,
   className,
 }: ChatPanelProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Use form context from parent (FormProvider in new.tsx)
+  const {
+    register,
+    formState: { isValid },
+  } = useFormContext<{ message: string }>();
 
   const {
     visibleMessages,
@@ -114,30 +127,12 @@ export function ChatPanel({
     messages,
     isLoading,
     currentStep,
-    showTypingIndicator,
   });
 
   // Auto-scroll chat to bottom when visible messages change
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [visibleMessages]);
-
-  // Handle form submit
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim() || disabled) return;
-    onSubmit();
-  };
-
-  // Handle key press
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (!disabled && inputValue.trim()) {
-        onSubmit();
-      }
-    }
-  };
 
   return (
     <div
@@ -148,7 +143,9 @@ export function ChatPanel({
     >
       {/* Chat Messages */}
       <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-4 pb-2">
-        {visibleMessages.length === 0 && !isLoading && pendingTypingMessages.length === 0 ? (
+        {visibleMessages.length === 0 &&
+        !isLoading &&
+        pendingTypingMessages.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <div className="bg-surface-overlay mb-3 flex h-12 w-12 items-center justify-center rounded-full">
               <Sparkles size={20} className="text-fg-subtle" />
@@ -163,7 +160,8 @@ export function ChatPanel({
         ) : (
           <div className="space-y-4">
             {visibleMessages.map((msg) => {
-              const assistantInfo = msg.role === "assistant" ? getAssistantInfo(msg.step) : null;
+              const assistantInfo =
+                msg.role === "assistant" ? getAssistantInfo(msg.step) : null;
               return (
                 <div
                   key={msg.id}
@@ -184,7 +182,9 @@ export function ChatPanel({
                       <User size={14} className="text-brand-400" />
                     ) : (
                       <img
-                        src={assistantInfo?.avatarUrl || ASSISTANT_AVATARS.scenario}
+                        src={
+                          assistantInfo?.avatarUrl || ASSISTANT_AVATARS.scenario
+                        }
                         alt={assistantInfo?.name || "AI"}
                         className="h-full w-full object-cover"
                       />
@@ -192,7 +192,12 @@ export function ChatPanel({
                   </div>
                   <div className="flex max-w-[80%] flex-col">
                     {assistantInfo && (
-                      <span className={cn("mb-0.5 text-[10px] font-medium", assistantInfo.colorClass)}>
+                      <span
+                        className={cn(
+                          "mb-0.5 text-[10px] font-medium",
+                          assistantInfo.colorClass,
+                        )}
+                      >
                         {assistantInfo.name}
                       </span>
                     )}
@@ -214,7 +219,7 @@ export function ChatPanel({
             {/* Typing indicator - controlled by shouldShow */}
             {shouldShow && (
               <div className="flex gap-3">
-                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-overlay">
+                <div className="bg-surface-overlay flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-full">
                   <img
                     src={getAssistantInfo(typingIndicatorStep).avatarUrl}
                     alt="AI"
@@ -233,27 +238,25 @@ export function ChatPanel({
         )}
       </div>
 
-      {/* Chat Input */}
+      {/* Chat Input - form is wrapped by parent in new.tsx */}
       <div className="flex-shrink-0 px-3 pt-2 pb-3">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <input
-            ref={inputRef}
             type="text"
-            value={inputValue}
-            onChange={(e) => onInputChange(e.target.value)}
+            {...register("message", { required: true })}
             placeholder={agent.inputPlaceholder}
+            disabled={isLoading}
             className={cn(
               "bg-surface-overlay text-fg-default placeholder:text-fg-subtle flex-1 rounded-full border-0 px-4 py-2.5 text-sm",
               "focus:ring-brand-500/30 ring-1 ring-transparent outline-none",
               "transition-shadow duration-200",
             )}
-            onKeyDown={handleKeyDown}
           />
           {isLoading && onStop ? (
             <button
               type="button"
               onClick={onStop}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-red-500/20 text-red-400 transition-all duration-200 hover:bg-red-500/30 hover:scale-105"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-red-500/20 text-red-400 transition-all duration-200 hover:scale-105 hover:bg-red-500/30"
               title="Stop generating"
             >
               <Square size={14} className="fill-current" />
@@ -261,18 +264,18 @@ export function ChatPanel({
           ) : (
             <button
               type="submit"
-              disabled={!inputValue.trim() || disabled}
+              disabled={isLoading || !isValid}
               className={cn(
                 "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-all duration-200",
-                inputValue.trim() && !disabled
-                  ? "bg-brand-600 hover:bg-brand-500 text-white hover:scale-105"
-                  : "bg-surface-overlay text-fg-subtle",
+                isLoading || !isValid
+                  ? "bg-surface-overlay text-fg-subtle"
+                  : "bg-brand-600 hover:bg-brand-500 text-white hover:scale-105",
               )}
             >
               <Send size={16} />
             </button>
           )}
-        </form>
+        </div>
       </div>
     </div>
   );
