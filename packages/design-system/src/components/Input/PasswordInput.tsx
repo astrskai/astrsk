@@ -1,21 +1,13 @@
 import * as React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { IconInput, type IconInputProps } from './IconInput';
+import { inputBaseStyles } from './input-styles';
 import { Label } from '../Label';
 
 export interface PasswordInputProps
-  extends Omit<
-    IconInputProps,
-    | 'type'
-    | 'icon'
-    | 'iconPosition'
-    | 'onIconClick'
-    | 'iconAriaLabel'
-    | 'rightIcon'
-    | 'onRightIconClick'
-    | 'rightIconAriaLabel'
-  > {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  /** Icon to display on the left side */
+  leftIcon?: React.ReactNode;
   /** Label text */
   label?: string;
   /** Helper text shown below input */
@@ -73,28 +65,52 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
     };
 
     const inputElement = (
-      <IconInput
-        {...props}
-        ref={ref}
-        id={inputId}
-        required={required}
-        aria-invalid={error ? 'true' : undefined}
-        aria-describedby={
-          [errorId, hintId].filter(Boolean).join(' ') || undefined
-        }
-        type={showPassword ? 'text' : 'password'}
-        leftIcon={effectiveLeftIcon}
-        rightIcon={
-          showPassword ? (
+      <div className={cn('relative', className)}>
+        {effectiveLeftIcon && (
+          <div
+            className={cn(
+              'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle)]',
+              '[&_svg]:size-4'
+            )}
+          >
+            {effectiveLeftIcon}
+          </div>
+        )}
+        <input
+          {...props}
+          ref={ref}
+          id={inputId}
+          required={required}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={
+            [errorId, hintId].filter(Boolean).join(' ') || undefined
+          }
+          type={showPassword ? 'text' : 'password'}
+          data-slot='input'
+          className={cn(
+            inputBaseStyles,
+            effectiveLeftIcon ? 'pl-9' : 'pl-3',
+            'pr-9'
+          )}
+        />
+        <button
+          type='button'
+          onClick={togglePasswordVisibility}
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+          tabIndex={-1}
+          className={cn(
+            'absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-subtle)]',
+            '[&_svg]:size-4',
+            'cursor-pointer transition-colors hover:text-[var(--fg-default)]'
+          )}
+        >
+          {showPassword ? (
             <EyeOff aria-hidden='true' />
           ) : (
             <Eye aria-hidden='true' />
-          )
-        }
-        onRightIconClick={togglePasswordVisibility}
-        rightIconAriaLabel={showPassword ? 'Hide password' : 'Show password'}
-        className={className}
-      />
+          )}
+        </button>
+      </div>
     );
 
     const labelElement = label && (
