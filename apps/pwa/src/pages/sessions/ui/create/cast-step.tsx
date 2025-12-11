@@ -805,6 +805,7 @@ export function CastStep({
     firstMessages,
     draftCharacters,
     currentStep,
+    addChatMessage,
   ]);
 
   // Handle chat stop (abort generation and show cancelled message)

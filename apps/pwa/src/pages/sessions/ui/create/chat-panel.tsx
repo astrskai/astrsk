@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
-import { User, Sparkles, Send, Square } from "lucide-react";
+import { User, Send, Square } from "lucide-react";
 import { cn } from "@/shared/lib";
 
 import type { SessionStep } from "./session-stepper";
@@ -120,7 +120,6 @@ export function ChatPanel({
 
   const {
     visibleMessages,
-    pendingTypingMessages,
     shouldShowTypingIndicator: shouldShow,
     typingIndicatorStep,
   } = useTypingIndicator({
@@ -143,22 +142,7 @@ export function ChatPanel({
     >
       {/* Chat Messages */}
       <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-4 pb-2">
-        {visibleMessages.length === 0 &&
-        !isLoading &&
-        pendingTypingMessages.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <div className="bg-surface-overlay mb-3 flex h-12 w-12 items-center justify-center rounded-full">
-              <Sparkles size={20} className="text-fg-subtle" />
-            </div>
-            <p className="text-fg-muted text-sm font-medium">
-              {agent.emptyTitle}
-            </p>
-            <p className="text-fg-subtle mt-1 max-w-[200px] text-xs">
-              {agent.emptyDescription}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
+        <div className="space-y-4">
             {visibleMessages.map((msg) => {
               const assistantInfo =
                 msg.role === "assistant" ? getAssistantInfo(msg.step) : null;
@@ -235,7 +219,6 @@ export function ChatPanel({
             )}
             <div ref={chatEndRef} />
           </div>
-        )}
       </div>
 
       {/* Chat Input - form is wrapped by parent in new.tsx */}

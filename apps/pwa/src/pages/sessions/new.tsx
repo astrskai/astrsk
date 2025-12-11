@@ -689,7 +689,7 @@ Ground Rules:`;
 
       setCurrentStep(targetStep);
     },
-    [currentStep, addChatMessage],
+    [currentStep],
   );
 
   const handlePrevious = useCallback(() => {

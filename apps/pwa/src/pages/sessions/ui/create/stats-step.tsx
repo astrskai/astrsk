@@ -625,75 +625,80 @@ export function StatsStep({
       >
           {/* Expandable List */}
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
-            {/* Action Bar - always visible at top */}
-            <div className="flex items-center justify-end gap-2">
-              {hasAttemptedGeneration && !isGenerating && dataStores.length === 0 && (
+            {/* Show generating indicator when generating or refining */}
+            {(isGenerating || isRefining) && (
+              <div className="flex items-center justify-between rounded-lg border border-brand-500/30 bg-brand-500/10 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <Loader2 size={18} className="animate-spin text-brand-500" />
+                  <span className="animate-pulse font-mono text-xs text-brand-400">
+                    {isRefining ? "REFINING VARIABLES..." : templateStatus || `DERIVING VARIABLES... (${dataStores.length} found)`}
+                  </span>
+                </div>
                 <Button
-                  onClick={handleRegenerate}
+                  onClick={handleStopGeneration}
                   variant="secondary"
                   size="sm"
-                  icon={<RefreshCw size={16} />}
-                  title="Regenerate trackers from scenario"
+                  icon={<Square size={14} />}
                 >
-                  <span className="hidden sm:inline">Regenerate</span>
+                  Stop
                 </Button>
-              )}
-              <Button
-                onClick={handleAddStore}
-                variant="default"
-                size="sm"
-                icon={<Plus size={16} />}
-              >
-                <span className="hidden sm:inline">New Tracker</span>
-              </Button>
-            </div>
+              </div>
+            )}
 
-            {/* Show generating indicator when generating or refining */}
-          {(isGenerating || isRefining) && (
-            <div className="mb-4 flex items-center justify-between rounded-lg border border-brand-500/30 bg-brand-500/10 px-4 py-3">
-              <div className="flex items-center gap-3">
-                <Loader2 size={18} className="animate-spin text-brand-500" />
-                <span className="animate-pulse font-mono text-xs text-brand-400">
-                  {isRefining ? "REFINING VARIABLES..." : templateStatus || `DERIVING VARIABLES... (${dataStores.length} found)`}
+            {/* Empty state - only show when not generating and no stores */}
+            {!isGenerating && dataStores.length === 0 && (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-900/30 px-6 py-12 text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-800">
+                  <Database size={24} className="text-zinc-400" />
+                </div>
+                <p className="text-sm font-medium text-zinc-300">
+                  {hasAttemptedGeneration ? "No trackers were generated" : "No trackers defined"}
+                </p>
+                <p className="mt-1 max-w-[280px] text-xs text-zinc-500">
+                  {hasAttemptedGeneration
+                    ? "AI couldn't find suitable trackers for your scenario"
+                    : "Add trackers manually or use AI to generate them"}
+                </p>
+                {/* Action buttons inside empty state */}
+                <div className="mt-6 flex items-center gap-3">
+                  {hasAttemptedGeneration && (
+                    <Button
+                      onClick={handleRegenerate}
+                      variant="secondary"
+                      size="sm"
+                      icon={<RefreshCw size={16} />}
+                    >
+                      Regenerate
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleAddStore}
+                    variant="default"
+                    size="sm"
+                    icon={<Plus size={16} />}
+                  >
+                    Add Tracker
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Header with action button - only show when stores exist */}
+            {dataStores.length > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-fg-muted">
+                  {dataStores.length} tracker{dataStores.length !== 1 ? "s" : ""}
                 </span>
-              </div>
-              <Button
-                onClick={handleStopGeneration}
-                variant="secondary"
-                size="sm"
-                icon={<Square size={14} />}
-              >
-                Stop
-              </Button>
-            </div>
-          )}
-          {/* Empty state - only show when not generating and no stores */}
-          {!isGenerating && dataStores.length === 0 && (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-900/30 px-6 py-10 text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
-                <Database size={20} className="text-zinc-400" />
-              </div>
-              <p className="text-sm font-medium text-zinc-400">
-                {hasAttemptedGeneration ? "No trackers were generated" : "No trackers defined"}
-              </p>
-              <p className="mt-1 max-w-[280px] text-xs text-zinc-500">
-                {hasAttemptedGeneration
-                  ? "AI couldn't find suitable trackers for your scenario"
-                  : "Add trackers manually or use AI to generate them"}
-              </p>
-              {hasAttemptedGeneration && (
                 <Button
                   onClick={handleAddStore}
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   icon={<Plus size={16} />}
-                  className="mt-4"
                 >
-                  New Tracker
+                  Add
                 </Button>
-              )}
-            </div>
-          )}
+              </div>
+            )}
           {/* Data stores list - shows during generation as stores arrive */}
           {dataStores.length > 0 && (
             dataStores.map((store) => {
