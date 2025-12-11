@@ -8,8 +8,8 @@ import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardTab } from "@/features/session/create-session/step-cards";
-import { cn } from "@/shared/lib";
 import { useMobileNavigationStore } from "@/shared/stores/mobile-navigation-context";
+import { Button } from "@/shared/ui/forms/button";
 
 export function SessionSettingsPage() {
   const { sessionId } = useParams({ from: "/_layout/sessions/settings/$sessionId" });
@@ -116,20 +116,13 @@ export function SessionSettingsPage() {
         refInitCardTab={refInitCardTab}
         isSettingsOpen={true}
         actionButton={
-          <button
+          <Button
             onClick={handleStartSession}
-            disabled={isStarting}
-            className={cn(
-              "bg-white text-black px-6 py-2.5 rounded-full font-bold text-sm",
-              "hover:bg-gray-200 transition-all flex items-center gap-2",
-              "shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]",
-              "transform hover:scale-105 active:scale-95",
-              "disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
-            )}
+            loading={isStarting}
+            icon={<Play className="h-3 w-3" />}
           >
-            <Play className="h-3 w-3" />
-            {isStarting ? "Starting..." : "Start Session"}
-          </button>
+            Start Session
+          </Button>
         }
       />
     </div>
