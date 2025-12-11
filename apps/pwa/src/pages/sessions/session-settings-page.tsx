@@ -5,16 +5,17 @@ import { Play } from "lucide-react";
 import { SessionSettings } from "./ui/chat/session-settings";
 import { fetchSession, useCloneSession, useSaveSession } from "@/entities/session/api";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
-import { useSessionStore, useSessionUIStore } from "@/shared/stores/session-store";
+import { useSessionStore } from "@/shared/stores/session-store";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import { cn } from "@/shared/lib";
+import { useMobileNavigationStore } from "@/shared/stores/mobile-navigation-context";
 
 export function SessionSettingsPage() {
   const { sessionId } = useParams({ from: "/_layout/sessions/settings/$sessionId" });
   const navigate = useNavigate();
   const selectSession = useSessionStore.use.selectSession();
-  const skipScenarioDialog = useSessionUIStore.use.skipScenarioDialog();
+  const setIsLeftSidebarOpen = useMobileNavigationStore.use.setIsOpen();
   const cloneSessionMutation = useCloneSession();
   const saveSessionMutation = useSaveSession();
 
@@ -62,14 +63,19 @@ export function SessionSettingsPage() {
       // Save the updated session
       await saveSessionMutation.mutateAsync({ session: clonedSession });
 
-      // Skip the scenario dialog for the new session
-      skipScenarioDialog(clonedSession.id.toString());
-
       // Success toast
       toastSuccess("Session started successfully");
 
       // Select and navigate to the cloned session
       selectSession(clonedSession.id, clonedSession.props.title);
+
+      // Open the left sidebar (session list) on desktop only
+      // Mobile is determined by window width < 768px (Tailwind md breakpoint)
+      const isMobile = window.innerWidth < 768;
+      if (!isMobile) {
+        setIsLeftSidebarOpen(true);
+      }
+
       navigate({
         to: "/sessions/$sessionId",
         params: { sessionId: clonedSession.id.toString() },
@@ -85,8 +91,8 @@ export function SessionSettingsPage() {
     sessionId,
     cloneSessionMutation,
     saveSessionMutation,
-    skipScenarioDialog,
     selectSession,
+    setIsLeftSidebarOpen,
     navigate,
   ]);
 
