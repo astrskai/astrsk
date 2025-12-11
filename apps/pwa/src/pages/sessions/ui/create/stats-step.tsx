@@ -218,6 +218,60 @@ export function StatsStep({
   dataStoresRef.current = dataStores;
   isGeneratingRef.current = isGenerating;
 
+  // Track previous isGenerating state for completion detection
+  const prevIsGeneratingRef = useRef(isGenerating);
+
+  // Show completion message when generation finishes (isGenerating: true → false)
+  useEffect(() => {
+    const wasGenerating = prevIsGeneratingRef.current;
+    prevIsGeneratingRef.current = isGenerating;
+
+    // Only trigger when isGenerating changes from true to false
+    if (!wasGenerating || isGenerating) return;
+
+    // Skip if no stats messages exist yet (welcome message hasn't been shown)
+    const statsMessages = chatMessagesRef.current.filter(m => m.step === "stats");
+    if (statsMessages.length === 0) return;
+
+    // Skip if completion message already exists
+    const hasCompletionMessage = statsMessages.some(m => m.id === "stats-completion");
+    if (hasCompletionMessage) return;
+
+    // Show typing indicator then completion message
+    setIsTypingIndicator(true);
+
+    const timer = setTimeout(() => {
+      setIsTypingIndicator(false);
+
+      const currentDataStores = dataStoresRef.current;
+      let completionMessage: ChatMessage;
+
+      if (currentDataStores.length > 0) {
+        completionMessage = {
+          id: "stats-completion",
+          role: "assistant",
+          content: `All done! Generated ${currentDataStores.length} stats for your scenario. Feel free to add or remove any as you like!`,
+          step: "stats",
+          isSystemGenerated: true,
+        };
+      } else {
+        completionMessage = {
+          id: "stats-completion",
+          role: "assistant",
+          content: `I couldn't find any specific stats to generate for this scenario. You can add custom stats manually!`,
+          step: "stats",
+          isSystemGenerated: true,
+        };
+      }
+
+      onChatMessagesChange?.([...chatMessagesRef.current, completionMessage]);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isGenerating, onChatMessagesChange]);
+
   // Show welcome message on first mount (always show typing indicator first)
   useEffect(() => {
     // Skip if there are existing stats messages
