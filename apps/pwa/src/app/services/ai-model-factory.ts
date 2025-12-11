@@ -231,6 +231,12 @@ export function createProvider({
       const parsedModelId = modelId?.includes(":") ? modelId.split(":")[1] : modelId;
       const isGeminiModel = parsedModelId?.startsWith("google/gemini-");
 
+      logger.info(`[createProvider] AstrskAi model detection`, {
+        originalModelId: modelId,
+        parsedModelId,
+        isGeminiModel,
+      });
+
       // Create custom fetch wrapper to add x-dev-key header (only in development)
       const devKey = import.meta.env.VITE_DEV_KEY;
       const baseFetch = getAISDKFetch();
@@ -391,10 +397,13 @@ export function createProvider({
 /**
  * Parse model ID for AstrskAi provider
  * AstrskAi model IDs are stored with "openai-compatible:" prefix but need to be used without it
- * For Gemini models, also strip the "google/" prefix since Google Generative AI expects just the model name
+ *
+ * IMPORTANT: For Gemini models, we need to keep the "google/" prefix because the backend
+ * routes to Vertex AI using the full path (google/gemini-3-pro)
+ *
  * Examples:
  * - "openai-compatible:deepseek/deepseek-chat" -> "deepseek/deepseek-chat"
- * - "openai-compatible:google/gemini-2.5-flash" -> "gemini-2.5-flash" (strips both prefixes)
+ * - "openai-compatible:google/gemini-3-pro" -> "google/gemini-3-pro" (keep google/ prefix)
  */
 function parseAstrskAiModelId(modelId: string): string {
   let parsed = modelId;
@@ -404,11 +413,7 @@ function parseAstrskAiModelId(modelId: string): string {
     parsed = parsed.substring("openai-compatible:".length);
   }
 
-  // For Gemini models, strip "google/" prefix (Google Generative AI expects just the model name)
-  if (parsed.startsWith("google/")) {
-    parsed = parsed.substring("google/".length);
-  }
-
+  // Keep the full path including "google/" prefix for backend routing
   return parsed;
 }
 
@@ -453,6 +458,48 @@ export function createLiteModel(
   }
 
   throw new Error(`Unable to create model for source: ${source}`);
+}
+
+/**
+ * Check if a model should use non-streaming approach for multi-tool calling.
+ * This is different from shouldUseToolFallback which is for structured output.
+ *
+ * Some models work with tool calling but have issues with streaming when using tools:
+ * - Gemini models via AstrskAi: Vertex AI streaming incompatibility
+ * - GLM models: Better stability with non-streaming
+ * - Friendli models (deepseek-ai/*, zai-org/*): Don't support streaming tool calls
+ *
+ * @param apiSource - The API source
+ * @param modelId - The model identifier
+ * @returns true if should use generateText instead of streamText for tool calling
+ */
+export function shouldUseNonStreamingForTools(apiSource: ApiSource, modelId: string): boolean {
+  const modelIdLower = modelId.toLowerCase();
+
+  // GLM models work better with non-streaming for tool calling
+  if (modelIdLower.includes("glm")) {
+    logger.info(`[ToolCalling] GLM model detected (${modelId}) - using non-streaming generateText`);
+    return true;
+  }
+
+  // AstrskAi provider - check model type
+  if (apiSource === ApiSource.AstrskAi) {
+    // Gemini models need non-streaming (Vertex AI streaming incompatibility)
+    if (modelId.includes("google/gemini")) {
+      logger.info(`[ToolCalling] Gemini model detected (${modelId}) - using non-streaming generateText`);
+      return true;
+    }
+
+    // Friendli models (deepseek-ai/*, zai-org/*) don't support streaming with tools
+    const parsedModelId = modelId.includes(":") ? modelId.split(":")[1] : modelId;
+    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
+    if (isFriendliModel) {
+      logger.info(`[ToolCalling] Friendli model detected (${modelId}) - using non-streaming generateText`);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
