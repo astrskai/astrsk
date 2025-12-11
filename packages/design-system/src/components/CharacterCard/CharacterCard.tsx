@@ -12,6 +12,8 @@ import {
   type CardBadge,
   type LikeButtonProps,
 } from '../Card';
+import { type ImageComponentProps } from '../../provider';
+import { useImageRenderer } from '../../hooks';
 
 export interface CharacterCardProps {
   /** Character name */
@@ -81,6 +83,17 @@ export interface CharacterCardProps {
    */
   loading?: 'lazy' | 'eager';
   /**
+   * Custom image renderer for framework-specific optimization.
+   * Takes precedence over DesignSystemProvider's imageComponent.
+   * @example Next.js usage:
+   * ```tsx
+   * renderImage={(props) => (
+   *   <NextImage {...props} fill style={{ objectFit: 'cover' }} />
+   * )}
+   * ```
+   */
+  renderImage?: (props: ImageComponentProps) => React.ReactNode;
+  /**
    * Custom footer actions to display at the bottom of the card.
    * Renders below the content area with a top border separator.
    * Useful for action buttons like "Play", "Add", "Edit", etc.
@@ -124,8 +137,10 @@ export function CharacterCard({
   imageSizes,
   loading = 'lazy',
   footerActions,
+  renderImage,
 }: CharacterCardProps) {
   const [imageError, setImageError] = useState(false);
+  const renderImageWithProvider = useImageRenderer({ renderImage });
 
   // Reset error state when imageUrl changes
   useEffect(() => {
@@ -137,6 +152,22 @@ export function CharacterCard({
   // Show initial fallback when no image URL or image fails to load
   const shouldShowInitial = !shouldShowImage;
 
+  const renderImageElement = () => {
+    const src = imageUrl || placeholderImageUrl;
+    if (!src) return null;
+
+    return renderImageWithProvider({
+      src,
+      alt: name,
+      className:
+        'absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105',
+      sizes: imageSizes,
+      loading,
+      onError: () => setImageError(true),
+      fill: true,
+    });
+  };
+
   return (
     <BaseCard
       className={cn('min-h-[380px]', className)}
@@ -145,16 +176,7 @@ export function CharacterCard({
     >
       {/* Image Area - Portrait ratio */}
       <div className="relative h-64 overflow-hidden bg-zinc-800">
-        {shouldShowImage && (
-          <img
-            src={imageUrl || placeholderImageUrl}
-            alt={name}
-            sizes={imageSizes}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading={loading}
-            onError={() => setImageError(true)}
-          />
-        )}
+        {shouldShowImage && renderImageElement()}
         {shouldShowInitial && (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-6xl font-bold text-zinc-500">

@@ -15,7 +15,6 @@ import {
   Sparkles,
   AlertTriangle,
   Globe,
-  Lock,
   Pencil,
   ArrowLeft,
   ImagePlus,
@@ -24,7 +23,13 @@ import {
 } from "lucide-react";
 import { CharacterCard as DesignSystemCharacterCard } from "@astrsk/design-system/character-card";
 import { Badge } from "@/shared/ui/badge";
-import { SearchInput, Button, Select, Input, Textarea } from "@/shared/ui/forms";
+import {
+  SearchInput,
+  Button,
+  Select,
+  Input,
+  Textarea,
+} from "@/shared/ui/forms";
 import {
   Tooltip,
   TooltipContent,
@@ -40,6 +45,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useTypingEffect } from "@/shared/hooks/use-typing-effect";
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
+import { MobileChatSheet } from "./mobile-chat-sheet";
 import { StepHeader } from "./step-header";
 import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
 import type { SessionStep } from "./session-stepper";
@@ -68,8 +74,9 @@ interface CastStepProps {
   onCreateCharacter: () => void;
   onImportCharacter: () => void;
   // Mobile tab state (controlled by parent for navigation)
-  mobileTab: "library" | "cast" | "chat";
-  onMobileTabChange: (tab: "library" | "cast" | "chat") => void;
+  // Note: "chat" tab removed - now using MobileChatSheet bottom sheet
+  mobileTab: "library" | "cast";
+  onMobileTabChange: (tab: "library" | "cast") => void;
   // Chat messages (lifted to parent for persistence across step navigation)
   chatMessages?: ChatMessage[];
   onChatMessagesChange?: (messages: ChatMessage[]) => void;
@@ -105,6 +112,7 @@ const AI_SECTION_Y_OFFSET = 300; // Distance from roster top to AI section
 
 /**
  * Build character card badges based on selection state and source type
+ * Labels are hidden on mobile (icon only) and shown on sm+ screens
  */
 function buildCharacterBadges(
   isPlayer: boolean,
@@ -112,59 +120,55 @@ function buildCharacterBadges(
   isLocal: boolean,
   isLibrary: boolean = false,
 ) {
+  // Mobile: icon only with compact padding (px-1.5), no gap (gap-0)
+  // Desktop (sm+): icon + label with normal padding (px-2) and gap (sm:gap-1)
+  const responsiveStyles = "px-1.5 sm:px-2 gap-0 sm:gap-1";
+  const responsiveLabel = (text: string) => (
+    <span className="hidden sm:inline">{text}</span>
+  );
+
   return [
-    // Source badge (left position)
+    // Source badge (left position) - icon only on mobile, with label on sm+
     ...(isLocal
       ? [
           {
-            label: "SESSION",
+            label: responsiveLabel("SESSION"),
             variant: "default" as const,
             position: "left" as const,
-            className: "border-amber-500/30 bg-amber-950/50 text-amber-300",
+            className: `border-amber-500/30 bg-amber-950/50 text-amber-300 ${responsiveStyles}`,
             icon: <Sparkles size={10} />,
           },
         ]
       : isLibrary
         ? [
             {
-              label: "LIBRARY",
+              label: responsiveLabel("LIBRARY"),
               variant: "default" as const,
               position: "left" as const,
-              className: "border-blue-500/30 bg-blue-950/50 text-blue-300",
+              className: `border-blue-500/30 bg-blue-950/50 text-blue-300 ${responsiveStyles}`,
               icon: <Globe size={10} />,
             },
           ]
         : []),
-    // Lock badge for library characters (right position when not selected) - icon only
-    ...(isLibrary && !isPlayer && !isAI
-      ? [
-          {
-            label: "",
-            variant: "default" as const,
-            position: "right" as const,
-            className: "border-zinc-500/30 bg-zinc-800/50 text-zinc-400 px-1.5",
-            icon: <Lock size={12} />,
-          },
-        ]
-      : []),
-    // Selection badge (right position) - overrides lock badge when selected
+    // Selection badge (right position)
     ...(isPlayer
       ? [
           {
-            label: "PLAYER",
+            label: responsiveLabel("PLAYER"),
             variant: "default" as const,
             position: "right" as const,
-            className: "border-emerald-500/30 bg-emerald-950/50 text-emerald-300",
+            className: `border-emerald-500/30 bg-emerald-950/50 text-emerald-300 ${responsiveStyles}`,
+            icon: <User size={10} />,
           },
         ]
       : isAI
         ? [
             {
-              label: "AI",
+              label: responsiveLabel("AI"),
               variant: "default" as const,
               position: "right" as const,
-              className:
-                "border-purple-500/30 bg-purple-950/50 text-purple-300",
+              className: `border-purple-500/30 bg-purple-950/50 text-purple-300 ${responsiveStyles}`,
+              icon: <Cpu size={10} />,
             },
           ]
         : []),
@@ -242,7 +246,9 @@ function FlyingTrailOverlay({
             <div
               className={cn(
                 "flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl font-bold text-white shadow-lg",
-                trail.targetType === "player" ? "bg-emerald-500" : "bg-purple-500",
+                trail.targetType === "player"
+                  ? "bg-emerald-500"
+                  : "bg-purple-500",
               )}
             >
               {trail.imageUrl ? (
@@ -405,15 +411,6 @@ function DraftCharacterCard({
   // Draft characters are always local (session)
   const badges = buildCharacterBadges(isPlayer, isAI, true);
 
-  // Edit action for session characters (shown on hover)
-  const actions = [
-    {
-      icon: Pencil,
-      label: "Edit",
-      onClick: onEdit,
-    },
-  ];
-
   return (
     <DesignSystemCharacterCard
       name={name}
@@ -422,7 +419,6 @@ function DraftCharacterCard({
       summary={draft.data?.cardSummary}
       tags={draft.data?.tags || []}
       badges={badges}
-      actions={actions}
       className="border-dashed border-amber-500/50"
       onClick={onOpenDetails}
       renderMetadata={() => null}
@@ -452,12 +448,22 @@ function DraftCharacterCard({
             disabled={isSelected}
             className={cn(
               "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
+              "border-r border-zinc-800",
               isSelected
                 ? "cursor-not-allowed text-zinc-600"
                 : "text-zinc-400 hover:bg-purple-600/10 hover:text-purple-300",
             )}
           >
             <Cpu size={10} className="sm:h-3 sm:w-3" /> ADD AS AI
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="flex items-center justify-center px-2 py-2 text-zinc-400 transition-all hover:bg-zinc-600/10 hover:text-zinc-200 sm:px-3 sm:py-3"
+          >
+            <Pencil size={12} className="sm:h-3.5 sm:w-3.5" />
           </button>
         </>
       }
@@ -510,7 +516,8 @@ export function CastStep({
       ) !== "true",
   );
   // Character being edited (null = library view, DraftCharacter = edit view)
-  const [editingCharacter, setEditingCharacter] = useState<DraftCharacter | null>(null);
+  const [editingCharacter, setEditingCharacter] =
+    useState<DraftCharacter | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const onChatMessagesChangeRef = useRef(onChatMessagesChange);
 
@@ -910,10 +917,7 @@ export function CastStep({
         aiCharacters.filter((c) => c.existingCardId !== cardId),
       );
     }
-    // If there's an existing player character that is a draft, return it to draft list
-    if (playerCharacter && playerCharacter.source !== "library") {
-      onDraftCharactersChange([...draftCharacters, playerCharacter]);
-    }
+    // Note: Draft characters stay in draftCharacters list, so no need to return them
     // Wrap library character as DraftCharacter with data for context
     const draftCharacter: DraftCharacter = {
       tempId: `library-${cardId}`,
@@ -993,7 +997,7 @@ export function CastStep({
     (updatedCharacter: DraftCharacter) => {
       // Update the character in draftCharacters list
       const updatedDrafts = draftCharacters.map((draft) =>
-        draft.tempId === updatedCharacter.tempId ? updatedCharacter : draft
+        draft.tempId === updatedCharacter.tempId ? updatedCharacter : draft,
       );
       onDraftCharactersChange(updatedDrafts);
 
@@ -1006,8 +1010,8 @@ export function CastStep({
       if (aiCharacters.some((c) => c.tempId === updatedCharacter.tempId)) {
         onAiCharactersChange(
           aiCharacters.map((c) =>
-            c.tempId === updatedCharacter.tempId ? updatedCharacter : c
-          )
+            c.tempId === updatedCharacter.tempId ? updatedCharacter : c,
+          ),
         );
       }
     },
@@ -1018,7 +1022,7 @@ export function CastStep({
       onPlayerCharacterChange,
       aiCharacters,
       onAiCharactersChange,
-    ]
+    ],
   );
 
   const totalSelected = (playerCharacter ? 1 : 0) + aiCharacters.length;
@@ -1060,8 +1064,8 @@ export function CastStep({
     setShowWarningBanner(false);
   }, []);
 
-  // Mobile tab configuration
-  const mobileTabs = useMemo<MobileTab<"library" | "cast" | "chat">[]>(
+  // Mobile tab configuration (2 tabs only - chat is in bottom sheet)
+  const mobileTabs = useMemo<MobileTab<"library" | "cast">[]>(
     () => [
       { value: "library", label: "Library", icon: <LayoutGrid size={14} /> },
       {
@@ -1069,12 +1073,11 @@ export function CastStep({
         label: "Roster",
         icon: <Users size={14} />,
         badge: (
-          <span className="rounded-full bg-indigo-600 px-1.5 text-[9px] text-white">
+          <span className="rounded-full bg-brand-600 px-1.5 text-[9px] text-white">
             {totalSelected}
           </span>
         ),
       },
-      { value: "chat", label: "AI", icon: <Sparkles size={14} /> },
     ],
     [totalSelected],
   );
@@ -1103,10 +1106,11 @@ export function CastStep({
 
       {/* Main Content */}
       <div className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 overflow-hidden px-0 pb-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
-        {/* Left Panel: AI Chat */}
+        {/* Left Panel: AI Chat (Desktop only) */}
         <ChatPanel
           messages={displayMessages}
           agent={CHAT_AGENTS.cast}
+          currentStep={currentStep}
           inputValue={chatInput}
           onInputChange={setChatInput}
           onSubmit={handleChatSubmit}
@@ -1117,19 +1121,25 @@ export function CastStep({
             if (isTypingIndicator) return true;
             // When generating, check if we're waiting for AI response
             if (isGenerating) {
-              const castMessages = displayMessages.filter(m => m.step === "cast");
+              const castMessages = displayMessages.filter(
+                (m) => m.step === "cast",
+              );
               const lastCastMessage = castMessages[castMessages.length - 1];
               // Show indicator if last message is from user (waiting for AI response)
               // or if last assistant message has no content yet (streaming not started)
               if (!lastCastMessage) return true;
               if (lastCastMessage.role === "user") return true;
-              if (lastCastMessage.role === "assistant" && !lastCastMessage.content) return true;
+              if (
+                lastCastMessage.role === "assistant" &&
+                !lastCastMessage.content
+              )
+                return true;
               return false;
             }
             return false;
           })()}
           disabled={isGenerating || isTypingIndicator || isWelcomeTyping}
-          className={mobileTab === "chat" ? "" : "hidden md:flex"}
+          className="hidden md:flex"
         />
 
         {/* Middle Panel: Character Library OR Edit Panel */}
@@ -1147,7 +1157,12 @@ export function CastStep({
                 initial={{ x: "100%", opacity: 0.5 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: "100%", opacity: 0.5 }}
-                transition={{ type: "spring", stiffness: 500, damping: 35, mass: 0.8 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 35,
+                  mass: 0.8,
+                }}
                 className="absolute inset-0 z-10 flex flex-col bg-zinc-950"
               >
                 <CharacterEditPanel
@@ -1167,247 +1182,260 @@ export function CastStep({
                 className="flex h-full flex-col"
               >
                 <StepHeader
-                icon={<LayoutGrid size={20} />}
-                title="Character Library"
-                subtitle="SELECT PERSONAS FOR SIMULATION"
-                actions={
-                  <div className="flex gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            onClick={onImportCharacter}
-                            variant="secondary"
-                            size="sm"
-                            icon={<Import size={16} />}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent variant="button" side="bottom">
-                          Import V2, V3 character cards
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <Button
-                      onClick={onCreateCharacter}
-                      variant="default"
-                      size="sm"
-                      icon={<Plus size={16} />}
+                  icon={<LayoutGrid size={20} />}
+                  title="Character Library"
+                  subtitle="SELECT PERSONAS FOR SIMULATION"
+                  actions={
+                    <div className="flex gap-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              onClick={onImportCharacter}
+                              variant="secondary"
+                              size="sm"
+                              icon={<Import size={16} />}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent variant="button" side="bottom">
+                            Import V2, V3 character cards
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <Button
+                        onClick={onCreateCharacter}
+                        variant="default"
+                        size="sm"
+                        icon={<Plus size={16} />}
+                      >
+                        <span className="hidden sm:inline">New Character</span>
+                      </Button>
+                    </div>
+                  }
+                >
+                  {/* Search and Filter */}
+                  <div className="flex w-full gap-2">
+                    <SearchInput
+                      placeholder="Search characters..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      variant="dark"
+                      className="min-w-0 flex-1"
+                    />
+                    <Select
+                      value={characterFilter}
+                      onChange={(e) =>
+                        setCharacterFilter(
+                          e.target.value as CharacterFilterType,
+                        )
+                      }
+                      options={CHARACTER_FILTER_OPTIONS}
+                      className="w-28 flex-shrink-0 sm:w-32"
+                    />
+                  </div>
+                </StepHeader>
+
+                {/* Info & Warning Banners */}
+                {(showInfoBanner ||
+                  (draftCharacters.length > 0 && showWarningBanner)) && (
+                  <div className="mx-3 mt-1 space-y-1 sm:mx-6 sm:mt-2">
+                    {showInfoBanner && (
+                      <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-950/20 px-3 py-2">
+                        <Info
+                          size={14}
+                          className="mt-0.5 flex-shrink-0 text-blue-400"
+                        />
+                        <p className="flex-1 text-[11px] leading-relaxed text-blue-300">
+                          <span className="inline-flex items-center gap-1 align-middle font-semibold">
+                            <Globe size={10} />
+                            LIBRARY
+                          </span>{" "}
+                          characters are read-only shared templates.{" "}
+                          <span className="inline-flex items-center gap-1 align-middle font-semibold text-amber-300">
+                            <Sparkles size={10} />
+                            SESSION
+                          </span>{" "}
+                          characters are fully editable.
+                        </p>
+                        <button
+                          onClick={handleDismissInfoBanner}
+                          className="flex-shrink-0 p-0.5 text-blue-400 transition-colors hover:text-blue-300"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    )}
+
+                    {draftCharacters.length > 0 && showWarningBanner && (
+                      <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2">
+                        <AlertTriangle
+                          size={14}
+                          className="mt-0.5 flex-shrink-0 text-red-400"
+                        />
+                        <p className="flex-1 text-[11px] leading-relaxed text-red-300">
+                          <span className="font-semibold">Warning:</span>{" "}
+                          Session characters will be lost if you leave without
+                          creating a session.
+                        </p>
+                        <button
+                          onClick={handleDismissWarningBanner}
+                          className="flex-shrink-0 p-0.5 text-red-400 transition-colors hover:text-red-300"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Character Grid */}
+                <div className="flex-1 overflow-y-auto px-4 py-2 sm:px-6 sm:py-4">
+                  <LayoutGroup>
+                    <motion.div
+                      layout
+                      className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3"
                     >
-                      <span className="hidden sm:inline">New Character</span>
-                    </Button>
-                  </div>
-                }
-              >
-                {/* Search and Filter */}
-                <div className="flex w-full gap-2">
-                  <SearchInput
-                    placeholder="Search characters..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    variant="dark"
-                    className="min-w-0 flex-1"
-                  />
-                  <Select
-                    value={characterFilter}
-                    onChange={(e) =>
-                      setCharacterFilter(e.target.value as CharacterFilterType)
-                    }
-                    options={CHARACTER_FILTER_OPTIONS}
-                    className="w-28 flex-shrink-0 sm:w-32"
-                  />
-                </div>
-              </StepHeader>
+                      <AnimatePresence mode="popLayout">
+                        {/* Draft characters first (SESSION - from import/chat/create) */}
+                        {filteredDraftCharacters.map((draft) => {
+                          // Check if this draft is already assigned to roster
+                          const isPlayer =
+                            playerCharacter?.tempId === draft.tempId;
+                          const isAI = aiCharacters.some(
+                            (c) => c.tempId === draft.tempId,
+                          );
 
-          {/* Info & Warning Banners */}
-          {(showInfoBanner ||
-            (draftCharacters.length > 0 && showWarningBanner)) && (
-            <div className="mx-3 mt-1 space-y-1 sm:mx-6 sm:mt-2">
-              {showInfoBanner && (
-                <div className="flex items-start gap-2 rounded-lg border border-blue-500/20 bg-blue-950/20 px-3 py-2">
-                  <Info
-                    size={14}
-                    className="mt-0.5 flex-shrink-0 text-blue-400"
-                  />
-                  <p className="flex-1 text-[11px] leading-relaxed text-blue-300">
-                    <span className="font-semibold">LIBRARY</span>{" "}
-                    characters are read-only templates. To customize one, use{" "}
-                    <span className="inline-block rounded border border-blue-500/30 bg-blue-950/50 px-1 text-[11px] font-semibold text-blue-300">Clone to Edit</span>.{" "}
-                    <span className="font-semibold text-amber-300">SESSION</span>{" "}
-                    characters are fully editable.
-                  </p>
-                  <button
-                    onClick={handleDismissInfoBanner}
-                    className="flex-shrink-0 p-0.5 text-blue-400 transition-colors hover:text-blue-300"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
-
-              {draftCharacters.length > 0 && showWarningBanner && (
-                <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2">
-                  <AlertTriangle
-                    size={14}
-                    className="mt-0.5 flex-shrink-0 text-red-400"
-                  />
-                  <p className="flex-1 text-[11px] leading-relaxed text-red-300">
-                    <span className="font-semibold">Warning:</span> Session
-                    characters will be lost if you leave without creating a
-                    session.
-                  </p>
-                  <button
-                    onClick={handleDismissWarningBanner}
-                    className="flex-shrink-0 p-0.5 text-red-400 transition-colors hover:text-red-300"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Character Grid */}
-          <div className="flex-1 overflow-y-auto px-4 py-2 sm:px-6 sm:py-4">
-            <LayoutGroup>
-              <motion.div
-                layout
-                className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3"
-              >
-                <AnimatePresence mode="popLayout">
-                  {/* Draft characters first (SESSION - from import/chat/create) */}
-                  {filteredDraftCharacters.map((draft) => {
-                    // Check if this draft is already assigned to roster
-                    const isPlayer = playerCharacter?.tempId === draft.tempId;
-                    const isAI = aiCharacters.some(
-                      (c) => c.tempId === draft.tempId,
-                    );
-
-                    return (
-                      <motion.div
-                        key={draft.tempId}
-                        layout
-                        data-card-wrapper
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{
-                          opacity: 0,
-                          scale: 0.8,
-                          transition: { duration: 0.2 },
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                        }}
-                      >
-                        <DraftCharacterCard
-                          draft={draft}
-                          isPlayer={isPlayer}
-                          isAI={isAI}
-                          onAssignPlayer={(e) => {
-                            triggerFlyingTrail(
-                              e,
-                              "player",
-                              draft.data?.name || "Character",
-                              draft.data?.imageUrl,
+                          return (
+                            <motion.div
+                              key={draft.tempId}
+                              layout
+                              data-card-wrapper
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{
+                                opacity: 0,
+                                scale: 0.8,
+                                transition: { duration: 0.2 },
+                              }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 500,
+                                damping: 30,
+                              }}
+                            >
+                              <DraftCharacterCard
+                                draft={draft}
+                                isPlayer={isPlayer}
+                                isAI={isAI}
+                                onAssignPlayer={(e) => {
+                                  triggerFlyingTrail(
+                                    e,
+                                    "player",
+                                    draft.data?.name || "Character",
+                                    draft.data?.imageUrl,
+                                  );
+                                  handleAssignDraftPlayer(draft);
+                                }}
+                                onAddAI={(e) => {
+                                  triggerFlyingTrail(
+                                    e,
+                                    "ai",
+                                    draft.data?.name || "Character",
+                                    draft.data?.imageUrl,
+                                  );
+                                  handleAddDraftAI(draft);
+                                }}
+                                onOpenDetails={() =>
+                                  setSelectedDetailsChar({
+                                    name: draft.data?.name || "Unnamed",
+                                    description: draft.data?.description,
+                                    cardSummary: draft.data?.cardSummary,
+                                    tags: draft.data?.tags,
+                                    imageUrl: draft.data?.imageUrl,
+                                  })
+                                }
+                                onEdit={() => setEditingCharacter(draft)}
+                              />
+                            </motion.div>
+                          );
+                        })}
+                        {/* Library characters (from DB) */}
+                        {filteredLibraryCharacters.map(
+                          (card: CharacterCard) => {
+                            const cardId = card.id.toString();
+                            // Check if this library card is selected (by existingCardId)
+                            const isPlayer =
+                              playerCharacter?.existingCardId === cardId;
+                            const isAI = aiCharacters.some(
+                              (c) => c.existingCardId === cardId,
                             );
-                            handleAssignDraftPlayer(draft);
-                          }}
-                          onAddAI={(e) => {
-                            triggerFlyingTrail(
-                              e,
-                              "ai",
-                              draft.data?.name || "Character",
-                              draft.data?.imageUrl,
+                            // Library cards are never "local"
+                            const isLocal = false;
+
+                            return (
+                              <motion.div
+                                key={cardId}
+                                layout
+                                data-card-wrapper
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{
+                                  opacity: 0,
+                                  scale: 0.8,
+                                  transition: { duration: 0.2 },
+                                }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 500,
+                                  damping: 30,
+                                }}
+                              >
+                                <LibraryCharacterCard
+                                  card={card}
+                                  isPlayer={isPlayer}
+                                  isAI={isAI}
+                                  isLocal={isLocal}
+                                  onAssignPlayer={() =>
+                                    handleAssignPlayer(card)
+                                  }
+                                  onAddAI={() => handleAddAI(card)}
+                                  onOpenDetails={() =>
+                                    setSelectedDetailsChar({
+                                      name: card.props.name || "Unnamed",
+                                      description: card.props.description,
+                                      cardSummary: card.props.cardSummary,
+                                      tags: card.props.tags,
+                                      version: card.props.version,
+                                      iconAssetId: card.props.iconAssetId,
+                                    })
+                                  }
+                                  triggerFlyingTrail={triggerFlyingTrail}
+                                />
+                              </motion.div>
                             );
-                            handleAddDraftAI(draft);
-                          }}
-                          onOpenDetails={() =>
-                            setSelectedDetailsChar({
-                              name: draft.data?.name || "Unnamed",
-                              description: draft.data?.description,
-                              cardSummary: draft.data?.cardSummary,
-                              tags: draft.data?.tags,
-                              imageUrl: draft.data?.imageUrl,
-                            })
-                          }
-                          onEdit={() => setEditingCharacter(draft)}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                  {/* Library characters (from DB) */}
-                  {filteredLibraryCharacters.map((card: CharacterCard) => {
-                    const cardId = card.id.toString();
-                    // Check if this library card is selected (by existingCardId)
-                    const isPlayer = playerCharacter?.existingCardId === cardId;
-                    const isAI = aiCharacters.some(
-                      (c) => c.existingCardId === cardId,
-                    );
-                    // Library cards are never "local"
-                    const isLocal = false;
+                          },
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  </LayoutGroup>
 
-                    return (
-                      <motion.div
-                        key={cardId}
-                        layout
-                        data-card-wrapper
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{
-                          opacity: 0,
-                          scale: 0.8,
-                          transition: { duration: 0.2 },
-                        }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                        }}
-                      >
-                        <LibraryCharacterCard
-                          card={card}
-                          isPlayer={isPlayer}
-                          isAI={isAI}
-                          isLocal={isLocal}
-                          onAssignPlayer={() => handleAssignPlayer(card)}
-                          onAddAI={() => handleAddAI(card)}
-                          onOpenDetails={() =>
-                            setSelectedDetailsChar({
-                              name: card.props.name || "Unnamed",
-                              description: card.props.description,
-                              cardSummary: card.props.cardSummary,
-                              tags: card.props.tags,
-                              version: card.props.version,
-                              iconAssetId: card.props.iconAssetId,
-                            })
-                          }
-                          triggerFlyingTrail={triggerFlyingTrail}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.div>
-            </LayoutGroup>
-
-            {/* Empty State */}
-            {filteredLibraryCharacters.length === 0 &&
-              filteredDraftCharacters.length === 0 && (
-                <div className="flex h-64 flex-col items-center justify-center text-zinc-600">
-                  <div className="mb-3 rounded-full bg-zinc-900/50 p-4">
-                    <Users size={32} />
-                  </div>
-                  <p className="text-sm">
-                    {characterFilter === "all"
-                      ? "No data found in archives."
-                      : characterFilter === "library"
-                        ? "No library characters found."
-                        : "No session characters found."}
-                  </p>
+                  {/* Empty State */}
+                  {filteredLibraryCharacters.length === 0 &&
+                    filteredDraftCharacters.length === 0 && (
+                      <div className="flex h-64 flex-col items-center justify-center text-zinc-600">
+                        <div className="mb-3 rounded-full bg-zinc-900/50 p-4">
+                          <Users size={32} />
+                        </div>
+                        <p className="text-sm">
+                          {characterFilter === "all"
+                            ? "No data found in archives."
+                            : characterFilter === "library"
+                              ? "No library characters found."
+                              : "No session characters found."}
+                        </p>
+                      </div>
+                    )}
                 </div>
-              )}
-            </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -1417,7 +1445,7 @@ export function CastStep({
         <div
           ref={rosterPanelRef}
           className={cn(
-            "relative w-full flex-col overflow-hidden rounded-xl border border-zinc-800 md:w-80 lg:w-96",
+            "relative w-full flex-col overflow-hidden rounded-xl border border-zinc-800 md:w-72 lg:w-80",
             mobileTab === "cast" ? "flex h-full" : "hidden md:flex",
           )}
         >
@@ -1577,21 +1605,21 @@ export function CastStep({
           {/* Footer */}
           <div className="flex-shrink-0 p-4">
             {totalSelected === 0 ? (
-              <div className="flex items-center justify-center gap-2 rounded-lg border border-amber-500/30 bg-amber-950/20 px-3 py-2.5">
+              <div className="flex items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2.5">
                 <AlertTriangle
                   size={14}
-                  className="flex-shrink-0 text-amber-400"
+                  className="flex-shrink-0 text-zinc-400"
                 />
-                <p className="text-[11px] font-medium text-amber-300">
+                <p className="text-[11px] font-medium text-zinc-400">
                   Select at least one character
                 </p>
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-2 rounded-lg border border-green-500/30 bg-green-950/20 px-3 py-2.5">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20 text-[10px] font-bold text-green-400">
+              <div className="flex items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-500/20 text-[10px] font-bold text-brand-400">
                   {totalSelected}
                 </span>
-                <p className="text-[11px] font-medium text-green-300">
+                <p className="text-[11px] font-medium text-zinc-300">
                   character{totalSelected > 1 ? "s" : ""} selected
                 </p>
               </div>
@@ -1599,6 +1627,37 @@ export function CastStep({
           </div>
         </div>
       </div>
+
+      {/* Mobile Chat Bottom Sheet */}
+      <MobileChatSheet
+        messages={displayMessages}
+        agent={CHAT_AGENTS.cast}
+        currentStep={currentStep}
+        inputValue={chatInput}
+        onInputChange={setChatInput}
+        onSubmit={handleChatSubmit}
+        onStop={isGenerating ? handleChatStop : undefined}
+        isLoading={isGenerating || isTypingIndicator}
+        showTypingIndicator={(() => {
+          if (isTypingIndicator) return true;
+          if (isGenerating) {
+            const castMessages = displayMessages.filter(
+              (m) => m.step === "cast",
+            );
+            const lastCastMessage = castMessages[castMessages.length - 1];
+            if (!lastCastMessage) return true;
+            if (lastCastMessage.role === "user") return true;
+            if (
+              lastCastMessage.role === "assistant" &&
+              !lastCastMessage.content
+            )
+              return true;
+            return false;
+          }
+          return false;
+        })()}
+        disabled={isGenerating || isTypingIndicator || isWelcomeTyping}
+      />
     </div>
   );
 }
@@ -1841,7 +1900,7 @@ interface EditableLorebookEntry {
   id: string;
   name: string;
   enabled: boolean;
-  keys: string;  // comma-separated string for easier editing
+  keys: string; // comma-separated string for easier editing
   recallRange: number;
   content: string;
 }
@@ -1854,11 +1913,15 @@ function CharacterEditPanel({
   // Form state initialized from character data
   const [name, setName] = useState(character.data?.name || "");
   const [summary, setSummary] = useState(character.data?.cardSummary || "");
-  const [description, setDescription] = useState(character.data?.description || "");
+  const [description, setDescription] = useState(
+    character.data?.description || "",
+  );
   const [tags, setTags] = useState<string[]>(character.data?.tags || []);
   const [tagInput, setTagInput] = useState("");
   const [imageUrl, setImageUrl] = useState(character.data?.imageUrl || "");
-  const [imageFile, setImageFile] = useState<File | undefined>(character.data?.imageFile);
+  const [imageFile, setImageFile] = useState<File | undefined>(
+    character.data?.imageFile,
+  );
   const [lorebook, setLorebook] = useState<EditableLorebookEntry[]>(
     character.data?.lorebook?.map((entry) => ({
       id: entry.id || crypto.randomUUID(),
@@ -1867,7 +1930,7 @@ function CharacterEditPanel({
       keys: entry.keys?.join(", ") || "",
       recallRange: entry.recallRange ?? 1000,
       content: entry.content || "",
-    })) || []
+    })) || [],
   );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1899,7 +1962,10 @@ function CharacterEditPanel({
           id: entry.id,
           name: entry.name,
           enabled: entry.enabled,
-          keys: entry.keys.split(",").map((k: string) => k.trim()).filter(Boolean),
+          keys: entry.keys
+            .split(",")
+            .map((k: string) => k.trim())
+            .filter(Boolean),
           recallRange: entry.recallRange,
           content: entry.content,
         })),
@@ -1965,12 +2031,12 @@ function CharacterEditPanel({
   const handleUpdateLorebookEntry = (
     index: number,
     field: keyof EditableLorebookEntry,
-    value: string | number | boolean
+    value: string | number | boolean,
   ) => {
     setLorebook(
       lorebook.map((entry, i) =>
-        i === index ? { ...entry, [field]: value } : entry
-      )
+        i === index ? { ...entry, [field]: value } : entry,
+      ),
     );
   };
 
@@ -2132,7 +2198,9 @@ function CharacterEditPanel({
 
           {/* Character Info Section */}
           <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-zinc-200">Character Info</h2>
+            <h2 className="text-sm font-semibold text-zinc-200">
+              Character Info
+            </h2>
 
             <Textarea
               label="Character Description"
@@ -2166,7 +2234,7 @@ function CharacterEditPanel({
                 {lorebook.map((entry, index) => (
                   <div
                     key={entry.id}
-                    className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 space-y-4"
+                    className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4"
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-zinc-400">
@@ -2196,20 +2264,27 @@ function CharacterEditPanel({
                         labelPosition="inner"
                         value={entry.keys}
                         onChange={(e) =>
-                          handleUpdateLorebookEntry(index, "keys", e.target.value)
+                          handleUpdateLorebookEntry(
+                            index,
+                            "keys",
+                            e.target.value,
+                          )
                         }
                         placeholder="Comma-separated keywords"
                       />
                       {entry.keys && (
                         <ul className="flex flex-wrap gap-2">
-                          {entry.keys.split(",").filter(k => k.trim()).map((key, keyIndex) => (
-                            <li
-                              key={`${entry.id}-${keyIndex}`}
-                              className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200"
-                            >
-                              {key.trim()}
-                            </li>
-                          ))}
+                          {entry.keys
+                            .split(",")
+                            .filter((k) => k.trim())
+                            .map((key, keyIndex) => (
+                              <li
+                                key={`${entry.id}-${keyIndex}`}
+                                className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200"
+                              >
+                                {key.trim()}
+                              </li>
+                            ))}
                         </ul>
                       )}
                     </div>
@@ -2219,7 +2294,11 @@ function CharacterEditPanel({
                       labelPosition="inner"
                       value={entry.content}
                       onChange={(e) =>
-                        handleUpdateLorebookEntry(index, "content", e.target.value)
+                        handleUpdateLorebookEntry(
+                          index,
+                          "content",
+                          e.target.value,
+                        )
                       }
                       autoResize
                     />

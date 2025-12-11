@@ -5,8 +5,8 @@ export type CardBadgeVariant = 'default' | 'private' | 'owner';
 export type CardBadgePosition = 'left' | 'right';
 
 export interface CardBadge {
-  /** Badge label text */
-  label: string;
+  /** Badge label text or ReactNode for responsive labels */
+  label: React.ReactNode;
   /** Optional icon to display before label */
   icon?: React.ReactNode;
   /** Badge style variant */

@@ -1,22 +1,32 @@
-import { useRef, useEffect } from "react";
-import { User, Bot, Sparkles, Send, Square } from "lucide-react";
+import { useRef, useEffect, useState, useMemo } from "react";
+import { User, Sparkles, Send, Square } from "lucide-react";
 import { cn } from "@/shared/lib";
 
 import type { SessionStep } from "./session-stepper";
 
 /**
- * Get assistant name and color based on step
+ * Step-specific assistant avatar images
  */
-function getAssistantLabel(step?: SessionStep): { name: string; colorClass: string } {
+export const ASSISTANT_AVATARS: Record<SessionStep, string> = {
+  scenario: "/img/session/scenario_assistant.jpeg",
+  cast: "/img/session/cast_assistant.jpeg",
+  stats: "/img/session/stats_assistant.jpeg",
+};
+
+/**
+ * Get assistant info based on step
+ */
+function getAssistantInfo(step?: SessionStep): { name: string; colorClass: string; avatarUrl: string } {
+  const defaultAvatar = ASSISTANT_AVATARS.scenario;
   switch (step) {
     case "scenario":
-      return { name: "Scenario AI", colorClass: "text-violet-400" };
+      return { name: "Scenario AI", colorClass: "text-brand-400", avatarUrl: ASSISTANT_AVATARS.scenario };
     case "cast":
-      return { name: "Cast AI", colorClass: "text-emerald-400" };
+      return { name: "Cast AI", colorClass: "text-brand-400", avatarUrl: ASSISTANT_AVATARS.cast };
     case "stats":
-      return { name: "Stats AI", colorClass: "text-amber-400" };
+      return { name: "Stats AI", colorClass: "text-brand-400", avatarUrl: ASSISTANT_AVATARS.stats };
     default:
-      return { name: "AI", colorClass: "text-fg-muted" };
+      return { name: "AI", colorClass: "text-brand-400", avatarUrl: defaultAvatar };
   }
 }
 
@@ -33,16 +43,14 @@ export interface ChatMessage {
   variant?: "default" | "cancelled";
   /** If true, this message is system-generated (welcome, max limit, etc.) and should NOT be included in AI chat history */
   isSystemGenerated?: boolean;
+  /** If set, show typing indicator for this duration (ms) before displaying the message */
+  typingIndicatorDuration?: number;
 }
 
 /**
  * Agent configuration for different step contexts
  */
 export interface ChatAgentConfig {
-  /** Agent title displayed in header */
-  title: string;
-  /** Agent subtitle/description */
-  subtitle: string;
   /** Empty state message */
   emptyTitle: string;
   /** Empty state description */
@@ -56,6 +64,8 @@ interface ChatPanelProps {
   messages: ChatMessage[];
   /** Agent configuration for this chat context */
   agent: ChatAgentConfig;
+  /** Current step - used for typing indicator avatar */
+  currentStep?: SessionStep;
   /** Current input value */
   inputValue: string;
   /** Input change handler */
@@ -81,6 +91,7 @@ interface ChatPanelProps {
 export function ChatPanel({
   messages,
   agent,
+  currentStep,
   inputValue,
   onInputChange,
   onSubmit,
@@ -90,19 +101,65 @@ export function ChatPanel({
   disabled = false,
   className,
 }: ChatPanelProps) {
-  // Determine if typing indicator should show:
-  // - If showTypingIndicator is explicitly set, use that value
-  // - Otherwise, show when loading AND no streaming content (last message is not assistant with content)
-  const shouldShowTypingIndicator = showTypingIndicator !== undefined
-    ? showTypingIndicator
-    : isLoading && !(messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && messages[messages.length - 1]?.content);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll chat to bottom when messages change
+  // Track message IDs that have completed their typing indicator delay
+  const [revealedMessageIds, setRevealedMessageIds] = useState<Set<string>>(new Set());
+
+  // Process messages with typingIndicatorDuration
+  // - Messages without duration: show immediately
+  // - Messages with duration: show after delay (tracked in revealedMessageIds)
+  const visibleMessages = useMemo(() => {
+    return messages.filter(msg => {
+      // No duration = show immediately
+      if (!msg.typingIndicatorDuration) return true;
+      // Has duration = only show if revealed
+      return revealedMessageIds.has(msg.id);
+    });
+  }, [messages, revealedMessageIds]);
+
+  // Find messages that need typing indicator (have duration, not yet revealed)
+  const pendingTypingMessages = useMemo(() => {
+    return messages.filter(msg =>
+      msg.typingIndicatorDuration && !revealedMessageIds.has(msg.id)
+    );
+  }, [messages, revealedMessageIds]);
+
+  // Process pending messages with typing indicator delay
+  useEffect(() => {
+    if (pendingTypingMessages.length === 0) return;
+
+    // Process first pending message
+    const firstPending = pendingTypingMessages[0];
+    const duration = firstPending.typingIndicatorDuration || 1000;
+
+    const timer = setTimeout(() => {
+      setRevealedMessageIds(prev => new Set([...prev, firstPending.id]));
+    }, duration);
+
+    return () => clearTimeout(timer);
+  }, [pendingTypingMessages]);
+
+  // Determine if typing indicator should show:
+  // 1. If we have pending messages with typing indicator duration
+  // 2. If showTypingIndicator is explicitly set
+  // 3. Otherwise, show when loading AND no streaming content
+  const shouldShowTypingIndicator =
+    pendingTypingMessages.length > 0 ||
+    (showTypingIndicator !== undefined
+      ? showTypingIndicator
+      : isLoading && !(visibleMessages.length > 0 && visibleMessages[visibleMessages.length - 1]?.role === "assistant" && visibleMessages[visibleMessages.length - 1]?.content));
+
+  // Get the step for typing indicator avatar (from pending message or fallback)
+  const typingIndicatorStep = pendingTypingMessages.length > 0
+    ? pendingTypingMessages[0].step
+    : (currentStep || visibleMessages[visibleMessages.length - 1]?.step);
+
+  // Auto-scroll chat to bottom when visible messages change
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [visibleMessages]);
 
   // Handle form submit
   const handleSubmit = (e: React.FormEvent) => {
@@ -128,20 +185,9 @@ export function ChatPanel({
         className,
       )}
     >
-      {/* Header */}
-      <div className="flex flex-shrink-0 items-center gap-2.5 px-4 py-3">
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600">
-          <Sparkles size={14} className="text-white" />
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-fg-default">{agent.title}</h2>
-          <p className="text-[10px] text-fg-muted">{agent.subtitle}</p>
-        </div>
-      </div>
-
       {/* Chat Messages */}
-      <div className="flex flex-1 flex-col overflow-y-auto p-4">
-        {messages.length === 0 && !isLoading ? (
+      <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-4 pb-2">
+        {visibleMessages.length === 0 && !isLoading && pendingTypingMessages.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <div className="bg-surface-overlay mb-3 flex h-12 w-12 items-center justify-center rounded-full">
               <Sparkles size={20} className="text-fg-subtle" />
@@ -155,8 +201,8 @@ export function ChatPanel({
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map((msg) => {
-              const assistantLabel = msg.role === "assistant" ? getAssistantLabel(msg.step) : null;
+            {visibleMessages.map((msg) => {
+              const assistantInfo = msg.role === "assistant" ? getAssistantInfo(msg.step) : null;
               return (
                 <div
                   key={msg.id}
@@ -167,7 +213,7 @@ export function ChatPanel({
                 >
                   <div
                     className={cn(
-                      "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
+                      "flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-full",
                       msg.role === "user"
                         ? "bg-brand-500/20"
                         : "bg-surface-overlay",
@@ -176,13 +222,17 @@ export function ChatPanel({
                     {msg.role === "user" ? (
                       <User size={14} className="text-brand-400" />
                     ) : (
-                      <Bot size={14} className="text-fg-muted" />
+                      <img
+                        src={assistantInfo?.avatarUrl || ASSISTANT_AVATARS.scenario}
+                        alt={assistantInfo?.name || "AI"}
+                        className="h-full w-full object-cover"
+                      />
                     )}
                   </div>
                   <div className="flex max-w-[80%] flex-col">
-                    {assistantLabel && (
-                      <span className={cn("mb-0.5 text-[10px] font-medium", assistantLabel.colorClass)}>
-                        {assistantLabel.name}
+                    {assistantInfo && (
+                      <span className={cn("mb-0.5 text-[10px] font-medium", assistantInfo.colorClass)}>
+                        {assistantInfo.name}
                       </span>
                     )}
                     <div
@@ -203,8 +253,12 @@ export function ChatPanel({
             {/* Typing indicator - controlled by shouldShowTypingIndicator */}
             {shouldShowTypingIndicator && (
               <div className="flex gap-3">
-                <div className="bg-surface-overlay flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full">
-                  <Bot size={14} className="text-fg-muted" />
+                <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-overlay">
+                  <img
+                    src={getAssistantInfo(typingIndicatorStep).avatarUrl}
+                    alt="AI"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div className="bg-surface-overlay flex h-7 items-center gap-1 rounded-xl px-3">
                   <span className="animate-bounce-typing bg-fg-muted h-1.5 w-1.5 rounded-full" />
@@ -268,22 +322,16 @@ export function ChatPanel({
  */
 export const CHAT_AGENTS = {
   scenario: {
-    title: "AI Assistant",
-    subtitle: "Generate scenario",
     emptyTitle: "Start a conversation",
     emptyDescription: "",
     inputPlaceholder: "",
   },
   cast: {
-    title: "AI Assistant",
-    subtitle: "Character creator",
     emptyTitle: "Create a character",
     emptyDescription: "",
     inputPlaceholder: "",
   },
   hud: {
-    title: "AI Assistant",
-    subtitle: "Data protocol setup",
     emptyTitle: "Start a conversation",
     emptyDescription: "",
     inputPlaceholder: "",

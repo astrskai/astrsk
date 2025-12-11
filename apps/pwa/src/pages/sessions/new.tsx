@@ -71,9 +71,10 @@ export function CreateSessionPage() {
   const [currentStep, setCurrentStep] = useState<SessionStep>("scenario");
 
   // Mobile cast tab state (lifted from CastStep for navigation control)
-  const [mobileCastTab, setMobileCastTab] = useState<
-    "library" | "cast" | "chat"
-  >("library");
+  // Note: "chat" tab removed - now using MobileChatSheet bottom sheet
+  const [mobileCastTab, setMobileCastTab] = useState<"library" | "cast">(
+    "library",
+  );
 
   // Mobile scenario tab state (lifted from ScenarioStep for navigation control)
   const [mobileScenarioTab, setMobileScenarioTab] = useState<
@@ -158,12 +159,18 @@ Ground Rules:`;
   const addedStatNamesRef = useRef<Set<string>>(new Set());
   // Track announced stat names to prevent duplicate chat messages
   const announcedStatNamesRef = useRef<Set<string>>(new Set());
+  // Pending stats messages to show when entering Stats step (deferred display)
+  const [pendingStatsMessages, setPendingStatsMessages] = useState<ChatMessage[]>([]);
+  // Track if pending messages have been shown (to prevent duplicate display)
+  const hasPendingMessagesBeenShownRef = useRef(false);
   // Refs mirror state for immediate checks in useCallback (avoids stale closure issues)
   const hasAttemptedStatsGenerationRef = useRef(false);
   const isStatsGeneratingRef = useRef(false);
   const isUserStoppedRef = useRef(false); // Track user-initiated stop
   const scenarioBackgroundRef = useRef(scenarioBackground);
   scenarioBackgroundRef.current = scenarioBackground;
+  const currentStepRef = useRef(currentStep);
+  currentStepRef.current = currentStep;
   const handleGenerateStatsRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   // Helpers to sync state + ref together (single source of truth pattern)
@@ -471,8 +478,15 @@ Ground Rules:`;
                   content: `I've added ${newStores.length} new stats: ${statNames}`,
                   step: "stats",
                   isSystemGenerated: true,
+                  // Show typing indicator before message (1.5s when on Stats, 1s when deferred)
+                  typingIndicatorDuration: currentStepRef.current === "stats" ? 1500 : 1000,
                 };
-                addChatMessage(batchMessage);
+                // If already on Stats step, add directly; otherwise defer
+                if (currentStepRef.current === "stats") {
+                  addChatMessage(batchMessage);
+                } else {
+                  setPendingStatsMessages(prev => [...prev, batchMessage]);
+                }
               }
             },
           },
@@ -480,35 +494,49 @@ Ground Rules:`;
         });
 
         // Add completion message after generation finishes
+        // If already on Stats step, add directly; otherwise defer until Stats step entry
+        let completionMessage: ChatMessage | null = null;
+
+        // Determine typing indicator duration based on current step
+        const typingDuration = currentStepRef.current === "stats" ? 1500 : 1000;
+
         if (maxLimitReached) {
-          const completionMessage: ChatMessage = {
+          completionMessage = {
             id: crypto.randomUUID(),
             role: "assistant",
             content: `All done! Up to ${MAX_TOTAL_STORES} stats are auto-generated. Feel free to add or remove any as you like!`,
             step: "stats",
             isSystemGenerated: true,
+            typingIndicatorDuration: typingDuration,
           };
-          addChatMessage(completionMessage);
         } else if (generatingStoresRef.current.length > 0) {
           // Normal completion - AI finished on its own
-          const completionMessage: ChatMessage = {
+          completionMessage = {
             id: crypto.randomUUID(),
             role: "assistant",
             content: `That's all the stats I think would fit this scenario. Feel free to add more or adjust them!`,
             step: "stats",
             isSystemGenerated: true,
+            typingIndicatorDuration: typingDuration,
           };
-          addChatMessage(completionMessage);
         } else {
           // No stats generated
-          const completionMessage: ChatMessage = {
+          completionMessage = {
             id: crypto.randomUUID(),
             role: "assistant",
             content: `I couldn't find any specific stats to generate for this scenario. You can add custom stats manually!`,
             step: "stats",
             isSystemGenerated: true,
+            typingIndicatorDuration: typingDuration,
           };
-          addChatMessage(completionMessage);
+        }
+
+        if (completionMessage) {
+          if (currentStepRef.current === "stats") {
+            addChatMessage(completionMessage);
+          } else {
+            setPendingStatsMessages(prev => [...prev, completionMessage]);
+          }
         }
       }
 
@@ -575,29 +603,32 @@ Ground Rules:`;
         handleGenerateStatsRef.current();
       }
 
+      // When entering Stats step, show pending messages (only once)
+      if (targetStep === "stats" && !hasPendingMessagesBeenShownRef.current) {
+        hasPendingMessagesBeenShownRef.current = true;
+        // Add pending messages to chat (use setTimeout to ensure state is updated after step change)
+        setTimeout(() => {
+          setPendingStatsMessages(prev => {
+            if (prev.length > 0) {
+              addChatMessages(prev);
+            }
+            return []; // Clear pending messages after showing
+          });
+        }, 0);
+      }
+
       setCurrentStep(targetStep);
     },
-    [currentStep], // handleGenerateStats removed - using ref instead
+    [currentStep, addChatMessages], // handleGenerateStats removed - using ref instead
   );
 
   const handlePrevious = useCallback(() => {
-    // On mobile, in cast step, if on roster tab -> go back to library tab first
-    const isMobile = window.innerWidth < 768; // md breakpoint
-    if (isMobile && currentStep === "cast" && mobileCastTab === "cast") {
-      setMobileCastTab("library");
-      return;
-    }
-
     const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
     if (currentIndex > 0) {
       const prevStep = SESSION_STEPS[currentIndex - 1].id as SessionStep;
       handleStepChange(prevStep);
-      // Reset mobile tab to roster when going back (so Previous from Scenario goes to Roster)
-      if (isMobile) {
-        setMobileCastTab("cast");
-      }
     }
-  }, [currentStep, mobileCastTab, handleStepChange]);
+  }, [currentStep, handleStepChange]);
 
   // Generate workflow handler (separate from session creation for testing)
   // Returns a promise that resolves when workflow is generated
@@ -1123,13 +1154,6 @@ Ground Rules:`;
   ]);
 
   const handleNext = () => {
-    // On mobile, in cast step, if on library tab -> go to roster tab first
-    const isMobile = window.innerWidth < 768; // md breakpoint
-    if (isMobile && currentStep === "cast" && mobileCastTab === "library") {
-      setMobileCastTab("cast");
-      return;
-    }
-
     const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
 
     // When on last step (Stats), start workflow generation and then finish
@@ -1148,10 +1172,6 @@ Ground Rules:`;
       const nextStep = SESSION_STEPS[currentIndex + 1].id as SessionStep;
       // Use centralized handler (triggers stats generation when leaving Scenario)
       handleStepChange(nextStep);
-      // Reset mobile tab to library when moving to a new step
-      if (isMobile) {
-        setMobileCastTab("library");
-      }
     }
   };
 
@@ -1224,41 +1244,46 @@ Ground Rules:`;
       <>
         {/* Header */}
         <div className="bg-surface/80 relative z-30 flex flex-shrink-0 items-center justify-between px-4 py-3 backdrop-blur-md md:px-6">
-          <button
-            onClick={handleCancel}
-            className="text-fg-muted hover:text-fg-default hidden items-center gap-2 text-sm transition-colors md:flex"
-          >
-            <X size={18} />
-            Cancel
-          </button>
-
-          {/* Mobile: Empty space for layout balance */}
-          <div className="w-7 md:hidden" />
-
-          {/* Desktop: New Session title */}
-          <h1 className="text-fg-default hidden text-base font-semibold md:block">
+          {/* Center: Title (absolute positioned to prevent layout shift) */}
+          <h1 className="text-fg-default pointer-events-none absolute inset-x-0 text-center text-sm font-semibold md:text-base">
             New Session
           </h1>
 
-          {/* Mobile: Step title with number */}
-          <div className="flex flex-col items-center md:hidden">
-            <span className="text-fg-muted text-xs font-medium">
-              Step {currentStepIndex + 1} of {SESSION_STEPS.length}
-            </span>
-            <h1 className="text-fg-default text-sm font-semibold">
-              {SESSION_STEPS.find((s) => s.id === currentStep)?.label}
-            </h1>
-            {/* Stats generation indicator for mobile */}
-            {isStatsGenerating && currentStep !== "stats" && (
-              <div className="flex items-center gap-1 text-[10px] text-brand-400">
-                <Loader2 size={10} className="animate-spin" />
-                <span>Generating stats...</span>
-              </div>
-            )}
+          {/* Left: Cancel/Back button */}
+          <div className="relative z-10 flex items-center">
+            {/* Mobile: Back or X */}
+            <div className="md:hidden">
+              {showPreviousButton ? (
+                <button
+                  onClick={handlePrevious}
+                  disabled={isScenarioGenerating}
+                  className="text-fg-muted hover:text-fg-default flex items-center gap-1 text-sm transition-colors disabled:opacity-50"
+                >
+                  <ChevronLeft size={18} />
+                  <span>Back</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleCancel}
+                  className="text-fg-muted hover:text-fg-default flex items-center justify-center p-1 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              )}
+            </div>
+            {/* Desktop: Cancel */}
+            <button
+              onClick={handleCancel}
+              className="text-fg-muted hover:text-fg-default hidden items-center gap-2 text-sm transition-colors md:flex"
+            >
+              <X size={18} />
+              Cancel
+            </button>
           </div>
 
-          {/* Desktop: Previous + Next buttons */}
-          <div className="hidden items-center gap-2 md:flex">
+          {/* Right: Next/Create button */}
+          <div className="relative z-10 flex items-center gap-2">
+            {/* Desktop: Previous button */}
             {showPreviousButton && (
               <Button
                 variant="ghost"
@@ -1266,10 +1291,12 @@ Ground Rules:`;
                 onClick={handlePrevious}
                 disabled={isScenarioGenerating}
                 icon={<ChevronLeft size={16} />}
+                className="hidden md:flex"
               >
                 Previous
               </Button>
             )}
+            {/* Next/Create button (both mobile and desktop) */}
             <Button
               size="sm"
               onClick={handleNext}
@@ -1280,18 +1307,11 @@ Ground Rules:`;
               }
               loading={isSaving || isWaitingForWorkflow}
             >
-              {isLastStep ? "Create Session" : "Next"}
+              <span className="md:hidden">{isLastStep ? "Create" : "Next"}</span>
+              <span className="hidden md:inline">{isLastStep ? "Create Session" : "Next"}</span>
               {!isLastStep && <ChevronRight size={16} />}
             </Button>
           </div>
-
-          {/* Mobile: X button to exit */}
-          <button
-            onClick={handleCancel}
-            className="text-fg-muted hover:text-fg-default flex items-center justify-center p-1 transition-colors md:hidden"
-          >
-            <X size={20} />
-          </button>
         </div>
 
         {/* Stepper */}
@@ -1303,7 +1323,7 @@ Ground Rules:`;
         />
 
         {/* Content */}
-        <div className="relative z-10 mb-16 flex-1 overflow-hidden md:mb-0">
+        <div className="relative z-10 flex-1 overflow-hidden">
           {currentStep === "cast" && (
             <CastStep
               currentStep={currentStep}
@@ -1402,39 +1422,6 @@ Ground Rules:`;
           )}
         </div>
 
-        {/* Mobile Floating Buttons */}
-        <div className="absolute right-0 bottom-0 left-0 z-20 bg-gradient-to-t from-black via-black/95 to-transparent px-4 pt-6 pb-4 md:hidden">
-          <div className="flex items-center justify-between gap-3">
-            {/* Show Previous if: on 2nd+ step OR on Cast step with Roster tab */}
-            {showPreviousButton ||
-            (currentStep === "cast" && mobileCastTab === "cast") ? (
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={isScenarioGenerating}
-                className="flex-1"
-                icon={<ChevronLeft size={16} />}
-              >
-                Previous
-              </Button>
-            ) : (
-              <div className="flex-1" />
-            )}
-            <Button
-              onClick={handleNext}
-              disabled={
-                !canProceed ||
-                isScenarioGenerating ||
-                (currentStep === "stats" && isStatsGenerating)
-              }
-              loading={isSaving || isWaitingForWorkflow}
-              className="flex-1"
-            >
-              {isLastStep ? "Create" : "Next"}
-              {!isLastStep && <ChevronRight size={16} />}
-            </Button>
-          </div>
-        </div>
       </>
 
       {/* Navigation Confirmation Dialog */}

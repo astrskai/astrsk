@@ -24,6 +24,38 @@ Import the CSS once in your app's entry point:
 import '@astrsk/design-system/styles';
 ```
 
+### Setup Provider (Optional)
+
+For framework-specific image optimization (Next.js, Remix, etc.), wrap your app with `DesignSystemProvider`:
+
+```tsx
+// app/providers.tsx or _app.tsx
+import { DesignSystemProvider } from '@astrsk/design-system';
+import Image from 'next/image';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <DesignSystemProvider
+      imageComponent={({ src, alt, className, sizes, onError, fill }) => (
+        <Image
+          src={src}
+          alt={alt}
+          className={className}
+          sizes={sizes}
+          onError={onError}
+          fill={fill}
+          style={{ objectFit: 'cover' }}
+        />
+      )}
+    >
+      {children}
+    </DesignSystemProvider>
+  );
+}
+```
+
+This applies optimized images globally to `CharacterCard`, `SessionCard`, and other image components.
+
 ### Use Components
 
 #### Option 1: Barrel Import (Default)
@@ -92,6 +124,68 @@ function App() {
 **Bundle Size Comparison:**
 - Barrel import: ~60KB (all components)
 - Subpath imports: ~10-15KB per component (only what you use)
+
+## Provider & Image Optimization
+
+The `DesignSystemProvider` allows you to customize how images are rendered across all components.
+
+### ImageComponentProps
+
+```typescript
+interface ImageComponentProps {
+  src: string;           // Image source URL
+  alt: string;           // Alt text for accessibility
+  className?: string;    // CSS class names
+  sizes?: string;        // Responsive image sizes hint
+  loading?: 'lazy' | 'eager';  // Loading strategy
+  onError?: () => void;  // Error handler
+  fill?: boolean;        // Whether image should fill container
+}
+```
+
+### Priority Order
+
+Image rendering follows this priority:
+
+1. **`renderImage` prop** - Per-component override
+2. **`DesignSystemProvider.imageComponent`** - Global setting
+3. **Default `<img>` tag** - Fallback
+
+### Per-Component Override
+
+Override the global setting for specific components:
+
+```tsx
+import { CharacterCard } from '@astrsk/design-system';
+import Image from 'next/image';
+
+<CharacterCard
+  name="Alice"
+  imageUrl="/image.jpg"
+  tags={['fantasy']}
+  renderImage={({ src, alt, className, sizes, onError }) => (
+    <Image
+      src={src}
+      alt={alt}
+      className={className}
+      sizes={sizes}
+      onError={onError}
+      fill
+      priority  // Only this card loads with priority
+    />
+  )}
+/>
+```
+
+### Without Provider (Default)
+
+Without `DesignSystemProvider`, components use standard `<img>` tags:
+
+```tsx
+// Works out of the box - no provider needed
+<CharacterCard name="Alice" imageUrl="/image.jpg" tags={['fantasy']} />
+<SessionCard title="Adventure" imageUrl="/session.jpg" />
+```
 
 ## Components
 

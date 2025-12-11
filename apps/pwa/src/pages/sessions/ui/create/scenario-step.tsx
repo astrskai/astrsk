@@ -20,8 +20,8 @@ import {
   type ScenarioBuilderMessage,
 } from "@/app/services/system-agents";
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
+import { MobileChatSheet } from "./mobile-chat-sheet";
 import { StepHeader } from "./step-header";
-import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
 import type { SessionStep } from "./session-stepper";
 
 // Animation for newly added items - highlight effect that fades out
@@ -62,9 +62,9 @@ interface ScenarioStepProps {
   // Generation state (lifted to parent to disable navigation)
   isGenerating: boolean;
   onIsGeneratingChange: (isGenerating: boolean) => void;
-  // Mobile tab state (controlled by parent for navigation)
-  mobileTab: "chat" | "builder";
-  onMobileTabChange: (tab: "chat" | "builder") => void;
+  // Mobile tab state (deprecated - no longer used, chat is in bottom sheet)
+  mobileTab?: "chat" | "builder";
+  onMobileTabChange?: (tab: "chat" | "builder") => void;
 }
 
 export interface FirstMessage {
@@ -585,9 +585,9 @@ export function ScenarioStep({
         finalResult = chunk;
       }
 
-      // If tools were executed, switch to builder tab on mobile for better UX
+      // If tools were executed, switch to builder tab on mobile for better UX (deprecated - no longer needed with bottom sheet)
       if (finalResult && finalResult.toolResults && finalResult.toolResults.length > 0) {
-        onMobileTabChange("builder");
+        onMobileTabChange?.("builder");
       }
 
       logger.info("[ScenarioStep] AI response generated", {
@@ -746,60 +746,45 @@ export function ScenarioStep({
     onChatMessagesChange([...chatMessages, cancelledMessage]);
   }, [currentStep, onChatMessagesChange, chatMessages, onIsGeneratingChange]);
 
-  // Mobile tab configuration
-  const mobileTabs = useMemo<MobileTab<"builder" | "chat">[]>(
-    () => [
-      { value: "builder", label: "Builder", icon: <Globe size={14} /> },
-      { value: "chat", label: "AI", icon: <Sparkles size={14} /> },
-    ],
-    [],
-  );
+  // Compute showTypingIndicator for reuse in both ChatPanel and MobileChatSheet
+  const showTypingIndicator = (() => {
+    // Show typing indicator for welcome message init
+    if (isTypingIndicator) return true;
+    // When generating, check if we're waiting for AI response
+    if (isGenerating) {
+      const scenarioMessages = displayMessages.filter(m => m.step === "scenario");
+      const lastScenarioMessage = scenarioMessages[scenarioMessages.length - 1];
+      // Show indicator if last message is from user (waiting for AI response)
+      // or if last assistant message has no content yet (streaming not started)
+      if (!lastScenarioMessage) return true;
+      if (lastScenarioMessage.role === "user") return true;
+      if (lastScenarioMessage.role === "assistant" && !lastScenarioMessage.content) return true;
+      return false;
+    }
+    return false;
+  })();
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {/* Mobile Tab Nav */}
-      <MobileTabNav
-        value={mobileTab}
-        onValueChange={onMobileTabChange}
-        tabs={mobileTabs}
-      />
-
       <div className="mx-auto flex h-full w-full max-w-[1600px] flex-1 flex-col gap-4 overflow-hidden px-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
-        {/* Left Panel: AI Chat */}
+        {/* Left Panel: AI Chat (Desktop only) */}
         <ChatPanel
           messages={displayMessages}
           agent={CHAT_AGENTS.scenario}
+          currentStep={currentStep}
           inputValue={aiPrompt}
           onInputChange={setAiPrompt}
           onSubmit={handleChatSubmit}
           onStop={isGenerating ? handleChatStop : undefined}
           isLoading={isGenerating || isTypingIndicator}
-          showTypingIndicator={(() => {
-            // Show typing indicator for welcome message init
-            if (isTypingIndicator) return true;
-            // When generating, check if we're waiting for AI response
-            if (isGenerating) {
-              const scenarioMessages = displayMessages.filter(m => m.step === "scenario");
-              const lastScenarioMessage = scenarioMessages[scenarioMessages.length - 1];
-              // Show indicator if last message is from user (waiting for AI response)
-              // or if last assistant message has no content yet (streaming not started)
-              if (!lastScenarioMessage) return true;
-              if (lastScenarioMessage.role === "user") return true;
-              if (lastScenarioMessage.role === "assistant" && !lastScenarioMessage.content) return true;
-              return false;
-            }
-            return false;
-          })()}
+          showTypingIndicator={showTypingIndicator}
           disabled={isGenerating || isTypingIndicator || isWelcomeTyping || isBackgroundTyping}
-          className={mobileTab === "chat" ? "" : "hidden md:flex"}
+          className="hidden md:flex"
         />
 
         {/* Right Panel: Scenario + First Messages + Lorebook */}
         <div
-          className={cn(
-            "border-border-default flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:rounded-xl md:border",
-            mobileTab === "builder" ? "" : "hidden md:flex",
-          )}
+          className="border-border-default flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:rounded-xl md:border"
         >
           <StepHeader
             icon={<Globe size={20} />}
@@ -945,6 +930,20 @@ export function ScenarioStep({
           </div>
         </div>
       </div>
+
+      {/* Mobile Chat Bottom Sheet */}
+      <MobileChatSheet
+        messages={displayMessages}
+        agent={CHAT_AGENTS.scenario}
+        currentStep={currentStep}
+        inputValue={aiPrompt}
+        onInputChange={setAiPrompt}
+        onSubmit={handleChatSubmit}
+        onStop={isGenerating ? handleChatStop : undefined}
+        isLoading={isGenerating || isTypingIndicator}
+        showTypingIndicator={showTypingIndicator}
+        disabled={isGenerating || isTypingIndicator || isWelcomeTyping || isBackgroundTyping}
+      />
     </div>
   );
 }

@@ -15,7 +15,6 @@ import {
   Sparkles,
   RefreshCw,
 } from "lucide-react";
-import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
 import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Button } from "@/shared/ui/forms";
@@ -27,6 +26,7 @@ import {
   type DataSchemaContext,
 } from "@/app/services/system-agents";
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
+import { MobileChatSheet } from "./mobile-chat-sheet";
 import type { SessionStep } from "./session-stepper";
 import { StepHeader } from "./step-header";
 
@@ -91,9 +91,9 @@ interface StatsStepProps {
   // Chat messages (lifted to parent for persistence across step navigation)
   chatMessages?: ChatMessage[];
   onChatMessagesChange?: (messages: ChatMessage[]) => void;
-  // Mobile tab state (controlled by parent for navigation)
-  mobileTab: "editor" | "chat";
-  onMobileTabChange: (tab: "editor" | "chat") => void;
+  // Mobile tab state (deprecated - no longer used, chat is in bottom sheet)
+  mobileTab?: "editor" | "chat";
+  onMobileTabChange?: (tab: "editor" | "chat") => void;
 }
 /**
  * Type Icon Component
@@ -424,44 +424,26 @@ export function StatsStep({
     onChatMessagesChange?.([...chatMessagesRef.current, cancelledMessage]);
   }, [currentStep, onChatMessagesChange]);
 
-  // Mobile tab configuration
-  const mobileTabs = useMemo<MobileTab<"editor" | "chat">[]>(
-    () => [
-      { value: "editor", label: "Editor", icon: <Database size={14} /> },
-      { value: "chat", label: "AI", icon: <Sparkles size={14} /> },
-    ],
-    [],
-  );
-
   return (
     <div className="flex h-full flex-col overflow-hidden">
-      {/* Mobile Tab Navigation */}
-      <MobileTabNav
-        value={mobileTab}
-        onValueChange={onMobileTabChange}
-        tabs={mobileTabs}
-      />
-
       <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-4 overflow-hidden px-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
-        {/* Left Panel: AI Chat */}
+        {/* Left Panel: AI Chat (Desktop only) */}
         <ChatPanel
           messages={chatMessages}
           agent={CHAT_AGENTS.hud}
+          currentStep={currentStep}
           inputValue={refinePrompt}
           onInputChange={setRefinePrompt}
           onSubmit={handleChatSubmit}
           onStop={isRefining ? handleChatStop : undefined}
           isLoading={isRefining}
           disabled={isRefining}
-          className={mobileTab === "chat" ? "" : "hidden md:flex"}
+          className="hidden md:flex"
         />
 
         {/* Right Panel: Data Protocol Editor */}
         <div
-          className={cn(
-            "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-border-default md:rounded-xl md:border",
-            mobileTab === "editor" ? "" : "hidden md:flex",
-          )}
+          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-border-default md:rounded-xl md:border"
         >
           <StepHeader
             icon={<Database size={20} />}
@@ -835,6 +817,19 @@ export function StatsStep({
         </div>
         </div>
       </div>
+
+      {/* Mobile Chat Bottom Sheet */}
+      <MobileChatSheet
+        messages={chatMessages}
+        agent={CHAT_AGENTS.hud}
+        currentStep={currentStep}
+        inputValue={refinePrompt}
+        onInputChange={setRefinePrompt}
+        onSubmit={handleChatSubmit}
+        onStop={isRefining ? handleChatStop : undefined}
+        isLoading={isRefining}
+        disabled={isRefining}
+      />
     </div>
   );
 }
