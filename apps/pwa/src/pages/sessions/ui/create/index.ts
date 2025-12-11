@@ -21,7 +21,6 @@ export {
   type ChatMessage,
   type ChatAgentConfig,
 } from "./chat-panel";
-export { StepHeader } from "./step-header";
 export {
   SessionStepper,
   SESSION_STEPS,

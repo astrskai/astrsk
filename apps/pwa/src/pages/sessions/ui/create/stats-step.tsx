@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   Database,
   Plus,
@@ -28,7 +28,6 @@ import {
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
 import { MobileChatSheet } from "./mobile-chat-sheet";
 import type { SessionStep } from "./session-stepper";
-import { StepHeader } from "./step-header";
 
 export type FlowTemplateName = "Simple";
 export interface TemplateSelectionResult {
@@ -179,6 +178,8 @@ export function StatsStep({
 
   // Stop generation - delegates to parent's handler
   const handleStopGeneration = useCallback(() => {
+    // Mark that user manually stopped generation (to skip completion message)
+    wasStoppedByUserRef.current = true;
     // Call parent's stop handler (which has the actual abort controller)
     onStopGeneration();
     // Also abort local refine controller if active
@@ -186,7 +187,24 @@ export function StatsStep({
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-  }, [onStopGeneration]);
+
+    // Add stopped message to chat (replace previous stopped message if exists)
+    const currentMessages = chatMessagesRef.current;
+    const messagesWithoutPreviousStopped = currentMessages.filter(
+      (m) => m.id !== "stats-generation-stopped"
+    );
+    const stoppedMessage: ChatMessage = {
+      id: "stats-generation-stopped",
+      role: "assistant",
+      content: dataStoresRef.current.length > 0
+        ? `Generation stopped. ${dataStoresRef.current.length} stats have been generated so far.`
+        : "Generation stopped. You can add stats manually or try regenerating.",
+      step: "stats",
+      variant: "cancelled",
+      isSystemGenerated: true,
+    };
+    onChatMessagesChange?.([...messagesWithoutPreviousStopped, stoppedMessage]);
+  }, [onStopGeneration, onChatMessagesChange]);
 
   // Regenerate trackers (clears existing and generates new ones)
   const handleRegenerate = useCallback(() => {
@@ -221,6 +239,9 @@ export function StatsStep({
   // Track previous isGenerating state for completion detection
   const prevIsGeneratingRef = useRef(isGenerating);
 
+  // Track if generation was stopped by user (to differentiate from natural completion)
+  const wasStoppedByUserRef = useRef(false);
+
   // Show completion message when generation finishes (isGenerating: true → false)
   useEffect(() => {
     const wasGenerating = prevIsGeneratingRef.current;
@@ -228,6 +249,12 @@ export function StatsStep({
 
     // Only trigger when isGenerating changes from true to false
     if (!wasGenerating || isGenerating) return;
+
+    // Skip if user manually stopped generation
+    if (wasStoppedByUserRef.current) {
+      wasStoppedByUserRef.current = false; // Reset for next generation
+      return;
+    }
 
     // Skip if no stats messages exist yet (welcome message hasn't been shown)
     const statsMessages = chatMessagesRef.current.filter(m => m.step === "stats");
@@ -577,38 +604,32 @@ export function StatsStep({
         <div
           className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-border-default md:rounded-xl md:border"
         >
-          <StepHeader
-            icon={<Database size={20} />}
-            title="Data Protocol"
-            subtitle="Define variables for AI to track"
-            actions={
-              <>
-                {hasAttemptedGeneration && !isGenerating && dataStores.length === 0 && (
-                  <Button
-                    onClick={handleRegenerate}
-                    variant="secondary"
-                    size="sm"
-                    icon={<RefreshCw size={16} />}
-                    title="Regenerate trackers from scenario"
-                  >
-                    <span className="hidden sm:inline">Regenerate</span>
-                  </Button>
-                )}
+          {/* Expandable List */}
+          <div className="flex-1 space-y-3 overflow-y-auto p-4">
+            {/* Action Bar - always visible at top */}
+            <div className="flex items-center justify-end gap-2">
+              {hasAttemptedGeneration && !isGenerating && dataStores.length === 0 && (
                 <Button
-                  onClick={handleAddStore}
-                  variant="default"
+                  onClick={handleRegenerate}
+                  variant="secondary"
                   size="sm"
-                  icon={<Plus size={16} />}
+                  icon={<RefreshCw size={16} />}
+                  title="Regenerate trackers from scenario"
                 >
-                  <span className="hidden sm:inline">New Tracker</span>
+                  <span className="hidden sm:inline">Regenerate</span>
                 </Button>
-              </>
-            }
-          />
+              )}
+              <Button
+                onClick={handleAddStore}
+                variant="default"
+                size="sm"
+                icon={<Plus size={16} />}
+              >
+                <span className="hidden sm:inline">New Tracker</span>
+              </Button>
+            </div>
 
-        {/* Expandable List */}
-        <div className="flex-1 space-y-3 overflow-y-auto p-4">
-          {/* Show generating indicator at top when generating or refining */}
+            {/* Show generating indicator when generating or refining */}
           {(isGenerating || isRefining) && (
             <div className="mb-4 flex items-center justify-between rounded-lg border border-brand-500/30 bg-brand-500/10 px-4 py-3">
               <div className="flex items-center gap-3">

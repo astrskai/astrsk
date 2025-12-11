@@ -4,10 +4,8 @@ import {
   Plus,
   Trash2,
   Copy,
-  Sparkles,
   MessageSquare,
   BookOpen,
-  Globe,
   Check,
 } from "lucide-react";
 import { Input, Textarea, Button } from "@/shared/ui/forms";
@@ -21,7 +19,6 @@ import {
 } from "@/app/services/system-agents";
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
 import { MobileChatSheet } from "./mobile-chat-sheet";
-import { StepHeader } from "./step-header";
 import type { SessionStep } from "./session-stepper";
 
 // Animation for newly added items - highlight effect that fades out
@@ -786,12 +783,6 @@ export function ScenarioStep({
         <div
           className="border-border-default flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:rounded-xl md:border"
         >
-          <StepHeader
-            icon={<Globe size={20} />}
-            title="Scenario Builder"
-            subtitle="Define world and context"
-          />
-
           {/* Content */}
           <div className="flex-1 space-y-6 overflow-y-auto p-4 md:p-6">
             {/* Scenario Description */}
