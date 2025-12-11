@@ -815,8 +815,8 @@ export function CastStep({
       variant: "cancelled",
       isSystemGenerated: true, // Exclude from AI chat history
     };
-    onChatMessagesChange?.([...chatMessages, cancelledMessage]);
-  }, [currentStep, onChatMessagesChange, chatMessages]);
+    addChatMessage?.(cancelledMessage);
+  }, [currentStep, addChatMessage]);
 
   // Fetch character cards
   const { data: characterCards } = useQuery({
