@@ -407,7 +407,8 @@ export function CharacterSelectionDialog({
                             // Pass current location as returnTo parameter
                             onOpenChange(false);
                             navigate({
-                              to: "/assets/characters/new",
+                              to: "/assets/characters/{-$characterId}",
+                              params: { characterId: "new" },
                               search: {
                                 mode: "edit",
                                 returnTo: location.pathname
