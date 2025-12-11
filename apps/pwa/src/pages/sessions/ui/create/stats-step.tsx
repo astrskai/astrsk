@@ -442,7 +442,7 @@ export function StatsStep({
         const addedStoreNames: string[] = [];
         const removedStoreNames: string[] = [];
 
-        await refineDataSchema({
+        const result = await refineDataSchema({
           prompt: promptText,
           context,
           currentStores,
@@ -487,7 +487,8 @@ export function StatsStep({
           responseText += addedStoreNames.length > 0 ? `. Removed: ${removedStoreNames.join(", ")}` : `Removed: ${removedStoreNames.join(", ")}`;
         }
         if (addedStoreNames.length === 0 && removedStoreNames.length === 0) {
-          responseText = "No changes were made.";
+          // No tool calls made - use AI's text response (e.g., redirection message for out-of-scope requests)
+          responseText = result.text?.trim() || "No changes were made.";
         }
 
         // Add AI response to chat (use ref to get latest messages after async operation)
