@@ -486,6 +486,26 @@ Now use the add_data_store tool to create the data stores.`;
       };
     }
   } catch (error) {
+    // Check if this is a non-fatal Vertex AI metadata-only response error
+    const isVertexMetadataError =
+      error instanceof Error &&
+      error.message?.includes("Invalid input: expected array, received undefined") &&
+      error.message?.includes("candidates") &&
+      generatedStores.length > 0; // We have successful tool results
+
+    if (isVertexMetadataError) {
+      logger.warn("[DataSchemaBuilder] Ignoring Vertex AI metadata-only response error (tools succeeded)", {
+        storesCreated: generatedStores.length,
+        errorMessage: error.message,
+      });
+
+      // Return what we have - the tool calls succeeded
+      return {
+        text: "",
+        stores: generatedStores,
+      };
+    }
+
     logger.error("[DataSchemaBuilder] Error generating data schema", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -668,6 +688,23 @@ export async function refineDataSchema({
       };
     }
   } catch (error) {
+    // Check if this is a non-fatal Vertex AI metadata-only response error
+    const isVertexMetadataError =
+      error instanceof Error &&
+      error.message?.includes("Invalid input: expected array, received undefined") &&
+      error.message?.includes("candidates");
+
+    if (isVertexMetadataError) {
+      logger.warn("[DataSchemaBuilder] Ignoring Vertex AI metadata-only response error (refinement may have completed)", {
+        errorMessage: error.message,
+      });
+
+      // Return empty text - the tool calls may have succeeded
+      return {
+        text: "",
+      };
+    }
+
     logger.error("[DataSchemaBuilder] Error refining data schema", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

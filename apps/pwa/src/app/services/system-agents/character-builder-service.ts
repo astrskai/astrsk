@@ -326,10 +326,10 @@ export async function generateCharacterResponse({
     })),
   ];
 
-  try {
-    // Track all tool results across steps
-    const allToolResults: unknown[] = [];
+  // Track all tool results across steps (declare outside try block for catch access)
+  const allToolResults: unknown[] = [];
 
+  try {
     // Check if this model needs non-streaming approach for tool calling
     const useNonStreaming = shouldUseNonStreamingForTools(
       apiConnection.source,
@@ -399,6 +399,26 @@ export async function generateCharacterResponse({
       };
     }
   } catch (error) {
+    // Check if this is a non-fatal Vertex AI metadata-only response error
+    const isVertexMetadataError =
+      error instanceof Error &&
+      error.message?.includes("Invalid input: expected array, received undefined") &&
+      error.message?.includes("candidates") &&
+      allToolResults.length > 0; // We have successful tool results
+
+    if (isVertexMetadataError) {
+      logger.warn("[CharacterBuilder] Ignoring Vertex AI metadata-only response error (tools succeeded)", {
+        toolResultsCount: allToolResults.length,
+        errorMessage: error.message,
+      });
+
+      // Return what we have - the tool calls succeeded
+      return {
+        text: "",
+        toolResults: allToolResults,
+      };
+    }
+
     logger.error("[CharacterBuilder] Error generating response", error);
     throw error;
   }
