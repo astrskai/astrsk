@@ -649,7 +649,6 @@ Ground Rules:`;
     dataSchemaEntryToStatsDataStore,
     setStatsAttempted,
     setStatsGenerating,
-    generatedWorkflow,
   ]);
 
   // Keep ref updated to latest handleGenerateStats (avoids dependency chain in handleStepChange)

@@ -262,6 +262,9 @@ export function StatsStep({
     const hasCompletionMessage = statsMessages.some(m => m.id === "stats-completion" || m.id === "stats-completion-placeholder");
     if (hasCompletionMessage) return;
 
+    // Track if placeholder was added (for cleanup on unmount)
+    let placeholderAdded = false;
+
     // Add placeholder message with typingIndicatorDuration
     const placeholderMessage: ChatMessage = {
       id: "stats-completion-placeholder",
@@ -272,8 +275,13 @@ export function StatsStep({
       typingIndicatorDuration: 1000, // Show typing indicator for 1 second
     };
     onChatMessagesChange?.([...chatMessagesRef.current, placeholderMessage]);
+    placeholderAdded = true;
 
     const timer = setTimeout(() => {
+      // Skip if component unmounted
+      if (!isMountedRef.current) return;
+
+      placeholderAdded = false; // Placeholder will be replaced, no cleanup needed
       const currentDataStores = dataStoresRef.current;
       let content: string;
 
@@ -297,6 +305,13 @@ export function StatsStep({
 
     return () => {
       clearTimeout(timer);
+      // Remove placeholder if it wasn't replaced (component unmounted during timeout)
+      if (placeholderAdded && isMountedRef.current) {
+        const cleaned = chatMessagesRef.current.filter(m => m.id !== "stats-completion-placeholder");
+        if (cleaned.length !== chatMessagesRef.current.length) {
+          onChatMessagesChange?.(cleaned);
+        }
+      }
     };
   }, [isGenerating, onChatMessagesChange]);
 
@@ -306,9 +321,8 @@ export function StatsStep({
     const statsMessages = chatMessagesRef.current.filter(m => m.step === "stats");
     if (statsMessages.length > 0) return;
 
-    // Use local variable to track if this effect instance should proceed
-    // This handles StrictMode double-mount correctly
-    let cancelled = false;
+    // Track if placeholder was added and not yet replaced (for cleanup on unmount)
+    let placeholderAdded = false;
 
     // Add placeholder welcome message with typingIndicatorDuration
     // The useTypingIndicator hook will show typing dots for this duration
@@ -321,9 +335,13 @@ export function StatsStep({
       typingIndicatorDuration: 1000, // Show typing indicator for 1 second
     };
     onChatMessagesChange?.([...chatMessagesRef.current, placeholderMessage]);
+    placeholderAdded = true;
 
     const timer = setTimeout(() => {
-      if (cancelled) return;
+      // Skip if component unmounted
+      if (!isMountedRef.current) return;
+
+      placeholderAdded = false; // Placeholder will be replaced, no cleanup needed
 
       // Use refs to get latest values (avoids stale closure)
       const currentDataStores = dataStoresRef.current;
@@ -356,8 +374,14 @@ export function StatsStep({
     }, 1000);
 
     return () => {
-      cancelled = true;
       clearTimeout(timer);
+      // Remove placeholder if it wasn't replaced (component unmounted during timeout)
+      if (placeholderAdded) {
+        const cleaned = chatMessagesRef.current.filter(m => m.id !== "stats-welcome-placeholder");
+        if (cleaned.length !== chatMessagesRef.current.length) {
+          onChatMessagesChange?.(cleaned);
+        }
+      }
     };
   }, []); // Only run on mount
 

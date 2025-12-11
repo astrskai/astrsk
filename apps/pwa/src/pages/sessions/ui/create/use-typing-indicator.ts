@@ -83,6 +83,9 @@ export function useTypingIndicator({
     if (messagesNeedingAnimation.length === 0) return;
 
     const timer = setInterval(() => {
+      // Collect newly completed message IDs outside of state updater
+      const newlyCompleted: string[] = [];
+
       setTypingProgress(prev => {
         const newProgress = { ...prev };
         let hasUpdates = false;
@@ -95,15 +98,20 @@ export function useTypingIndicator({
             newProgress[msg.id] = Math.min(currentPos + CHARS_PER_TICK, targetLength);
             hasUpdates = true;
 
-            // Mark as completed when done
+            // Collect completed IDs (don't call setState here)
             if (newProgress[msg.id] >= targetLength) {
-              setCompletedTypingIds(prevIds => new Set([...prevIds, msg.id]));
+              newlyCompleted.push(msg.id);
             }
           }
         }
 
         return hasUpdates ? newProgress : prev;
       });
+
+      // Update completed IDs outside of state updater (pure function)
+      if (newlyCompleted.length > 0) {
+        setCompletedTypingIds(prev => new Set([...prev, ...newlyCompleted]));
+      }
     }, TYPING_INTERVAL);
 
     return () => clearInterval(timer);
