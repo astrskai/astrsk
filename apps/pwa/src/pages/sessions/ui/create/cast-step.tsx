@@ -526,6 +526,18 @@ export function CastStep({
     onChatMessagesChangeRef.current = onChatMessagesChange;
   }, [onChatMessagesChange]);
 
+  // Sync editingCharacter when draftCharacters changes (e.g., from AI chat updates)
+  useEffect(() => {
+    if (editingCharacter) {
+      const updatedDraft = draftCharacters.find(
+        (d) => d.tempId === editingCharacter.tempId,
+      );
+      if (updatedDraft) {
+        setEditingCharacter(updatedDraft);
+      }
+    }
+  }, [draftCharacters, editingCharacter?.tempId]);
+
   // Flying trail animation state
   const [flyingTrails, setFlyingTrails] = useState<FlyingTrail[]>([]);
   const rosterPanelRef = useRef<HTMLDivElement>(null);
@@ -714,11 +726,30 @@ export function CastStep({
       const updatedDrafts = draftCharacters.map((draft) => {
         if (draft.tempId === id && draft.data) {
           const existingData = draft.data; // Extract to satisfy TypeScript narrowing
+
+          // Convert CharacterLorebookEntry[] to LorebookEntryData[] if lorebook is being updated
+          const lorebookUpdate = updates.lorebook
+            ? {
+                lorebook: updates.lorebook.map((entry) => ({
+                  id: entry.id,
+                  name: entry.name,
+                  enabled: entry.enabled,
+                  keys: entry.keys,
+                  recallRange: entry.recallRange,
+                  content: entry.content,
+                })),
+              }
+            : {};
+
+          // Omit lorebook from updates and apply converted version
+          const { lorebook: _, ...otherUpdates } = updates;
+
           return {
             ...draft,
             data: {
               ...existingData,
-              ...updates,
+              ...otherUpdates,
+              ...lorebookUpdate,
             },
           };
         }
@@ -764,6 +795,7 @@ export function CastStep({
         }));
 
       // Build current characters list for context (only drafts with data)
+      // Include source field to distinguish SESSION (editable) vs LIBRARY (read-only)
       const currentCharacters: CharacterData[] = draftCharacters
         .filter((draft) => draft.data !== undefined)
         .map((draft) => ({
@@ -773,6 +805,17 @@ export function CastStep({
           tags: draft.data!.tags,
           cardSummary: draft.data!.cardSummary,
           exampleDialogue: draft.data!.exampleDialogue,
+          lorebook: draft.data!.lorebook?.map((entry) => ({
+            id: entry.id,
+            name: entry.name,
+            enabled: entry.enabled ?? true,
+            keys: entry.keys ?? [],
+            recallRange: entry.recallRange ?? 1000,
+            content: entry.content,
+          })),
+          // SESSION characters are editable (source: import/chat)
+          // LIBRARY characters are read-only (source: library)
+          source: draft.source === "library" ? "library" : "session",
         }));
 
       const response = await generateCharacterResponse({
@@ -1936,6 +1979,52 @@ function CharacterEditPanel({
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Track created object URL for cleanup
   const createdObjectUrlRef = useRef<string | null>(null);
+  // Track if we're currently syncing from prop to avoid infinite loop
+  const isSyncingFromPropRef = useRef(false);
+  // Track the last synced character tempId to detect external changes
+  const lastSyncedTempIdRef = useRef(character.tempId);
+
+  // Sync local state when character prop changes from EXTERNAL source (e.g., AI chat updates)
+  // Only sync if the data actually changed externally, not from our own onSave
+  useEffect(() => {
+    // Skip if this is a self-triggered update (same tempId, data changed by us)
+    if (isSyncingFromPropRef.current) {
+      return;
+    }
+
+    // Check if lorebook count changed (external update indicator - e.g., AI added lorebook entry)
+    const currentLorebookCount = character.data?.lorebook?.length ?? 0;
+    const localLorebookCount = lorebook.length;
+    const lorebookCountChanged = currentLorebookCount !== localLorebookCount;
+
+    // Only sync if there's a meaningful external change (lorebook count or different character)
+    if (lorebookCountChanged || (lastSyncedTempIdRef.current !== character.tempId)) {
+      isSyncingFromPropRef.current = true;
+      lastSyncedTempIdRef.current = character.tempId;
+
+      setName(character.data?.name || "");
+      setSummary(character.data?.cardSummary || "");
+      setDescription(character.data?.description || "");
+      setTags(character.data?.tags || []);
+      setImageUrl(character.data?.imageUrl || "");
+      setImageFile(character.data?.imageFile);
+      setLorebook(
+        character.data?.lorebook?.map((entry) => ({
+          id: entry.id || crypto.randomUUID(),
+          name: entry.name || "",
+          enabled: entry.enabled ?? true,
+          keys: entry.keys?.join(", ") || "",
+          recallRange: entry.recallRange ?? 1000,
+          content: entry.content || "",
+        })) || [],
+      );
+
+      // Reset flag after state updates are processed
+      requestAnimationFrame(() => {
+        isSyncingFromPropRef.current = false;
+      });
+    }
+  }, [character.tempId, character.data?.lorebook?.length]);
 
   // Cleanup object URL on unmount
   useEffect(() => {

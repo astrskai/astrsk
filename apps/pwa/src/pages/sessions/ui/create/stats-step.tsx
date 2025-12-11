@@ -83,6 +83,8 @@ interface StatsStepProps {
   onHasAttemptedGenerationChange: (attempted: boolean) => void;
   // Callback to stop stats generation (handled by parent) - required since parent controls abort controller
   onStopGeneration: () => void;
+  // Callback to regenerate stats (handled by parent) - triggers generation from parent
+  onRegenerate?: () => void;
   // Selected flow template (lifted to parent for workflow generation)
   selectedTemplate?: TemplateSelectionResult | null;
   onSelectedTemplateChange?: (template: TemplateSelectionResult | null) => void;
@@ -128,6 +130,7 @@ export function StatsStep({
   hasAttemptedGeneration,
   onHasAttemptedGenerationChange,
   onStopGeneration,
+  onRegenerate,
   selectedTemplate,
   onSelectedTemplateChange,
   onResponseTemplateChange,
@@ -190,7 +193,9 @@ export function StatsStep({
     // Reset attempt flag and clear stores to trigger regeneration
     onHasAttemptedGenerationChange(false);
     onDataStoresChange([]);
-  }, [onDataStoresChange, onHasAttemptedGenerationChange]);
+    // Trigger regeneration from parent (which controls the generation logic)
+    onRegenerate?.();
+  }, [onDataStoresChange, onHasAttemptedGenerationChange, onRegenerate]);
 
   // Cleanup effect - only runs on unmount
   useEffect(() => {

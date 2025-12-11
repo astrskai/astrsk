@@ -15,6 +15,18 @@ import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib";
 
 /**
+ * Lorebook entry data for character creation/editing
+ */
+export interface CharacterLorebookEntry {
+  id: string;
+  name: string;
+  enabled: boolean;
+  keys: string[];
+  recallRange: number;
+  content: string;
+}
+
+/**
  * Character data structure for creation
  */
 export interface CharacterData {
@@ -24,6 +36,9 @@ export interface CharacterData {
   tags?: string[];
   cardSummary?: string;
   exampleDialogue?: string;
+  lorebook?: CharacterLorebookEntry[];
+  /** Source of character: "session" (editable) or "library" (read-only) */
+  source?: "session" | "library";
 }
 
 /**
@@ -54,6 +69,12 @@ interface QueryCharacterResult {
   message: string;
 }
 
+interface LorebookEntryResult {
+  success: boolean;
+  entry?: CharacterLorebookEntry;
+  message: string;
+}
+
 /**
  * Build system prompt for character generation with scenario context
  */
@@ -72,13 +93,27 @@ function buildSystemPrompt(scenarioContext: ScenarioContext, currentCharacters: 
     });
   }
 
-  // Add current characters list (IDs and names only - use query tool for details)
+  // Add current characters list with source type (SESSION = editable, LIBRARY = read-only)
   if (currentCharacters.length > 0) {
-    contextSection += `\n\n## Current Characters (${currentCharacters.length}):`;
-    currentCharacters.forEach((char, i) => {
-      const idInfo = char.id ? ` - ID: \`${char.id}\`` : "";
-      contextSection += `\n${i + 1}${idInfo} - "${char.name}"`;
-    });
+    const sessionChars = currentCharacters.filter((c) => c.source === "session");
+    const libraryChars = currentCharacters.filter((c) => c.source === "library");
+
+    contextSection += `\n\n## Current Characters (${currentCharacters.length} total):`;
+
+    if (sessionChars.length > 0) {
+      contextSection += `\n\n### SESSION Characters (✏️ Editable):`;
+      sessionChars.forEach((char) => {
+        const idInfo = char.id ? ` - ID: \`${char.id}\`` : "";
+        contextSection += `\n- [SESSION]${idInfo} "${char.name}"`;
+      });
+    }
+
+    if (libraryChars.length > 0) {
+      contextSection += `\n\n### LIBRARY Characters (🔒 Read-Only):`;
+      libraryChars.forEach((char) => {
+        contextSection += `\n- [LIBRARY] "${char.name}" (cannot be modified)`;
+      });
+    }
   }
 
   return `You are a creative character builder assistant for roleplay and storytelling.
@@ -105,9 +140,12 @@ Immediately create a complete character using the create_character tool.
 - "Someone cool" → Too vague, ask for more details.
 
 ## Your Tools:
-1. **query_character_details** - Get full details of a character by ID (description, tags, etc.)
+1. **query_character_details** - Get full details of a character by ID (description, tags, lorebook, etc.)
 2. **create_character** - Create a new character with specified details
 3. **update_character** - Update an existing character's details (name, description, tags, summary, dialogue)
+4. **add_lorebook_entry** - Add a new lorebook entry to a character
+5. **update_lorebook_entry** - Update an existing lorebook entry
+6. **remove_lorebook_entry** - Remove a lorebook entry from a character
 
 ## Character Creation Guidelines:
 
@@ -137,24 +175,76 @@ Immediately create a complete character using the create_character tool.
 - Show their personality through speech patterns
 
 ## Querying Character Details:
-When you need to see full details of a character (to edit):
+When you need to see full details of a character (to edit or add lorebook):
 - Use **query_character_details** with the character's ID
-- This returns: name, description, tags, cardSummary, exampleDialogue
+- This returns: name, description, tags, cardSummary, exampleDialogue, lorebook entries
 
 ## Editing vs. Creating:
 When the user asks to modify an existing character:
-- First use **query_character_details** to see current state
+- First use **query_character_details** to see current state (including lorebook)
 - Use **update_character** with the existing character's ID (shown in Current Characters list)
 - DO NOT create duplicates - always update existing characters when asked to edit them
 
-## After creating:
-Briefly summarize the character and ask if they want any changes.
+## ⚠️ SESSION vs LIBRARY - Character Edit Rules:
 
-## SCOPE LIMITATION:
-You are ONLY responsible for character-related tasks (creating, editing, querying characters).
-- If the user asks about SCENARIO (background, setting, lorebook) → Reply: "Scenario editing is handled in the Scenario step. You can go back to modify the scenario there!"
-- If the user asks about STATS/VARIABLES (health, trust, etc.) → Reply: "Stats and variables are managed in the Stats step. You can customize them after this step!"
-- Stay focused on character building only.${contextSection}`;
+### ✅ SESSION Characters [SESSION] - Fully Editable:
+- Characters created via chat or import are marked [SESSION]
+- You CAN modify all their properties using update_character tool
+- You CAN add/update/remove their lorebook entries
+- Always use the character's ID from the Current Characters list
+
+### 🚫 LIBRARY Characters [LIBRARY] - Read-Only:
+- Characters from the user's permanent library are marked [LIBRARY]
+- These are shared templates that CANNOT be modified
+- If user asks to edit a LIBRARY character, respond:
+  "This character is from your Library and cannot be modified here. Library characters are read-only templates. If you'd like a customized version, I can create a new SESSION character based on them!"
+
+### Editable Elements (SESSION characters only):
+- ✅ Name, Description, Tags, Card Summary, Example Dialogue
+- ✅ Lorebook entries (add/update/remove)
+
+### Non-Editable via Chat:
+- ❌ Character images → Guide user: "To change the character image, use the Edit button (pencil icon) on the character card in the Library panel."
+- ❌ LIBRARY character data → Suggest creating a SESSION copy instead
+
+## Lorebook Management:
+Lorebook entries are character-specific knowledge that gets injected into context when triggered by keywords.
+- **Adding entries**: Use **add_lorebook_entry** with the character's ID
+- **Updating entries**: First query to get entry IDs, then use **update_lorebook_entry**
+- **Removing entries**: Use **remove_lorebook_entry** with character ID and entry ID
+
+### Lorebook Entry Structure:
+- **name**: Entry title (e.g., "Character's Secret Past")
+- **keys**: Trigger keywords as array (e.g., ["past", "history", "secret"])
+- **content**: The lore content to inject when triggered
+- **recallRange**: How many messages back to scan for triggers (default: 1000)
+- **enabled**: Whether the entry is active (default: true)
+
+## After creating:
+Briefly summarize the character and ask if they want any changes or lorebook entries.
+
+## SCOPE LIMITATION - Step Navigation Guide:
+You are ONLY responsible for character-related tasks in the Cast step. Guide users to the appropriate step for other topics:
+
+### ✅ This Step (Cast) - Character Building:
+- Creating new characters
+- Editing SESSION character details (name, description, tags, summary, dialogue)
+- Managing character-specific lorebook entries
+- Querying character information
+
+### 🔙 Previous Step (Scenario) - World Building:
+If user asks about: background, setting, world lore, scenario lorebook, story setup
+→ Reply: "That's handled in the **Scenario step**! You can navigate back to modify the scenario background or world lorebook. Note: Each character can have their own personal lorebook entries here in the Cast step."
+
+### 🔜 Next Step (Stats) - Game Mechanics:
+If user asks about: stats, variables, health, trust, attributes, game rules, tracking values
+→ Reply: "Stats and variables are managed in the **Stats step**, which comes after Cast. You'll be able to define custom stats like health, trust, or any other trackable values there!"
+
+### 🚫 Out of Scope:
+If user asks about unrelated topics (weather, coding, general knowledge, etc.)
+→ Reply: "I'm your character creation assistant! I can help you create or edit characters for your session. What kind of character would you like to create?"
+
+Stay focused on character building and character lorebook only.${contextSection}`;
 }
 
 /**
@@ -220,9 +310,9 @@ function createCharacterTools(
     }),
 
     update_character: tool({
-      description: "Update an existing locally-created character by ID. Use this to edit a character's details instead of creating a duplicate.",
+      description: "Update an existing SESSION character by ID. LIBRARY characters cannot be modified. Use this to edit a character's details instead of creating a duplicate.",
       inputSchema: z.object({
-        id: z.string().describe("The ID of the character to update"),
+        id: z.string().describe("The ID of the character to update (must be a SESSION character)"),
         name: z.string().optional().describe("New name for the character (leave empty to keep current)"),
         description: z.string().optional().describe("New description (leave empty to keep current)"),
         tags: z.array(z.string()).optional().describe("New tags (leave empty to keep current)"),
@@ -238,6 +328,14 @@ function createCharacterTools(
           };
         }
 
+        // Block modifications to LIBRARY characters
+        if (character.source === "library") {
+          return {
+            success: false,
+            message: `Cannot modify "${character.name}" - this is a LIBRARY character (read-only). Library characters are shared templates. To customize, create a new SESSION character based on them.`,
+          };
+        }
+
         const updates: Partial<CharacterData> = {};
         if (name !== undefined) updates.name = name;
         if (description !== undefined) updates.description = description;
@@ -249,6 +347,171 @@ function createCharacterTools(
         return {
           success: true,
           message: `Character "${character.name}" has been updated.`,
+        };
+      },
+    }),
+
+    add_lorebook_entry: tool({
+      description: "Add a new lorebook entry to a SESSION character. LIBRARY characters cannot be modified.",
+      inputSchema: z.object({
+        characterId: z.string().describe("The ID of the character to add the lorebook entry to (must be a SESSION character)"),
+        name: z.string().describe("Title of the lorebook entry (e.g., 'Character's Secret Past')"),
+        keys: z.array(z.string()).describe("Trigger keywords that activate this entry (e.g., ['past', 'history', 'secret'])"),
+        content: z.string().describe("The lore content to inject when triggered"),
+        recallRange: z.number().optional().describe("How many messages back to scan for triggers (default: 1000)"),
+        enabled: z.boolean().optional().describe("Whether the entry is active (default: true)"),
+      }),
+      execute: async ({ characterId, name, keys, content, recallRange, enabled }): Promise<LorebookEntryResult> => {
+        const character = currentCharacters.find((c) => c.id === characterId);
+        if (!character) {
+          return {
+            success: false,
+            message: `Character with ID "${characterId}" not found.`,
+          };
+        }
+
+        // Block modifications to LIBRARY characters
+        if (character.source === "library") {
+          return {
+            success: false,
+            message: `Cannot add lorebook to "${character.name}" - this is a LIBRARY character (read-only). To add custom lore, create a SESSION character based on them.`,
+          };
+        }
+
+        const newEntry: CharacterLorebookEntry = {
+          id: crypto.randomUUID(),
+          name,
+          keys,
+          content,
+          recallRange: recallRange ?? 1000,
+          enabled: enabled ?? true,
+        };
+
+        // Get existing lorebook or create empty array
+        const existingLorebook = character.lorebook || [];
+        const updatedLorebook = [...existingLorebook, newEntry];
+
+        callbacks.onUpdateCharacter(characterId, { lorebook: updatedLorebook });
+
+        return {
+          success: true,
+          entry: newEntry,
+          message: `Lorebook entry "${name}" added to "${character.name}".`,
+        };
+      },
+    }),
+
+    update_lorebook_entry: tool({
+      description: "Update an existing lorebook entry on a SESSION character. LIBRARY characters cannot be modified. First use query_character_details to get the entry IDs.",
+      inputSchema: z.object({
+        characterId: z.string().describe("The ID of the character (must be a SESSION character)"),
+        entryId: z.string().describe("The ID of the lorebook entry to update"),
+        name: z.string().optional().describe("New title for the entry"),
+        keys: z.array(z.string()).optional().describe("New trigger keywords"),
+        content: z.string().optional().describe("New lore content"),
+        recallRange: z.number().optional().describe("New recall range"),
+        enabled: z.boolean().optional().describe("Enable or disable the entry"),
+      }),
+      execute: async ({ characterId, entryId, name, keys, content, recallRange, enabled }): Promise<UpdateCharacterResult> => {
+        const character = currentCharacters.find((c) => c.id === characterId);
+        if (!character) {
+          return {
+            success: false,
+            message: `Character with ID "${characterId}" not found.`,
+          };
+        }
+
+        // Block modifications to LIBRARY characters
+        if (character.source === "library") {
+          return {
+            success: false,
+            message: `Cannot modify lorebook of "${character.name}" - this is a LIBRARY character (read-only).`,
+          };
+        }
+
+        if (!character.lorebook || character.lorebook.length === 0) {
+          return {
+            success: false,
+            message: `Character "${character.name}" has no lorebook entries.`,
+          };
+        }
+
+        const entryIndex = character.lorebook.findIndex((e) => e.id === entryId);
+        if (entryIndex === -1) {
+          return {
+            success: false,
+            message: `Lorebook entry with ID "${entryId}" not found in "${character.name}".`,
+          };
+        }
+
+        const existingEntry = character.lorebook[entryIndex];
+        const updatedEntry: CharacterLorebookEntry = {
+          ...existingEntry,
+          ...(name !== undefined && { name }),
+          ...(keys !== undefined && { keys }),
+          ...(content !== undefined && { content }),
+          ...(recallRange !== undefined && { recallRange }),
+          ...(enabled !== undefined && { enabled }),
+        };
+
+        const updatedLorebook = [...character.lorebook];
+        updatedLorebook[entryIndex] = updatedEntry;
+
+        callbacks.onUpdateCharacter(characterId, { lorebook: updatedLorebook });
+
+        return {
+          success: true,
+          message: `Lorebook entry "${updatedEntry.name}" has been updated.`,
+        };
+      },
+    }),
+
+    remove_lorebook_entry: tool({
+      description: "Remove a lorebook entry from a SESSION character. LIBRARY characters cannot be modified.",
+      inputSchema: z.object({
+        characterId: z.string().describe("The ID of the character (must be a SESSION character)"),
+        entryId: z.string().describe("The ID of the lorebook entry to remove"),
+      }),
+      execute: async ({ characterId, entryId }): Promise<UpdateCharacterResult> => {
+        const character = currentCharacters.find((c) => c.id === characterId);
+        if (!character) {
+          return {
+            success: false,
+            message: `Character with ID "${characterId}" not found.`,
+          };
+        }
+
+        // Block modifications to LIBRARY characters
+        if (character.source === "library") {
+          return {
+            success: false,
+            message: `Cannot modify lorebook of "${character.name}" - this is a LIBRARY character (read-only).`,
+          };
+        }
+
+        if (!character.lorebook || character.lorebook.length === 0) {
+          return {
+            success: false,
+            message: `Character "${character.name}" has no lorebook entries.`,
+          };
+        }
+
+        const entryIndex = character.lorebook.findIndex((e) => e.id === entryId);
+        if (entryIndex === -1) {
+          return {
+            success: false,
+            message: `Lorebook entry with ID "${entryId}" not found in "${character.name}".`,
+          };
+        }
+
+        const entryName = character.lorebook[entryIndex].name;
+        const updatedLorebook = character.lorebook.filter((e) => e.id !== entryId);
+
+        callbacks.onUpdateCharacter(characterId, { lorebook: updatedLorebook });
+
+        return {
+          success: true,
+          message: `Lorebook entry "${entryName}" has been removed from "${character.name}".`,
         };
       },
     }),

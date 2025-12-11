@@ -79,7 +79,7 @@ export function SessionStepper({
                   isCompleted && "bg-surface-overlay text-fg-muted",
                   !isActive && !isCompleted && isAccessible && "bg-surface-overlay text-fg-subtle",
                   isLocked && !showLoading && "bg-zinc-800/30 text-zinc-600",
-                  showLoading && "bg-zinc-800/30 text-zinc-500",
+                  showLoading && "bg-brand-500/10 text-brand-400 ring-1 ring-brand-500/40 animate-pulse",
                   isClickable && "hover:bg-surface-raised",
                 )}
               >

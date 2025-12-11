@@ -153,7 +153,9 @@ Ground Rules:`;
   // Refs mirror state for immediate checks in useCallback (avoids stale closure issues)
   const hasAttemptedStatsGenerationRef = useRef(false);
   const isStatsGeneratingRef = useRef(false);
-  const isUserStoppedRef = useRef(false); // Track user-initiated stop
+  const isUserStoppedRef = useRef(false); // Track user-initiated stop for current generation
+  // Persists across navigation - prevents auto-regeneration when user explicitly stopped
+  const userExplicitlyStoppedRef = useRef(false);
   const scenarioBackgroundRef = useRef(scenarioBackground);
   scenarioBackgroundRef.current = scenarioBackground;
   const currentStepRef = useRef(currentStep);
@@ -169,6 +171,11 @@ Ground Rules:`;
   const setStatsAttempted = useCallback((value: boolean) => {
     hasAttemptedStatsGenerationRef.current = value;
     setHasAttemptedStatsGeneration(value);
+    // When resetting to false (regenerate request), also reset userExplicitlyStopped
+    // This allows manual regeneration via Regenerate button
+    if (!value) {
+      userExplicitlyStoppedRef.current = false;
+    }
   }, []);
 
   const selectSession = useSessionStore.use.selectSession();
@@ -485,11 +492,16 @@ Ground Rules:`;
         count: generatingStoresRef.current.length,
       });
     } catch (e) {
-      if ((e as Error).name === "AbortError") {
-        // User stop: allow retry. Max-limit: treat as success.
+      const errorName = (e as Error).name;
+      // Handle abort-related errors (AbortError, AI SDK errors, or user-initiated stop)
+      const isAbortRelated = errorName === "AbortError" ||
+        errorName === "AI_NoOutputGeneratedError" ||
+        isUserStoppedRef.current;
+
+      if (isAbortRelated) {
+        // User stop or abort-related error: keep hasAttemptedGeneration=true so Regenerate button shows
         if (isUserStoppedRef.current) {
           logger.info("[CreateSession] Stats generation stopped by user");
-          setStatsAttempted(false);
           isUserStoppedRef.current = false;
         } else {
           logger.info("[CreateSession] Stats generation completed (max limit)");
@@ -517,6 +529,8 @@ Ground Rules:`;
   const handleStopStatsGeneration = useCallback(() => {
     if (statsAbortControllerRef.current) {
       isUserStoppedRef.current = true;
+      // Persist across navigation - prevents auto-regeneration when going back to Scenario then forward
+      userExplicitlyStoppedRef.current = true;
       statsAbortControllerRef.current.abort();
       statsAbortControllerRef.current = null;
     }
@@ -534,13 +548,13 @@ Ground Rules:`;
       if (currentStep === targetStep) return;
 
       // When leaving Scenario step (going forward), trigger stats generation once
-      // Use ref for immediate check to avoid stale closure issues
+      // Skip if already attempted or user explicitly stopped (they can use Regenerate button manually)
       if (
         currentStep === "scenario" &&
         targetIndex > currentIndex &&
-        !hasAttemptedStatsGenerationRef.current
+        !hasAttemptedStatsGenerationRef.current &&
+        !userExplicitlyStoppedRef.current
       ) {
-        // Call via ref to avoid dependency chain issues
         handleGenerateStatsRef.current();
       }
 
@@ -1337,6 +1351,7 @@ Ground Rules:`;
                 hasAttemptedGeneration={hasAttemptedStatsGeneration}
                 onHasAttemptedGenerationChange={setStatsAttempted}
                 onStopGeneration={handleStopStatsGeneration}
+                onRegenerate={handleGenerateStats}
                 selectedTemplate={selectedFlowTemplate}
                 onSelectedTemplateChange={setSelectedFlowTemplate}
                 onResponseTemplateChange={setFlowResponseTemplate}
