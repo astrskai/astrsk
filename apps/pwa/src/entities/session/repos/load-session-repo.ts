@@ -70,4 +70,12 @@ export interface LoadSessionRepo {
     query: { isPlaySession?: boolean; pageSize?: number },
     tx?: Transaction,
   ): Promise<Result<SessionListItem[]>>;
+
+  /**
+   * Get session configs only (optimized for cleanup operations)
+   * Only fetches id and config fields
+   */
+  getSessionConfigs(
+    tx?: Transaction,
+  ): Promise<Result<Array<{ id: string; config: Record<string, unknown> }>>>;
 }

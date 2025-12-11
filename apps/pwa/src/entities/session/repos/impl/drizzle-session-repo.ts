@@ -327,4 +327,33 @@ export class DrizzleSessionRepo
       return formatFail("Failed to get session list items", error);
     }
   }
+
+  /**
+   * Get session configs only (optimized for cleanup operations)
+   *
+   * Fetches only id and config fields from all sessions, avoiding the overhead
+   * of loading complete session data. Used by cleanup utilities to detect
+   * sessions with specific config states (e.g., generationStatus === "generating").
+   *
+   * @param tx - Optional transaction
+   * @returns Result with array of { id, config } objects
+   */
+  async getSessionConfigs(
+    tx?: Transaction,
+  ): Promise<Result<Array<{ id: string; config: Record<string, unknown> }>>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Select only id and config fields for maximum efficiency
+      const rows = await db
+        .select({
+          id: sessions.id,
+          config: sessions.config,
+        })
+        .from(sessions);
+
+      return Result.ok(rows);
+    } catch (error) {
+      return formatFail("Failed to get session configs", error);
+    }
+  }
 }
