@@ -17,6 +17,7 @@ import {
   jsonSchemaToZod,
   shouldUseToolFallback,
   streamWithToolFallback,
+  generateWithToolFallback,
   isJsonSchemaNotSupportedError,
   isRecoverableWithToolMode,
   cacheModelForToolFallback,
@@ -613,6 +614,21 @@ const makeProviderOptions = ({
   // GLM models require thinking to be disabled for tool calling
   if (modelId && modelId.toLowerCase().includes("glm")) {
     options.thinking = { type: "disabled" } as unknown as JSONValue;
+  }
+
+  // Gemini models: Configure thinking via google.thinkingConfig
+  // Gemini 3: Always "low" (cannot be disabled), Gemini 2.5: Use thinking_budget parameter (0 = disabled)
+  if (apiSource === ApiSource.AstrskAi && modelId?.startsWith("google/gemini-")) {
+    const isGemini3 = modelId.toLowerCase().includes("gemini-3");
+    const thinkingBudget = parameters.get("thinking_budget");
+    const existingGoogleOptions = (options.google as Record<string, unknown>) || {};
+
+    options.google = {
+      ...existingGoogleOptions,
+      thinkingConfig: isGemini3
+        ? { thinkingLevel: "low" }
+        : { thinkingBudget: typeof thinkingBudget === "number" ? thinkingBudget : 0 },
+    } as unknown as JSONValue;
   }
 
   return options;
@@ -1409,6 +1425,7 @@ async function generateTextOutput({
         apiKey: apiConnection.apiKey,
         baseUrl: apiConnection.baseUrl,
         openrouterProviderSort: apiConnection.openrouterProviderSort,
+        modelId,
       });
       break;
 
@@ -1603,6 +1620,7 @@ async function generateStructuredOutput({
         baseUrl: apiConnection.baseUrl,
         openrouterProviderSort: apiConnection.openrouterProviderSort,
         isStructuredOutput: true,
+        modelId,
       });
       break;
 
@@ -1682,7 +1700,7 @@ async function generateStructuredOutput({
     astrskHeaders["x-dev-key"] = devKey;
   }
 
-  // Helper: Execute tool fallback approach (streamText with tool calling - STREAMING!)
+  // Helper: Execute tool fallback approach (generateText/streamText with tool calling)
   const executeToolFallback = () => {
     // Convert CoreMessage to simple message format for the fallback
     const simpleMessages = transformedMessages.map((msg) => ({
@@ -1690,7 +1708,34 @@ async function generateStructuredOutput({
       content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
     }));
 
-    // Use streaming version that yields partial objects as they arrive
+    // Gemini uses non-streaming generateWithToolFallback (Vertex AI streaming incompatible with streamObject)
+    const isGoogleProvider = apiConnection.source === ApiSource.AstrskAi &&
+      parsedModelId.startsWith("google/gemini-");
+
+    if (isGoogleProvider) {
+
+      const partialObjectStream = (async function* () {
+        const result = await generateWithToolFallback({
+          model: model as LanguageModel,
+          messages: simpleMessages,
+          schema: schema.typeDef as JSONSchema7,
+          schemaName: schema.name,
+          schemaDescription: schema.description,
+          abortSignal: combinedAbortSignal,
+          isGoogleProvider: true,
+          modelId: parsedModelId,
+          providerOptions,
+          settings,
+        });
+        yield result;
+      })();
+
+      return { partialObjectStream };
+    }
+
+    // Other models use streaming version
+    logger.info(`[StructuredOutput] Using streamWithToolFallback`);
+
     const partialObjectStream = streamWithToolFallback({
       model: model as LanguageModel,
       messages: simpleMessages,
@@ -1698,6 +1743,9 @@ async function generateStructuredOutput({
       schemaName: schema.name,
       schemaDescription: schema.description,
       abortSignal: combinedAbortSignal,
+      isGoogleProvider: false,
+      providerOptions,
+      settings,
     });
 
     return { partialObjectStream };
