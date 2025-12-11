@@ -65,11 +65,9 @@ export function isModelCachedForToolFallback(apiSource: ApiSource, modelId: stri
   if (now - cachedTimestamp > TOOL_FALLBACK_CACHE_DURATION_MS) {
     // Cache expired, remove it
     toolFallbackCache.delete(cacheKey);
-    logger.info(`[ToolFallback] Cache expired for ${apiSource}:${modelId}`);
     return false;
   }
 
-  logger.info(`[ToolFallback] Model found in cache: ${apiSource}:${modelId}`);
   return true;
 }
 
@@ -80,7 +78,6 @@ export function isModelCachedForToolFallback(apiSource: ApiSource, modelId: stri
 export function cacheModelForToolFallback(apiSource: ApiSource, modelId: string): void {
   const cacheKey = getCacheKey(apiSource, modelId);
   toolFallbackCache.set(cacheKey, Date.now());
-  logger.info(`[ToolFallback] Model cached for tool fallback: ${apiSource}:${modelId}`);
 }
 
 /**
@@ -176,7 +173,6 @@ export function providerSupportsToolCalling(apiSource: ApiSource): boolean {
  */
 export function clearToolFallbackCache(): void {
   toolFallbackCache.clear();
-  logger.info("[ToolFallback] Cache cleared");
 }
 
 /**
@@ -552,9 +548,9 @@ export function shouldUseToolFallback(apiSource: ApiSource, modelId: string): bo
     const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
 
     // Only Friendli models don't need fallback (they use json mode)
-    if (isFriendliModel) {
-      return false;
-    }
+    // if (isFriendliModel) {
+    //   return false;
+    // }
 
     // All other AstrskAi models (including Gemini) need tool fallback
     return true;
@@ -752,13 +748,9 @@ export async function generateWithToolFallback<T>({
   const outputCall = toolCalls.find((call) => call.toolName === schemaName);
 
   if (!outputCall) {
-    logger.error("[ToolFallback] No tool call found in response", {
-      toolCalls: toolCalls.map((c) => c.toolName),
-    });
     throw new Error("Model did not produce structured output via tool call");
   }
 
-  logger.info("[ToolFallback] Successfully extracted structured output from tool call");
   // AI SDK uses 'input' property for tool call parameters (not 'args')
   return (outputCall as unknown as { input: T }).input;
 }
@@ -852,19 +844,8 @@ export async function* streamWithToolFallback<T>({
               latestObject = partialObject;
               yieldCount++;
 
-              logger.info(
-                `[ToolFallback] Yielding partial object #${yieldCount} ` +
-                `(after ${deltaCount} deltas, parseState: ${parseState})`
-              );
-
               yield partialObject;
             }
-          } else {
-            // For partial parsing, validation might fail during streaming
-            // This is expected as the object is being built incrementally
-            logger.debug(
-              `[ToolFallback] Partial validation failed (expected during streaming)`
-            );
           }
         } catch (error) {
           logger.debug(`[ToolFallback] Validation error: ${error}`);
@@ -874,10 +855,6 @@ export async function* streamWithToolFallback<T>({
 
     // Final tool call with complete data
     if (chunk.type === "tool-call" && chunk.toolName === schemaName) {
-      logger.info(
-        `[ToolFallback] Stream complete! Total deltas: ${deltaCount}, ` +
-        `Total yields: ${yieldCount}`
-      );
 
       // AI SDK v5 uses 'input' property for tool call parameters
       const finalObject = (chunk as any).input as T;
@@ -885,7 +862,6 @@ export async function* streamWithToolFallback<T>({
       // Only yield final if different from last partial
       if (!isDeepEqualData(finalObject, latestObject)) {
         yieldCount++;
-        logger.info(`[ToolFallback] Yielding final object #${yieldCount}`);
         yield finalObject;
       }
       return;
