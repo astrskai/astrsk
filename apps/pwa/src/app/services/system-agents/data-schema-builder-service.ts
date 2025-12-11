@@ -117,32 +117,7 @@ function generateUniqueId(): string {
 }
 
 /**
- * Extract previously created store names from conversation messages
- * The AI SDK passes messages including tool results from previous steps
- */
-function extractCreatedStoresFromMessages(messages: unknown[]): string[] {
-  const storeNames: string[] = [];
-
-  for (const msg of messages) {
-    // Check if message has tool results (from previous steps)
-    const msgObj = msg as { role?: string; content?: unknown[] };
-    if (msgObj.role === "tool" || Array.isArray(msgObj.content)) {
-      const contents = Array.isArray(msgObj.content) ? msgObj.content : [msgObj.content];
-      for (const content of contents) {
-        const contentObj = content as { type?: string; result?: { createdStore?: { name: string } } };
-        if (contentObj?.type === "tool-result" && contentObj.result?.createdStore?.name) {
-          storeNames.push(contentObj.result.createdStore.name);
-        }
-      }
-    }
-  }
-
-  return storeNames;
-}
-
-/**
  * Create data schema builder tools with callbacks to update state
- * Uses AI SDK's messages parameter for context about previously created stores
  */
 function createDataSchemaTools(
   currentStores: DataSchemaEntry[],
@@ -173,7 +148,7 @@ function createDataSchemaTools(
     add_data_store: tool({
       description: "Add a single trackable data store/variable to the HUD. Creates a value that will be displayed to players and tracked by the AI. Call this tool multiple times to add multiple stores.",
       inputSchema: dataStoreEntrySchema,
-      execute: async (store, { messages }) => {
+      execute: async (store) => {
         const { name, type, description, initial, min, max } = store;
 
         // Check total limit before processing
