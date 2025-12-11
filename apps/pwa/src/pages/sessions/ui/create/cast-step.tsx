@@ -515,16 +515,35 @@ export function CastStep({
   }, [onChatMessagesChange]);
 
   // Sync editingCharacter when draftCharacters changes (e.g., from AI chat updates)
+  // Only sync when draftCharacters actually changes AND we're currently editing
+  const prevDraftCharactersRef = useRef(draftCharacters);
+  const prevEditingTempIdRef = useRef<string | null>(null);
   useEffect(() => {
+    const currentTempId = editingCharacter?.tempId ?? null;
+
+    // Skip if editingCharacter just changed (user action, not external update)
+    if (prevEditingTempIdRef.current !== currentTempId) {
+      prevEditingTempIdRef.current = currentTempId;
+      prevDraftCharactersRef.current = draftCharacters;
+      return;
+    }
+
+    // Only run if draftCharacters reference actually changed
+    if (prevDraftCharactersRef.current === draftCharacters) {
+      return;
+    }
+    prevDraftCharactersRef.current = draftCharacters;
+
+    // Only sync if we're currently editing a character
     if (editingCharacter) {
       const updatedDraft = draftCharacters.find(
         (d) => d.tempId === editingCharacter.tempId,
       );
-      if (updatedDraft) {
+      if (updatedDraft && updatedDraft !== editingCharacter) {
         setEditingCharacter(updatedDraft);
       }
     }
-  }, [draftCharacters, editingCharacter?.tempId]);
+  }, [draftCharacters, editingCharacter]);
 
   // Flying trail animation state
   const [flyingTrails, setFlyingTrails] = useState<FlyingTrail[]>([]);
@@ -1037,7 +1056,7 @@ export function CastStep({
   }, [isGenerating, onChatLoadingChange]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex h-full w-full flex-col overflow-hidden">
       {/* Flying Trail Animation Overlay */}
       <FlyingTrailOverlay
         trails={flyingTrails}
@@ -1067,21 +1086,27 @@ export function CastStep({
             mobileTab === "library" ? "flex" : "hidden md:flex",
           )}
         >
-          <AnimatePresence mode="popLayout" initial={false}>
+          <AnimatePresence mode="wait" initial={false}>
             {editingCharacter ? (
-              /* Character Edit Panel - shown when editing a session character */
               <motion.div
                 key="edit-panel"
                 initial={{ x: "100%", opacity: 0.5 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: "100%", opacity: 0.5 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 500,
-                  damping: 35,
-                  mass: 0.8,
+                animate={{
+                  x: 0,
+                  opacity: 1,
+                  transition: {
+                    type: "spring",
+                    stiffness: 600,
+                    damping: 35,
+                    mass: 0.6,
+                  },
                 }}
-                className="absolute inset-0 z-10 flex flex-col bg-zinc-950"
+                exit={{
+                  x: "100%",
+                  opacity: 0.5,
+                  transition: { duration: 0.15 },
+                }}
+                className="flex h-full w-full flex-col bg-zinc-950"
               >
                 <CharacterEditPanel
                   character={editingCharacter}
@@ -1090,14 +1115,13 @@ export function CastStep({
                 />
               </motion.div>
             ) : (
-              /* Character Library - default view */
               <motion.div
                 key="library-panel"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="flex h-full flex-col"
+                transition={{ duration: 0.1 }}
+                className="flex h-full w-full flex-col"
               >
                 {/* Search and Actions Bar */}
                 <div className="flex flex-shrink-0 items-center gap-2 px-4 py-3 md:px-6">
@@ -1724,7 +1748,7 @@ function CharacterDetailsModal({
               </div>
 
               {/* Bottom fade overlay - sticky on mobile, absolute on desktop */}
-              <div className="pointer-events-none sticky bottom-0 h-12 w-full bg-gradient-to-t from-surface-raised to-transparent md:absolute md:inset-x-0" />
+              <div className="from-surface-raised pointer-events-none sticky bottom-0 h-12 w-full bg-gradient-to-t to-transparent md:absolute md:inset-x-0" />
             </div>
           </div>
         )
@@ -1792,6 +1816,8 @@ function CharacterEditPanel({
   const isSyncingFromPropRef = useRef(false);
   // Track the last synced character tempId to detect external changes
   const lastSyncedTempIdRef = useRef(character.tempId);
+  // Track if this is the initial mount to skip first auto-save
+  const isInitialMountRef = useRef(true);
 
   // Sync local state when character prop changes from EXTERNAL source (e.g., AI chat updates)
   // Only sync if the data actually changed externally, not from our own onSave
@@ -1849,6 +1875,12 @@ function CharacterEditPanel({
 
   // Auto-save on changes
   useEffect(() => {
+    // Skip initial mount - don't save on first render
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
+
     // Skip if we're currently syncing from external prop changes
     if (isSyncingFromPropRef.current) {
       return;
@@ -1878,7 +1910,8 @@ function CharacterEditPanel({
       },
     };
     onSave(updatedCharacter);
-  }, [name, summary, description, tags, imageUrl, imageFile, lorebook, character, onSave]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- character and onSave intentionally excluded to prevent infinite loops
+  }, [name, summary, description, tags, imageUrl, imageFile, lorebook]);
 
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
