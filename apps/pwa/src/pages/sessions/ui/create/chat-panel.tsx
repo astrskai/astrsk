@@ -331,9 +331,9 @@ export const CHAT_AGENTS = {
     emptyDescription: "",
     inputPlaceholder: "",
   },
-  hud: {
+  stats: {
     emptyTitle: "Start a conversation",
     emptyDescription: "",
     inputPlaceholder: "",
   },
-} as const satisfies Record<string, ChatAgentConfig>;
+} as const satisfies Record<SessionStep, ChatAgentConfig>;

@@ -217,7 +217,7 @@ export function MobileChatSheet({
                 />
               </div>
               <p className="flex-1 truncate text-xs text-zinc-400">
-                {lastVisibleMessage.content.slice(0, 50)}...
+                {lastVisibleMessage.content}
               </p>
               <ChevronDown size={14} className="rotate-180 text-zinc-500" />
             </div>

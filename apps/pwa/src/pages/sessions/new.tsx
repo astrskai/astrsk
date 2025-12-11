@@ -161,8 +161,6 @@ Ground Rules:`;
   const announcedStatNamesRef = useRef<Set<string>>(new Set());
   // Pending stats messages to show when entering Stats step (deferred display)
   const [pendingStatsMessages, setPendingStatsMessages] = useState<ChatMessage[]>([]);
-  // Track if pending messages have been shown (to prevent duplicate display)
-  const hasPendingMessagesBeenShownRef = useRef(false);
   // Refs mirror state for immediate checks in useCallback (avoids stale closure issues)
   const hasAttemptedStatsGenerationRef = useRef(false);
   const isStatsGeneratingRef = useRef(false);
@@ -603,23 +601,16 @@ Ground Rules:`;
         handleGenerateStatsRef.current();
       }
 
-      // When entering Stats step, show pending messages (only once)
-      if (targetStep === "stats" && !hasPendingMessagesBeenShownRef.current) {
-        hasPendingMessagesBeenShownRef.current = true;
-        // Add pending messages to chat (use setTimeout to ensure state is updated after step change)
-        setTimeout(() => {
-          setPendingStatsMessages(prev => {
-            if (prev.length > 0) {
-              addChatMessages(prev);
-            }
-            return []; // Clear pending messages after showing
-          });
-        }, 0);
+      // When entering Stats step, show pending messages
+      // ChatPanel handles typing indicator via typingIndicatorDuration on each message
+      if (targetStep === "stats" && pendingStatsMessages.length > 0) {
+        addChatMessages(pendingStatsMessages);
+        setPendingStatsMessages([]);
       }
 
       setCurrentStep(targetStep);
     },
-    [currentStep, addChatMessages], // handleGenerateStats removed - using ref instead
+    [currentStep, addChatMessages, pendingStatsMessages], // handleGenerateStats removed - using ref instead
   );
 
   const handlePrevious = useCallback(() => {

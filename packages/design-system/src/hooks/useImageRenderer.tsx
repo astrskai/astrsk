@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDesignSystem, type ImageComponentProps } from '../provider';
+import { cn } from '../lib/utils';
 
 export interface UseImageRendererOptions {
   /**
@@ -49,7 +50,10 @@ export function useImageRenderer(options: UseImageRendererOptions = {}) {
         src={imageProps.src}
         alt={imageProps.alt}
         sizes={imageProps.sizes}
-        className={imageProps.className}
+        className={cn(
+          imageProps.className,
+          imageProps.fill && 'absolute inset-0 h-full w-full object-cover'
+        )}
         loading={imageProps.loading}
         onError={imageProps.onError}
       />

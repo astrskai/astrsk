@@ -430,7 +430,7 @@ export function StatsStep({
         {/* Left Panel: AI Chat (Desktop only) */}
         <ChatPanel
           messages={chatMessages}
-          agent={CHAT_AGENTS.hud}
+          agent={CHAT_AGENTS.stats}
           currentStep={currentStep}
           inputValue={refinePrompt}
           onInputChange={setRefinePrompt}
@@ -821,7 +821,7 @@ export function StatsStep({
       {/* Mobile Chat Bottom Sheet */}
       <MobileChatSheet
         messages={chatMessages}
-        agent={CHAT_AGENTS.hud}
+        agent={CHAT_AGENTS.stats}
         currentStep={currentStep}
         inputValue={refinePrompt}
         onInputChange={setRefinePrompt}
