@@ -9,6 +9,7 @@ export {
   type FirstMessage,
   type LorebookEntry,
   type CharacterContext,
+  type ChatHandlers,
 } from "./scenario-step";
 export { StatsStep, type StatsDataStore, type DataStoreType } from "./stats-step";
 export {
@@ -27,3 +28,4 @@ export {
   type SessionStep,
   type StepConfig,
 } from "./session-stepper";
+export { MobileChatSheet } from "./mobile-chat-sheet";

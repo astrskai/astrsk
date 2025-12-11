@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { useForm, FormProvider } from "react-hook-form";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { ChevronRight, ChevronLeft, X } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
@@ -10,11 +11,15 @@ import {
   CharacterCreateDialog,
   SessionStepper,
   SESSION_STEPS,
+  ChatPanel,
+  MobileChatSheet,
+  CHAT_AGENTS,
   type SessionStep,
   type FirstMessage,
   type LorebookEntry,
   type StatsDataStore,
   type ChatMessage,
+  type ChatHandlers,
 } from "./ui/create";
 import { logger } from "@/shared/lib";
 import {
@@ -52,7 +57,10 @@ import {
   type DataSchemaContext,
   type DataSchemaEntry,
 } from "@/app/services/system-agents";
-import type { TemplateSelectionResult, DataStoreType } from "./ui/create/stats-step";
+import type {
+  TemplateSelectionResult,
+  DataStoreType,
+} from "./ui/create/stats-step";
 import { Sparkles, Loader2 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 
@@ -122,7 +130,57 @@ Ground Rules:`;
 
   // Functional update helper to add messages (avoids stale closure issues in async callbacks)
   const addChatMessage = useCallback((message: ChatMessage) => {
-    setChatMessages(prev => [...prev, message]);
+    setChatMessages((prev) => [...prev, message]);
+  }, []);
+
+  // Chat forms - separate instances for Desktop and Mobile to avoid form context conflicts
+  // Using react-hook-form for uncontrolled input (no re-renders on typing)
+  // mode: "onChange" enables real-time validation for isValid state
+  const desktopChatForm = useForm<{ message: string }>({
+    defaultValues: { message: "" },
+    mode: "onChange",
+  });
+  const mobileChatForm = useForm<{ message: string }>({
+    defaultValues: { message: "" },
+    mode: "onChange",
+  });
+
+  // Step-specific chat handlers (registered by each step via ref)
+  // Using ref to avoid re-renders when handlers change
+  const chatHandlersRef = useRef<{
+    onSubmit: (prompt: string) => void;
+    onStop: () => void;
+  } | null>(null);
+
+  // Chat UI state (controlled by current step)
+  // isLoading = AI is generating (blocks input until response complete)
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
+  // Desktop chat submit handler
+  const handleDesktopChatSubmit = useCallback(
+    (data: { message: string }) => {
+      const prompt = data.message.trim();
+      if (!prompt) return;
+      chatHandlersRef.current?.onSubmit(prompt);
+      desktopChatForm.reset();
+    },
+    [desktopChatForm],
+  );
+
+  // Mobile chat submit handler
+  const handleMobileChatSubmit = useCallback(
+    (data: { message: string }) => {
+      const prompt = data.message.trim();
+      if (!prompt) return;
+      chatHandlersRef.current?.onSubmit(prompt);
+      mobileChatForm.reset();
+    },
+    [mobileChatForm],
+  );
+
+  // Unified chat stop handler - delegates to current step's handler
+  const handleChatStop = useCallback(() => {
+    chatHandlersRef.current?.onStop();
   }, []);
 
   // Stats state
@@ -138,10 +196,14 @@ Ground Rules:`;
   const [flowResponseTemplate, setFlowResponseTemplate] = useState<string>("");
 
   // Workflow generation state
-  const [generatedWorkflow, setGeneratedWorkflow] = useState<WorkflowState | null>(null);
-  const [generatedSessionName, setGeneratedSessionName] = useState<string | null>(null);
+  const [generatedWorkflow, setGeneratedWorkflow] =
+    useState<WorkflowState | null>(null);
+  const [generatedSessionName, setGeneratedSessionName] = useState<
+    string | null
+  >(null);
   const [isWorkflowGenerating, setIsWorkflowGenerating] = useState(false);
-  const [workflowProgress, setWorkflowProgress] = useState<WorkflowBuilderProgress | null>(null);
+  const [workflowProgress, setWorkflowProgress] =
+    useState<WorkflowBuilderProgress | null>(null);
   const workflowGenerationPromiseRef =
     useRef<Promise<WorkflowState | null> | null>(null);
   // Show waiting dialog only when user tries to create session and workflow is still generating
@@ -160,7 +222,9 @@ Ground Rules:`;
   scenarioBackgroundRef.current = scenarioBackground;
   const currentStepRef = useRef(currentStep);
   currentStepRef.current = currentStep;
-  const handleGenerateStatsRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const handleGenerateStatsRef = useRef<() => Promise<void>>(() =>
+    Promise.resolve(),
+  );
 
   // Helpers to sync state + ref together (single source of truth pattern)
   const setStatsGenerating = useCallback((value: boolean) => {
@@ -328,8 +392,10 @@ Ground Rules:`;
       else if (field.type === "boolean") type = "boolean";
 
       let initial: number | boolean | string = "";
-      if (type === "integer") initial = parseInt(field.initialValue || "0", 10) || 0;
-      else if (type === "number") initial = parseFloat(field.initialValue || "0") || 0;
+      if (type === "integer")
+        initial = parseInt(field.initialValue || "0", 10) || 0;
+      else if (type === "number")
+        initial = parseFloat(field.initialValue || "0") || 0;
       else if (type === "boolean") initial = field.initialValue === "true";
       else initial = field.initialValue || "";
 
@@ -363,7 +429,10 @@ Ground Rules:`;
   // Called when transitioning from Scenario → Cast step
   const handleGenerateStats = useCallback(async () => {
     // Skip if already generating or already attempted (refs for immediate check)
-    if (isStatsGeneratingRef.current || hasAttemptedStatsGenerationRef.current) {
+    if (
+      isStatsGeneratingRef.current ||
+      hasAttemptedStatsGenerationRef.current
+    ) {
       return;
     }
 
@@ -383,23 +452,33 @@ Ground Rules:`;
       const scenario = scenarioBackgroundRef.current;
 
       // Step 1: Load template
-      logger.info("[CreateSession] Starting stats generation with Simple template");
+      logger.info(
+        "[CreateSession] Starting stats generation with Simple template",
+      );
       setSelectedFlowTemplate(SIMPLE_TEMPLATE);
 
       const response = await fetch(`/default/flow/${SIMPLE_TEMPLATE.filename}`);
       if (!response.ok) {
-        throw new Error(`Failed to load flow template: ${SIMPLE_TEMPLATE.filename}`);
+        throw new Error(
+          `Failed to load flow template: ${SIMPLE_TEMPLATE.filename}`,
+        );
       }
       const templateJson = await response.json();
 
       // Extract responseTemplate
-      if (templateJson.responseTemplate && typeof templateJson.responseTemplate === "string") {
+      if (
+        templateJson.responseTemplate &&
+        typeof templateJson.responseTemplate === "string"
+      ) {
         setFlowResponseTemplate(templateJson.responseTemplate);
       }
 
       // Step 2: Extract template fields
       const templateFields: StatsDataStore[] = [];
-      if (templateJson.dataStoreSchema?.fields && Array.isArray(templateJson.dataStoreSchema.fields)) {
+      if (
+        templateJson.dataStoreSchema?.fields &&
+        Array.isArray(templateJson.dataStoreSchema.fields)
+      ) {
         for (const field of templateJson.dataStoreSchema.fields) {
           templateFields.push(templateFieldToStatsDataStore(field));
         }
@@ -418,15 +497,17 @@ Ground Rules:`;
       const MAX_TOTAL_STORES = 5;
 
       if (scenario.length >= MIN_SCENARIO_LENGTH_FOR_AI_STATS) {
-        const existingStores: DataSchemaEntry[] = templateFields.map((store) => ({
-          id: store.id,
-          name: store.name,
-          type: store.type,
-          description: store.description,
-          initial: store.initial,
-          min: store.min,
-          max: store.max,
-        }));
+        const existingStores: DataSchemaEntry[] = templateFields.map(
+          (store) => ({
+            id: store.id,
+            name: store.name,
+            type: store.type,
+            description: store.description,
+            initial: store.initial,
+            min: store.min,
+            max: store.max,
+          }),
+        );
 
         // Track if max limit was reached (to show different completion message)
         let maxLimitReached = false;
@@ -463,7 +544,8 @@ Ground Rules:`;
     } catch (e) {
       const errorName = (e as Error).name;
       // Handle abort-related errors (AbortError, AI SDK errors, or user-initiated stop)
-      const isAbortRelated = errorName === "AbortError" ||
+      const isAbortRelated =
+        errorName === "AbortError" ||
         errorName === "AI_NoOutputGeneratedError" ||
         isUserStoppedRef.current;
 
@@ -482,7 +564,8 @@ Ground Rules:`;
 
       logger.error("[CreateSession] Stats generation failed", e);
       toastError("Failed to generate data schema", {
-        description: e instanceof Error ? e.message : "An unknown error occurred",
+        description:
+          e instanceof Error ? e.message : "An unknown error occurred",
       });
       // Allow retry on error
       setStatsAttempted(false);
@@ -490,7 +573,12 @@ Ground Rules:`;
     } finally {
       setStatsGenerating(false);
     }
-  }, [templateFieldToStatsDataStore, dataSchemaEntryToStatsDataStore, setStatsAttempted, setStatsGenerating]);
+  }, [
+    templateFieldToStatsDataStore,
+    dataSchemaEntryToStatsDataStore,
+    setStatsAttempted,
+    setStatsGenerating,
+  ]);
 
   // Keep ref updated to latest handleGenerateStats (avoids dependency chain in handleStepChange)
   handleGenerateStatsRef.current = handleGenerateStats;
@@ -675,17 +763,17 @@ Ground Rules:`;
           },
         });
 
-      logger.info("[CreateSession] Workflow generated", {
-        template: selectedFlowTemplate?.templateName || "Simple",
-        nodeCount: workflowResult.state.nodes.length,
-        edgeCount: workflowResult.state.edges.length,
-        agentCount: workflowResult.state.agents.size,
-        sessionName: workflowResult.sessionName,
-      });
+        logger.info("[CreateSession] Workflow generated", {
+          template: selectedFlowTemplate?.templateName || "Simple",
+          nodeCount: workflowResult.state.nodes.length,
+          edgeCount: workflowResult.state.edges.length,
+          agentCount: workflowResult.state.agents.size,
+          sessionName: workflowResult.sessionName,
+        });
 
-      // Store the generated workflow and session name for use in handleFinish
-      setGeneratedWorkflow(workflowResult.state);
-      setGeneratedSessionName(workflowResult.sessionName);
+        // Store the generated workflow and session name for use in handleFinish
+        setGeneratedWorkflow(workflowResult.state);
+        setGeneratedSessionName(workflowResult.sessionName);
 
         toastSuccess("Workflow generated!", {
           description: `Enhanced ${selectedFlowTemplate?.templateName || "Simple"} template with ${workflowResult.state.agents.size} agents`,
@@ -743,9 +831,7 @@ Ground Rules:`;
     setIsSaving(true);
     try {
       // Use generated session name, or fallback to character names
-      const sessionName =
-        generatedSessionName ||
-        "New Session";
+      const sessionName = generatedSessionName || "New Session";
 
       // Step 1: Create session FIRST (without resources) to satisfy foreign key constraints
       // Resources with session_id require the session to exist first
@@ -1070,7 +1156,11 @@ Ground Rules:`;
     // When on last step (Stats), start workflow generation and then finish
     if (currentStep === "stats") {
       // Start workflow generation if needed, then finish
-      if (statsDataStores.length > 0 && !generatedWorkflow && !isWorkflowGenerating) {
+      if (
+        statsDataStores.length > 0 &&
+        !generatedWorkflow &&
+        !isWorkflowGenerating
+      ) {
         // Start workflow generation and store promise immediately (avoid race condition)
         workflowGenerationPromiseRef.current = handleGenerateWorkflow();
       }
@@ -1218,8 +1308,12 @@ Ground Rules:`;
               }
               loading={isSaving || isWaitingForWorkflow}
             >
-              <span className="md:hidden">{isLastStep ? "Create" : "Next"}</span>
-              <span className="hidden md:inline">{isLastStep ? "Create Session" : "Next"}</span>
+              <span className="md:hidden">
+                {isLastStep ? "Create" : "Next"}
+              </span>
+              <span className="hidden md:inline">
+                {isLastStep ? "Create Session" : "Next"}
+              </span>
               {!isLastStep && <ChevronRight size={16} />}
             </Button>
           </div>
@@ -1233,8 +1327,26 @@ Ground Rules:`;
           maxAccessibleStepIndex={getAccessibleStepIndex()}
         />
 
-        {/* Content */}
-        <div className="relative z-10 flex-1 overflow-hidden">
+        {/* Content - pb-[100px] on mobile for MobileChatSheet space */}
+        {/* Desktop: ChatPanel(left) + StepContent(right) layout */}
+        <div className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 overflow-hidden px-0 pb-[100px] md:flex-row md:gap-6 md:px-6 md:pb-6">
+          {/* Desktop Chat Panel (rendered once, configured by current step) */}
+          <FormProvider {...desktopChatForm}>
+            <form
+              onSubmit={desktopChatForm.handleSubmit(handleDesktopChatSubmit)}
+              className="hidden h-full w-full max-w-md md:flex"
+            >
+              <ChatPanel
+                messages={chatMessages}
+                agent={CHAT_AGENTS[currentStep]}
+                currentStep={currentStep}
+                onStop={isChatLoading ? handleChatStop : undefined}
+                isLoading={isChatLoading}
+              />
+            </form>
+          </FormProvider>
+
+          {/* Step Content */}
           {currentStep === "cast" && (
             <CastStep
               currentStep={currentStep}
@@ -1259,6 +1371,8 @@ Ground Rules:`;
                 // Add new draft character at the front of library (not directly to roster)
                 setDraftCharacters((prev) => [draftCharacter, ...prev]);
               }}
+              chatHandlersRef={chatHandlersRef}
+              onChatLoadingChange={setIsChatLoading}
             />
           )}
 
@@ -1289,8 +1403,8 @@ Ground Rules:`;
               }))}
               isGenerating={isScenarioGenerating}
               onIsGeneratingChange={setIsScenarioGenerating}
-              mobileTab={mobileScenarioTab}
-              onMobileTabChange={setMobileScenarioTab}
+              chatHandlersRef={chatHandlersRef}
+              onChatLoadingChange={setIsChatLoading}
             />
           )}
 
@@ -1327,13 +1441,25 @@ Ground Rules:`;
                 onResponseTemplateChange={setFlowResponseTemplate}
                 chatMessages={chatMessages}
                 onChatMessagesChange={setChatMessages}
-                mobileTab={mobileHudTab}
-                onMobileTabChange={setMobileHudTab}
+                chatHandlersRef={chatHandlersRef}
+                onChatLoadingChange={setIsChatLoading}
               />
             </div>
           )}
         </div>
 
+        {/* Mobile Chat Bottom Sheet (rendered once, configured by current step) */}
+        {/* Separate FormProvider to avoid form context conflicts with Desktop */}
+        <FormProvider {...mobileChatForm}>
+          <MobileChatSheet
+            messages={chatMessages}
+            agent={CHAT_AGENTS[currentStep]}
+            currentStep={currentStep}
+            onSubmit={handleMobileChatSubmit}
+            onStop={isChatLoading ? handleChatStop : undefined}
+            isLoading={isChatLoading}
+          />
+        </FormProvider>
       </>
 
       {/* Navigation Confirmation Dialog */}
@@ -1400,25 +1526,33 @@ Ground Rules:`;
                   {workflowProgress?.phase === "initializing" && (
                     <>
                       <div className="h-2 w-2 animate-pulse rounded-full bg-yellow-400" />
-                      <span className="text-xs text-yellow-400">Initializing...</span>
+                      <span className="text-xs text-yellow-400">
+                        Initializing...
+                      </span>
                     </>
                   )}
                   {workflowProgress?.phase === "building" && (
                     <>
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-brand-400" />
-                      <span className="text-xs text-brand-400">Building workflow...</span>
+                      <div className="bg-brand-400 h-2 w-2 animate-pulse rounded-full" />
+                      <span className="text-brand-400 text-xs">
+                        Building workflow...
+                      </span>
                     </>
                   )}
                   {workflowProgress?.phase === "validating" && (
                     <>
                       <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
-                      <span className="text-xs text-blue-400">Validating...</span>
+                      <span className="text-xs text-blue-400">
+                        Validating...
+                      </span>
                     </>
                   )}
                   {workflowProgress?.phase === "fixing" && (
                     <>
                       <div className="h-2 w-2 animate-pulse rounded-full bg-orange-400" />
-                      <span className="text-xs text-orange-400">Fixing issues...</span>
+                      <span className="text-xs text-orange-400">
+                        Fixing issues...
+                      </span>
                     </>
                   )}
                   {workflowProgress?.phase === "complete" && (
@@ -1429,17 +1563,24 @@ Ground Rules:`;
                   )}
                   {!workflowProgress && (
                     <>
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-fg-subtle" />
-                      <span className="text-xs text-fg-subtle">Preparing...</span>
+                      <div className="bg-fg-subtle h-2 w-2 animate-pulse rounded-full" />
+                      <span className="text-fg-subtle text-xs">
+                        Preparing...
+                      </span>
                     </>
                   )}
                 </div>
 
                 {/* Current action message */}
                 {workflowProgress?.message && (
-                  <div className="flex items-center gap-2 text-fg-muted">
-                    <Sparkles size={12} className="text-brand-400 flex-shrink-0" />
-                    <span className="text-xs truncate">{workflowProgress.message}</span>
+                  <div className="text-fg-muted flex items-center gap-2">
+                    <Sparkles
+                      size={12}
+                      className="text-brand-400 flex-shrink-0"
+                    />
+                    <span className="truncate text-xs">
+                      {workflowProgress.message}
+                    </span>
                   </div>
                 )}
               </div>

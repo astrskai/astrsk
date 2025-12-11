@@ -25,8 +25,8 @@ import {
   type DataSchemaEntry,
   type DataSchemaContext,
 } from "@/app/services/system-agents";
-import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
-import { MobileChatSheet } from "./mobile-chat-sheet";
+import type { ChatMessage } from "./chat-panel";
+import type { ChatHandlers } from "./scenario-step";
 import type { SessionStep } from "./session-stepper";
 
 export type FlowTemplateName = "Simple";
@@ -92,9 +92,10 @@ interface StatsStepProps {
   // Chat messages (lifted to parent for persistence across step navigation)
   chatMessages?: ChatMessage[];
   onChatMessagesChange?: (messages: ChatMessage[]) => void;
-  // Mobile tab state (deprecated - no longer used, chat is in bottom sheet)
-  mobileTab?: "editor" | "chat";
-  onMobileTabChange?: (tab: "editor" | "chat") => void;
+  // Chat handlers ref (for parent to call submit/stop)
+  chatHandlersRef: React.MutableRefObject<ChatHandlers | null>;
+  // Chat UI state callbacks
+  onChatLoadingChange: (loading: boolean) => void;
 }
 /**
  * Type Icon Component
@@ -135,17 +136,14 @@ export function StatsStep({
   onResponseTemplateChange,
   chatMessages = [],
   onChatMessagesChange,
-  mobileTab,
-  onMobileTabChange,
+  chatHandlersRef,
+  onChatLoadingChange,
 }: StatsStepProps) {
   const [expandedId, setExpandedId] = useState<string | null>(
     dataStores[0]?.id || null,
   );
-  const [refinePrompt, setRefinePrompt] = useState("");
   const [isRefining, setIsRefining] = useState(false);
   const [templateStatus, setTemplateStatus] = useState<string>("");
-  // Typing indicator for welcome message
-  const [isTypingIndicator, setIsTypingIndicator] = useState(false);
 
   // Track if component is mounted (for cleanup)
   const isMountedRef = useRef(true);
@@ -260,38 +258,41 @@ export function StatsStep({
     const statsMessages = chatMessagesRef.current.filter(m => m.step === "stats");
     if (statsMessages.length === 0) return;
 
-    // Skip if completion message already exists
-    const hasCompletionMessage = statsMessages.some(m => m.id === "stats-completion");
+    // Skip if completion message already exists (including placeholder)
+    const hasCompletionMessage = statsMessages.some(m => m.id === "stats-completion" || m.id === "stats-completion-placeholder");
     if (hasCompletionMessage) return;
 
-    // Show typing indicator then completion message
-    setIsTypingIndicator(true);
+    // Add placeholder message with typingIndicatorDuration
+    const placeholderMessage: ChatMessage = {
+      id: "stats-completion-placeholder",
+      role: "assistant",
+      content: "",
+      step: "stats",
+      isSystemGenerated: true,
+      typingIndicatorDuration: 1000, // Show typing indicator for 1 second
+    };
+    onChatMessagesChange?.([...chatMessagesRef.current, placeholderMessage]);
 
     const timer = setTimeout(() => {
-      setIsTypingIndicator(false);
-
       const currentDataStores = dataStoresRef.current;
-      let completionMessage: ChatMessage;
+      let content: string;
 
       if (currentDataStores.length > 0) {
-        completionMessage = {
-          id: "stats-completion",
-          role: "assistant",
-          content: `All done! Generated ${currentDataStores.length} stats for your scenario. Feel free to add or remove any as you like!`,
-          step: "stats",
-          isSystemGenerated: true,
-        };
+        content = `All done! Generated ${currentDataStores.length} stats for your scenario. Feel free to add or remove any as you like!`;
       } else {
-        completionMessage = {
-          id: "stats-completion",
-          role: "assistant",
-          content: `I couldn't find any specific stats to generate for this scenario. You can add custom stats manually!`,
-          step: "stats",
-          isSystemGenerated: true,
-        };
+        content = `I couldn't find any specific stats to generate for this scenario. You can add custom stats manually!`;
       }
 
-      onChatMessagesChange?.([...chatMessagesRef.current, completionMessage]);
+      // Replace placeholder with actual message
+      const updatedMessages = chatMessagesRef.current.filter(m => m.id !== "stats-completion-placeholder");
+      const completionMessage: ChatMessage = {
+        id: "stats-completion",
+        role: "assistant",
+        content,
+        step: "stats",
+        isSystemGenerated: true,
+      };
+      onChatMessagesChange?.([...updatedMessages, completionMessage]);
     }, 1000);
 
     return () => {
@@ -299,7 +300,7 @@ export function StatsStep({
     };
   }, [isGenerating, onChatMessagesChange]);
 
-  // Show welcome message on first mount (always show typing indicator first)
+  // Show welcome message on first mount with typing indicator
   useEffect(() => {
     // Skip if there are existing stats messages
     const statsMessages = chatMessagesRef.current.filter(m => m.step === "stats");
@@ -309,55 +310,54 @@ export function StatsStep({
     // This handles StrictMode double-mount correctly
     let cancelled = false;
 
-    setIsTypingIndicator(true);
+    // Add placeholder welcome message with typingIndicatorDuration
+    // The useTypingIndicator hook will show typing dots for this duration
+    const placeholderMessage: ChatMessage = {
+      id: "stats-welcome-placeholder",
+      role: "assistant",
+      content: "",
+      step: "stats",
+      isSystemGenerated: true,
+      typingIndicatorDuration: 1000, // Show typing indicator for 1 second
+    };
+    onChatMessagesChange?.([...chatMessagesRef.current, placeholderMessage]);
 
     const timer = setTimeout(() => {
       if (cancelled) return;
-
-      setIsTypingIndicator(false);
 
       // Use refs to get latest values (avoids stale closure)
       const currentDataStores = dataStoresRef.current;
       const currentIsGenerating = isGeneratingRef.current;
 
-      // Determine welcome message based on current state
-      let welcomeMessage: ChatMessage;
+      // Determine welcome message content based on current state
+      let content: string;
       if (currentDataStores.length > 0) {
         // Has items - show count (whether still generating or not)
         const suffix = currentIsGenerating ? " Still analyzing..." : " Feel free to adjust them or add more!";
-        welcomeMessage = {
-          id: "stats-welcome",
-          role: "assistant",
-          content: `I've generated ${currentDataStores.length} stats for your scenario.${suffix}`,
-          step: "stats",
-          isSystemGenerated: true,
-        };
+        content = `I've generated ${currentDataStores.length} stats for your scenario.${suffix}`;
       } else if (currentIsGenerating) {
         // No items yet but generating
-        welcomeMessage = {
-          id: "stats-generating",
-          role: "assistant",
-          content: `I'm analyzing your scenario and generating stats...`,
-          step: "stats",
-          isSystemGenerated: true,
-        };
+        content = `I'm analyzing your scenario and generating stats...`;
       } else {
         // No items and not generating
-        welcomeMessage = {
-          id: "stats-welcome",
-          role: "assistant",
-          content: `No stats generated yet. You can add custom stats manually or wait for generation to complete.`,
-          step: "stats",
-          isSystemGenerated: true,
-        };
+        content = `No stats generated yet. You can add custom stats manually or wait for generation to complete.`;
       }
-      onChatMessagesChange?.([...chatMessagesRef.current, welcomeMessage]);
+
+      // Replace placeholder with actual message
+      const updatedMessages = chatMessagesRef.current.filter(m => m.id !== "stats-welcome-placeholder");
+      const welcomeMessage: ChatMessage = {
+        id: "stats-welcome",
+        role: "assistant",
+        content,
+        step: "stats",
+        isSystemGenerated: true,
+      };
+      onChatMessagesChange?.([...updatedMessages, welcomeMessage]);
     }, 1000);
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
-      setIsTypingIndicator(false);
     };
   }, []); // Only run on mount
 
@@ -422,23 +422,20 @@ export function StatsStep({
   );
 
   // Handle refine prompt submission (via chat)
+  // Receives prompt from parent
   const handleRefine = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!refinePrompt.trim()) return;
+    async (prompt: string) => {
+      if (!prompt.trim()) return;
 
       // Add user message to chat (use ref to get latest messages, avoiding stale closure)
       const userMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "user",
-        content: refinePrompt,
+        content: prompt,
         step: currentStep,
       };
       const currentMessages = chatMessagesRef.current;
       onChatMessagesChange?.([...currentMessages, userMessage]);
-
-      const promptText = refinePrompt;
-      setRefinePrompt("");
       setIsRefining(true);
 
       // Cancel any previous request
@@ -470,7 +467,7 @@ export function StatsStep({
         const removedStoreNames: string[] = [];
 
         const result = await refineDataSchema({
-          prompt: promptText,
+          prompt,
           context,
           currentStores,
           callbacks: {
@@ -551,16 +548,14 @@ export function StatsStep({
         setIsRefining(false);
       }
     },
-    [refinePrompt, dataStores, onDataStoresChange, dataSchemaEntryToStatsDataStore, onChatMessagesChange, currentStep],
+    [dataStores, onDataStoresChange, dataSchemaEntryToStatsDataStore, onChatMessagesChange, currentStep, sessionContext?.scenario],
   );
 
-  // Handle chat submit (wraps handleRefine)
-  const handleChatSubmit = useCallback(() => {
-    if (!refinePrompt.trim()) return;
-    // Create a synthetic form event for handleRefine
-    const syntheticEvent = { preventDefault: () => {} } as React.FormEvent;
-    handleRefine(syntheticEvent);
-  }, [refinePrompt, handleRefine]);
+  // Handle chat submit - receives prompt from parent
+  const handleChatSubmit = useCallback((prompt: string) => {
+    if (!prompt.trim()) return;
+    handleRefine(prompt);
+  }, [handleRefine]);
 
   // Handle chat stop (abort refining and show cancelled message)
   const handleChatStop = useCallback(() => {
@@ -582,28 +577,28 @@ export function StatsStep({
     onChatMessagesChange?.([...chatMessagesRef.current, cancelledMessage]);
   }, [currentStep, onChatMessagesChange]);
 
-  return (
-    <div className="flex h-full flex-col overflow-hidden">
-      <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-4 overflow-hidden px-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
-        {/* Left Panel: AI Chat (Desktop only) */}
-        <ChatPanel
-          messages={chatMessages}
-          agent={CHAT_AGENTS.stats}
-          currentStep={currentStep}
-          inputValue={refinePrompt}
-          onInputChange={setRefinePrompt}
-          onSubmit={handleChatSubmit}
-          onStop={isRefining ? handleChatStop : undefined}
-          isLoading={isRefining || isTypingIndicator}
-          showTypingIndicator={isTypingIndicator || isRefining}
-          disabled={isRefining || isTypingIndicator}
-          className="hidden md:flex"
-        />
+  // Register chat handlers with parent (via ref to avoid re-renders)
+  useEffect(() => {
+    chatHandlersRef.current = {
+      onSubmit: handleChatSubmit,
+      onStop: handleChatStop,
+    };
+    return () => {
+      chatHandlersRef.current = null;
+    };
+  }, [handleChatSubmit, handleChatStop, chatHandlersRef]);
 
-        {/* Right Panel: Data Protocol Editor */}
-        <div
-          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-border-default md:rounded-xl md:border"
-        >
+  // Sync chat loading state to parent (only when AI is generating response)
+  useEffect(() => {
+    onChatLoadingChange(isRefining);
+  }, [isRefining, onChatLoadingChange]);
+
+  return (
+    <div className="flex h-full flex-1 flex-col overflow-hidden">
+      {/* Data Protocol Editor */}
+      <div
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-border-default md:rounded-xl md:border"
+      >
           {/* Expandable List */}
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {/* Action Bar - always visible at top */}
@@ -962,21 +957,6 @@ export function StatsStep({
           )}
         </div>
         </div>
-      </div>
-
-      {/* Mobile Chat Bottom Sheet */}
-      <MobileChatSheet
-        messages={chatMessages}
-        agent={CHAT_AGENTS.stats}
-        currentStep={currentStep}
-        inputValue={refinePrompt}
-        onInputChange={setRefinePrompt}
-        onSubmit={handleChatSubmit}
-        onStop={isRefining ? handleChatStop : undefined}
-        isLoading={isRefining || isTypingIndicator}
-        showTypingIndicator={isTypingIndicator || isRefining}
-        disabled={isRefining || isTypingIndicator}
-      />
     </div>
   );
 }

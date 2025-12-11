@@ -17,8 +17,7 @@ import {
   generateScenarioResponse,
   type ScenarioBuilderMessage,
 } from "@/app/services/system-agents";
-import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
-import { MobileChatSheet } from "./mobile-chat-sheet";
+import type { ChatMessage } from "./chat-panel";
 import type { SessionStep } from "./session-stepper";
 
 // Animation for newly added items - highlight effect that fades out
@@ -40,6 +39,12 @@ const MIN_SCENARIO_LENGTH = 400;
 const WELCOME_MESSAGE_CONTENT =
   "Hi! I'm here to help you build your scenario. Tell me about the world, setting, or story you'd like to create, and I'll help you craft the background, first messages, and lorebook entries.";
 
+/** Chat handlers interface for parent registration */
+export interface ChatHandlers {
+  onSubmit: (prompt: string) => void;
+  onStop: () => void;
+}
+
 interface ScenarioStepProps {
   // Current step for tagging chat messages
   currentStep: SessionStep;
@@ -59,9 +64,10 @@ interface ScenarioStepProps {
   // Generation state (lifted to parent to disable navigation)
   isGenerating: boolean;
   onIsGeneratingChange: (isGenerating: boolean) => void;
-  // Mobile tab state (deprecated - no longer used, chat is in bottom sheet)
-  mobileTab?: "chat" | "builder";
-  onMobileTabChange?: (tab: "chat" | "builder") => void;
+  // Chat handlers ref (for parent to call submit/stop)
+  chatHandlersRef: React.MutableRefObject<ChatHandlers | null>;
+  // Chat UI state callbacks
+  onChatLoadingChange: (loading: boolean) => void;
 }
 
 export interface FirstMessage {
@@ -169,10 +175,9 @@ export function ScenarioStep({
   aiCharacters,
   isGenerating,
   onIsGeneratingChange,
-  mobileTab,
-  onMobileTabChange,
+  chatHandlersRef,
+  onChatLoadingChange,
 }: ScenarioStepProps) {
-  const [aiPrompt, setAiPrompt] = useState("");
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Track newly added items for animation (IDs that were just added by AI)
@@ -180,53 +185,6 @@ export function ScenarioStep({
 
   // Track when background was just updated by AI for animation
   const [isBackgroundAnimating, setIsBackgroundAnimating] = useState(false);
-
-  // Track initial typing indicator state (before text streaming starts)
-  const [isTypingIndicator, setIsTypingIndicator] = useState(false);
-
-  // Use ref to track typing state for cleanup (must be declared before useTypingEffect)
-  const isWelcomeTypingRef = useRef(false);
-
-  // Welcome message typing effect
-  const {
-    displayText: welcomeDisplayText,
-    isTyping: isWelcomeTyping,
-    startTyping: startWelcomeTyping,
-  } = useTypingEffect({
-    onComplete: () => {
-      // Update to final message when typing completes
-      onChatMessagesChange([
-        {
-          id: "welcome",
-          role: "assistant",
-          content: WELCOME_MESSAGE_CONTENT,
-          step: "scenario",
-          isSystemGenerated: true, // Exclude from AI chat history
-        },
-      ]);
-    },
-  });
-
-  // Keep ref in sync with typing state
-  isWelcomeTypingRef.current = isWelcomeTyping;
-
-  // Finalize welcome message on unmount if still typing
-  useEffect(() => {
-    return () => {
-      if (isWelcomeTypingRef.current) {
-        // Directly update chat messages with final content on unmount
-        onChatMessagesChange([
-          {
-            id: "welcome",
-            role: "assistant",
-            content: WELCOME_MESSAGE_CONTENT,
-            step: "scenario",
-            isSystemGenerated: true, // Exclude from AI chat history
-          },
-        ]);
-      }
-    };
-  }, [onChatMessagesChange]);
 
   // Background typing effect (faster for long scenario descriptions)
   const {
@@ -251,56 +209,22 @@ export function ScenarioStep({
     }
   }, [isBackgroundTyping, pendingBackground, onBackgroundChange]);
 
-  // Add initial welcome message with typing indicator then streaming text effect
+  // Add initial welcome message with typing indicator and animation
+  // useTypingIndicator hook handles both typing indicator and typewriter animation
   useEffect(() => {
     if (chatMessages.length === 0) {
-      setIsTypingIndicator(true);
-
-      // After typing indicator, start streaming the text
-      const typingTimer = setTimeout(() => {
-        setIsTypingIndicator(false);
-
-        // Add empty message that will be updated with streaming text
-        const welcomeMessage: ChatMessage = {
-          id: "welcome",
-          role: "assistant",
-          content: "",
-          step: "scenario",
-          isSystemGenerated: true, // Exclude from AI chat history
-        };
-        onChatMessagesChange([welcomeMessage]);
-
-        // Start typing effect
-        startWelcomeTyping(WELCOME_MESSAGE_CONTENT);
-      }, 1500); // Show typing indicator for 1.5 seconds
-
-      return () => clearTimeout(typingTimer);
+      const welcomeMessage: ChatMessage = {
+        id: "welcome",
+        role: "assistant",
+        content: WELCOME_MESSAGE_CONTENT, // Full content - hook handles animation
+        step: "scenario",
+        isSystemGenerated: true, // Exclude from AI chat history
+        typingIndicatorDuration: 1500, // Show typing indicator for 1.5 seconds
+        typingAnimation: true, // Animate the text after typing indicator
+      };
+      onChatMessagesChange([welcomeMessage]);
     }
   }, []); // Only run on mount
-
-  // Compute messages with streaming text applied
-  const displayMessages = useMemo(() => {
-    // During typing indicator phase, show no messages (typing dots will show)
-    if (isTypingIndicator) {
-      return [];
-    }
-    // Welcome message typing - show streaming text only if we have text to show
-    if (isWelcomeTyping && chatMessages.length > 0 && chatMessages[0]?.id === "welcome") {
-      // Don't show empty bubble - wait until welcomeDisplayText has content
-      if (!welcomeDisplayText) {
-        return [];
-      }
-      return [{ ...chatMessages[0], content: welcomeDisplayText }];
-    }
-    // Filter out any empty assistant messages (streaming placeholder before content arrives)
-    // This prevents showing empty chat bubbles during streaming initialization
-    return chatMessages.filter((msg) => {
-      // Keep all user messages
-      if (msg.role === "user") return true;
-      // Only show assistant messages that have content
-      return msg.content.trim().length > 0;
-    });
-  }, [chatMessages, isWelcomeTyping, welcomeDisplayText, isTypingIndicator]);
 
   // Clear animation flags after animation completes
   useEffect(() => {
@@ -410,8 +334,8 @@ export function ScenarioStep({
   };
 
   // --- AI Generation with Tool Calling ---
-  const generateScenario = useCallback(async () => {
-    if (!aiPrompt.trim()) {
+  const generateScenario = useCallback(async (prompt: string) => {
+    if (!prompt.trim()) {
       toastWarning("Please enter a prompt to generate a scenario");
       return;
     }
@@ -426,12 +350,11 @@ export function ScenarioStep({
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
-      content: aiPrompt,
+      content: prompt,
       step: currentStep,
     };
     const updatedMessages = [...chatMessages, userMessage];
     onChatMessagesChange(updatedMessages);
-    setAiPrompt("");
     onIsGeneratingChange(true);
 
     try {
@@ -582,11 +505,6 @@ export function ScenarioStep({
         finalResult = chunk;
       }
 
-      // If tools were executed, switch to builder tab on mobile for better UX (deprecated - no longer needed with bottom sheet)
-      if (finalResult && finalResult.toolResults && finalResult.toolResults.length > 0) {
-        onMobileTabChange?.("builder");
-      }
-
       logger.info("[ScenarioStep] AI response generated", {
         toolResults: finalResult?.toolResults?.length || 0,
       });
@@ -617,7 +535,6 @@ export function ScenarioStep({
       onIsGeneratingChange(false);
     }
   }, [
-    aiPrompt,
     chatMessages,
     background,
     firstMessages,
@@ -629,7 +546,6 @@ export function ScenarioStep({
     playerCharacter,
     aiCharacters,
     onIsGeneratingChange,
-    onMobileTabChange,
     currentStep,
   ]);
 
@@ -717,11 +633,11 @@ export function ScenarioStep({
     ),
   }));
 
-  // Handle chat submit (wraps generateScenario)
-  const handleChatSubmit = useCallback(() => {
-    if (!aiPrompt.trim()) return;
-    generateScenario();
-  }, [aiPrompt, generateScenario]);
+  // Handle chat submit - receives prompt from parent
+  const handleChatSubmit = useCallback((prompt: string) => {
+    if (!prompt.trim()) return;
+    generateScenario(prompt);
+  }, [generateScenario]);
 
   // Handle chat stop (abort generation and show cancelled message)
   const handleChatStop = useCallback(() => {
@@ -743,46 +659,28 @@ export function ScenarioStep({
     onChatMessagesChange([...chatMessages, cancelledMessage]);
   }, [currentStep, onChatMessagesChange, chatMessages, onIsGeneratingChange]);
 
-  // Compute showTypingIndicator for reuse in both ChatPanel and MobileChatSheet
-  const showTypingIndicator = (() => {
-    // Show typing indicator for welcome message init
-    if (isTypingIndicator) return true;
-    // When generating, check if we're waiting for AI response
-    if (isGenerating) {
-      const scenarioMessages = displayMessages.filter(m => m.step === "scenario");
-      const lastScenarioMessage = scenarioMessages[scenarioMessages.length - 1];
-      // Show indicator if last message is from user (waiting for AI response)
-      // or if last assistant message has no content yet (streaming not started)
-      if (!lastScenarioMessage) return true;
-      if (lastScenarioMessage.role === "user") return true;
-      if (lastScenarioMessage.role === "assistant" && !lastScenarioMessage.content) return true;
-      return false;
-    }
-    return false;
-  })();
+  // Register chat handlers with parent (via ref to avoid re-renders)
+  useEffect(() => {
+    chatHandlersRef.current = {
+      onSubmit: handleChatSubmit,
+      onStop: handleChatStop,
+    };
+    return () => {
+      chatHandlersRef.current = null;
+    };
+  }, [handleChatSubmit, handleChatStop, chatHandlersRef]);
+
+  // Sync chat loading state to parent (only when AI is generating response)
+  useEffect(() => {
+    onChatLoadingChange(isGenerating);
+  }, [isGenerating, onChatLoadingChange]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      <div className="mx-auto flex h-full w-full max-w-[1600px] flex-1 flex-col gap-4 overflow-hidden px-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
-        {/* Left Panel: AI Chat (Desktop only) */}
-        <ChatPanel
-          messages={displayMessages}
-          agent={CHAT_AGENTS.scenario}
-          currentStep={currentStep}
-          inputValue={aiPrompt}
-          onInputChange={setAiPrompt}
-          onSubmit={handleChatSubmit}
-          onStop={isGenerating ? handleChatStop : undefined}
-          isLoading={isGenerating || isTypingIndicator}
-          showTypingIndicator={showTypingIndicator}
-          disabled={isGenerating || isTypingIndicator || isWelcomeTyping || isBackgroundTyping}
-          className="hidden md:flex"
-        />
-
-        {/* Right Panel: Scenario + First Messages + Lorebook */}
-        <div
-          className="border-border-default flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:rounded-xl md:border"
-        >
+    <div className="flex h-full flex-1 flex-col overflow-hidden">
+      {/* Scenario + First Messages + Lorebook */}
+      <div
+        className="border-border-default flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:rounded-xl md:border"
+      >
           {/* Content */}
           <div className="flex-1 space-y-6 overflow-y-auto p-4 md:p-6">
             {/* Scenario Description */}
@@ -920,21 +818,6 @@ export function ScenarioStep({
             </section>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Chat Bottom Sheet */}
-      <MobileChatSheet
-        messages={displayMessages}
-        agent={CHAT_AGENTS.scenario}
-        currentStep={currentStep}
-        inputValue={aiPrompt}
-        onInputChange={setAiPrompt}
-        onSubmit={handleChatSubmit}
-        onStop={isGenerating ? handleChatStop : undefined}
-        isLoading={isGenerating || isTypingIndicator}
-        showTypingIndicator={showTypingIndicator}
-        disabled={isGenerating || isTypingIndicator || isWelcomeTyping || isBackgroundTyping}
-      />
     </div>
   );
 }

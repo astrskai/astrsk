@@ -42,10 +42,9 @@ import { cn, logger } from "@/shared/lib";
 import { SESSION_STORAGE_KEYS } from "@/shared/storage";
 import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
-import { useTypingEffect } from "@/shared/hooks/use-typing-effect";
-import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
-import { MobileChatSheet } from "./mobile-chat-sheet";
+import type { ChatMessage } from "./chat-panel";
 import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
+import type { ChatHandlers } from "./scenario-step";
 import type { SessionStep } from "./session-stepper";
 import {
   generateCharacterResponse,
@@ -85,6 +84,10 @@ interface CastStepProps {
   // Scenario context for AI character generation
   scenarioBackground?: string;
   firstMessages?: FirstMessage[];
+  // Chat handlers ref (for parent to call submit/stop)
+  chatHandlersRef: React.MutableRefObject<ChatHandlers | null>;
+  // Chat UI state callbacks
+  onChatLoadingChange: (loading: boolean) => void;
 }
 
 const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
@@ -492,15 +495,15 @@ export function CastStep({
   onCharacterCreatedFromChat,
   scenarioBackground,
   firstMessages,
+  chatHandlersRef,
+  onChatLoadingChange,
 }: CastStepProps) {
   const [search, setSearch] = useState("");
   const [characterFilter, setCharacterFilter] =
     useState<CharacterFilterType>("all");
   const [selectedDetailsChar, setSelectedDetailsChar] =
     useState<CharacterDetailsData | null>(null);
-  const [chatInput, setChatInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isTypingIndicator, setIsTypingIndicator] = useState(false);
   const [showInfoBanner, setShowInfoBanner] = useState(
     () =>
       sessionStorage.getItem(
@@ -580,112 +583,26 @@ export function CastStep({
     };
   }, []);
 
-  // Use ref to track typing state for cleanup
-  const isWelcomeTypingRef = useRef(false);
-
-  // Welcome message typing effect using custom hook
-  const {
-    displayText: welcomeDisplayText,
-    isTyping: isWelcomeTyping,
-    startTyping: startWelcomeTyping,
-  } = useTypingEffect({
-    onComplete: () => {
-      // Update to final message when typing completes
-      const existingMessages = chatMessages.filter(
-        (m) => m.id !== "cast-welcome",
-      );
-      onChatMessagesChange?.([
-        ...existingMessages,
-        {
-          id: "cast-welcome",
-          role: "assistant",
-          content: WELCOME_MESSAGE_CONTENT,
-          step: "cast",
-          isSystemGenerated: true, // Exclude from AI chat history
-        },
-      ]);
-    },
-  });
-
-  // Keep ref in sync with typing state
-  isWelcomeTypingRef.current = isWelcomeTyping;
-
-  // Finalize welcome message on unmount if still typing
-  useEffect(() => {
-    return () => {
-      if (isWelcomeTypingRef.current) {
-        // Directly update chat messages with final content on unmount
-        const existingMessages = chatMessages.filter(
-          (m) => m.id !== "cast-welcome",
-        );
-        onChatMessagesChangeRef.current?.([
-          ...existingMessages,
-          {
-            id: "cast-welcome",
-            role: "assistant",
-            content: WELCOME_MESSAGE_CONTENT,
-            step: "cast",
-            isSystemGenerated: true, // Exclude from AI chat history
-          },
-        ]);
-      }
-    };
-  }, [chatMessages]);
-
-  // Add initial welcome message with typing indicator then streaming text effect
-  // Only show if no cast-step messages exist yet
+  // Add initial welcome message with typing indicator and animation
+  // useTypingIndicator hook handles both typing indicator and typewriter animation
   useEffect(() => {
     const hasCastMessages = chatMessages.some((m) => m.step === "cast");
     if (hasCastMessages) return;
 
-    setIsTypingIndicator(true);
-
-    // After typing indicator, start streaming the text
-    const typingTimer = setTimeout(() => {
-      setIsTypingIndicator(false);
-
-      // Add welcome message that will be updated with streaming text
-      const welcomeMessage: ChatMessage = {
-        id: "cast-welcome",
-        role: "assistant",
-        content: "",
-        step: "cast",
-        isSystemGenerated: true, // Exclude from AI chat history
-      };
-      // Prepend welcome message to existing messages (from other steps)
-      // Use ref to get current messages without stale closure
-      const currentMessages = chatMessages.filter((m) => m.step !== "cast");
-      onChatMessagesChangeRef.current?.([...currentMessages, welcomeMessage]);
-
-      // Start typing effect
-      startWelcomeTyping(WELCOME_MESSAGE_CONTENT);
-    }, 1500); // Show typing indicator for 1.5 seconds
-
-    return () => clearTimeout(typingTimer);
+    const welcomeMessage: ChatMessage = {
+      id: "cast-welcome",
+      role: "assistant",
+      content: WELCOME_MESSAGE_CONTENT, // Full content - hook handles animation
+      step: "cast",
+      isSystemGenerated: true, // Exclude from AI chat history
+      typingIndicatorDuration: 1500, // Show typing indicator for 1.5 seconds
+      typingAnimation: true, // Animate the text after typing indicator
+    };
+    // Prepend welcome message to existing messages (from other steps)
+    const currentMessages = chatMessages.filter((m) => m.step !== "cast");
+    onChatMessagesChangeRef.current?.([...currentMessages, welcomeMessage]);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run on mount, uses ref for callback
   }, []);
-
-  // Show all messages, apply streaming text to welcome message if typing
-  const displayMessages = useMemo(() => {
-    // Base filter: remove empty assistant messages
-    const filterMessages = (msgs: typeof chatMessages) =>
-      msgs.filter((msg) => {
-        if (msg.role === "user") return true;
-        return msg.content.trim().length > 0;
-      });
-
-    // Welcome message typing - show streaming text
-    if (isWelcomeTyping) {
-      return filterMessages(
-        chatMessages.map((m) =>
-          m.id === "cast-welcome" ? { ...m, content: welcomeDisplayText } : m,
-        ),
-      );
-    }
-
-    // Normal display - filter out empty assistant messages
-    return filterMessages(chatMessages);
-  }, [chatMessages, isWelcomeTyping, welcomeDisplayText]);
 
   // Handle character creation from AI - creates DraftCharacter without DB save
   const handleCharacterCreated = useCallback(
@@ -765,18 +682,18 @@ export function CastStep({
   );
 
   // Handle chat submit with AI character generation
-  const handleChatSubmit = useCallback(async () => {
-    if (!chatInput.trim() || isGenerating) return;
+  // Receives prompt from parent
+  const handleChatSubmit = useCallback(async (prompt: string) => {
+    if (!prompt.trim() || isGenerating) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
-      content: chatInput,
+      content: prompt,
       step: currentStep,
     };
     const newMessages = [...chatMessages, userMessage];
     onChatMessagesChange?.(newMessages);
-    setChatInput("");
 
     // Start AI generation
     setIsGenerating(true);
@@ -879,7 +796,6 @@ export function CastStep({
       }, 0);
     }
   }, [
-    chatInput,
     chatMessages,
     onChatMessagesChange,
     isGenerating,
@@ -1123,6 +1039,22 @@ export function CastStep({
     [totalSelected],
   );
 
+  // Register chat handlers with parent (via ref to avoid re-renders)
+  useEffect(() => {
+    chatHandlersRef.current = {
+      onSubmit: handleChatSubmit,
+      onStop: handleChatStop,
+    };
+    return () => {
+      chatHandlersRef.current = null;
+    };
+  }, [handleChatSubmit, handleChatStop, chatHandlersRef]);
+
+  // Sync chat loading state to parent (only when AI is generating response)
+  useEffect(() => {
+    onChatLoadingChange(isGenerating);
+  }, [isGenerating, onChatLoadingChange]);
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Flying Trail Animation Overlay */}
@@ -1145,45 +1077,9 @@ export function CastStep({
         tabs={mobileTabs}
       />
 
-      {/* Main Content */}
-      <div className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4 overflow-hidden px-0 pb-0 md:flex-row md:gap-6 md:px-6 md:pb-6">
-        {/* Left Panel: AI Chat (Desktop only) */}
-        <ChatPanel
-          messages={displayMessages}
-          agent={CHAT_AGENTS.cast}
-          currentStep={currentStep}
-          inputValue={chatInput}
-          onInputChange={setChatInput}
-          onSubmit={handleChatSubmit}
-          onStop={isGenerating ? handleChatStop : undefined}
-          isLoading={isGenerating || isTypingIndicator}
-          showTypingIndicator={(() => {
-            // Show typing indicator for welcome message init
-            if (isTypingIndicator) return true;
-            // When generating, check if we're waiting for AI response
-            if (isGenerating) {
-              const castMessages = displayMessages.filter(
-                (m) => m.step === "cast",
-              );
-              const lastCastMessage = castMessages[castMessages.length - 1];
-              // Show indicator if last message is from user (waiting for AI response)
-              // or if last assistant message has no content yet (streaming not started)
-              if (!lastCastMessage) return true;
-              if (lastCastMessage.role === "user") return true;
-              if (
-                lastCastMessage.role === "assistant" &&
-                !lastCastMessage.content
-              )
-                return true;
-              return false;
-            }
-            return false;
-          })()}
-          disabled={isGenerating || isTypingIndicator || isWelcomeTyping}
-          className="hidden md:flex"
-        />
-
-        {/* Middle Panel: Character Library OR Edit Panel */}
+      {/* Main Content - Library + Roster (2 column on desktop) */}
+      <div className="flex flex-1 flex-col gap-4 overflow-hidden md:flex-row md:gap-6">
+        {/* Library Panel OR Edit Panel */}
         <div
           className={cn(
             "relative flex min-w-0 flex-1 flex-col overflow-hidden border border-zinc-800 md:rounded-xl",
@@ -1664,37 +1560,6 @@ export function CastStep({
           </div>
         </div>
       </div>
-
-      {/* Mobile Chat Bottom Sheet */}
-      <MobileChatSheet
-        messages={displayMessages}
-        agent={CHAT_AGENTS.cast}
-        currentStep={currentStep}
-        inputValue={chatInput}
-        onInputChange={setChatInput}
-        onSubmit={handleChatSubmit}
-        onStop={isGenerating ? handleChatStop : undefined}
-        isLoading={isGenerating || isTypingIndicator}
-        showTypingIndicator={(() => {
-          if (isTypingIndicator) return true;
-          if (isGenerating) {
-            const castMessages = displayMessages.filter(
-              (m) => m.step === "cast",
-            );
-            const lastCastMessage = castMessages[castMessages.length - 1];
-            if (!lastCastMessage) return true;
-            if (lastCastMessage.role === "user") return true;
-            if (
-              lastCastMessage.role === "assistant" &&
-              !lastCastMessage.content
-            )
-              return true;
-            return false;
-          }
-          return false;
-        })()}
-        disabled={isGenerating || isTypingIndicator || isWelcomeTyping}
-      />
     </div>
   );
 }
