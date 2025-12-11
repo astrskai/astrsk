@@ -11,8 +11,16 @@ const ASTRSK_CLOUD_MODELS = [
     name: "DeepSeek Official (Default)",
   },
   {
-    id: "openai-compatible:deepseek-ai/DeepSeek-V3.1",
-    name: "DeepSeek V3.1 (Friendli)",
+    id: "openai-compatible:google/gemini-3-pro",
+    name: "Gemini 3 Pro",
+  },
+  {
+    id: "openai-compatible:google/gemini-2.5-flash",
+    name: "Gemini 2.5 Flash",
+  },
+  {
+    id: "openai-compatible:google/gemini-2.5-flash-lite",
+    name: "Gemini 2.5 Flash Lite",
   },
   {
     id: "openai-compatible:zai-org/GLM-4.6",

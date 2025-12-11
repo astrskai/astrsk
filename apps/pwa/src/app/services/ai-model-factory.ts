@@ -17,7 +17,7 @@ import {
   createOpenRouter,
   type OpenRouterProviderSettings,
 } from "@openrouter/ai-sdk-provider";
-import { type LanguageModel, generateText, streamText, tool, parsePartialJson, isDeepEqualData } from "ai";
+import { type LanguageModel, type JSONValue, generateText, streamText, tool, parsePartialJson, isDeepEqualData } from "ai";
 import { merge } from "lodash-es";
 import { z } from "zod";
 import { JSONSchema7 } from "json-schema";
@@ -65,11 +65,9 @@ export function isModelCachedForToolFallback(apiSource: ApiSource, modelId: stri
   if (now - cachedTimestamp > TOOL_FALLBACK_CACHE_DURATION_MS) {
     // Cache expired, remove it
     toolFallbackCache.delete(cacheKey);
-    logger.info(`[ToolFallback] Cache expired for ${apiSource}:${modelId}`);
     return false;
   }
 
-  logger.info(`[ToolFallback] Model found in cache: ${apiSource}:${modelId}`);
   return true;
 }
 
@@ -80,7 +78,6 @@ export function isModelCachedForToolFallback(apiSource: ApiSource, modelId: stri
 export function cacheModelForToolFallback(apiSource: ApiSource, modelId: string): void {
   const cacheKey = getCacheKey(apiSource, modelId);
   toolFallbackCache.set(cacheKey, Date.now());
-  logger.info(`[ToolFallback] Model cached for tool fallback: ${apiSource}:${modelId}`);
 }
 
 /**
@@ -176,7 +173,6 @@ export function providerSupportsToolCalling(apiSource: ApiSource): boolean {
  */
 export function clearToolFallbackCache(): void {
   toolFallbackCache.clear();
-  logger.info("[ToolFallback] Cache cleared");
 }
 
 /**
@@ -188,6 +184,7 @@ export interface CreateProviderOptions {
   baseUrl?: string;
   isStructuredOutput?: boolean;
   openrouterProviderSort?: OpenrouterProviderSort;
+  modelId?: string; // Used to detect Gemini models in AstrskAi
 }
 
 /**
@@ -200,6 +197,7 @@ export function createProvider({
   baseUrl,
   isStructuredOutput,
   openrouterProviderSort,
+  modelId,
 }: CreateProviderOptions) {
   let provider;
   switch (source) {
@@ -228,6 +226,11 @@ export function createProvider({
         throw new Error("VITE_CLOUD_LLM_URL is not configured");
       }
 
+      // Check if this is a Gemini model (google/gemini-*)
+      // Parse modelId to extract the actual model name (strip "openai-compatible:" prefix if present)
+      const parsedModelId = modelId?.includes(":") ? modelId.split(":")[1] : modelId;
+      const isGeminiModel = parsedModelId?.startsWith("google/gemini-");
+
       // Create custom fetch wrapper to add x-dev-key header (only in development)
       const devKey = import.meta.env.VITE_DEV_KEY;
       const baseFetch = getAISDKFetch();
@@ -240,11 +243,21 @@ export function createProvider({
         return baseFetch(url, { ...options, headers });
       };
 
-      provider = createOpenAICompatible({
-        name: "astrsk-cloud",
-        baseURL: astrskBaseUrl,
-        fetch: astrskFetch,
-      });
+      if (isGeminiModel) {
+        // For Gemini models: use Google Generative AI provider with custom fetch
+        provider = createGoogleGenerativeAI({
+          apiKey: "", // No API key needed for AstrskAi proxy
+          baseURL: astrskBaseUrl,
+          fetch: astrskFetch,
+        });
+      } else {
+        // For other models: use OpenAI Compatible provider
+        provider = createOpenAICompatible({
+          name: "astrsk-cloud",
+          baseURL: astrskBaseUrl,
+          fetch: astrskFetch,
+        });
+      }
       break;
     }
 
@@ -378,13 +391,25 @@ export function createProvider({
 /**
  * Parse model ID for AstrskAi provider
  * AstrskAi model IDs are stored with "openai-compatible:" prefix but need to be used without it
- * Example: "openai-compatible:deepseek/deepseek-chat" -> "deepseek/deepseek-chat"
+ * For Gemini models, also strip the "google/" prefix since Google Generative AI expects just the model name
+ * Examples:
+ * - "openai-compatible:deepseek/deepseek-chat" -> "deepseek/deepseek-chat"
+ * - "openai-compatible:google/gemini-2.5-flash" -> "gemini-2.5-flash" (strips both prefixes)
  */
 function parseAstrskAiModelId(modelId: string): string {
-  if (modelId.startsWith("openai-compatible:")) {
-    return modelId.substring("openai-compatible:".length);
+  let parsed = modelId;
+
+  // Strip "openai-compatible:" prefix if present
+  if (parsed.startsWith("openai-compatible:")) {
+    parsed = parsed.substring("openai-compatible:".length);
   }
-  return modelId;
+
+  // For Gemini models, strip "google/" prefix (Google Generative AI expects just the model name)
+  if (parsed.startsWith("google/")) {
+    parsed = parsed.substring("google/".length);
+  }
+
+  return parsed;
 }
 
 export function createLiteModel(
@@ -393,7 +418,7 @@ export function createLiteModel(
   apiKey: string,
   baseUrl?: string,
 ): LanguageModel {
-  const provider = createProvider({ source, apiKey, baseUrl });
+  const provider = createProvider({ source, apiKey, baseUrl, modelId });
 
   // Parse model ID for AstrskAi - strip "openai-compatible:" prefix
   const parsedModelId = source === ApiSource.AstrskAi
@@ -460,14 +485,17 @@ export function getStructuredOutputMode(
     return "tool";
   }
 
-  // For AstrskAi: Friendli models need json mode, others support tool calling
+  // For AstrskAi: Different models have different capabilities
   // - Friendli models (deepseek-ai/*, zai-org/*): no tool calling, use json mode
+  // - Gemini models (google/gemini-*): use tool mode (will use tool fallback)
   // - BytePlus models (byteplus/*): supports tool calling, use tool mode
   // - GLM Official (glm-4.6): supports tool calling, use tool mode
   if (apiSource === ApiSource.AstrskAi) {
     // Extract the model ID after "openai-compatible:" prefix if present
     const parsedModelId = modelId.includes(":") ? modelId.split(":")[1] : modelId;
     const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
+
+    // Only Friendli models use json mode; all others use tool mode
     const mode = isFriendliModel ? "json" : "tool";
     logger.info(`[StructuredOutput] AstrskAi model (${parsedModelId}) - using ${mode} mode`);
     return mode;
@@ -511,17 +539,21 @@ export function shouldUseToolFallback(apiSource: ApiSource, modelId: string): bo
     return true;
   }
 
-  // AstrskAi: All models that use "tool" mode need fallback (backend issue)
-  // Only Friendli models (deepseek-ai/*, zai-org/*) use "json" mode and don't need fallback
+  // AstrskAi: Different models have different capabilities
+  // - Friendli models (deepseek-ai/*, zai-org/*): use "json" mode, no fallback needed
+  // - Gemini models (google/gemini-*): use tool fallback (Vertex AI streaming incompatible with streamObject)
+  // - Other models: use tool fallback (backend compatibility)
   if (apiSource === ApiSource.AstrskAi) {
     const parsedModelId = modelId.includes(":") ? modelId.split(":")[1] : modelId;
     const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
 
-    // If NOT Friendli, use tool fallback
-    if (!isFriendliModel) {
-      logger.info(`[StructuredOutput] AstrskAi non-Friendli model detected (${parsedModelId}) - using generateText with tool fallback`);
-      return true;
-    }
+    // Only Friendli models don't need fallback (they use json mode)
+    // if (isFriendliModel) {
+    //   return false;
+    // }
+
+    // All other AstrskAi models (including Gemini) need tool fallback
+    return true;
   }
 
   // Check dynamic cache for models that previously failed with json_schema errors
@@ -604,6 +636,38 @@ export function jsonSchemaToZod(schema: JSONSchema7): z.ZodTypeAny {
 }
 
 /**
+ * Separates provider-specific options from general options.
+ *
+ * Provider-specific keys (google, openai, anthropic, mistral, cohere) are nested
+ * under `providerOptions` in the AI SDK call, while general options are spread at top level.
+ *
+ * Example input: { google: { thinkingConfig: {...} }, context: 24000 }
+ * Example output:
+ *   - providerSpecificOptions: { google: { thinkingConfig: {...} } }
+ *   - generalOptions: { context: 24000 }
+ *
+ * Final AI SDK call structure:
+ *   generateText({ ...settings, ...generalOptions, providerOptions: providerSpecificOptions })
+ */
+function separateProviderOptions(providerOptions?: Record<string, JSONValue>) {
+  const providerSpecificKeys = ['google', 'openai', 'anthropic', 'mistral', 'cohere'];
+  const providerSpecificOptions: Record<string, JSONValue> = {};
+  const generalOptions: Record<string, JSONValue> = {};
+
+  if (providerOptions) {
+    for (const [key, value] of Object.entries(providerOptions)) {
+      if (providerSpecificKeys.includes(key)) {
+        providerSpecificOptions[key] = value;
+      } else {
+        generalOptions[key] = value;
+      }
+    }
+  }
+
+  return { providerSpecificOptions, generalOptions };
+}
+
+/**
  * Options for generateText with tool fallback
  */
 export interface GenerateWithToolFallbackOptions {
@@ -613,6 +677,10 @@ export interface GenerateWithToolFallbackOptions {
   schemaName?: string;
   schemaDescription?: string;
   abortSignal?: AbortSignal;
+  isGoogleProvider?: boolean; // Flag to indicate Google Generative AI provider
+  modelId?: string; // Model ID to determine thinking parameters (Gemini 2.5 vs 3)
+  providerOptions?: Record<string, JSONValue>; // Provider-specific options (including thinking config)
+  settings?: Record<string, any>; // AI SDK settings (temperature, topK, maxTokens, etc.)
 }
 
 /**
@@ -621,6 +689,10 @@ export interface GenerateWithToolFallbackOptions {
  *
  * Instead of using streamObject/generateObject which sends response_format with json_schema,
  * this approach defines the schema as a tool parameter and extracts the result from the tool call.
+ *
+ * For Gemini models, thinking is controlled via providerOptions.google.thinkingConfig:
+ * - Gemini 2.5: thinkingBudget (0-24576, 0 = disable)
+ * - Gemini 3: thinkingLevel ("low" | "medium" | "high")
  *
  * @returns The parsed object matching the schema
  */
@@ -631,6 +703,10 @@ export async function generateWithToolFallback<T>({
   schemaName = "output",
   schemaDescription = "Generate the structured output",
   abortSignal,
+  isGoogleProvider = false,
+  modelId,
+  providerOptions,
+  settings,
 }: GenerateWithToolFallbackOptions): Promise<T> {
   // Convert JSON schema to Zod for tool parameter validation
   const zodSchema = jsonSchemaToZod(schema);
@@ -652,7 +728,8 @@ export async function generateWithToolFallback<T>({
     },
   ];
 
-  logger.info(`[ToolFallback] Using generateText with tool for structured output`);
+  // Separate provider-specific options from general options
+  const { providerSpecificOptions, generalOptions } = separateProviderOptions(providerOptions);
 
   const result = await generateText({
     model,
@@ -660,6 +737,9 @@ export async function generateWithToolFallback<T>({
     tools: { [schemaName]: outputTool },
     toolChoice: { type: "tool", toolName: schemaName },
     abortSignal,
+    ...(settings || {}),
+    ...(generalOptions as any),
+    ...(Object.keys(providerSpecificOptions).length > 0 ? { providerOptions: providerSpecificOptions as any } : {}),
   });
 
   // Extract the result from the tool call
@@ -668,13 +748,9 @@ export async function generateWithToolFallback<T>({
   const outputCall = toolCalls.find((call) => call.toolName === schemaName);
 
   if (!outputCall) {
-    logger.error("[ToolFallback] No tool call found in response", {
-      toolCalls: toolCalls.map((c) => c.toolName),
-    });
     throw new Error("Model did not produce structured output via tool call");
   }
 
-  logger.info("[ToolFallback] Successfully extracted structured output from tool call");
   // AI SDK uses 'input' property for tool call parameters (not 'args')
   return (outputCall as unknown as { input: T }).input;
 }
@@ -692,6 +768,9 @@ export async function* streamWithToolFallback<T>({
   schemaName = "output",
   schemaDescription = "Generate the structured output",
   abortSignal,
+  isGoogleProvider = false,
+  providerOptions,
+  settings,
 }: GenerateWithToolFallbackOptions): AsyncGenerator<T, void, unknown> {
   // Convert JSON schema to Zod for tool parameter validation
   const zodSchema = jsonSchemaToZod(schema);
@@ -712,7 +791,8 @@ export async function* streamWithToolFallback<T>({
     },
   ];
 
-  logger.info(`[ToolFallback] Using streamText with tool for structured output (STREAMING)`);
+  // Separate provider-specific options from general options
+  const { providerSpecificOptions, generalOptions } = separateProviderOptions(providerOptions);
 
   const result = streamText({
     model,
@@ -720,6 +800,9 @@ export async function* streamWithToolFallback<T>({
     tools: { [schemaName]: outputTool },
     toolChoice: { type: "tool", toolName: schemaName },
     abortSignal,
+    ...(settings || {}),
+    ...(generalOptions as any),
+    ...(Object.keys(providerSpecificOptions).length > 0 ? { providerOptions: providerSpecificOptions as any } : {}),
   });
 
   let accumulatedArgs = "";
@@ -728,9 +811,13 @@ export async function* streamWithToolFallback<T>({
   let latestObjectJson: any = undefined; // Track raw JSON
   let latestObject: Partial<T> = {}; // Track validated object
 
+  // For Google: Check if we can access raw text deltas from the stream
+  let googleArgsAccumulator = "";
+
   // Stream the tool call parameters as they arrive
   for await (const chunk of result.fullStream) {
-    // Accumulate tool input deltas
+
+    // Handle tool-input-delta (standard OpenAI format)
     if (chunk.type === "tool-input-delta" && chunk.id) {
       deltaCount++;
       accumulatedArgs += chunk.delta;
@@ -757,19 +844,8 @@ export async function* streamWithToolFallback<T>({
               latestObject = partialObject;
               yieldCount++;
 
-              logger.info(
-                `[ToolFallback] Yielding partial object #${yieldCount} ` +
-                `(after ${deltaCount} deltas, parseState: ${parseState})`
-              );
-
               yield partialObject;
             }
-          } else {
-            // For partial parsing, validation might fail during streaming
-            // This is expected as the object is being built incrementally
-            logger.debug(
-              `[ToolFallback] Partial validation failed (expected during streaming)`
-            );
           }
         } catch (error) {
           logger.debug(`[ToolFallback] Validation error: ${error}`);
@@ -779,10 +855,6 @@ export async function* streamWithToolFallback<T>({
 
     // Final tool call with complete data
     if (chunk.type === "tool-call" && chunk.toolName === schemaName) {
-      logger.info(
-        `[ToolFallback] Stream complete! Total deltas: ${deltaCount}, ` +
-        `Total yields: ${yieldCount}`
-      );
 
       // AI SDK v5 uses 'input' property for tool call parameters
       const finalObject = (chunk as any).input as T;
@@ -790,7 +862,6 @@ export async function* streamWithToolFallback<T>({
       // Only yield final if different from last partial
       if (!isDeepEqualData(finalObject, latestObject)) {
         yieldCount++;
-        logger.info(`[ToolFallback] Yielding final object #${yieldCount}`);
         yield finalObject;
       }
       return;
