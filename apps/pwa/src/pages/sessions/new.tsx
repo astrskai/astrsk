@@ -44,6 +44,7 @@ import {
   type WorkflowBuilderContext,
   type StatsDataStoreField,
   type WorkflowState,
+  type WorkflowBuilderProgress,
   ModelTier,
 } from "@/app/services/system-agents/workflow-builder";
 import {
@@ -118,6 +119,16 @@ Ground Rules:`;
   // Unified chat messages (shared across all steps)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
+  // Functional update helper to add messages (avoids stale closure issues in async callbacks)
+  const addChatMessage = useCallback((message: ChatMessage) => {
+    setChatMessages(prev => [...prev, message]);
+  }, []);
+
+  // Functional update helper to add multiple messages at once
+  const addChatMessages = useCallback((messages: ChatMessage[]) => {
+    setChatMessages(prev => [...prev, ...messages]);
+  }, []);
+
   // Stats state
   const [statsDataStores, setStatsDataStores] = useState<StatsDataStore[]>([]);
   const [isStatsGenerating, setIsStatsGenerating] = useState(false);
@@ -134,6 +145,7 @@ Ground Rules:`;
   const [generatedWorkflow, setGeneratedWorkflow] = useState<WorkflowState | null>(null);
   const [generatedSessionName, setGeneratedSessionName] = useState<string | null>(null);
   const [isWorkflowGenerating, setIsWorkflowGenerating] = useState(false);
+  const [workflowProgress, setWorkflowProgress] = useState<WorkflowBuilderProgress | null>(null);
   const workflowGenerationPromiseRef =
     useRef<Promise<WorkflowState | null> | null>(null);
   // Show waiting dialog only when user tries to create session and workflow is still generating
@@ -142,6 +154,28 @@ Ground Rules:`;
   // Stats generation refs (for abort control and incremental updates)
   const statsAbortControllerRef = useRef<AbortController | null>(null);
   const generatingStoresRef = useRef<StatsDataStore[]>([]);
+  // Track actually added stat names (to filter batch messages to only show real additions)
+  const addedStatNamesRef = useRef<Set<string>>(new Set());
+  // Track announced stat names to prevent duplicate chat messages
+  const announcedStatNamesRef = useRef<Set<string>>(new Set());
+  // Refs mirror state for immediate checks in useCallback (avoids stale closure issues)
+  const hasAttemptedStatsGenerationRef = useRef(false);
+  const isStatsGeneratingRef = useRef(false);
+  const isUserStoppedRef = useRef(false); // Track user-initiated stop
+  const scenarioBackgroundRef = useRef(scenarioBackground);
+  scenarioBackgroundRef.current = scenarioBackground;
+  const handleGenerateStatsRef = useRef<() => Promise<void>>(() => Promise.resolve());
+
+  // Helpers to sync state + ref together (single source of truth pattern)
+  const setStatsGenerating = useCallback((value: boolean) => {
+    isStatsGeneratingRef.current = value;
+    setIsStatsGenerating(value);
+  }, []);
+
+  const setStatsAttempted = useCallback((value: boolean) => {
+    hasAttemptedStatsGenerationRef.current = value;
+    setHasAttemptedStatsGeneration(value);
+  }, []);
 
   const selectSession = useSessionStore.use.selectSession();
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -250,8 +284,8 @@ Ground Rules:`;
             },
           };
 
-          // Add to draft characters in library (user can select to assign to roster)
-          setDraftCharacters((prev) => [...prev, draftCharacter]);
+          // Add to draft characters at the front of library (user can select to assign to roster)
+          setDraftCharacters((prev) => [draftCharacter, ...prev]);
         }
 
         toastSuccess("Character imported!", {
@@ -271,24 +305,6 @@ Ground Rules:`;
     },
     [],
   );
-
-  const handlePrevious = () => {
-    // On mobile, in cast step, if on roster tab -> go back to library tab first
-    const isMobile = window.innerWidth < 768; // md breakpoint
-    if (isMobile && currentStep === "cast" && mobileCastTab === "cast") {
-      setMobileCastTab("library");
-      return;
-    }
-
-    const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
-    if (currentIndex > 0) {
-      setCurrentStep(SESSION_STEPS[currentIndex - 1].id as SessionStep);
-      // Reset mobile tab to roster when going back (so Previous from Scenario goes to Roster)
-      if (isMobile) {
-        setMobileCastTab("cast");
-      }
-    }
-  };
 
   // Simple template constant (only template available)
   const SIMPLE_TEMPLATE: TemplateSelectionResult = {
@@ -345,66 +361,64 @@ Ground Rules:`;
   // Generate stats data stores from scenario
   // Called when transitioning from Scenario → Cast step
   const handleGenerateStats = useCallback(async () => {
-    // Skip if already generating or already attempted
-    if (isStatsGenerating || hasAttemptedStatsGeneration) return;
-
-    setIsStatsGenerating(true);
-
-    // Cancel any previous request
-    if (statsAbortControllerRef.current) {
-      statsAbortControllerRef.current.abort();
+    // Skip if already generating or already attempted (refs for immediate check)
+    if (isStatsGeneratingRef.current || hasAttemptedStatsGenerationRef.current) {
+      return;
     }
+
+    // Mark as started immediately to prevent duplicate calls
+    setStatsAttempted(true);
+    setStatsGenerating(true);
+
+    // Cancel any previous request and create new abort controller
+    statsAbortControllerRef.current?.abort();
     statsAbortControllerRef.current = new AbortController();
 
-    // Clear existing stores
+    // Clear existing stores and tracking refs
     generatingStoresRef.current = [];
+    addedStatNamesRef.current = new Set();
+    announcedStatNamesRef.current = new Set();
     setStatsDataStores([]);
 
     try {
-      const scenario = scenarioBackground;
+      const scenario = scenarioBackgroundRef.current;
 
-      // Step 1: Use Simple template
+      // Step 1: Load template
       logger.info("[CreateSession] Starting stats generation with Simple template");
       setSelectedFlowTemplate(SIMPLE_TEMPLATE);
 
-      // Step 2: Load template and extract dataStoreSchema fields
       const response = await fetch(`/default/flow/${SIMPLE_TEMPLATE.filename}`);
       if (!response.ok) {
         throw new Error(`Failed to load flow template: ${SIMPLE_TEMPLATE.filename}`);
       }
       const templateJson = await response.json();
 
-      // Extract responseTemplate from template
+      // Extract responseTemplate
       if (templateJson.responseTemplate && typeof templateJson.responseTemplate === "string") {
         setFlowResponseTemplate(templateJson.responseTemplate);
       }
 
-      // Extract dataStoreSchema fields from template
+      // Step 2: Extract template fields
       const templateFields: StatsDataStore[] = [];
       if (templateJson.dataStoreSchema?.fields && Array.isArray(templateJson.dataStoreSchema.fields)) {
         for (const field of templateJson.dataStoreSchema.fields) {
-          const statsStore = templateFieldToStatsDataStore(field);
-          templateFields.push(statsStore);
+          templateFields.push(templateFieldToStatsDataStore(field));
         }
       }
 
-      // Add template fields immediately
       if (templateFields.length > 0) {
         generatingStoresRef.current = [...templateFields];
         setStatsDataStores(generatingStoresRef.current);
-
         toastSuccess(`Using ${SIMPLE_TEMPLATE.templateName} template`, {
           description: `Loaded ${templateFields.length} pre-defined variables`,
         });
       }
 
-      // Step 3: Generate additional fields using AI (if scenario is substantial)
-      // Minimum length for AI to generate meaningful data schema
+      // Step 3: Generate AI fields (if scenario is substantial)
       const MIN_SCENARIO_LENGTH_FOR_AI_STATS = 200;
-      if (scenario.length >= MIN_SCENARIO_LENGTH_FOR_AI_STATS) {
-        const context: DataSchemaContext = { scenario };
+      const MAX_TOTAL_STORES = 10;
 
-        // Convert template fields for AI context
+      if (scenario.length >= MIN_SCENARIO_LENGTH_FOR_AI_STATS) {
         const existingStores: DataSchemaEntry[] = templateFields.map((store) => ({
           id: store.id,
           name: store.name,
@@ -415,66 +429,175 @@ Ground Rules:`;
           max: store.max,
         }));
 
-        const MAX_TOTAL_STORES = 10;
+        // Track if max limit was reached (to show different completion message)
+        let maxLimitReached = false;
 
         await generateDataSchemaAI({
-          context,
+          context: { scenario },
           currentStores: existingStores,
           callbacks: {
             onAddStore: (store) => {
-              // Check if aborted before adding
               if (statsAbortControllerRef.current?.signal.aborted) return;
               if (generatingStoresRef.current.length >= MAX_TOTAL_STORES) {
+                maxLimitReached = true;
                 statsAbortControllerRef.current?.abort();
                 return;
               }
-              const statsStore = dataSchemaEntryToStatsDataStore(store);
-              generatingStoresRef.current = [...generatingStoresRef.current, statsStore];
+              generatingStoresRef.current = [
+                ...generatingStoresRef.current,
+                dataSchemaEntryToStatsDataStore(store),
+              ];
               setStatsDataStores(generatingStoresRef.current);
+              // Track actually added store names for batch message filtering
+              addedStatNamesRef.current.add(store.name);
             },
             onRemoveStore: () => {},
             onClearAll: () => {},
+            onBatchComplete: (stores) => {
+              // Filter to only stats that were actually added AND not yet announced
+              const newStores = stores.filter(
+                s => addedStatNamesRef.current.has(s.name) && !announcedStatNamesRef.current.has(s.name)
+              );
+              if (newStores.length > 0) {
+                // Mark as announced to prevent duplicate messages
+                newStores.forEach(s => announcedStatNamesRef.current.add(s.name));
+
+                // Format names: remove underscores
+                const formatName = (name: string) => name.replace(/_/g, " ");
+                const statNames = newStores.map(s => formatName(s.name)).join(", ");
+                const batchMessage: ChatMessage = {
+                  id: crypto.randomUUID(),
+                  role: "assistant",
+                  content: `I've added ${newStores.length} new stats: ${statNames}`,
+                  step: "stats",
+                  isSystemGenerated: true,
+                };
+                addChatMessage(batchMessage);
+              }
+            },
           },
           abortSignal: statsAbortControllerRef.current.signal,
         });
+
+        // Add completion message after generation finishes
+        if (maxLimitReached) {
+          const completionMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: `All done! Up to ${MAX_TOTAL_STORES} stats are auto-generated. Feel free to add or remove any as you like!`,
+            step: "stats",
+            isSystemGenerated: true,
+          };
+          addChatMessage(completionMessage);
+        } else if (generatingStoresRef.current.length > 0) {
+          // Normal completion - AI finished on its own
+          const completionMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: `That's all the stats I think would fit this scenario. Feel free to add more or adjust them!`,
+            step: "stats",
+            isSystemGenerated: true,
+          };
+          addChatMessage(completionMessage);
+        } else {
+          // No stats generated
+          const completionMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: `I couldn't find any specific stats to generate for this scenario. You can add custom stats manually!`,
+            step: "stats",
+            isSystemGenerated: true,
+          };
+          addChatMessage(completionMessage);
+        }
       }
 
       logger.info("[CreateSession] Stats generation complete", {
         count: generatingStoresRef.current.length,
       });
-
-      // Mark as attempted only on successful completion
-      setHasAttemptedStatsGeneration(true);
     } catch (e) {
       if ((e as Error).name === "AbortError") {
-        logger.info("[CreateSession] Stats generation aborted");
-        // Don't mark as attempted on abort - allow retry
+        // User stop: allow retry. Max-limit: treat as success.
+        if (isUserStoppedRef.current) {
+          logger.info("[CreateSession] Stats generation stopped by user");
+          setStatsAttempted(false);
+          isUserStoppedRef.current = false;
+        } else {
+          logger.info("[CreateSession] Stats generation completed (max limit)");
+        }
+        setStatsGenerating(false);
         return;
       }
+
       logger.error("[CreateSession] Stats generation failed", e);
       toastError("Failed to generate data schema", {
         description: e instanceof Error ? e.message : "An unknown error occurred",
       });
-      // Don't mark as attempted on error - allow retry by navigating back and forward
+      // Allow retry on error
+      setStatsAttempted(false);
+      setStatsGenerating(false);
     } finally {
-      setIsStatsGenerating(false);
+      setStatsGenerating(false);
     }
-  }, [
-    isStatsGenerating,
-    hasAttemptedStatsGeneration,
-    scenarioBackground,
-    templateFieldToStatsDataStore,
-    dataSchemaEntryToStatsDataStore,
-  ]);
+  }, [templateFieldToStatsDataStore, dataSchemaEntryToStatsDataStore, setStatsAttempted, setStatsGenerating]);
 
-  // Stop stats generation
+  // Keep ref updated to latest handleGenerateStats (avoids dependency chain in handleStepChange)
+  handleGenerateStatsRef.current = handleGenerateStats;
+
+  // Stop stats generation (user-initiated)
   const handleStopStatsGeneration = useCallback(() => {
     if (statsAbortControllerRef.current) {
+      isUserStoppedRef.current = true;
       statsAbortControllerRef.current.abort();
       statsAbortControllerRef.current = null;
     }
-    setIsStatsGenerating(false);
-  }, []);
+    setStatsGenerating(false);
+  }, [setStatsGenerating]);
+
+  // Centralized step change handler - handles both Next button and Stepper clicks
+  // Ensures stats generation is triggered exactly once when leaving Scenario step
+  const handleStepChange = useCallback(
+    (targetStep: SessionStep) => {
+      const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
+      const targetIndex = SESSION_STEPS.findIndex((s) => s.id === targetStep);
+
+      // Don't navigate to the same step
+      if (currentStep === targetStep) return;
+
+      // When leaving Scenario step (going forward), trigger stats generation once
+      // Use ref for immediate check to avoid stale closure issues
+      if (
+        currentStep === "scenario" &&
+        targetIndex > currentIndex &&
+        !hasAttemptedStatsGenerationRef.current
+      ) {
+        // Call via ref to avoid dependency chain issues
+        handleGenerateStatsRef.current();
+      }
+
+      setCurrentStep(targetStep);
+    },
+    [currentStep], // handleGenerateStats removed - using ref instead
+  );
+
+  const handlePrevious = useCallback(() => {
+    // On mobile, in cast step, if on roster tab -> go back to library tab first
+    const isMobile = window.innerWidth < 768; // md breakpoint
+    if (isMobile && currentStep === "cast" && mobileCastTab === "cast") {
+      setMobileCastTab("library");
+      return;
+    }
+
+    const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
+    if (currentIndex > 0) {
+      const prevStep = SESSION_STEPS[currentIndex - 1].id as SessionStep;
+      handleStepChange(prevStep);
+      // Reset mobile tab to roster when going back (so Previous from Scenario goes to Roster)
+      if (isMobile) {
+        setMobileCastTab("cast");
+      }
+    }
+  }, [currentStep, mobileCastTab, handleStepChange]);
 
   // Generate workflow handler (separate from session creation for testing)
   // Returns a promise that resolves when workflow is generated
@@ -605,6 +728,7 @@ Ground Rules:`;
             },
             onProgress: (progress) => {
               logger.info("[CreateSession] Workflow progress", progress);
+              setWorkflowProgress(progress);
             },
           },
         });
@@ -1008,13 +1132,6 @@ Ground Rules:`;
 
     const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
 
-    // When leaving Scenario step, start stats generation in background
-    // New step order: Scenario → Cast → Stats
-    if (currentStep === "scenario" && !hasAttemptedStatsGeneration && !isStatsGenerating) {
-      // Start stats generation (don't await - runs in background)
-      handleGenerateStats();
-    }
-
     // When on last step (Stats), start workflow generation and then finish
     if (currentStep === "stats") {
       // Start workflow generation if needed, then finish
@@ -1028,8 +1145,9 @@ Ground Rules:`;
     }
 
     if (currentIndex < SESSION_STEPS.length - 1) {
-      const nextIndex = currentIndex + 1;
-      setCurrentStep(SESSION_STEPS[nextIndex].id as SessionStep);
+      const nextStep = SESSION_STEPS[currentIndex + 1].id as SessionStep;
+      // Use centralized handler (triggers stats generation when leaving Scenario)
+      handleStepChange(nextStep);
       // Reset mobile tab to library when moving to a new step
       if (isMobile) {
         setMobileCastTab("library");
@@ -1062,9 +1180,14 @@ Ground Rules:`;
   );
 
   // Calculate which steps are accessible (all previous steps must be complete)
-  // Returns array of step indices that can be navigated to
+  // Returns the maximum step index that can be navigated to
+  // Also considers generating states to sync with Next button disabled conditions
   const getAccessibleStepIndex = useCallback((): number => {
-    // Always can access step 0 (Scenario)
+    // Block all navigation during scenario generation
+    if (isScenarioGenerating) {
+      return SESSION_STEPS.findIndex((s) => s.id === currentStep);
+    }
+
     // Can access step N only if steps 0 to N-1 are all complete
     for (let i = 0; i < SESSION_STEPS.length; i++) {
       if (!isStepComplete(SESSION_STEPS[i].id)) {
@@ -1072,7 +1195,7 @@ Ground Rules:`;
       }
     }
     return SESSION_STEPS.length - 1; // All steps complete
-  }, [isStepComplete]);
+  }, [isStepComplete, isScenarioGenerating, currentStep]);
 
   // Determine when Next button should be enabled based on current step
   // Step order: Scenario → Cast → Stats
@@ -1174,7 +1297,7 @@ Ground Rules:`;
         {/* Stepper */}
         <SessionStepper
           currentStep={currentStep}
-          onStepClick={setCurrentStep}
+          onStepClick={handleStepChange}
           isStatsGenerating={isStatsGenerating}
           maxAccessibleStepIndex={getAccessibleStepIndex()}
         />
@@ -1200,9 +1323,10 @@ Ground Rules:`;
               onMobileTabChange={setMobileCastTab}
               chatMessages={chatMessages}
               onChatMessagesChange={setChatMessages}
+              addChatMessage={addChatMessage}
               onCharacterCreatedFromChat={(draftCharacter) => {
-                // Add new draft character to library (not directly to roster)
-                setDraftCharacters((prev) => [...prev, draftCharacter]);
+                // Add new draft character at the front of library (not directly to roster)
+                setDraftCharacters((prev) => [draftCharacter, ...prev]);
               }}
             />
           )}
@@ -1264,7 +1388,7 @@ Ground Rules:`;
                 isGenerating={isStatsGenerating}
                 onIsGeneratingChange={setIsStatsGenerating}
                 hasAttemptedGeneration={hasAttemptedStatsGeneration}
-                onHasAttemptedGenerationChange={setHasAttemptedStatsGeneration}
+                onHasAttemptedGenerationChange={setStatsAttempted}
                 onStopGeneration={handleStopStatsGeneration}
                 selectedTemplate={selectedFlowTemplate}
                 onSelectedTemplateChange={setSelectedFlowTemplate}
@@ -1349,8 +1473,8 @@ Ground Rules:`;
               lorebook: pendingData.lorebookEntries,
             },
           };
-          // Add to draft characters in library (user can select to assign to roster)
-          setDraftCharacters((prev) => [...prev, draftCharacter]);
+          // Add to draft characters at the front of library (user can select to assign to roster)
+          setDraftCharacters((prev) => [draftCharacter, ...prev]);
         }}
       />
 
@@ -1369,9 +1493,56 @@ Ground Rules:`;
               <Dialog.Description className="text-fg-muted text-center text-sm">
                 Please wait while we finish building your workflow...
               </Dialog.Description>
-              <div className="text-fg-subtle flex items-center gap-2 text-xs">
-                <Sparkles size={14} className="text-brand-400" />
-                <span>AI is building your workflow...</span>
+
+              {/* Progress Steps */}
+              <div className="w-full space-y-2 rounded-lg bg-black/20 p-3">
+                {/* Phase indicator */}
+                <div className="flex items-center gap-2">
+                  {workflowProgress?.phase === "initializing" && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-yellow-400" />
+                      <span className="text-xs text-yellow-400">Initializing...</span>
+                    </>
+                  )}
+                  {workflowProgress?.phase === "building" && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-brand-400" />
+                      <span className="text-xs text-brand-400">Building workflow...</span>
+                    </>
+                  )}
+                  {workflowProgress?.phase === "validating" && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
+                      <span className="text-xs text-blue-400">Validating...</span>
+                    </>
+                  )}
+                  {workflowProgress?.phase === "fixing" && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-orange-400" />
+                      <span className="text-xs text-orange-400">Fixing issues...</span>
+                    </>
+                  )}
+                  {workflowProgress?.phase === "complete" && (
+                    <>
+                      <div className="h-2 w-2 rounded-full bg-green-400" />
+                      <span className="text-xs text-green-400">Complete!</span>
+                    </>
+                  )}
+                  {!workflowProgress && (
+                    <>
+                      <div className="h-2 w-2 animate-pulse rounded-full bg-fg-subtle" />
+                      <span className="text-xs text-fg-subtle">Preparing...</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Current action message */}
+                {workflowProgress?.message && (
+                  <div className="flex items-center gap-2 text-fg-muted">
+                    <Sparkles size={12} className="text-brand-400 flex-shrink-0" />
+                    <span className="text-xs truncate">{workflowProgress.message}</span>
+                  </div>
+                )}
               </div>
             </div>
           </Dialog.Content>

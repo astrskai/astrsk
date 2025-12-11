@@ -101,6 +101,12 @@ Fields are updated by AI agents in a workflow with branching. In descriptions, n
 - Generate MAXIMUM 8 data stores (aim for 4-6) unless user explicitly requests more in their prompt.
 - YOU MUST use the add_data_store tool to create the data stores. Do NOT just describe them in text.
 
+## SCOPE LIMITATION:
+You are ONLY responsible for stats/data-related tasks (adding, removing, modifying variables).
+- If the user asks about SCENARIO (background, setting, lorebook) → Reply: "Scenario editing is handled in the Scenario step. You can go back to modify the scenario there!"
+- If the user asks about CHARACTERS (creating, editing characters) → Reply: "Character creation is handled in the Cast step. You can go back to modify characters there!"
+- Stay focused on stats and variables only.
+
 Analyze the scenario and create appropriate data stores using the add_data_store tool. Don't ask for clarification.`;
 }
 
@@ -146,6 +152,7 @@ function createDataSchemaTools(
     onAddStore: (store: DataSchemaEntry) => void;
     onRemoveStore: (id: string) => void;
     onClearAll: () => void;
+    onBatchComplete?: (stores: DataSchemaEntry[]) => void;
   },
 ) {
   // Maximum total data stores allowed
@@ -236,6 +243,7 @@ function createDataSchemaTools(
           name: sanitizedName,
           message: `Added data store "${sanitizedName}" (${type}). Total stores: ${currentTotal + 1}/${MAX_DATA_STORES}`,
           totalStores: currentTotal + 1,
+          createdStore: newStore,
         };
       },
     }),
@@ -298,6 +306,7 @@ export async function generateDataSchema({
     onAddStore: (store: DataSchemaEntry) => void;
     onRemoveStore: (id: string) => void;
     onClearAll: () => void;
+    onBatchComplete?: (stores: DataSchemaEntry[]) => void;
   };
   abortSignal?: AbortSignal;
 }): Promise<{ text: string; stores: DataSchemaEntry[] }> {
@@ -343,6 +352,7 @@ export async function generateDataSchema({
     },
     onRemoveStore: callbacks.onRemoveStore,
     onClearAll: callbacks.onClearAll,
+    onBatchComplete: callbacks.onBatchComplete,
   };
 
   const tools = createDataSchemaTools(currentStores, trackingCallbacks);

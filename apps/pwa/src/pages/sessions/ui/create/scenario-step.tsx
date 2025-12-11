@@ -187,6 +187,9 @@ export function ScenarioStep({
   // Track initial typing indicator state (before text streaming starts)
   const [isTypingIndicator, setIsTypingIndicator] = useState(false);
 
+  // Use ref to track typing state for cleanup (must be declared before useTypingEffect)
+  const isWelcomeTypingRef = useRef(false);
+
   // Welcome message typing effect
   const {
     displayText: welcomeDisplayText,
@@ -200,10 +203,33 @@ export function ScenarioStep({
           id: "welcome",
           role: "assistant",
           content: WELCOME_MESSAGE_CONTENT,
+          step: "scenario",
+          isSystemGenerated: true, // Exclude from AI chat history
         },
       ]);
     },
   });
+
+  // Keep ref in sync with typing state
+  isWelcomeTypingRef.current = isWelcomeTyping;
+
+  // Finalize welcome message on unmount if still typing
+  useEffect(() => {
+    return () => {
+      if (isWelcomeTypingRef.current) {
+        // Directly update chat messages with final content on unmount
+        onChatMessagesChange([
+          {
+            id: "welcome",
+            role: "assistant",
+            content: WELCOME_MESSAGE_CONTENT,
+            step: "scenario",
+            isSystemGenerated: true, // Exclude from AI chat history
+          },
+        ]);
+      }
+    };
+  }, [onChatMessagesChange]);
 
   // Background typing effect (faster for long scenario descriptions)
   const {
@@ -242,6 +268,8 @@ export function ScenarioStep({
           id: "welcome",
           role: "assistant",
           content: "",
+          step: "scenario",
+          isSystemGenerated: true, // Exclude from AI chat history
         };
         onChatMessagesChange([welcomeMessage]);
 
@@ -255,12 +283,27 @@ export function ScenarioStep({
 
   // Compute messages with streaming text applied
   const displayMessages = useMemo(() => {
-    // Welcome message typing
+    // During typing indicator phase, show no messages (typing dots will show)
+    if (isTypingIndicator) {
+      return [];
+    }
+    // Welcome message typing - show streaming text only if we have text to show
     if (isWelcomeTyping && chatMessages.length > 0 && chatMessages[0]?.id === "welcome") {
+      // Don't show empty bubble - wait until welcomeDisplayText has content
+      if (!welcomeDisplayText) {
+        return [];
+      }
       return [{ ...chatMessages[0], content: welcomeDisplayText }];
     }
-    return chatMessages;
-  }, [chatMessages, isWelcomeTyping, welcomeDisplayText]);
+    // Filter out any empty assistant messages (streaming placeholder before content arrives)
+    // This prevents showing empty chat bubbles during streaming initialization
+    return chatMessages.filter((msg) => {
+      // Keep all user messages
+      if (msg.role === "user") return true;
+      // Only show assistant messages that have content
+      return msg.content.trim().length > 0;
+    });
+  }, [chatMessages, isWelcomeTyping, welcomeDisplayText, isTypingIndicator]);
 
   // Clear animation flags after animation completes
   useEffect(() => {
@@ -396,12 +439,13 @@ export function ScenarioStep({
 
     try {
       // Convert chat messages to scenario builder format
-      const scenarioMessages: ScenarioBuilderMessage[] = updatedMessages.map(
-        (msg) => ({
+      // Filter out system-generated messages (welcome, etc.) from AI context
+      const scenarioMessages: ScenarioBuilderMessage[] = updatedMessages
+        .filter((msg) => !msg.isSystemGenerated)
+        .map((msg) => ({
           role: msg.role,
           content: msg.content,
-        }),
-      );
+        }));
 
       // Current scenario data for the agent to work with
       const currentScenario = {
@@ -697,6 +741,7 @@ export function ScenarioStep({
       content: "Response generation was stopped by user.",
       step: currentStep,
       variant: "cancelled",
+      isSystemGenerated: true, // Exclude from AI chat history
     };
     onChatMessagesChange([...chatMessages, cancelledMessage]);
   }, [currentStep, onChatMessagesChange, chatMessages, onIsGeneratingChange]);
@@ -729,6 +774,22 @@ export function ScenarioStep({
           onSubmit={handleChatSubmit}
           onStop={isGenerating ? handleChatStop : undefined}
           isLoading={isGenerating || isTypingIndicator}
+          showTypingIndicator={(() => {
+            // Show typing indicator for welcome message init
+            if (isTypingIndicator) return true;
+            // When generating, check if we're waiting for AI response
+            if (isGenerating) {
+              const scenarioMessages = displayMessages.filter(m => m.step === "scenario");
+              const lastScenarioMessage = scenarioMessages[scenarioMessages.length - 1];
+              // Show indicator if last message is from user (waiting for AI response)
+              // or if last assistant message has no content yet (streaming not started)
+              if (!lastScenarioMessage) return true;
+              if (lastScenarioMessage.role === "user") return true;
+              if (lastScenarioMessage.role === "assistant" && !lastScenarioMessage.content) return true;
+              return false;
+            }
+            return false;
+          })()}
           disabled={isGenerating || isTypingIndicator || isWelcomeTyping || isBackgroundTyping}
           className={mobileTab === "chat" ? "" : "hidden md:flex"}
         />

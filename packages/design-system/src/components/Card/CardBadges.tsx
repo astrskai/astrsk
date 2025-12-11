@@ -64,7 +64,7 @@ export function CardBadges({ badges, position, className }: CardBadgesProps) {
     )}>
       {filteredBadges.map((badge, index) => (
         <div
-          key={`${badge.label}-${index}`}
+          key={`${badge.label || 'icon'}-${index}`}
           className={cn(
             'flex max-w-full items-center gap-1 rounded border px-2 py-1 text-[10px] font-bold backdrop-blur-md',
             badgeVariantStyles[badge.variant ?? 'default'],
@@ -72,7 +72,7 @@ export function CardBadges({ badges, position, className }: CardBadgesProps) {
           )}
         >
           {badge.icon && <span className="shrink-0">{badge.icon}</span>}
-          <span className="truncate">{badge.label}</span>
+          {badge.label && <span className="truncate">{badge.label}</span>}
         </div>
       ))}
     </div>

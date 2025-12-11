@@ -419,6 +419,7 @@ export function StatsStep({
       content: "Response generation was stopped by user.",
       step: currentStep,
       variant: "cancelled",
+      isSystemGenerated: true, // Exclude from AI chat history
     };
     onChatMessagesChange?.([...chatMessagesRef.current, cancelledMessage]);
   }, [currentStep, onChatMessagesChange]);
