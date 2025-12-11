@@ -26,7 +26,8 @@
  * | Sync Risk               | ⭐⭐⭐⭐⭐ (None) | ⭐⭐ (High)     |
  */
 
-import { useQuery, useQueries } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import { cardQueries } from "@/entities/card/api/query-factory";
 import { sessionQueries } from "@/entities/session/api/query-factory";
 import { CharacterCard } from "@/entities/card/domain/character-card";
@@ -67,24 +68,63 @@ export interface SessionListFilters {
  * ```
  */
 export function useSessionsWithCharacterMetadata(filters: SessionListFilters = {}) {
+  const queryClient = useQueryClient();
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // 1. Fetch all sessions with filters
-  const { data: sessions = [], ...sessionQuery } = useQuery({
-    ...sessionQueries.list(filters),
-    // Poll every 3 seconds if any session is generating workflow
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      if (!data) return false;
+  const { data: sessions = [], ...sessionQuery } = useQuery(
+    sessionQueries.list(filters)
+  );
 
-      // Check if any session has generationStatus === "generating"
-      const hasGenerating = data.some(
-        (session) => session.config?.generationStatus === "generating"
-      );
+  // 2. Set up polling for sessions that are generating
+  useEffect(() => {
+    // Check if any session is currently generating
+    const hasGenerating = sessions.some(
+      (session) => session.config?.generationStatus === "generating"
+    );
 
-      return hasGenerating ? 3000 : false; // Poll every 3s if generating, otherwise don't poll
-    },
-  });
+    if (hasGenerating && !pollingIntervalRef.current) {
+      // Start polling every 3 seconds
+      pollingIntervalRef.current = setInterval(() => {
+        queryClient.invalidateQueries({ queryKey: sessionQueries.lists() });
+      }, 3000);
+    } else if (!hasGenerating && pollingIntervalRef.current) {
+      // Stop polling when no sessions are generating
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
 
-  // 2. Extract unique character IDs from all sessions (only enabled characters)
+    // Cleanup on unmount
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [sessions, queryClient]);
+
+  // 3. Warn user before page unload if any session is generating
+  useEffect(() => {
+    const hasGenerating = sessions.some(
+      (session) => session.config?.generationStatus === "generating"
+    );
+
+    if (!hasGenerating) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "Workflow generation is in progress. If you refresh now, the generation will be interrupted.";
+      return e.returnValue;
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [sessions]);
+
+  // 4. Extract unique character IDs from all sessions (only enabled characters)
   const uniqueCharacterIds = Array.from(
     new Set(
       sessions.flatMap((session) =>
@@ -95,7 +135,7 @@ export function useSessionsWithCharacterMetadata(filters: SessionListFilters = {
     )
   );
 
-  // 3. Batch prefetch all character cards in parallel
+  // 4. Batch prefetch all character cards in parallel
   // TanStack Query automatically deduplicates and caches
   const characterQueries = useQueries({
     queries: uniqueCharacterIds.map((characterId) =>
@@ -103,7 +143,7 @@ export function useSessionsWithCharacterMetadata(filters: SessionListFilters = {
     ),
   });
 
-  // 4. Build character metadata map from cache
+  // 5. Build character metadata map from cache
   const characterMetadataMap = new Map<string, CharacterMetadata>();
 
   for (const query of characterQueries) {
@@ -119,7 +159,7 @@ export function useSessionsWithCharacterMetadata(filters: SessionListFilters = {
     }
   }
 
-  // 5. Enrich sessions with character metadata (only enabled characters)
+  // 6. Enrich sessions with character metadata (only enabled characters)
   const enrichedSessions: SessionWithCharacterMetadata[] = sessions.map((session) => ({
     session,
     characterAvatars: session.characterCards
