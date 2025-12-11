@@ -12,6 +12,8 @@ import {
   type CardBadge,
   type LikeButtonProps,
 } from '../Card';
+import { type ImageComponentProps } from '../../provider';
+import { useImageRenderer } from '../../hooks';
 
 export interface CharacterAvatar {
   /** Character name */
@@ -76,6 +78,17 @@ export interface SessionCardProps {
    * @default 'lazy'
    */
   loading?: 'lazy' | 'eager';
+  /**
+   * Custom image renderer for framework-specific optimization.
+   * Takes precedence over DesignSystemProvider's imageComponent.
+   * @example Next.js usage:
+   * ```tsx
+   * renderImage={(props) => (
+   *   <NextImage {...props} fill style={{ objectFit: 'cover' }} />
+   * )}
+   * ```
+   */
+  renderImage?: (props: ImageComponentProps) => React.ReactNode;
 }
 
 /**
@@ -189,8 +202,10 @@ export function SessionCard({
   downloadCount,
   imageSizes,
   loading = 'lazy',
+  renderImage,
 }: SessionCardProps) {
   const [imageError, setImageError] = useState(false);
+  const renderImageWithProvider = useImageRenderer({ renderImage });
 
   // Reset error state when imageUrl changes
   useEffect(() => {
@@ -201,6 +216,21 @@ export function SessionCard({
   const shouldShowImage = imageUrl && !imageError;
   // Show initial fallback when image fails to load (only if imageUrl was provided)
   const shouldShowInitial = imageUrl && imageError;
+
+  const renderImageElement = () => {
+    if (!imageUrl) return null;
+
+    return renderImageWithProvider({
+      src: imageUrl,
+      alt: title,
+      className:
+        'absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90',
+      sizes: imageSizes,
+      loading,
+      onError: () => setImageError(true),
+      fill: true,
+    });
+  };
 
   return (
     <BaseCard
@@ -217,14 +247,7 @@ export function SessionCard({
         {/* Cover Image */}
         {shouldShowImage ? (
           <>
-            <img
-              src={imageUrl}
-              alt={title}
-              sizes={imageSizes}
-              className='absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90'
-              loading={loading}
-              onError={() => setImageError(true)}
-            />
+            {renderImageElement()}
             <div className='absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent' />
           </>
         ) : shouldShowInitial ? (

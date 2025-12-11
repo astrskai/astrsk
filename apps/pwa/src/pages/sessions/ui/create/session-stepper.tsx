@@ -34,7 +34,9 @@ interface SessionStepperProps {
 
 /**
  * Session creation stepper component
- * Full-width sticky bar style stepper for wizard navigation
+ * Responsive stepper for wizard navigation
+ * - Mobile: Compact horizontal pills
+ * - Desktop: Full-width with labels and connector lines
  */
 export function SessionStepper({
   currentStep,
@@ -44,28 +46,75 @@ export function SessionStepper({
   maxAccessibleStepIndex = 0,
   className,
 }: SessionStepperProps) {
+  const currentIndex = steps.findIndex((s) => s.id === currentStep);
+
   return (
     <div
       className={cn(
-        "bg-canvas relative z-20 hidden w-full justify-center pt-2 pb-4 shadow-xl md:flex",
+        "bg-canvas relative z-20 flex w-full justify-center px-4 py-2 md:pt-2 md:pb-4 md:shadow-xl",
         className,
       )}
     >
-      <div className="flex items-center gap-2 overflow-x-auto px-4 md:gap-8">
+      {/* Mobile: Compact step indicators */}
+      <div className="flex items-center gap-1 md:hidden">
         {steps.map((step, index) => {
-          const currentIndex = steps.findIndex((s) => s.id === currentStep);
           const Icon = step.icon;
-
-          // Step states
           const isActive = step.id === currentStep;
-          const isCompleted = index < currentIndex; // Already passed this step
-          const isAccessible = index <= maxAccessibleStepIndex; // Requirements met for this step
-          const isLocked = index > maxAccessibleStepIndex; // Requirements not met
-
-          // Clickable: accessible and not current step
+          const isCompleted = index < currentIndex;
+          const isAccessible = index <= maxAccessibleStepIndex;
+          const isLocked = index > maxAccessibleStepIndex;
           const isClickable = isAccessible && !isActive;
+          const isStatsStep = step.id === "stats";
+          const showLoading = isStatsStep && isStatsGenerating && !isActive;
 
-          // Show loading spinner for Stats step when generating in background
+          return (
+            <div key={step.id} className="flex items-center">
+              <button
+                type="button"
+                onClick={() => isClickable && onStepClick(step.id)}
+                disabled={!isClickable}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all",
+                  isActive && "bg-brand-500/20 text-brand-400",
+                  isCompleted && "bg-surface-overlay text-fg-muted",
+                  !isActive && !isCompleted && isAccessible && "bg-surface-overlay text-fg-subtle",
+                  isLocked && !showLoading && "bg-zinc-800/30 text-zinc-600",
+                  showLoading && "bg-zinc-800/30 text-zinc-500",
+                  isClickable && "hover:bg-surface-raised",
+                )}
+              >
+                {showLoading ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : isCompleted ? (
+                  <Check size={12} className="text-brand-400" />
+                ) : (
+                  <Icon size={12} />
+                )}
+                <span>{step.label}</span>
+              </button>
+              {/* Connector */}
+              {index !== steps.length - 1 && (
+                <div
+                  className={cn(
+                    "mx-1 h-[2px] w-3",
+                    index < currentIndex ? "bg-brand-500/50" : "bg-zinc-700",
+                  )}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: Full stepper with icons and labels */}
+      <div className="hidden items-center gap-8 md:flex">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          const isActive = step.id === currentStep;
+          const isCompleted = index < currentIndex;
+          const isAccessible = index <= maxAccessibleStepIndex;
+          const isLocked = index > maxAccessibleStepIndex;
+          const isClickable = isAccessible && !isActive;
           const isStatsStep = step.id === "stats";
           const showLoading = isStatsStep && isStatsGenerating && !isActive;
 
@@ -84,22 +133,17 @@ export function SessionStepper({
                 <div
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-300",
-                    // Active: current step (brand highlight with glow)
                     isActive &&
                       "border-brand-500 bg-brand-500/20 text-brand-400 shadow-[0_0_15px_rgba(var(--brand-500-rgb),0.3)]",
-                    // Completed: passed step (green check)
                     isCompleted &&
-                      "border-green-500/50 bg-green-500/10 text-green-400",
-                    // Accessible but not visited yet (clickable, normal style)
+                      "border-brand-500/50 bg-brand-500/10 text-brand-400",
                     !isActive &&
                       !isCompleted &&
                       isAccessible &&
                       "border-border-default bg-surface-overlay text-fg-muted hover:border-brand-500/50",
-                    // Locked: can't navigate yet (more visible locked state)
                     isLocked &&
                       !showLoading &&
                       "border-zinc-700 bg-zinc-800/50 text-zinc-600",
-                    // Stats generating: gray tone to distinguish from active (brand)
                     showLoading &&
                       "border-zinc-500/50 bg-zinc-500/10 text-zinc-400",
                   )}
@@ -115,15 +159,10 @@ export function SessionStepper({
                 <span
                   className={cn(
                     "text-xs font-bold transition-colors",
-                    // Active: bright text
                     isActive && "text-fg-default",
-                    // Completed: green text
-                    isCompleted && "text-green-400",
-                    // Accessible: normal text
+                    isCompleted && "text-brand-400",
                     !isActive && !isCompleted && isAccessible && "text-fg-muted",
-                    // Locked: more visible locked text
                     isLocked && !showLoading && "text-zinc-600",
-                    // Stats generating: gray tone to distinguish from active
                     showLoading && "text-zinc-400",
                   )}
                 >
@@ -135,10 +174,7 @@ export function SessionStepper({
                 <div
                   className={cn(
                     "h-[2px] w-8 transition-colors",
-                    // Line is green if next step is completed or current
-                    index < currentIndex
-                      ? "bg-green-500/50"
-                      : "bg-border-default",
+                    index < currentIndex ? "bg-brand-500/50" : "bg-border-default",
                   )}
                 />
               )}

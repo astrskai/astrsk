@@ -3,6 +3,15 @@
    Public API Exports
    ============================================== */
 
+// Provider
+export {
+  DesignSystemProvider,
+  useDesignSystem,
+  type DesignSystemConfig,
+  type DesignSystemProviderProps,
+  type ImageComponentProps,
+} from './provider';
+
 // Utilities
 export { cn } from './lib/utils';
 
