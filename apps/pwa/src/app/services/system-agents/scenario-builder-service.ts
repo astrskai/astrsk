@@ -5,12 +5,12 @@
  * The agent can create and edit scenario content through defined tools.
  */
 
-import { streamText, tool, stepCountIs } from "ai";
+import { streamText, generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
 import { useModelStore, type DefaultModelSelection } from "@/shared/stores/model-store";
 import { ApiService } from "@/app/services/api-service";
-import { createLiteModel } from "@/app/services/ai-model-factory";
+import { createLiteModel, shouldUseNonStreamingForTools } from "@/app/services/ai-model-factory";
 import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib";
 
@@ -513,49 +513,89 @@ export async function* generateScenarioResponse({
     })),
   ];
 
+  // Check if this model needs non-streaming approach for tool calling
+  const useNonStreaming = shouldUseNonStreamingForTools(
+    apiConnection.source,
+    defaultModel.modelId
+  );
+
   try {
     // Track all tool results across steps
     const allToolResults: unknown[] = [];
 
-    // Stream response with tools - onStepFinish fires after each step completes
-    const result = streamText({
-      model,
-      messages: formattedMessages,
-      tools,
-      stopWhen: stepCountIs(5), // Allow multiple tool calls in sequence
-      abortSignal,
-      onStepFinish: ({ toolResults }) => {
-        // This callback fires after each step, allowing UI to update
-        if (toolResults && toolResults.length > 0) {
-          allToolResults.push(...toolResults);
-          logger.info("[ScenarioBuilder] Step completed", {
-            toolResultsInStep: toolResults.length,
-          });
-        }
-      },
-    });
+    if (useNonStreaming) {
+      // Use non-streaming generateText (model requires it)
+      logger.info("[ScenarioBuilder] Using non-streaming mode");
 
-    // Stream text deltas as they arrive
-    let accumulatedText = "";
-    for await (const chunk of result.textStream) {
-      accumulatedText += chunk;
+      const result = await generateText({
+        model,
+        messages: formattedMessages,
+        tools,
+        stopWhen: stepCountIs(5),
+        abortSignal,
+      });
+
+      // Collect all tool results
+      if (result.toolResults && result.toolResults.length > 0) {
+        allToolResults.push(...result.toolResults);
+        logger.info("[ScenarioBuilder] Tool results", {
+          count: result.toolResults.length,
+        });
+      }
+
+      const finalText = result.text || "";
+
+      logger.info("[ScenarioBuilder] Response generated (non-streaming)", {
+        text: finalText.substring(0, 100),
+        totalToolResults: allToolResults.length,
+      });
+
+      // Yield final result once
       yield {
-        textDelta: chunk,
+        text: finalText,
+        toolResults: allToolResults,
+      };
+    } else {
+      // Stream response with tools for other models
+      const result = streamText({
+        model,
+        messages: formattedMessages,
+        tools,
+        stopWhen: stepCountIs(5),
+        abortSignal,
+        onStepFinish: ({ toolResults }) => {
+          // This callback fires after each step, allowing UI to update
+          if (toolResults && toolResults.length > 0) {
+            allToolResults.push(...toolResults);
+            logger.info("[ScenarioBuilder] Step completed", {
+              toolResultsInStep: toolResults.length,
+            });
+          }
+        },
+      });
+
+      // Stream text deltas as they arrive
+      let accumulatedText = "";
+      for await (const chunk of result.textStream) {
+        accumulatedText += chunk;
+        yield {
+          textDelta: chunk,
+          text: accumulatedText,
+          toolResults: allToolResults,
+        };
+      }
+
+      logger.info("[ScenarioBuilder] Response generated (streaming)", {
+        text: accumulatedText?.substring(0, 100),
+        totalToolResults: allToolResults.length,
+      });
+
+      // Yield final result with complete text
+      yield {
         text: accumulatedText,
         toolResults: allToolResults,
       };
     }
-
-    logger.info("[ScenarioBuilder] Response generated", {
-      text: accumulatedText?.substring(0, 100),
-      totalToolResults: allToolResults.length,
-    });
-
-    // Yield final result with complete text
-    yield {
-      text: accumulatedText,
-      toolResults: allToolResults,
-    };
   } catch (error) {
     logger.error("[ScenarioBuilder] Error generating response", error);
     throw error;

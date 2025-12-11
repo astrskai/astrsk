@@ -6,12 +6,12 @@
  * (variables, stats, trackers) that would enhance the roleplay experience.
  */
 
-import { streamText, tool, stepCountIs } from "ai";
+import { streamText, generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
 import { useModelStore, type DefaultModelSelection } from "@/shared/stores/model-store";
 import { ApiService } from "@/app/services/api-service";
-import { createLiteModel } from "@/app/services/ai-model-factory";
+import { createLiteModel, shouldUseNonStreamingForTools } from "@/app/services/ai-model-factory";
 import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib";
 import { sanitizeFileName } from "@/shared/lib/file-utils";
@@ -376,80 +376,115 @@ Now use the add_data_store tool to create the data stores.`;
     // GLM models require thinking to be disabled for tool calling
     const isGlmModel = defaultModel.modelId.toLowerCase().includes("glm");
 
-    // Generate response with tools
-    // Use prepareStep to update system prompt with newly created stores before each step
-    const result = streamText({
-      model,
-      messages: initialMessages,
-      tools,
-      stopWhen: stepCountIs(10), // Allow multiple tool calls for each data store
-      abortSignal,
-      ...(isGlmModel && {
-        providerOptions: {
-          zhipu: { thinking: { type: "disabled" } },
+    // Check if this model needs non-streaming approach for tool calling
+    const useNonStreaming = shouldUseNonStreamingForTools(
+      apiConnection.source,
+      defaultModel.modelId
+    );
+
+    // Common options for both streaming and non-streaming
+    const glmOptions = isGlmModel ? {
+      providerOptions: {
+        zhipu: { thinking: { type: "disabled" } },
+      },
+    } : {};
+
+    if (useNonStreaming) {
+      // Use non-streaming generateText (model requires it)
+      logger.info("[DataSchemaBuilder] Using non-streaming mode");
+
+      const result = await generateText({
+        model,
+        messages: initialMessages,
+        tools,
+        stopWhen: stepCountIs(10), // Allow multiple tool calls for each data store
+        abortSignal,
+        ...glmOptions,
+      });
+
+      // Log detailed response information
+      logger.info("[DataSchemaBuilder] Response generated (non-streaming)", {
+        text: result.text?.substring(0, 200),
+        fullText: result.text,
+        storesCreated: generatedStores.length,
+      });
+
+      return {
+        text: result.text || "",
+        stores: generatedStores,
+      };
+    } else {
+      // Generate response with tools (streaming)
+      // Use prepareStep to update system prompt with newly created stores before each step
+      const result = streamText({
+        model,
+        messages: initialMessages,
+        tools,
+        stopWhen: stepCountIs(10), // Allow multiple tool calls for each data store
+        abortSignal,
+        ...glmOptions,
+        onStepFinish: (step) => {
+          const { text, toolCalls, toolResults, finishReason, response } = step;
+
+          logger.info("[DataSchemaBuilder] Step finished", {
+            text: text?.substring(0, 100),
+            toolCallsCount: toolCalls?.length || 0,
+            toolResultsCount: toolResults?.length || 0,
+            finishReason,
+            hasResponse: !!response,
+          });
+
+          // If there's an error, try to get more details
+          if (finishReason === 'error') {
+            logger.error("[DataSchemaBuilder] Step finished with error", {
+              fullStep: JSON.stringify(step, null, 2),
+              responseKeys: response ? Object.keys(response) : [],
+            });
+          }
         },
-      }),
-      onStepFinish: (step) => {
-        const { text, toolCalls, toolResults, finishReason, response } = step;
+        // prepareStep allows modifying messages before each step
+        prepareStep: ({ stepNumber, steps }) => {
+          // After first step, include created stores in the system prompt
+          if (stepNumber > 0 && generatedStores.length > 0) {
+            const updatedSystemPrompt = buildDynamicSystemPrompt(generatedStores);
 
-        logger.info("[DataSchemaBuilder] Step finished", {
-          text: text?.substring(0, 100),
-          toolCallsCount: toolCalls?.length || 0,
-          toolResultsCount: toolResults?.length || 0,
-          finishReason,
-          hasResponse: !!response,
-        });
+            // Get existing messages from previous steps (excluding old system prompt)
+            const previousMessages = steps.flatMap(step => {
+              const msgs: Array<{ role: "user" | "assistant" | "system"; content: string }> = [];
+              // Include assistant's tool calls and responses
+              if (step.text) {
+                msgs.push({ role: "assistant", content: step.text });
+              }
+              return msgs;
+            });
 
-        // If there's an error, try to get more details
-        if (finishReason === 'error') {
-          logger.error("[DataSchemaBuilder] Step finished with error", {
-            fullStep: JSON.stringify(step, null, 2),
-            responseKeys: response ? Object.keys(response) : [],
-          });
-        }
-      },
-      // prepareStep allows modifying messages before each step
-      prepareStep: ({ stepNumber, steps }) => {
-        // After first step, include created stores in the system prompt
-        if (stepNumber > 0 && generatedStores.length > 0) {
-          const updatedSystemPrompt = buildDynamicSystemPrompt(generatedStores);
+            return {
+              messages: [
+                { role: "system" as const, content: updatedSystemPrompt },
+                { role: "user" as const, content: userMessage },
+                ...previousMessages,
+              ],
+            };
+          }
+          return {};
+        },
+      });
 
-          // Get existing messages from previous steps (excluding old system prompt)
-          const previousMessages = steps.flatMap(step => {
-            const msgs: Array<{ role: "user" | "assistant" | "system"; content: string }> = [];
-            // Include assistant's tool calls and responses
-            if (step.text) {
-              msgs.push({ role: "assistant", content: step.text });
-            }
-            return msgs;
-          });
+      // Wait for the stream to complete and get final text
+      const text = await result.text;
 
-          return {
-            messages: [
-              { role: "system" as const, content: updatedSystemPrompt },
-              { role: "user" as const, content: userMessage },
-              ...previousMessages,
-            ],
-          };
-        }
-        return {};
-      },
-    });
+      // Log detailed response information
+      logger.info("[DataSchemaBuilder] Response generated (streaming)", {
+        text: text?.substring(0, 200),
+        fullText: text,
+        storesCreated: generatedStores.length,
+      });
 
-    // Wait for the stream to complete and get final text
-    const text = await result.text;
-
-    // Log detailed response information
-    logger.info("[DataSchemaBuilder] Response generated", {
-      text: text?.substring(0, 200),
-      fullText: text,
-      storesCreated: generatedStores.length,
-    });
-
-    return {
-      text,
-      stores: generatedStores,
-    };
+      return {
+        text,
+        stores: generatedStores,
+      };
+    }
   } catch (error) {
     logger.error("[DataSchemaBuilder] Error generating data schema", {
       error: error instanceof Error ? error.message : String(error),
@@ -538,59 +573,100 @@ export async function refineDataSchema({
     // GLM models require thinking to be disabled for tool calling
     const isGlmModel = defaultModel.modelId.toLowerCase().includes("glm");
 
-    // Generate response with tools
-    const result = streamText({
-      model,
-      messages,
-      tools,
-      stopWhen: stepCountIs(5),
-      abortSignal,
-      ...(isGlmModel && {
-        providerOptions: {
-          zhipu: { thinking: { type: "disabled" } },
-        },
-      }),
-      onStepFinish: (step) => {
-        const { text, toolCalls, toolResults, finishReason, response } = step;
+    // Check if this model needs non-streaming approach for tool calling
+    const useNonStreaming = shouldUseNonStreamingForTools(
+      apiConnection.source,
+      defaultModel.modelId
+    );
 
-        logger.info("[DataSchemaBuilder] Refinement step finished", {
-          text: text?.substring(0, 100),
-          toolCallsCount: toolCalls?.length || 0,
-          toolResultsCount: toolResults?.length || 0,
-          finishReason,
-          hasResponse: !!response,
-        });
-
-        // If there's an error, try to get more details
-        if (finishReason === 'error') {
-          logger.error("[DataSchemaBuilder] Step finished with error", {
-            fullStep: JSON.stringify(step, null, 2),
-            responseKeys: response ? Object.keys(response) : [],
-          });
-        }
+    // Common options for both streaming and non-streaming
+    const glmOptions = isGlmModel ? {
+      providerOptions: {
+        zhipu: { thinking: { type: "disabled" } },
       },
-    });
+    } : {};
 
-    // Wait for the stream to complete and get final text
-    const text = await result.text;
+    if (useNonStreaming) {
+      // Use non-streaming generateText (model requires it)
+      logger.info("[DataSchemaBuilder] Refinement using non-streaming mode");
 
-    logger.info("[DataSchemaBuilder] Refinement completed", {
-      text: text?.substring(0, 100),
-      fullText: text,
-      textLength: text?.length || 0,
-    });
-
-    // If text is empty, log warning with more details
-    if (!text || text.trim().length === 0) {
-      logger.warn("[DataSchemaBuilder] Refinement returned empty text", {
-        messages: messages.map(m => ({ role: m.role, content: m.content?.substring(0, 100) })),
-        storesCount: currentStores.length,
+      const result = await generateText({
+        model,
+        messages,
+        tools,
+        stopWhen: stepCountIs(5),
+        abortSignal,
+        ...glmOptions,
       });
-    }
 
-    return {
-      text,
-    };
+      logger.info("[DataSchemaBuilder] Refinement completed (non-streaming)", {
+        text: result.text?.substring(0, 100),
+        fullText: result.text,
+        textLength: result.text?.length || 0,
+      });
+
+      // If text is empty, log warning with more details
+      if (!result.text || result.text.trim().length === 0) {
+        logger.warn("[DataSchemaBuilder] Refinement returned empty text", {
+          messages: messages.map(m => ({ role: m.role, content: m.content?.substring(0, 100) })),
+          storesCount: currentStores.length,
+        });
+      }
+
+      return {
+        text: result.text,
+      };
+    } else {
+      // Generate response with tools (streaming)
+      const result = streamText({
+        model,
+        messages,
+        tools,
+        stopWhen: stepCountIs(5),
+        abortSignal,
+        ...glmOptions,
+        onStepFinish: (step) => {
+          const { text, toolCalls, toolResults, finishReason, response } = step;
+
+          logger.info("[DataSchemaBuilder] Refinement step finished", {
+            text: text?.substring(0, 100),
+            toolCallsCount: toolCalls?.length || 0,
+            toolResultsCount: toolResults?.length || 0,
+            finishReason,
+            hasResponse: !!response,
+          });
+
+          // If there's an error, try to get more details
+          if (finishReason === 'error') {
+            logger.error("[DataSchemaBuilder] Step finished with error", {
+              fullStep: JSON.stringify(step, null, 2),
+              responseKeys: response ? Object.keys(response) : [],
+            });
+          }
+        },
+      });
+
+      // Wait for the stream to complete and get final text
+      const text = await result.text;
+
+      logger.info("[DataSchemaBuilder] Refinement completed (streaming)", {
+        text: text?.substring(0, 100),
+        fullText: text,
+        textLength: text?.length || 0,
+      });
+
+      // If text is empty, log warning with more details
+      if (!text || text.trim().length === 0) {
+        logger.warn("[DataSchemaBuilder] Refinement returned empty text", {
+          messages: messages.map(m => ({ role: m.role, content: m.content?.substring(0, 100) })),
+          storesCount: currentStores.length,
+        });
+      }
+
+      return {
+        text,
+      };
+    }
   } catch (error) {
     logger.error("[DataSchemaBuilder] Error refining data schema", {
       error: error instanceof Error ? error.message : String(error),
