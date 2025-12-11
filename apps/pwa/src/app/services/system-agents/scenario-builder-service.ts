@@ -298,8 +298,11 @@ function createScenarioTools(
     onUpdateLorebookEntry: (id: string, updates: { title?: string; keys?: string; desc?: string; range?: number }) => void;
   },
 ) {
-  // Track current background for sequential edits within same generation
+  // Track current state for sequential edits within same generation
+  // This allows AI to add items and then update them in the same session
   let currentBackground = currentScenario.background;
+  let currentFirstMessages = [...currentScenario.firstMessages];
+  let currentLorebook = [...currentScenario.lorebook];
 
   return {
     set_scenario: tool({
@@ -350,6 +353,8 @@ function createScenarioTools(
       }),
       execute: async ({ title, content }) => {
         const id = generateUniqueId();
+        // Track newly added message for subsequent updates in same session
+        currentFirstMessages.push({ id, title, content });
         callbacks.onAddFirstMessage({ id, title, content });
         return {
           success: true,
@@ -367,7 +372,8 @@ function createScenarioTools(
         content: z.string().optional().describe("New content for this first message (leave empty to keep current)"),
       }),
       execute: async ({ id, title, content }) => {
-        const message = currentScenario.firstMessages.find((m) => m.id === id);
+        // Use tracker to find message (includes items added in this session)
+        const message = currentFirstMessages.find((m) => m.id === id);
         if (!message) {
           return {
             success: false,
@@ -378,6 +384,12 @@ function createScenarioTools(
         const updates: { title?: string; content?: string } = {};
         if (title !== undefined) updates.title = title;
         if (content !== undefined) updates.content = content;
+
+        // Update tracker for subsequent operations
+        const messageIndex = currentFirstMessages.findIndex((m) => m.id === id);
+        if (messageIndex !== -1) {
+          currentFirstMessages[messageIndex] = { ...currentFirstMessages[messageIndex], ...updates };
+        }
 
         callbacks.onUpdateFirstMessage(id, updates);
         return {
@@ -397,6 +409,8 @@ function createScenarioTools(
       }),
       execute: async ({ title, keys, desc, range = 2 }) => {
         const id = generateUniqueId();
+        // Track newly added entry for subsequent updates in same session
+        currentLorebook.push({ id, title, keys, desc, range });
         callbacks.onAddLorebookEntry({ id, title, keys, desc, range });
         return {
           success: true,
@@ -416,7 +430,8 @@ function createScenarioTools(
         range: z.number().optional().describe("New recall range (leave empty to keep current)"),
       }),
       execute: async ({ id, title, keys, desc, range }) => {
-        const entry = currentScenario.lorebook.find((e) => e.id === id);
+        // Use tracker to find entry (includes items added in this session)
+        const entry = currentLorebook.find((e) => e.id === id);
         if (!entry) {
           return {
             success: false,
@@ -429,6 +444,12 @@ function createScenarioTools(
         if (keys !== undefined) updates.keys = keys;
         if (desc !== undefined) updates.desc = desc;
         if (range !== undefined) updates.range = range;
+
+        // Update tracker for subsequent operations
+        const entryIndex = currentLorebook.findIndex((e) => e.id === id);
+        if (entryIndex !== -1) {
+          currentLorebook[entryIndex] = { ...currentLorebook[entryIndex], ...updates };
+        }
 
         callbacks.onUpdateLorebookEntry(id, updates);
         return {
