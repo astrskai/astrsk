@@ -77,13 +77,14 @@ Return ONLY the name, nothing else.`;
       ],
     });
 
-    const name = result.text.trim().replace(/^["']|["']$/g, ""); // Remove quotes if present
+    let name = result.text.trim().replace(/^["']|["']$/g, ""); // Remove quotes if present
 
-    // Validate length
-    const wordCount = name.split(/\s+/).length;
-    if (wordCount > 7) {
-      logger.warn("[SessionNameGenerator] Generated name too long, using fallback", { name });
-      return generateFallbackName(scenario);
+    // Truncate to maximum 7 words if too long
+    const words = name.split(/\s+/);
+    const MAX_WORDS = 7;
+
+    if (words.length > MAX_WORDS) {
+      name = words.slice(0, MAX_WORDS).join(" ");
     }
 
     logger.info("[SessionNameGenerator] Generated session name", { name, scenario: scenario.substring(0, 100) });

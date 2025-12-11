@@ -676,11 +676,6 @@ export async function generateCharacterResponse({
       allToolResults.length > 0; // We have successful tool results
 
     if (isVertexMetadataError) {
-      logger.warn("[CharacterBuilder] Ignoring Vertex AI metadata-only response error (tools succeeded)", {
-        toolResultsCount: allToolResults.length,
-        errorMessage: error.message,
-      });
-
       // Return what we have - the tool calls succeeded
       return {
         text: "",

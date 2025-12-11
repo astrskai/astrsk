@@ -149,6 +149,47 @@ const getGlobalDefaultModel = (
   return null;
 };
 
+/**
+ * Remove character name prefix from LLM response if present.
+ * Matches patterns like "Character Name:" or "Character Name :" at the start of the text.
+ * Only removes prefixes that look like character names (2-30 characters before colon).
+ *
+ * Examples:
+ * - "Jane Doe: Hello there" → "Hello there"
+ * - "Jane Doe : Hello" → "Hello"
+ * - "Jane: Hi" → "Hi"
+ * - "Hello there" → "Hello there" (no change)
+ * - "A: Quick note" → "A: Quick note" (too short, likely not a name)
+ *
+ * @param content - The text content to clean
+ * @returns The content with character name prefix removed if present
+ */
+const removeCharacterNamePrefix = (content: string): string => {
+  // Match character name at start followed by colon
+  // Pattern: Start of string → 2-30 non-colon characters → Optional space → Colon → Optional space
+  // Min 2 chars: Avoids matching single letters like "A:" (likely not a character name)
+  // Max 30 chars: Typical character name length limit
+  const characterNamePattern = /^[^:\n]{2,30}\s*:\s*/;
+
+  const match = content.match(characterNamePattern);
+  if (match) {
+    const prefix = match[0];
+    const nameWithoutColon = prefix.replace(/\s*:\s*$/, '').trim();
+
+    // Additional validation: Check if it looks like a name
+    // Names typically contain letters and possibly spaces, hyphens, apostrophes, periods
+    // Reject if it's mostly numbers or special characters
+    const namePattern = /^[A-Za-z][\w\s\-'.]{1,28}[A-Za-z.]?$/;
+
+    if (namePattern.test(nameWithoutColon)) {
+      // Remove the matched prefix and trim any leading whitespace
+      return content.slice(prefix.length).trimStart();
+    }
+  }
+
+  return content;
+};
+
 // Helper function to get fallback model based on tier (for AstrskAi backend)
 const getFallbackModel = (modelTier?: ModelTier): string | null => {
   if (!modelTier) {
@@ -2307,6 +2348,11 @@ async function* executeAgentNode({
         yield result;
       }
 
+      // Post-process: Remove character name prefix if present (e.g., "Jane Doe: Hello" → "Hello")
+      // This handles cases where LLMs incorrectly prefix responses with character names
+      response = removeCharacterNamePrefix(response);
+      merge(result, { output: { response } });
+
       try {
         const metadata: any = {};
 
@@ -3277,6 +3323,7 @@ export {
   evaluateConditionOperator,
   executeFlow,
   makeContext,
+  removeCharacterNamePrefix,
   renderMessages,
   transformMessagesForModel
 };
