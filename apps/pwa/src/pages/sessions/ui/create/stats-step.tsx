@@ -142,6 +142,8 @@ export function StatsStep({
   const [refinePrompt, setRefinePrompt] = useState("");
   const [isRefining, setIsRefining] = useState(false);
   const [templateStatus, setTemplateStatus] = useState<string>("");
+  // Typing indicator for welcome message
+  const [isTypingIndicator, setIsTypingIndicator] = useState(false);
 
   // Track if component is mounted (for cleanup)
   const isMountedRef = useRef(true);
@@ -203,6 +205,75 @@ export function StatsStep({
 
   // NOTE: Auto-generation removed - now triggered by parent (new.tsx) when leaving Scenario step
   // This allows stats to be pre-generated while user is on Cast step
+
+  // Refs for latest values in welcome message effect (avoids stale closure)
+  // Update on every render to ensure setTimeout callback gets latest values
+  const dataStoresRef = useRef(dataStores);
+  const isGeneratingRef = useRef(isGenerating);
+  dataStoresRef.current = dataStores;
+  isGeneratingRef.current = isGenerating;
+
+  // Show welcome message on first mount (always show typing indicator first)
+  useEffect(() => {
+    // Skip if there are existing stats messages
+    const statsMessages = chatMessagesRef.current.filter(m => m.step === "stats");
+    if (statsMessages.length > 0) return;
+
+    // Use local variable to track if this effect instance should proceed
+    // This handles StrictMode double-mount correctly
+    let cancelled = false;
+
+    setIsTypingIndicator(true);
+
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+
+      setIsTypingIndicator(false);
+
+      // Use refs to get latest values (avoids stale closure)
+      const currentDataStores = dataStoresRef.current;
+      const currentIsGenerating = isGeneratingRef.current;
+
+      // Determine welcome message based on current state
+      let welcomeMessage: ChatMessage;
+      if (currentDataStores.length > 0) {
+        // Has items - show count (whether still generating or not)
+        const suffix = currentIsGenerating ? " Still analyzing..." : " Feel free to adjust them or add more!";
+        welcomeMessage = {
+          id: "stats-welcome",
+          role: "assistant",
+          content: `I've generated ${currentDataStores.length} stats for your scenario.${suffix}`,
+          step: "stats",
+          isSystemGenerated: true,
+        };
+      } else if (currentIsGenerating) {
+        // No items yet but generating
+        welcomeMessage = {
+          id: "stats-generating",
+          role: "assistant",
+          content: `I'm analyzing your scenario and generating stats...`,
+          step: "stats",
+          isSystemGenerated: true,
+        };
+      } else {
+        // No items and not generating
+        welcomeMessage = {
+          id: "stats-welcome",
+          role: "assistant",
+          content: `No stats generated yet. You can add custom stats manually or wait for generation to complete.`,
+          step: "stats",
+          isSystemGenerated: true,
+        };
+      }
+      onChatMessagesChange?.([...chatMessagesRef.current, welcomeMessage]);
+    }, 1000);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      setIsTypingIndicator(false);
+    };
+  }, []); // Only run on mount
 
   // Toggle accordion expansion
   const toggleExpand = (id: string) => {
@@ -436,8 +507,9 @@ export function StatsStep({
           onInputChange={setRefinePrompt}
           onSubmit={handleChatSubmit}
           onStop={isRefining ? handleChatStop : undefined}
-          isLoading={isRefining}
-          disabled={isRefining}
+          isLoading={isRefining || isTypingIndicator}
+          showTypingIndicator={isTypingIndicator || isRefining}
+          disabled={isRefining || isTypingIndicator}
           className="hidden md:flex"
         />
 
@@ -827,8 +899,9 @@ export function StatsStep({
         onInputChange={setRefinePrompt}
         onSubmit={handleChatSubmit}
         onStop={isRefining ? handleChatStop : undefined}
-        isLoading={isRefining}
-        disabled={isRefining}
+        isLoading={isRefining || isTypingIndicator}
+        showTypingIndicator={isTypingIndicator || isRefining}
+        disabled={isRefining || isTypingIndicator}
       />
     </div>
   );

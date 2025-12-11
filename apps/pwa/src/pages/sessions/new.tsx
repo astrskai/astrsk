@@ -125,11 +125,6 @@ Ground Rules:`;
     setChatMessages(prev => [...prev, message]);
   }, []);
 
-  // Functional update helper to add multiple messages at once
-  const addChatMessages = useCallback((messages: ChatMessage[]) => {
-    setChatMessages(prev => [...prev, ...messages]);
-  }, []);
-
   // Stats state
   const [statsDataStores, setStatsDataStores] = useState<StatsDataStore[]>([]);
   const [isStatsGenerating, setIsStatsGenerating] = useState(false);
@@ -155,12 +150,6 @@ Ground Rules:`;
   // Stats generation refs (for abort control and incremental updates)
   const statsAbortControllerRef = useRef<AbortController | null>(null);
   const generatingStoresRef = useRef<StatsDataStore[]>([]);
-  // Track actually added stat names (to filter batch messages to only show real additions)
-  const addedStatNamesRef = useRef<Set<string>>(new Set());
-  // Track announced stat names to prevent duplicate chat messages
-  const announcedStatNamesRef = useRef<Set<string>>(new Set());
-  // Pending stats messages to show when entering Stats step (deferred display)
-  const [pendingStatsMessages, setPendingStatsMessages] = useState<ChatMessage[]>([]);
   // Refs mirror state for immediate checks in useCallback (avoids stale closure issues)
   const hasAttemptedStatsGenerationRef = useRef(false);
   const isStatsGeneratingRef = useRef(false);
@@ -379,10 +368,8 @@ Ground Rules:`;
     statsAbortControllerRef.current?.abort();
     statsAbortControllerRef.current = new AbortController();
 
-    // Clear existing stores and tracking refs
+    // Clear existing stores
     generatingStoresRef.current = [];
-    addedStatNamesRef.current = new Set();
-    announcedStatNamesRef.current = new Set();
     setStatsDataStores([]);
 
     try {
@@ -453,88 +440,44 @@ Ground Rules:`;
                 dataSchemaEntryToStatsDataStore(store),
               ];
               setStatsDataStores(generatingStoresRef.current);
-              // Track actually added store names for batch message filtering
-              addedStatNamesRef.current.add(store.name);
             },
             onRemoveStore: () => {},
             onClearAll: () => {},
-            onBatchComplete: (stores) => {
-              // Filter to only stats that were actually added AND not yet announced
-              const newStores = stores.filter(
-                s => addedStatNamesRef.current.has(s.name) && !announcedStatNamesRef.current.has(s.name)
-              );
-              if (newStores.length > 0) {
-                // Mark as announced to prevent duplicate messages
-                newStores.forEach(s => announcedStatNamesRef.current.add(s.name));
-
-                // Format names: remove underscores
-                const formatName = (name: string) => name.replace(/_/g, " ");
-                const statNames = newStores.map(s => formatName(s.name)).join(", ");
-                const batchMessage: ChatMessage = {
-                  id: crypto.randomUUID(),
-                  role: "assistant",
-                  content: `I've added ${newStores.length} new stats: ${statNames}`,
-                  step: "stats",
-                  isSystemGenerated: true,
-                  // Show typing indicator before message (1.5s when on Stats, 1s when deferred)
-                  typingIndicatorDuration: currentStepRef.current === "stats" ? 1500 : 1000,
-                };
-                // If already on Stats step, add directly; otherwise defer
-                if (currentStepRef.current === "stats") {
-                  addChatMessage(batchMessage);
-                } else {
-                  setPendingStatsMessages(prev => [...prev, batchMessage]);
-                }
-              }
-            },
           },
           abortSignal: statsAbortControllerRef.current.signal,
         });
 
-        // Add completion message after generation finishes
-        // If already on Stats step, add directly; otherwise defer until Stats step entry
-        let completionMessage: ChatMessage | null = null;
+        // Add completion message only if currently on Stats step
+        // Otherwise, welcome message on Stats entry will handle it
+        if (currentStepRef.current === "stats") {
+          let completionMessage: ChatMessage;
 
-        // Determine typing indicator duration based on current step
-        const typingDuration = currentStepRef.current === "stats" ? 1500 : 1000;
-
-        if (maxLimitReached) {
-          completionMessage = {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: `All done! Up to ${MAX_TOTAL_STORES} stats are auto-generated. Feel free to add or remove any as you like!`,
-            step: "stats",
-            isSystemGenerated: true,
-            typingIndicatorDuration: typingDuration,
-          };
-        } else if (generatingStoresRef.current.length > 0) {
-          // Normal completion - AI finished on its own
-          completionMessage = {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: `That's all the stats I think would fit this scenario. Feel free to add more or adjust them!`,
-            step: "stats",
-            isSystemGenerated: true,
-            typingIndicatorDuration: typingDuration,
-          };
-        } else {
-          // No stats generated
-          completionMessage = {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: `I couldn't find any specific stats to generate for this scenario. You can add custom stats manually!`,
-            step: "stats",
-            isSystemGenerated: true,
-            typingIndicatorDuration: typingDuration,
-          };
-        }
-
-        if (completionMessage) {
-          if (currentStepRef.current === "stats") {
-            addChatMessage(completionMessage);
+          if (maxLimitReached) {
+            completionMessage = {
+              id: "stats-completion",
+              role: "assistant",
+              content: `All done! Up to ${MAX_TOTAL_STORES} stats are auto-generated. Feel free to add or remove any as you like!`,
+              step: "stats",
+              isSystemGenerated: true,
+            };
+          } else if (generatingStoresRef.current.length > 0) {
+            completionMessage = {
+              id: "stats-completion",
+              role: "assistant",
+              content: `That's all the stats I think would fit this scenario. Feel free to add more or adjust them!`,
+              step: "stats",
+              isSystemGenerated: true,
+            };
           } else {
-            setPendingStatsMessages(prev => [...prev, completionMessage]);
+            completionMessage = {
+              id: "stats-completion",
+              role: "assistant",
+              content: `I couldn't find any specific stats to generate for this scenario. You can add custom stats manually!`,
+              step: "stats",
+              isSystemGenerated: true,
+            };
           }
+          addChatMessage(completionMessage);
         }
       }
 
@@ -601,16 +544,9 @@ Ground Rules:`;
         handleGenerateStatsRef.current();
       }
 
-      // When entering Stats step, show pending messages
-      // ChatPanel handles typing indicator via typingIndicatorDuration on each message
-      if (targetStep === "stats" && pendingStatsMessages.length > 0) {
-        addChatMessages(pendingStatsMessages);
-        setPendingStatsMessages([]);
-      }
-
       setCurrentStep(targetStep);
     },
-    [currentStep, addChatMessages, pendingStatsMessages], // handleGenerateStats removed - using ref instead
+    [currentStep, addChatMessage],
   );
 
   const handlePrevious = useCallback(() => {
