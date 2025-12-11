@@ -5,12 +5,12 @@
  * The agent can create character cards through defined tools.
  */
 
-import { streamText, tool, stepCountIs } from "ai";
+import { streamText, generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
 import { useModelStore, type DefaultModelSelection } from "@/shared/stores/model-store";
 import { ApiService } from "@/app/services/api-service";
-import { createLiteModel } from "@/app/services/ai-model-factory";
+import { createLiteModel, shouldUseNonStreamingForTools } from "@/app/services/ai-model-factory";
 import { UniqueEntityID } from "@/shared/domain";
 import { logger } from "@/shared/lib";
 
@@ -593,35 +593,74 @@ export async function generateCharacterResponse({
     // Track all tool results across steps
     const allToolResults: unknown[] = [];
 
-    // Stream response with tools
-    const result = streamText({
-      model,
-      messages: formattedMessages,
-      tools,
-      stopWhen: stepCountIs(3), // Allow up to 3 tool calls
-      abortSignal,
-      onStepFinish: ({ toolResults }) => {
-        if (toolResults && toolResults.length > 0) {
-          allToolResults.push(...toolResults);
-          logger.info("[CharacterBuilder] Step completed", {
-            toolResultsInStep: toolResults.length,
-          });
-        }
-      },
-    });
+    // Check if this model needs non-streaming approach for tool calling
+    const useNonStreaming = shouldUseNonStreamingForTools(
+      apiConnection.source,
+      defaultModel.modelId
+    );
 
-    // Wait for the stream to complete and get final text
-    const text = await result.text;
+    if (useNonStreaming) {
+      // Use non-streaming generateText (model requires it)
+      logger.info("[CharacterBuilder] Using non-streaming mode");
 
-    logger.info("[CharacterBuilder] Response generated", {
-      text: text?.substring(0, 100),
-      totalToolResults: allToolResults.length,
-    });
+      const result = await generateText({
+        model,
+        messages: formattedMessages,
+        tools,
+        stopWhen: stepCountIs(3), // Allow up to 3 tool calls
+        abortSignal,
+      });
 
-    return {
-      text,
-      toolResults: allToolResults,
-    };
+      // Collect all tool results
+      if (result.toolResults && result.toolResults.length > 0) {
+        allToolResults.push(...result.toolResults);
+        logger.info("[CharacterBuilder] Tool results", {
+          count: result.toolResults.length,
+        });
+      }
+
+      const finalText = result.text || "";
+
+      logger.info("[CharacterBuilder] Response generated (non-streaming)", {
+        text: finalText.substring(0, 100),
+        totalToolResults: allToolResults.length,
+      });
+
+      return {
+        text: finalText,
+        toolResults: allToolResults,
+      };
+    } else {
+      // Stream response with tools
+      const result = streamText({
+        model,
+        messages: formattedMessages,
+        tools,
+        stopWhen: stepCountIs(3), // Allow up to 3 tool calls
+        abortSignal,
+        onStepFinish: ({ toolResults }) => {
+          if (toolResults && toolResults.length > 0) {
+            allToolResults.push(...toolResults);
+            logger.info("[CharacterBuilder] Step completed", {
+              toolResultsInStep: toolResults.length,
+            });
+          }
+        },
+      });
+
+      // Wait for the stream to complete and get final text
+      const text = await result.text;
+
+      logger.info("[CharacterBuilder] Response generated (streaming)", {
+        text: text?.substring(0, 100),
+        totalToolResults: allToolResults.length,
+      });
+
+      return {
+        text,
+        toolResults: allToolResults,
+      };
+    }
   } catch (error) {
     logger.error("[CharacterBuilder] Error generating response", error);
     throw error;
