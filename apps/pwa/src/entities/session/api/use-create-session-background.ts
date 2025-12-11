@@ -139,23 +139,24 @@ export async function executeBackgroundGeneration(
   } catch (error) {
     logger.error("[executeBackgroundGeneration] Background generation failed", error);
 
-    // Mark session as failed (preserve existing config)
+    // Mark session as completed with generation failure note (preserve existing config)
+    // Session is still playable with Simple workflow
     session.update({
       config: {
         ...session.config,
-        generationStatus: "failed",
+        generationStatus: "completed",
         generationError: error instanceof Error ? error.message : "Unknown error",
       },
     });
 
     await SessionService.saveSession.execute({ session: session });
 
-    // Invalidate queries to show failed status
+    // Invalidate queries to refresh UI
     queryClient.invalidateQueries({ queryKey: [TableName.Sessions] });
 
-    // Show error notification
-    toastError("Session generation failed", {
-      description: error instanceof Error ? error.message : "Unknown error",
+    // Show warning notification - session is still usable but workflow generation failed
+    toastError("Session created with standard workflow", {
+      description: `"${sessionName}" is ready to play using standard workflow instead.`,
     });
   }
 }
