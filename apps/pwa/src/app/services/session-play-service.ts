@@ -16,6 +16,7 @@ import {
   getStructuredOutputMode,
   jsonSchemaToZod,
   shouldUseToolFallback,
+  shouldUseNonStreamingForTools,
   streamWithToolFallback,
   generateWithToolFallback,
   isJsonSchemaNotSupportedError,
@@ -1711,7 +1712,6 @@ async function generateStructuredOutput({
     // Gemini uses non-streaming generateWithToolFallback (Vertex AI streaming incompatible with streamObject)
     const isGoogleProvider = apiConnection.source === ApiSource.AstrskAi &&
       parsedModelId.startsWith("google/gemini-");
-
     if (isGoogleProvider) {
 
       const partialObjectStream = (async function* () {
@@ -2245,12 +2245,24 @@ async function* executeAgentNode({
       // Generate text output with fallback to lite model on failure
       let streamResult;
       try {
+        // Check if we need to force non-streaming for this model
+        const forceNonStreaming = shouldUseNonStreamingForTools(apiConnection.source, apiModelId);
+        const effectiveStreaming = forceNonStreaming ? false : agent.props.outputStreaming;
+
+        if (forceNonStreaming && agent.props.outputStreaming) {
+          logger.info("[SessionPlay] Forcing non-streaming for model", {
+            modelId: apiModelId,
+            source: apiConnection.source,
+            originalStreaming: agent.props.outputStreaming,
+          });
+        }
+
         streamResult = await generateTextOutput({
           apiConnection: apiConnection,
           modelId: apiModelId,
           messages: transformedMessages,
           parameters: agent.parameters,
-          streaming: agent.props.outputStreaming,
+          streaming: effectiveStreaming,
           stopSignalByUser: stopSignalByUser,
           creditLog: creditLog,
         });

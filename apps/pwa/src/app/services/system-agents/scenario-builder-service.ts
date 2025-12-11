@@ -580,9 +580,10 @@ export async function* generateScenarioResponse({
     defaultModel.modelId
   );
 
+  // Track all tool results across steps (declare outside try block for catch access)
+  const allToolResults: unknown[] = [];
+
   try {
-    // Track all tool results across steps
-    const allToolResults: unknown[] = [];
 
     if (useNonStreaming) {
       // Use non-streaming generateText (model requires it)
@@ -658,6 +659,38 @@ export async function* generateScenarioResponse({
       };
     }
   } catch (error) {
+    // Check if this is a Vertex AI metadata-only response error
+    // This can happen when Vertex AI returns metadata without candidates array
+    const errorJson = JSON.stringify(error);
+    const isVertexMetadataError =
+      errorJson.includes("candidates") &&
+      (errorJson.includes("Invalid input: expected array, received undefined") ||
+       (errorJson.includes("expected") && errorJson.includes("array")));
+
+    // Log detailed error info for debugging
+    logger.info("[ScenarioBuilder] Caught error", {
+      isVertexMetadataError,
+      toolResultsCount: allToolResults.length,
+      errorType: error?.constructor?.name,
+      errorJsonPreview: errorJson.substring(0, 500),
+    });
+
+    // If this is a Vertex AI metadata error, it means the API response was malformed
+    // This is a known issue with Gemini/Vertex AI - just ignore and return what we have
+    if (isVertexMetadataError) {
+      logger.warn("[ScenarioBuilder] Ignoring Vertex AI metadata-only response error", {
+        toolResultsCount: allToolResults.length,
+        message: "This is a known Vertex AI API response format issue",
+      });
+
+      // Yield what we have (may be empty if error happened before any tools)
+      yield {
+        text: "",
+        toolResults: allToolResults,
+      };
+      return; // Exit the generator
+    }
+
     logger.error("[ScenarioBuilder] Error generating response", error);
     throw error;
   }
