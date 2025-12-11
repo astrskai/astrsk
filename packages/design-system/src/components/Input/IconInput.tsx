@@ -4,8 +4,8 @@ import { inputBaseStyles } from './input-styles';
 
 export interface IconInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** Icon to display inside the input (optional - use leftIcon/rightIcon as alternatives) */
-  icon?: React.ReactNode;
+  /** Icon to display inside the input (required) */
+  icon: React.ReactNode;
   /** Position of the icon */
   iconPosition?: 'left' | 'right';
   /** Callback when icon is clicked (makes icon clickable) */

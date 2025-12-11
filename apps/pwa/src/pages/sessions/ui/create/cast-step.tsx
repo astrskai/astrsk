@@ -1635,7 +1635,7 @@ function CharacterDetailsModal({
       size="lg"
       isShowCloseButton
       className="overflow-hidden p-0"
-      contentClassName="md:!overflow-hidden"
+      contentClassName="md:overflow-hidden!"
       content={
         character && (
           <div className="flex flex-col md:h-[400px] md:flex-row">

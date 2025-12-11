@@ -1907,6 +1907,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
           {isReady && (
             <ReactFlowProvider>
               <ReactFlow<CustomNodeType, CustomEdgeType>
+                colorMode="dark"
                 proOptions={proOptions}
                 nodes={nodes}
                 edges={edges}
