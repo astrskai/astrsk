@@ -7,6 +7,7 @@ import ErrorPage from "@/pages/error";
 // Search params schema
 const searchSchema = z.object({
   mode: z.enum(["view", "edit"]).optional().default("view"),
+  returnTo: z.string().optional(), // URL to navigate back to after creation
 });
 
 // Component that switches between view and edit mode

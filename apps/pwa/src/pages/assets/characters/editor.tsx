@@ -409,6 +409,7 @@ const FirstMessageItemContent = ({
 const CharacterEditorPage = () => {
   const navigate = useNavigate();
   const { characterId } = Route.useParams();
+  const { returnTo } = Route.useSearch();
 
   // Determine if we're in create mode (no characterId or "new")
   const isCreateMode = !characterId || characterId === "new";
@@ -808,7 +809,12 @@ const CharacterEditorPage = () => {
 
       // Navigate to view mode (or characters list for new characters)
       if (isCreateMode) {
-        navigate({ to: "/assets/characters" });
+        // If returnTo parameter exists, navigate back to that page
+        if (returnTo) {
+          navigate({ to: returnTo as any });
+        } else {
+          navigate({ to: "/assets/characters" });
+        }
       } else {
         // Go back to view mode
         navigate({

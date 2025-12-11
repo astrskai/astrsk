@@ -18,6 +18,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { fetchSession, useSaveSession } from "@/entities/session/api";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
+import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/shared/ui";
 import { DialogBase } from "@/shared/ui/dialogs/base";
 import CharacterCardUI from "@/features/character/ui/character-card";
@@ -347,6 +348,9 @@ export const SessionSettings = ({
   const [isUserCharacterDialogOpen, setIsUserCharacterDialogOpen] = useState(false);
   const [isAICharacterDialogOpen, setIsAICharacterDialogOpen] = useState(false);
 
+  // Scenario selection dialog state
+  const [isScenarioDialogOpen, setIsScenarioDialogOpen] = useState(false);
+
   // Background dialog state
   const [isBackgroundDialogOpen, setIsBackgroundDialogOpen] = useState(false);
 
@@ -634,7 +638,17 @@ export const SessionSettings = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Scenario - 2/3 width */}
         <Section title="Scenario" className="lg:col-span-2 h-80 flex flex-col">
-          <div className="flex-grow space-y-4 overflow-y-auto pr-2">
+          <button
+            onClick={() => {
+              if (plotCard?.id) {
+                navigate({
+                  to: "/assets/scenarios/$scenarioId",
+                  params: { scenarioId: plotCard.id.toString() }
+                });
+              }
+            }}
+            className="flex-grow space-y-4 overflow-y-auto pr-2 cursor-pointer hover:bg-surface-overlay/50 rounded-lg transition-colors text-left"
+          >
             {plotCard ? (
               <>
                 <div>
@@ -665,7 +679,7 @@ export const SessionSettings = ({
                 <p className="text-sm">No scenario selected</p>
               </div>
             )}
-          </div>
+          </button>
         </Section>
 
         {/* Workflow - 1/3 width */}

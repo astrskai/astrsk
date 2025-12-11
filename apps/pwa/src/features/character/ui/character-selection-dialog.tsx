@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, Info } from "lucide-react";
+import { ChevronLeft, Info, Plus } from "lucide-react";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { Button, SearchInput } from "@/shared/ui/forms";
 import CharacterCardUI from "@/features/character/ui/character-card";
 import Carousel from "@/shared/ui/carousel-v2";
@@ -203,6 +204,8 @@ export function CharacterSelectionDialog({
   description = "Choose one or more AI character cards",
   confirmButtonText = "Add",
 }: CharacterSelectionDialogProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   // Temporary state for dialog selection (only committed on Confirm)
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(
@@ -384,7 +387,7 @@ export function CharacterSelectionDialog({
 
                 {/* Empty State */}
                 {filteredCharacterCards.length === 0 && (
-                  <div className="text-text-secondary flex flex-col items-center justify-center py-12 text-center">
+                  <div className="text-text-secondary flex flex-col items-center justify-center gap-4 py-12 text-center">
                     {searchKeyword ? (
                       <>
                         <p className="mb-2 text-lg">No characters found</p>
@@ -395,9 +398,27 @@ export function CharacterSelectionDialog({
                         <p className="mb-2 text-lg">
                           No character cards available
                         </p>
-                        <p className="text-sm">
+                        <p className="text-sm mb-4">
                           Create a character card first to continue
                         </p>
+                        <Button
+                          onClick={() => {
+                            // Close dialog and navigate to character creation page
+                            // Pass current location as returnTo parameter
+                            onOpenChange(false);
+                            navigate({
+                              to: "/assets/characters/new",
+                              search: {
+                                mode: "edit",
+                                returnTo: location.pathname
+                              }
+                            });
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Create Character
+                        </Button>
                       </>
                     )}
                   </div>

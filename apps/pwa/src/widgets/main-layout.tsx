@@ -2,7 +2,7 @@ import { useAppStore } from "@/shared/stores/app-store";
 import { usePwa } from "@/shared/hooks/use-pwa";
 import { useGlobalErrorHandler } from "@/shared/hooks/use-global-error-handler";
 import { useSessionStore } from "@/shared/stores/session-store";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { UniqueEntityID } from "@/shared/domain";
 import { useLocation } from "@tanstack/react-router";
 import { TopBar } from "@/widgets/top-bar";
@@ -19,6 +19,7 @@ import {
   LeftMainSidebarContainer,
   MobileHeader,
 } from "@/widgets/sidebar/left-main-sidebar";
+import { useMobileNavigationStore } from "@/shared/stores/mobile-navigation-context";
 
 export function MainLayout({
   children,
@@ -121,7 +122,8 @@ function MainLayoutContent({
   isRootPage: boolean;
 }) {
   const { scrollContainerRef } = useScrollContainer();
-  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobileMenuOpen = useMobileNavigationStore.use.isOpen();
+  const setMobileMenuOpen = useMobileNavigationStore.use.setIsOpen();
   const location = useLocation();
 
   // Hide mobile header on session chat page (has its own header)
