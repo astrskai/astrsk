@@ -36,7 +36,7 @@ type SheetState = "collapsed" | "peek" | "expanded";
 const SHEET_HEIGHTS = {
   collapsed: 100,      // Handle + message preview + input bar
   peek: "50vh",        // Half screen
-  expanded: "85vh",    // Full screen
+  expanded: "calc(100vh - 100px)",    // Full screen minus header (stepper + header ~100px)
 } as const;
 
 /**

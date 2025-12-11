@@ -556,18 +556,11 @@ export function StatsStep({
           {/* Show generating indicator at top when generating or refining */}
           {(isGenerating || isRefining) && (
             <div className="mb-4 flex items-center justify-between rounded-lg border border-brand-500/30 bg-brand-500/10 px-4 py-3">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-3">
-                  <Loader2 size={18} className="animate-spin text-brand-500" />
-                  <span className="animate-pulse font-mono text-xs text-brand-400">
-                    {isRefining ? "REFINING VARIABLES..." : templateStatus || `DERIVING VARIABLES... (${dataStores.length} found)`}
-                  </span>
-                </div>
-                {selectedTemplate && !isRefining && (
-                  <span className="ml-8 text-[10px] text-fg-muted">
-                    Template: {selectedTemplate.templateName}
-                  </span>
-                )}
+              <div className="flex items-center gap-3">
+                <Loader2 size={18} className="animate-spin text-brand-500" />
+                <span className="animate-pulse font-mono text-xs text-brand-400">
+                  {isRefining ? "REFINING VARIABLES..." : templateStatus || `DERIVING VARIABLES... (${dataStores.length} found)`}
+                </span>
               </div>
               <Button
                 onClick={handleStopGeneration}
