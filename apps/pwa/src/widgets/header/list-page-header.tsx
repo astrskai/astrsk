@@ -1,6 +1,7 @@
-import { Download, Plus } from "lucide-react";
+import { ChevronDown, Download, Plus } from "lucide-react";
 import { Button, SearchInput } from "@/shared/ui/forms";
 import type { SelectOption } from "@/shared/ui/forms";
+import { SimpleDropdownMenu } from "@/shared/ui/simple-dropdown-menu";
 
 export interface ListPageHeaderProps {
   /**
@@ -130,22 +131,24 @@ export function ListPageHeader({
 
           {/* Sort Dropdown */}
           {showSort && (
-            <div className="flex h-9 items-center rounded-lg border border-zinc-800 bg-zinc-900 px-2 transition-colors hover:border-zinc-700 md:h-10 md:px-3">
-              <span className="mr-2 hidden text-xs font-bold tracking-wider text-zinc-500 uppercase md:block">
-                Sort:
-              </span>
-              <select
-                value={sortValue}
-                onChange={(e) => onSortChange(e.target.value)}
-                className="max-w-[80px] cursor-pointer bg-transparent text-sm font-medium text-zinc-300 focus:outline-none md:max-w-none"
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SimpleDropdownMenu
+              align="end"
+              trigger={
+                <button className="flex h-9 cursor-pointer items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-700 md:h-10 md:px-3">
+                  <span className="mr-1 hidden text-xs font-bold tracking-wider text-zinc-500 uppercase md:inline">
+                    Sort:
+                  </span>
+                  <span className="max-w-[80px] truncate md:max-w-none">
+                    {sortOptions.find((o) => o.value === sortValue)?.label}
+                  </span>
+                  <ChevronDown size={14} className="text-zinc-500" />
+                </button>
+              }
+              items={sortOptions.map((option) => ({
+                label: option.label,
+                onClick: () => onSortChange(option.value),
+              }))}
+            />
           )}
         </div>
       </div>
