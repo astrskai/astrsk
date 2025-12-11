@@ -93,21 +93,32 @@ Configure the template agents for this scenario. The flow structure is already c
 
 ### Data Management Agent (data_management_agent)
 - **Purpose**: Analyze conversation and update game state
-- **DO**: Define structured output fields as DELTA values (not absolute values)
-- **DO**: Map its outputs to datastore node fields using formulas
-- **IMPORTANT**: Use conservative delta ranges to avoid aggressive state changes
+- **DO**: Define structured output fields based on field type
+- **DO**: Map its outputs to datastore node fields using appropriate formulas
+- **IMPORTANT**: Use conservative delta ranges for numeric fields to avoid aggressive state changes
 
-**Delta Value Pattern (REQUIRED)**:
-For numeric fields with ranges (e.g., health 0-10), output a small DELTA value with +/- range:
-- Output field: \`health_delta\` with range -1 to +1 (NOT health with 0-10)
-- DataStore mapping formula: \`{{health}}+{{data_management_agent.health_delta}}\`
-- Positive delta = increase, Negative delta = decrease
-- This ensures gradual, realistic changes instead of dramatic swings
+**Output Field Patterns by Type**:
 
-**Conservative Delta Ranges**:
+1. **String/Enum Fields** (e.g., current_location, mood, weather):
+   - Agent outputs the ACTUAL VALUE directly (not a delta)
+   - Output field: \`current_location\` (string) - agent decides the new location
+   - DataStore mapping formula: \`{{data_management_agent.current_location}}\` (direct override)
+   - **IMPORTANT**: List possible values in agent's prompt message in plain text
+   - Example prompt text assuming {{possible_locations}} was define previously: "Possible locations: {{possible_locations}}. Based on the conversation, determine the current_location."
+
+2. **Integer/Numeric Fields** (e.g., health, stamina, trust):
+   - Agent outputs a small DELTA value with +/- range
+   - Output field: \`health_delta\` with range -1 to +1 (NOT health with 0-10)
+   - DataStore mapping formula: \`{{health}}+{{data_management_agent.health_delta}}\`
+   - Positive delta = increase, Negative delta = decrease
+   - This ensures gradual, realistic changes instead of dramatic swings
+
+**Conservative Delta Ranges for Numeric Fields**:
 - For fields with range 0-10: use delta range -1 to +1 or -2 to +2
-- For fields with range 0-100: use delta range -3 to +3
-- Always use small increments to maintain immersion
+- For fields with range 0-100: use delta range -1 to +3 (RECOMMENDED for most fields)
+- For fields with range 0-1000: use delta range -3 to +10
+- For fields with range 0-10000: use delta range -4 to +30
+- Always use conservative increments to maintain immersion and gradual progression
 
 ## Variables Available in Prompts
 - Data Store: \`{{field_name}}\` - current value of tracked field
@@ -119,7 +130,8 @@ For numeric fields with ranges (e.g., health 0-10), output a small DELTA value w
 **NOTE**: History/conversation messages are ALREADY included automatically in the agent prompts.
 You do NOT need to add any history-related prompts or instructions - the system handles this.
 
-## Process
+## Configuration Process
+
 1. **RP Agents** (rp_agent_character, rp_agent_user, rp_agent_scenario):
    - **Minimal updates only** - RP agents work well by default
    - **Only add datastore field references** to existing prompts if they're missing
@@ -131,17 +143,13 @@ You do NOT need to add any history-related prompts or instructions - the system 
    - DO NOT use \`upsert_output_fields\` on these agents
 
 2. **Data Management Agent** (data_management_agent):
-   - **FOCUS ALL UPDATES HERE** - This is the only agent that needs configuration
-   - Use \`upsert_prompt_messages\` to explain what state changes to track
-   - Use \`upsert_output_fields\` to define DELTA output fields (e.g., \`mood_delta\` not \`mood\`)
-   - For numeric fields: use conservative ranges (-1 to +1 for 0-10 fields, -3 to +3 for 0-100 fields)
-   - Use \`update_data_store_node_fields\` to map with formulas: \`{{field}}+{{data_management_agent.field_delta}}\`
+   - **FOCUS ALL UPDATES HERE** - This is the only agent that needs full configuration
+   - Follow the field type patterns described above in "Output Field Patterns by Type"
+   - Use \`upsert_prompt_messages\` to explain state tracking (include possible values for string fields)
+   - Use \`upsert_output_fields\` to define output fields (string or integer_delta based on type)
+   - Use \`update_data_store_node_fields\` to map with appropriate formulas
 
-**Example for health field (0-10)**:
-- Output field: \`health_delta\` (integer, min: -1, max: 1)
-- DataStore mapping: \`{{health}}+{{data_management_agent.health_delta}}\`
-
-Ensure ALL ${context.dataStoreSchema.length} schema fields are updated via data_management_agent using delta values.`;
+Ensure ALL ${context.dataStoreSchema.length} schema fields are updated via data_management_agent with correct type-based patterns.`;
 }
 
 export function buildUserPrompt(fieldCount: number): string {
@@ -156,11 +164,18 @@ export function buildUserPrompt(fieldCount: number): string {
 
 2. **Data Management Agent** (data_management_agent):
 - Use \`upsert_prompt_messages\` to describe what state changes to track based on the scenario
-- Use \`upsert_output_fields\` to define ${fieldCount} DELTA output fields (e.g., \`health_delta\` not \`health\`)
-- Use conservative delta ranges: -1 to +1 for 0-10 fields, -3 to +3 for 0-100 fields
-- Use \`update_data_store_node_fields\` with formulas: \`{{field}}+{{data_management_agent.field_delta}}\`
+- Use \`upsert_output_fields\` to define ${fieldCount} output fields:
+  - **String fields**: Output the actual value (agent decides), list possible values in prompt
+  - **Integer fields**: Output delta with \`_delta\` suffix, use conservative ranges based on field scale:
+    - 0-10 fields: -1 to +1
+    - 0-100 fields: -1 to +3
+    - 0-1000 fields: -3 to +10
+    - 0-10000 fields: -4 to +30
+- Use \`update_data_store_node_fields\` with formulas:
+  - **String fields**: \`{{data_management_agent.field_name}}\` (direct override)
+  - **Integer fields**: \`{{field_name}}+{{data_management_agent.field_name_delta}}\` (delta calculation)
 
-All ${fieldCount} schema fields must be updated via data_management_agent using delta values for gradual changes.`;
+All ${fieldCount} schema fields must be updated via data_management_agent with correct field type patterns.`;
 }
 
 // Fixer stage is not needed for simplified workflow builder
