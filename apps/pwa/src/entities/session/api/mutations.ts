@@ -20,6 +20,7 @@ import { flowQueries } from "@/entities/flow/api/flow-queries";
 /**
  * Helper to update a session in the listItems cache
  * Updates the item and moves it to the top (sorted by updatedAt desc)
+ * If the session doesn't exist, adds it as a new item
  */
 function updateSessionListItem(
   sessionId: string,
@@ -27,12 +28,30 @@ function updateSessionListItem(
 ) {
   const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
   queryClient.setQueryData<SessionListItem[]>(listItemQueryKey, (oldData) => {
-    if (!oldData) return oldData;
+    if (!oldData) {
+      // No existing data - create new array with this item
+      return [{
+        id: sessionId,
+        title: updates.title || "Untitled",
+        messageCount: updates.messageCount || 0,
+        updatedAt: updates.updatedAt || new Date(),
+      }];
+    }
 
     const existingIndex = oldData.findIndex((item) => item.id === sessionId);
-    if (existingIndex === -1) return oldData;
 
-    // Update the item
+    if (existingIndex === -1) {
+      // Session doesn't exist - add as new item at the top
+      const newItem: SessionListItem = {
+        id: sessionId,
+        title: updates.title || "Untitled",
+        messageCount: updates.messageCount || 0,
+        updatedAt: updates.updatedAt || new Date(),
+      };
+      return [newItem, ...oldData];
+    }
+
+    // Update existing item
     const updatedItem: SessionListItem = {
       ...oldData[existingIndex],
       ...updates,
