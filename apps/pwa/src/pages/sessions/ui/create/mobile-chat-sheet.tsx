@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence, useDragControls, type PanInfo } from "motion/react";
 import { ChevronDown, Sparkles, Send, Square } from "lucide-react";
 import { cn } from "@/shared/lib";
@@ -6,6 +6,7 @@ import { cn } from "@/shared/lib";
 import type { ChatMessage, ChatAgentConfig } from "./chat-panel";
 import { ASSISTANT_AVATARS } from "./chat-panel";
 import type { SessionStep } from "./session-stepper";
+import { useTypingIndicator } from "./use-typing-indicator";
 
 interface MobileChatSheetProps {
   /** Chat messages to display */
@@ -59,49 +60,17 @@ export function MobileChatSheet({
   const chatEndRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
 
-  // Track message IDs that have completed their typing indicator delay
-  const [revealedMessageIds, setRevealedMessageIds] = useState<Set<string>>(new Set());
-
-  // Process messages with typingIndicatorDuration
-  const visibleMessages = useMemo(() => {
-    return messages.filter(msg => {
-      if (!msg.typingIndicatorDuration) return true;
-      return revealedMessageIds.has(msg.id);
-    });
-  }, [messages, revealedMessageIds]);
-
-  // Find messages that need typing indicator
-  const pendingTypingMessages = useMemo(() => {
-    return messages.filter(msg =>
-      msg.typingIndicatorDuration && !revealedMessageIds.has(msg.id)
-    );
-  }, [messages, revealedMessageIds]);
-
-  // Process pending messages with typing indicator delay
-  useEffect(() => {
-    if (pendingTypingMessages.length === 0) return;
-
-    const firstPending = pendingTypingMessages[0];
-    const duration = firstPending.typingIndicatorDuration || 1000;
-
-    const timer = setTimeout(() => {
-      setRevealedMessageIds(prev => new Set([...prev, firstPending.id]));
-    }, duration);
-
-    return () => clearTimeout(timer);
-  }, [pendingTypingMessages]);
-
-  // Determine if typing indicator should show
-  const shouldShowTypingIndicator =
-    pendingTypingMessages.length > 0 ||
-    (showTypingIndicator !== undefined
-      ? showTypingIndicator
-      : isLoading && !(visibleMessages.length > 0 && visibleMessages[visibleMessages.length - 1]?.role === "assistant" && visibleMessages[visibleMessages.length - 1]?.content));
-
-  // Get the step for typing indicator avatar
-  const typingIndicatorStep = pendingTypingMessages.length > 0
-    ? pendingTypingMessages[0].step
-    : (currentStep || visibleMessages[visibleMessages.length - 1]?.step);
+  const {
+    visibleMessages,
+    pendingTypingMessages,
+    shouldShowTypingIndicator: shouldShow,
+    typingIndicatorStep,
+  } = useTypingIndicator({
+    messages,
+    isLoading,
+    currentStep,
+    showTypingIndicator,
+  });
 
   // Auto-expand when new message arrives and we're not collapsed
   useEffect(() => {
@@ -279,7 +248,7 @@ export function MobileChatSheet({
                     </div>
                   ))}
                   {/* Typing indicator */}
-                  {shouldShowTypingIndicator && (
+                  {shouldShow && (
                     <div className="flex gap-2">
                       <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-overlay">
                         <img

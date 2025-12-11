@@ -1,8 +1,9 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect } from "react";
 import { User, Sparkles, Send, Square } from "lucide-react";
 import { cn } from "@/shared/lib";
 
 import type { SessionStep } from "./session-stepper";
+import { useTypingIndicator } from "./use-typing-indicator";
 
 /**
  * Step-specific assistant avatar images
@@ -104,57 +105,17 @@ export function ChatPanel({
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Track message IDs that have completed their typing indicator delay
-  const [revealedMessageIds, setRevealedMessageIds] = useState<Set<string>>(new Set());
-
-  // Process messages with typingIndicatorDuration
-  // - Messages without duration: show immediately
-  // - Messages with duration: show after delay (tracked in revealedMessageIds)
-  const visibleMessages = useMemo(() => {
-    return messages.filter(msg => {
-      // No duration = show immediately
-      if (!msg.typingIndicatorDuration) return true;
-      // Has duration = only show if revealed
-      return revealedMessageIds.has(msg.id);
-    });
-  }, [messages, revealedMessageIds]);
-
-  // Find messages that need typing indicator (have duration, not yet revealed)
-  const pendingTypingMessages = useMemo(() => {
-    return messages.filter(msg =>
-      msg.typingIndicatorDuration && !revealedMessageIds.has(msg.id)
-    );
-  }, [messages, revealedMessageIds]);
-
-  // Process pending messages with typing indicator delay
-  useEffect(() => {
-    if (pendingTypingMessages.length === 0) return;
-
-    // Process first pending message
-    const firstPending = pendingTypingMessages[0];
-    const duration = firstPending.typingIndicatorDuration || 1000;
-
-    const timer = setTimeout(() => {
-      setRevealedMessageIds(prev => new Set([...prev, firstPending.id]));
-    }, duration);
-
-    return () => clearTimeout(timer);
-  }, [pendingTypingMessages]);
-
-  // Determine if typing indicator should show:
-  // 1. If we have pending messages with typing indicator duration
-  // 2. If showTypingIndicator is explicitly set
-  // 3. Otherwise, show when loading AND no streaming content
-  const shouldShowTypingIndicator =
-    pendingTypingMessages.length > 0 ||
-    (showTypingIndicator !== undefined
-      ? showTypingIndicator
-      : isLoading && !(visibleMessages.length > 0 && visibleMessages[visibleMessages.length - 1]?.role === "assistant" && visibleMessages[visibleMessages.length - 1]?.content));
-
-  // Get the step for typing indicator avatar (from pending message or fallback)
-  const typingIndicatorStep = pendingTypingMessages.length > 0
-    ? pendingTypingMessages[0].step
-    : (currentStep || visibleMessages[visibleMessages.length - 1]?.step);
+  const {
+    visibleMessages,
+    pendingTypingMessages,
+    shouldShowTypingIndicator: shouldShow,
+    typingIndicatorStep,
+  } = useTypingIndicator({
+    messages,
+    isLoading,
+    currentStep,
+    showTypingIndicator,
+  });
 
   // Auto-scroll chat to bottom when visible messages change
   useEffect(() => {
@@ -250,8 +211,8 @@ export function ChatPanel({
                 </div>
               );
             })}
-            {/* Typing indicator - controlled by shouldShowTypingIndicator */}
-            {shouldShowTypingIndicator && (
+            {/* Typing indicator - controlled by shouldShow */}
+            {shouldShow && (
               <div className="flex gap-3">
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-overlay">
                   <img
