@@ -93,8 +93,6 @@ Fields are updated by AI agents in a workflow with branching. In descriptions, n
 
 ## Tools:
 - **add_data_store** - Add a single tracker (call multiple times for multiple stores)
-- **remove_data_store** - Remove by ID
-- **clear_all** - Clear all
 
 **IMPORTANT**:
 - Call add_data_store once for EACH data store you want to create.
@@ -244,39 +242,6 @@ function createDataSchemaTools(
           message: `Added data store "${sanitizedName}" (${type}). Total stores: ${currentTotal + 1}/${MAX_DATA_STORES}`,
           totalStores: currentTotal + 1,
           createdStore: newStore,
-        };
-      },
-    }),
-
-    remove_data_store: tool({
-      description: "Remove a data store by its ID.",
-      inputSchema: z.object({
-        id: z.string().describe("The ID of the data store to remove"),
-      }),
-      execute: async ({ id }) => {
-        callbacks.onRemoveStore(id);
-        return {
-          success: true,
-          message: `Removed data store with ID "${id}"`,
-        };
-      },
-    }),
-
-    clear_all: tool({
-      description: "Remove all existing data stores to start fresh.",
-      inputSchema: z.object({
-        confirm: z.boolean().describe("Must be true to confirm clearing all data stores"),
-      }),
-      execute: async ({ confirm }) => {
-        if (!confirm) {
-          return { success: false, message: "Set confirm=true to clear all data stores" };
-        }
-        const count = currentStores.length;
-        callbacks.onClearAll();
-        return {
-          success: true,
-          message: `Cleared all ${count} data stores`,
-          count,
         };
       },
     }),
