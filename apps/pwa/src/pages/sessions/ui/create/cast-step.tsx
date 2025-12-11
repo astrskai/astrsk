@@ -19,22 +19,20 @@ import {
   ArrowLeft,
   ImagePlus,
   Trash2,
+  Search,
 } from "lucide-react";
 import { CharacterCard as DesignSystemCharacterCard } from "@astrsk/design-system/character-card";
+import { Button } from "@astrsk/design-system/button";
+import { IconInput } from "@astrsk/design-system/input";
 import { Badge } from "@/shared/ui/badge";
-import {
-  SearchInput,
-  Button,
-  Select,
-  Input,
-  Textarea,
-} from "@/shared/ui/forms";
+import { Input, Textarea } from "@/shared/ui/forms";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
+import { DialogBase } from "@/shared/ui/dialogs/base";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
@@ -91,15 +89,6 @@ interface CastStepProps {
 }
 
 const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
-
-// Character filter types
-type CharacterFilterType = "all" | "library" | "session";
-
-const CHARACTER_FILTER_OPTIONS = [
-  { value: "all", label: "All Types" },
-  { value: "library", label: "Library" },
-  { value: "session", label: "Session" },
-];
 
 // Initial welcome message for character creation
 const WELCOME_MESSAGE_CONTENT =
@@ -499,8 +488,6 @@ export function CastStep({
   onChatLoadingChange,
 }: CastStepProps) {
   const [search, setSearch] = useState("");
-  const [characterFilter, setCharacterFilter] =
-    useState<CharacterFilterType>("all");
   const [selectedDetailsChar, setSelectedDetailsChar] =
     useState<CharacterDetailsData | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -683,130 +670,133 @@ export function CastStep({
 
   // Handle chat submit with AI character generation
   // Receives prompt from parent
-  const handleChatSubmit = useCallback(async (prompt: string) => {
-    if (!prompt.trim() || isGenerating) return;
+  const handleChatSubmit = useCallback(
+    async (prompt: string) => {
+      if (!prompt.trim() || isGenerating) return;
 
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: prompt,
-      step: currentStep,
-    };
-    const newMessages = [...chatMessages, userMessage];
-    onChatMessagesChange?.(newMessages);
+      const userMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: prompt,
+        step: currentStep,
+      };
+      const newMessages = [...chatMessages, userMessage];
+      onChatMessagesChange?.(newMessages);
 
-    // Start AI generation
-    setIsGenerating(true);
-    abortControllerRef.current = new AbortController();
+      // Start AI generation
+      setIsGenerating(true);
+      abortControllerRef.current = new AbortController();
 
-    try {
-      // Convert ChatMessage to CharacterBuilderMessage format
-      // Filter out system-generated messages (welcome, etc.) from AI context
-      const builderMessages: CharacterBuilderMessage[] = newMessages
-        .filter((msg) => !msg.isSystemGenerated)
-        .map((msg) => ({
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-        }));
-
-      // Build current characters list for context (only drafts with data)
-      // Include source field to distinguish SESSION (editable) vs LIBRARY (read-only)
-      const currentCharacters: CharacterData[] = draftCharacters
-        .filter((draft) => draft.data !== undefined)
-        .map((draft) => ({
-          id: draft.tempId,
-          name: draft.data!.name,
-          description: draft.data!.description,
-          tags: draft.data!.tags,
-          cardSummary: draft.data!.cardSummary,
-          exampleDialogue: draft.data!.exampleDialogue,
-          lorebook: draft.data!.lorebook?.map((entry) => ({
-            id: entry.id,
-            name: entry.name,
-            enabled: entry.enabled ?? true,
-            keys: entry.keys ?? [],
-            recallRange: entry.recallRange ?? 1000,
-            content: entry.content,
-          })),
-          // SESSION characters are editable (source: import/chat)
-          // LIBRARY characters are read-only (source: library)
-          source: draft.source === "library" ? "library" : "session",
-        }));
-
-      const response = await generateCharacterResponse({
-        messages: builderMessages,
-        scenarioContext: {
-          background: scenarioBackground,
-          firstMessages: firstMessages?.map((msg) => ({
-            title: msg.title,
+      try {
+        // Convert ChatMessage to CharacterBuilderMessage format
+        // Filter out system-generated messages (welcome, etc.) from AI context
+        const builderMessages: CharacterBuilderMessage[] = newMessages
+          .filter((msg) => !msg.isSystemGenerated)
+          .map((msg) => ({
+            role: msg.role as "user" | "assistant",
             content: msg.content,
-          })),
-        },
-        currentCharacters,
-        callbacks: {
-          onCreateCharacter: handleCharacterCreated,
-          onUpdateCharacter: handleCharacterUpdated,
-        },
-        abortSignal: abortControllerRef.current.signal,
-      });
+          }));
 
-      // Check if aborted before applying results
-      if (abortControllerRef.current?.signal.aborted) {
-        return;
-      }
+        // Build current characters list for context (only drafts with data)
+        // Include source field to distinguish SESSION (editable) vs LIBRARY (read-only)
+        const currentCharacters: CharacterData[] = draftCharacters
+          .filter((draft) => draft.data !== undefined)
+          .map((draft) => ({
+            id: draft.tempId,
+            name: draft.data!.name,
+            description: draft.data!.description,
+            tags: draft.data!.tags,
+            cardSummary: draft.data!.cardSummary,
+            exampleDialogue: draft.data!.exampleDialogue,
+            lorebook: draft.data!.lorebook?.map((entry) => ({
+              id: entry.id,
+              name: entry.name,
+              enabled: entry.enabled ?? true,
+              keys: entry.keys ?? [],
+              recallRange: entry.recallRange ?? 1000,
+              content: entry.content,
+            })),
+            // SESSION characters are editable (source: import/chat)
+            // LIBRARY characters are read-only (source: library)
+            source: draft.source === "library" ? "library" : "session",
+          }));
 
-      // Add assistant response to chat using functional update (avoids stale closure)
-      if (response.text) {
-        const assistantMessage: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: response.text,
-          step: currentStep,
-        };
-        addChatMessage?.(assistantMessage);
+        const response = await generateCharacterResponse({
+          messages: builderMessages,
+          scenarioContext: {
+            background: scenarioBackground,
+            firstMessages: firstMessages?.map((msg) => ({
+              title: msg.title,
+              content: msg.content,
+            })),
+          },
+          currentCharacters,
+          callbacks: {
+            onCreateCharacter: handleCharacterCreated,
+            onUpdateCharacter: handleCharacterUpdated,
+          },
+          abortSignal: abortControllerRef.current.signal,
+        });
+
+        // Check if aborted before applying results
+        if (abortControllerRef.current?.signal.aborted) {
+          return;
+        }
+
+        // Add assistant response to chat using functional update (avoids stale closure)
+        if (response.text) {
+          const assistantMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: response.text,
+            step: currentStep,
+          };
+          addChatMessage?.(assistantMessage);
+        }
+      } catch (error) {
+        // Check if this was an abort - don't show error for user-initiated abort
+        if (
+          (error as Error).name === "AbortError" ||
+          abortControllerRef.current?.signal.aborted
+        ) {
+          logger.info("[CastStep] Character generation aborted");
+          return;
+        } else {
+          logger.error("[CastStep] Character generation failed", error);
+          // Add error message to chat using functional update (avoids stale closure)
+          const errorMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content:
+              "Sorry, I encountered an error while generating the character. Please try again.",
+            step: currentStep,
+          };
+          addChatMessage?.(errorMessage);
+        }
+      } finally {
+        setIsGenerating(false);
+        // Defer clearing the controller to the next tick to ensure the catch block
+        // can complete its signal.aborted check before the reference is nullified.
+        // This prevents a race condition where handleChatStop sets abort but the
+        // catch block hasn't finished checking the signal yet.
+        setTimeout(() => {
+          abortControllerRef.current = null;
+        }, 0);
       }
-    } catch (error) {
-      // Check if this was an abort - don't show error for user-initiated abort
-      if (
-        (error as Error).name === "AbortError" ||
-        abortControllerRef.current?.signal.aborted
-      ) {
-        logger.info("[CastStep] Character generation aborted");
-        return;
-      } else {
-        logger.error("[CastStep] Character generation failed", error);
-        // Add error message to chat using functional update (avoids stale closure)
-        const errorMessage: ChatMessage = {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content:
-            "Sorry, I encountered an error while generating the character. Please try again.",
-          step: currentStep,
-        };
-        addChatMessage?.(errorMessage);
-      }
-    } finally {
-      setIsGenerating(false);
-      // Defer clearing the controller to the next tick to ensure the catch block
-      // can complete its signal.aborted check before the reference is nullified.
-      // This prevents a race condition where handleChatStop sets abort but the
-      // catch block hasn't finished checking the signal yet.
-      setTimeout(() => {
-        abortControllerRef.current = null;
-      }, 0);
-    }
-  }, [
-    chatMessages,
-    onChatMessagesChange,
-    isGenerating,
-    handleCharacterCreated,
-    handleCharacterUpdated,
-    scenarioBackground,
-    firstMessages,
-    draftCharacters,
-    currentStep,
-    addChatMessage,
-  ]);
+    },
+    [
+      chatMessages,
+      onChatMessagesChange,
+      isGenerating,
+      handleCharacterCreated,
+      handleCharacterUpdated,
+      scenarioBackground,
+      firstMessages,
+      draftCharacters,
+      currentStep,
+      addChatMessage,
+    ],
+  );
 
   // Handle chat stop (abort generation and show cancelled message)
   const handleChatStop = useCallback(() => {
@@ -836,35 +826,25 @@ export function CastStep({
   // Filter library characters by search
   const filteredLibraryCharacters = useMemo(() => {
     if (!characterCards) return [];
-    // If filter is "session", hide all library characters
-    if (characterFilter === "session") return [];
+    if (!search.trim()) return characterCards;
 
-    let filtered = characterCards;
-    if (search.trim()) {
-      const keyword = search.toLowerCase();
-      filtered = filtered.filter((card: CharacterCard) => {
-        const name = card.props.name?.toLowerCase() || "";
-        return name.includes(keyword);
-      });
-    }
-    return filtered;
-  }, [characterCards, search, characterFilter]);
+    const keyword = search.toLowerCase();
+    return characterCards.filter((card: CharacterCard) => {
+      const name = card.props.name?.toLowerCase() || "";
+      return name.includes(keyword);
+    });
+  }, [characterCards, search]);
 
-  // Filter draft characters by search and filter type
+  // Filter draft characters by search
   const filteredDraftCharacters = useMemo(() => {
-    // If filter is "library", hide all draft (session) characters
-    if (characterFilter === "library") return [];
+    if (!search.trim()) return draftCharacters;
 
-    let filtered = draftCharacters;
-    if (search.trim()) {
-      const keyword = search.toLowerCase();
-      filtered = filtered.filter((draft) => {
-        const name = draft.data?.name?.toLowerCase() || "";
-        return name.includes(keyword);
-      });
-    }
-    return filtered;
-  }, [draftCharacters, search, characterFilter]);
+    const keyword = search.toLowerCase();
+    return draftCharacters.filter((draft) => {
+      const name = draft.data?.name?.toLowerCase() || "";
+      return name.includes(keyword);
+    });
+  }, [draftCharacters, search]);
 
   // Handlers for library characters (from DB)
   const handleAssignPlayer = (card: CharacterCard) => {
@@ -1031,7 +1011,7 @@ export function CastStep({
         label: "Roster",
         icon: <Users size={14} />,
         badge: (
-          <span className="rounded-full bg-brand-600 px-1.5 text-[9px] text-white">
+          <span className="bg-brand-600 rounded-full px-1.5 text-[9px] text-white">
             {totalSelected}
           </span>
         ),
@@ -1119,54 +1099,37 @@ export function CastStep({
                 transition={{ duration: 0.15 }}
                 className="flex h-full flex-col"
               >
-                {/* Search, Filter and Actions Bar */}
-                <div className="flex flex-shrink-0 flex-col gap-3 px-4 py-3 md:px-6">
-                  {/* Actions Row */}
-                  <div className="flex items-center justify-end gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            onClick={onImportCharacter}
-                            variant="secondary"
-                            size="sm"
-                            icon={<Import size={16} />}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent variant="button" side="bottom">
-                          Import V2, V3 character cards
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <Button
-                      onClick={onCreateCharacter}
-                      variant="default"
-                      size="sm"
-                      icon={<Plus size={16} />}
-                    >
-                      <span className="hidden sm:inline">New Character</span>
-                    </Button>
-                  </div>
-                  {/* Search and Filter Row */}
-                  <div className="flex w-full gap-2">
-                    <SearchInput
-                      placeholder="Search characters..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      variant="dark"
-                      className="min-w-0 flex-1"
-                    />
-                    <Select
-                      value={characterFilter}
-                      onChange={(e) =>
-                        setCharacterFilter(
-                          e.target.value as CharacterFilterType,
-                        )
-                      }
-                      options={CHARACTER_FILTER_OPTIONS}
-                      className="w-28 flex-shrink-0 sm:w-32"
-                    />
-                  </div>
+                {/* Search and Actions Bar */}
+                <div className="flex flex-shrink-0 items-center gap-2 px-4 py-3 md:px-6">
+                  <IconInput
+                    icon={<Search />}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    rightIcon={search ? <X /> : undefined}
+                    onRightIconClick={search ? () => setSearch("") : undefined}
+                    rightIconAriaLabel="Clear search"
+                    className="min-w-0 flex-1"
+                  />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          onClick={onImportCharacter}
+                          variant="secondary"
+                          size="icon"
+                        >
+                          <Import />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent variant="button" side="bottom">
+                        Import V2, V3 character cards
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Button onClick={onCreateCharacter}>
+                    <Plus />
+                    <span className="hidden sm:inline">New Character</span>
+                  </Button>
                 </div>
 
                 {/* Info & Warning Banners */}
@@ -1360,13 +1323,7 @@ export function CastStep({
                         <div className="mb-3 rounded-full bg-zinc-900/50 p-4">
                           <Users size={32} />
                         </div>
-                        <p className="text-sm">
-                          {characterFilter === "all"
-                            ? "No data found in archives."
-                            : characterFilter === "library"
-                              ? "No library characters found."
-                              : "No session characters found."}
-                        </p>
+                        <p className="text-sm">No characters found.</p>
                       </div>
                     )}
                 </div>
@@ -1550,7 +1507,7 @@ export function CastStep({
               </div>
             ) : (
               <div className="flex items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2.5">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-500/20 text-[10px] font-bold text-brand-400">
+                <span className="bg-brand-500/20 text-brand-400 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
                   {totalSelected}
                 </span>
                 <p className="text-[11px] font-medium text-zinc-300">
@@ -1655,6 +1612,7 @@ interface CharacterDetailsData {
  * Character Details Modal
  * Shows full character information when clicking on a card
  * Supports both library characters (CharacterCard) and draft characters (DraftCharacter)
+ * Uses DialogBase for consistent styling, accessibility, and proper mobile viewport handling
  */
 function CharacterDetailsModal({
   character,
@@ -1668,119 +1626,110 @@ function CharacterDetailsModal({
   // Use asset URL if available, otherwise use direct imageUrl (draft characters)
   const imageUrl = assetImageUrl || character?.imageUrl;
 
-  if (!character) return null;
-
   return (
-    <div
-      className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm duration-200"
-      onClick={onClose}
-    >
-      <div
-        className="bg-surface border-border-default animate-in slide-in-from-bottom-4 relative flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border shadow-2xl duration-300"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex h-full min-h-[400px] flex-col md:flex-row">
-          {/* Visual Side - Character Image */}
-          <div className="from-brand-600 to-brand-800 relative flex w-full flex-col justify-between overflow-hidden bg-gradient-to-br md:w-1/3">
-            {imageUrl ? (
-              <img
-                src={imageUrl}
-                alt={character.name || ""}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-6xl font-black text-white/50">
-                  {(character.name || "??").substring(0, 2).toUpperCase()}
-                </span>
+    <DialogBase
+      open={!!character}
+      onOpenChange={(open) => !open && onClose()}
+      title={character?.name || "Character Details"}
+      hideTitle
+      size="lg"
+      isShowCloseButton
+      className="overflow-hidden p-0"
+      contentClassName="md:overflow-hidden!"
+      content={
+        character && (
+          <div className="flex flex-col md:h-[400px] md:flex-row">
+            {/* Visual Side - Character Image */}
+            {/* Mobile: sticky top, Desktop: fixed left column */}
+            <div className="bg-surface-raised sticky top-0 z-10 md:relative md:top-auto md:z-auto md:h-full md:w-2/5">
+              <div className="from-brand-600 to-brand-800 relative flex h-48 w-full flex-col justify-end overflow-hidden bg-gradient-to-br md:h-full">
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={character.name || ""}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-5xl font-black text-white/50 md:text-6xl">
+                      {(character.name || "??").substring(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+                {/* Character Name Overlay */}
+                <div className="relative z-10 p-4 md:p-6">
+                  <h2 className="text-lg leading-tight font-bold text-white md:text-2xl">
+                    {character.name || "Unnamed"}
+                  </h2>
+                  {character.version && (
+                    <p className="mt-1 font-mono text-xs text-white/70 md:text-sm">
+                      v{character.version}
+                    </p>
+                  )}
+                </div>
               </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-            <div className="relative z-10 p-6">
-              <span className="font-mono text-xs text-white/50">
-                CHARACTER_PROFILE
-              </span>
             </div>
 
-            <div className="relative z-10 p-6">
-              <h2 className="text-2xl leading-tight font-bold text-white">
-                {character.name || "Unnamed"}
-              </h2>
-              {character.version && (
-                <p className="mt-1 font-mono text-sm text-white/70">
-                  v{character.version}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Data Side - Character Info */}
-          <div className="bg-surface flex flex-1 flex-col p-6">
-            <div className="mb-6 flex items-start justify-between">
-              <div>
+            {/* Data Side - Character Info */}
+            <div className="relative flex flex-1 flex-col md:h-full md:min-h-0">
+              {/* Header - sticky on mobile, fixed on desktop */}
+              <div className="bg-surface-raised sticky top-48 z-10 px-4 pt-4 pb-4 md:relative md:top-auto md:z-auto md:px-6 md:pt-6 md:pb-4">
                 <h3 className="text-fg-muted mb-1 flex items-center gap-2 text-xs font-bold tracking-widest uppercase">
                   <Activity size={12} /> Character Info
                 </h3>
                 <div className="bg-brand-500 h-0.5 w-12" />
               </div>
-              <button
-                onClick={onClose}
-                className="hover:bg-surface-raised text-fg-muted hover:text-fg-default rounded-full p-2 transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
 
-            <div className="flex-1 space-y-6 overflow-y-auto">
-              {/* Summary */}
-              {character.cardSummary && (
-                <p className="text-fg-muted border-border-default border-l-2 pl-4 text-sm leading-relaxed">
-                  {character.cardSummary}
-                </p>
-              )}
-
-              {/* Description */}
-              {character.description && (
-                <div>
-                  <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
-                    Description
-                  </h4>
-                  <p className="text-fg-muted max-h-40 overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap">
-                    {character.description}
+              {/* Content (scrollable on desktop) */}
+              <div className="flex-1 space-y-4 px-4 pb-8 md:space-y-5 md:overflow-y-auto md:px-6 md:pb-10">
+                {/* Summary */}
+                {character.cardSummary && (
+                  <p className="text-fg-muted border-border-default border-l-2 pl-3 text-sm leading-relaxed md:pl-4">
+                    {character.cardSummary}
                   </p>
-                </div>
-              )}
+                )}
 
-              {/* Tags */}
-              {character.tags && character.tags.length > 0 && (
-                <div>
-                  <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
-                    Tags
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {character.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="bg-surface-raised text-brand-300 border-border-default rounded border px-2 py-1 text-xs"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                {/* Description */}
+                {character.description && (
+                  <div>
+                    <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
+                      Description
+                    </h4>
+                    <p className="text-fg-muted text-sm leading-relaxed whitespace-pre-wrap">
+                      {character.description}
+                    </p>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
 
-            <div className="border-border-default mt-6 flex justify-end border-t pt-4">
-              <Button onClick={onClose} variant="secondary" size="sm">
-                Close
-              </Button>
+                {/* Tags */}
+                {character.tags && character.tags.length > 0 && (
+                  <div>
+                    <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
+                      Tags
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5 md:gap-2">
+                      {character.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="bg-surface-raised text-brand-300 border-border-default rounded border px-1.5 py-0.5 text-xs md:px-2 md:py-1"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom fade overlay - sticky on mobile, absolute on desktop */}
+              <div className="pointer-events-none sticky bottom-0 h-12 w-full bg-gradient-to-t from-surface-raised to-transparent md:absolute md:inset-x-0" />
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+        )
+      }
+    />
   );
 }
 
@@ -1858,7 +1807,10 @@ function CharacterEditPanel({
     const lorebookCountChanged = currentLorebookCount !== localLorebookCount;
 
     // Only sync if there's a meaningful external change (lorebook count or different character)
-    if (lorebookCountChanged || (lastSyncedTempIdRef.current !== character.tempId)) {
+    if (
+      lorebookCountChanged ||
+      lastSyncedTempIdRef.current !== character.tempId
+    ) {
       isSyncingFromPropRef.current = true;
       lastSyncedTempIdRef.current = character.tempId;
 

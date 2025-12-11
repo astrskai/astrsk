@@ -30,7 +30,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         defaultValue={resolvedDefaultValue}
         className={cn(
           // Base styles
-          'flex h-9 w-full appearance-none rounded-xl border px-3 py-2 text-sm transition-colors',
+          'flex h-9 w-full appearance-none rounded-lg border px-3 py-2 text-sm transition-colors',
           // Colors
           'bg-[var(--input-bg)] border-[var(--input-border)] text-[var(--fg-default)]',
           // Arrow indicator spacing

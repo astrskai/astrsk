@@ -13,6 +13,7 @@ import { enableMapSet } from "immer";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
+import "@astrsk/design-system/styles";
 import "@/app/styles/global.css";
 import "@/app/styles/theme.css";
 

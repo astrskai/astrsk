@@ -4,8 +4,8 @@ import { inputBaseStyles } from './input-styles';
 
 export interface IconInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** Icon to display inside the input */
-  icon?: React.ReactNode;
+  /** Icon to display inside the input (required) */
+  icon: React.ReactNode;
   /** Position of the icon */
   iconPosition?: 'left' | 'right';
   /** Callback when icon is clicked (makes icon clickable) */
@@ -56,28 +56,8 @@ const IconInput = React.forwardRef<HTMLInputElement, IconInputProps>(
     ref
   ) => {
     // Determine which icons are present
-    const hasLeftIcon = leftIcon || (icon && iconPosition === 'left');
-    const hasRightIcon = rightIcon || (icon && iconPosition === 'right');
-
-    const inputStyles = cn(
-      inputBaseStyles,
-      hasLeftIcon ? 'pl-9' : 'pl-3',
-      hasRightIcon ? 'pr-9' : 'pr-3',
-      className
-    );
-
-    // No icons at all
-    if (!icon && !leftIcon && !rightIcon) {
-      return (
-        <input
-          type={type}
-          ref={ref}
-          data-slot='input'
-          className={inputStyles}
-          {...props}
-        />
-      );
-    }
+    const hasLeftIcon = leftIcon || iconPosition === 'left';
+    const hasRightIcon = rightIcon || iconPosition === 'right';
 
     const isMainIconClickable = !!onIconClick;
     const isRightIconClickable = !!onRightIconClick;
@@ -162,14 +142,18 @@ const IconInput = React.forwardRef<HTMLInputElement, IconInputProps>(
     };
 
     return (
-      <div className='relative'>
+      <div className={cn('relative', className)}>
         {renderLeftIcon()}
         {renderRightIcon()}
         <input
           type={type}
           ref={ref}
           data-slot='input'
-          className={inputStyles}
+          className={cn(
+            inputBaseStyles,
+            hasLeftIcon ? 'pl-9' : 'pl-3',
+            hasRightIcon ? 'pr-9' : 'pr-3'
+          )}
           {...props}
         />
       </div>

@@ -79,8 +79,8 @@ export function CustomHandle({
         type={isOutput ? "source" : "target"}
         className={
           isOutput
-            ? "hover:!bg-emphasis !h-3 !w-3 !border-0 !bg-transparent transition-all duration-200 group-hover/node:!h-6 group-hover/node:!w-6"
-            : "hover:!bg-emphasis !h-3 !w-3 !border-0 !bg-white transition-all duration-200"
+            ? "hover:bg-emphasis! h-3! w-3! border-0! bg-transparent! transition-all duration-200 group-hover/node:h-6! group-hover/node:w-6!"
+            : "hover:bg-emphasis! h-3! w-3! border-0! bg-white! transition-all duration-200"
         }
         title={
           isOutput
@@ -127,7 +127,7 @@ export function CustomIfHandle({
         type="source"
         id={handleId}
         style={{ top: topPosition }}
-        className="hover:!bg-emphasis !h-3 !w-3 !border-0 !bg-transparent transition-all duration-200 group-hover/node:!h-6 group-hover/node:!w-6"
+        className="hover:bg-emphasis! h-3! w-3! border-0! bg-transparent! transition-all duration-200 group-hover/node:h-6! group-hover/node:w-6!"
         title={`Click or drag to create new node (${label} path)`}
         onClick={(e) => {
           e.stopPropagation();
