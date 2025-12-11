@@ -815,8 +815,8 @@ export function CastStep({
       variant: "cancelled",
       isSystemGenerated: true, // Exclude from AI chat history
     };
-    onChatMessagesChange?.([...chatMessages, cancelledMessage]);
-  }, [currentStep, onChatMessagesChange, chatMessages]);
+    addChatMessage?.(cancelledMessage);
+  }, [currentStep, addChatMessage]);
 
   // Fetch character cards
   const { data: characterCards } = useQuery({
@@ -1849,6 +1849,11 @@ function CharacterEditPanel({
 
   // Auto-save on changes
   useEffect(() => {
+    // Skip if we're currently syncing from external prop changes
+    if (isSyncingFromPropRef.current) {
+      return;
+    }
+
     const updatedCharacter: DraftCharacter = {
       ...character,
       data: {
@@ -1873,7 +1878,7 @@ function CharacterEditPanel({
       },
     };
     onSave(updatedCharacter);
-  }, [name, summary, description, tags, imageUrl, imageFile, lorebook]);
+  }, [name, summary, description, tags, imageUrl, imageFile, lorebook, character, onSave]);
 
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
