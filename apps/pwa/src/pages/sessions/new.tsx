@@ -426,7 +426,7 @@ Ground Rules:`;
 
       // Step 3: Generate AI fields (if scenario is substantial)
       const MIN_SCENARIO_LENGTH_FOR_AI_STATS = 200;
-      const MAX_TOTAL_STORES = 10;
+      const MAX_TOTAL_STORES = 5;
       const MAX_RETRIES = 2;
       const RETRY_DELAY_MS = 2000; // 2 seconds
 
@@ -523,38 +523,7 @@ Ground Rules:`;
           throw lastError;
         }
 
-        // Add completion message only if currently on Stats step
-        // Otherwise, welcome message on Stats entry will handle it
-        if (currentStepRef.current === "stats") {
-          let completionMessage: ChatMessage;
-
-          if (maxLimitReached) {
-            completionMessage = {
-              id: "stats-completion",
-              role: "assistant",
-              content: `All done! Up to ${MAX_TOTAL_STORES} stats are auto-generated. Feel free to add or remove any as you like!`,
-              step: "stats",
-              isSystemGenerated: true,
-            };
-          } else if (generatingStoresRef.current.length > 0) {
-            completionMessage = {
-              id: "stats-completion",
-              role: "assistant",
-              content: `That's all the stats I think would fit this scenario. Feel free to add more or adjust them!`,
-              step: "stats",
-              isSystemGenerated: true,
-            };
-          } else {
-            completionMessage = {
-              id: "stats-completion",
-              role: "assistant",
-              content: `I couldn't find any specific stats to generate for this scenario. You can add custom stats manually!`,
-              step: "stats",
-              isSystemGenerated: true,
-            };
-          }
-          addChatMessage(completionMessage);
-        }
+        // Completion message is now handled by stats-step.tsx when isGenerating changes to false
       }
 
     } catch (e) {

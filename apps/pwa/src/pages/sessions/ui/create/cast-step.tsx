@@ -19,7 +19,6 @@ import {
   ArrowLeft,
   ImagePlus,
   Trash2,
-  BookOpen,
 } from "lucide-react";
 import { CharacterCard as DesignSystemCharacterCard } from "@astrsk/design-system/character-card";
 import { Badge } from "@/shared/ui/badge";
@@ -46,7 +45,6 @@ import { useAsset } from "@/shared/hooks/use-asset";
 import { useTypingEffect } from "@/shared/hooks/use-typing-effect";
 import { ChatPanel, CHAT_AGENTS, type ChatMessage } from "./chat-panel";
 import { MobileChatSheet } from "./mobile-chat-sheet";
-import { StepHeader } from "./step-header";
 import { MobileTabNav, type MobileTab } from "./mobile-tab-nav";
 import type { SessionStep } from "./session-stepper";
 import {
@@ -1224,39 +1222,35 @@ export function CastStep({
                 transition={{ duration: 0.15 }}
                 className="flex h-full flex-col"
               >
-                <StepHeader
-                  icon={<LayoutGrid size={20} />}
-                  title="Character Library"
-                  subtitle="SELECT PERSONAS FOR SIMULATION"
-                  actions={
-                    <div className="flex gap-2">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              onClick={onImportCharacter}
-                              variant="secondary"
-                              size="sm"
-                              icon={<Import size={16} />}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent variant="button" side="bottom">
-                            Import V2, V3 character cards
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <Button
-                        onClick={onCreateCharacter}
-                        variant="default"
-                        size="sm"
-                        icon={<Plus size={16} />}
-                      >
-                        <span className="hidden sm:inline">New Character</span>
-                      </Button>
-                    </div>
-                  }
-                >
-                  {/* Search and Filter */}
+                {/* Search, Filter and Actions Bar */}
+                <div className="flex flex-shrink-0 flex-col gap-3 px-4 py-3 md:px-6">
+                  {/* Actions Row */}
+                  <div className="flex items-center justify-end gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            onClick={onImportCharacter}
+                            variant="secondary"
+                            size="sm"
+                            icon={<Import size={16} />}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent variant="button" side="bottom">
+                          Import V2, V3 character cards
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <Button
+                      onClick={onCreateCharacter}
+                      variant="default"
+                      size="sm"
+                      icon={<Plus size={16} />}
+                    >
+                      <span className="hidden sm:inline">New Character</span>
+                    </Button>
+                  </div>
+                  {/* Search and Filter Row */}
                   <div className="flex w-full gap-2">
                     <SearchInput
                       placeholder="Search characters..."
@@ -1276,7 +1270,7 @@ export function CastStep({
                       className="w-28 flex-shrink-0 sm:w-32"
                     />
                   </div>
-                </StepHeader>
+                </div>
 
                 {/* Info & Warning Banners */}
                 {(showInfoBanner ||

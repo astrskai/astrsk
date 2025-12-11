@@ -370,10 +370,13 @@
     border-color: var(--border);
   }
   html {
+    height: 100%;
     overscroll-behavior: none;
     touch-action: manipulation;
   }
   body {
+    height: 100%;
+    min-height: 100dvh;
     color: var(--foreground);
     background-color: var(--color-background-primary);
     font-family:
@@ -385,6 +388,10 @@
       "Helvetica Neue",
       Arial,
       sans-serif;
+  }
+  #root {
+    height: 100%;
+    min-height: 100dvh;
   }
 
   button:where(:not(:disabled)) {

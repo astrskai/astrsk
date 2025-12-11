@@ -121,6 +121,9 @@ export function MobileChatSheet({
       <div className="flex h-full flex-col rounded-t-2xl border-t border-zinc-700 bg-zinc-900 shadow-2xl">
         {/* Header */}
         <div className="flex flex-shrink-0 items-center gap-2 px-3 pt-2 pb-1">
+          {/* Spacer for centering (visible in peek/expanded) */}
+          {sheetState !== "collapsed" && <div className="h-8 w-8 flex-shrink-0" />}
+
           {/* Drag handle - tappable to toggle collapsed/peek */}
           <button
             type="button"
