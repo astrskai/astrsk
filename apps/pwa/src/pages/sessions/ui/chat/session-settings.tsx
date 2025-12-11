@@ -642,7 +642,7 @@ export const SessionSettings = ({
             onClick={() => {
               if (plotCard?.id) {
                 navigate({
-                  to: "/assets/scenarios/$scenarioId",
+                  to: "/assets/scenarios/{-$scenarioId}",
                   params: { scenarioId: plotCard.id.toString() }
                 });
               }
