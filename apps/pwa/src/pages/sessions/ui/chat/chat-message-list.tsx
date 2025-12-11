@@ -191,6 +191,17 @@ export default function ChatMessageList({
     prevStreamingIdRef.current = streamingMessageId;
   }, [streamingMessageId, isAtBottom, messageCount, scrollToBottom]);
 
+  // Auto-scroll during streaming (follow text as it grows)
+  useEffect(() => {
+    if (!streamingMessageId || !isAtBottom) return;
+
+    const interval = setInterval(() => {
+      scrollToBottom(0);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [streamingMessageId, isAtBottom, scrollToBottom]);
+
   // const handleScrollToBottom = () => {
   //   scrollToBottom();
   // };
