@@ -113,9 +113,10 @@ export async function executeBackgroundGeneration(
       }
     }
 
-    // Step 3: Mark session as completed
+    // Step 3: Mark session as completed (preserve existing config)
     session.update({
       config: {
+        ...session.config,
         generationStatus: "completed",
       },
     });
@@ -138,9 +139,10 @@ export async function executeBackgroundGeneration(
   } catch (error) {
     logger.error("[executeBackgroundGeneration] Background generation failed", error);
 
-    // Mark session as failed
+    // Mark session as failed (preserve existing config)
     session.update({
       config: {
+        ...session.config,
         generationStatus: "failed",
         generationError: error instanceof Error ? error.message : "Unknown error",
       },

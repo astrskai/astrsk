@@ -10,6 +10,7 @@ import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { VibeSessionService } from "@/app/services/vibe-session-service";
 import { initializeExtensions } from "@/features/extensions/bootstrap";
+import { cleanupStaleGeneratingSessions } from "@/entities/session/api/cleanup-stale-sessions";
 
 export async function initServices(
   onProgress?: (service: string, status: "start" | "success" | "error", error?: string) => void,
@@ -115,6 +116,15 @@ export async function initServices(
       DataStoreNodeService.dataStoreNodeRepo,
       IfNodeService.ifNodeRepo,
     );
+    onProgress?.(currentService, "success");
+
+    // Cleanup stale generating sessions (sessions interrupted by page refresh)
+    currentService = "session-cleanup";
+    onProgress?.(currentService, "start");
+    const cleanedCount = await cleanupStaleGeneratingSessions();
+    if (cleanedCount > 0) {
+      console.log(`[init-services] Cleaned up ${cleanedCount} interrupted session(s)`);
+    }
     onProgress?.(currentService, "success");
 
     // Extensions - Initialize last, after all services are ready
