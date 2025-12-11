@@ -452,13 +452,6 @@ Now use the add_data_store tool to create the data stores.`;
         onStepFinish: (step) => {
           const { text, toolCalls, toolResults, finishReason, response } = step;
 
-          logger.info("[DataSchemaBuilder] Step finished", {
-            text: text?.substring(0, 100),
-            toolCallsCount: toolCalls?.length || 0,
-            toolResultsCount: toolResults?.length || 0,
-            finishReason,
-            hasResponse: !!response,
-          });
 
           // If there's an error, try to get more details
           if (finishReason === 'error') {
@@ -499,12 +492,6 @@ Now use the add_data_store tool to create the data stores.`;
       // Wait for the stream to complete and get final text
       const text = await result.text;
 
-      // Log detailed response information
-      logger.info("[DataSchemaBuilder] Response generated (streaming)", {
-        text: text?.substring(0, 200),
-        fullText: text,
-        storesCreated: generatedStores.length,
-      });
 
       return {
         text,
@@ -520,10 +507,6 @@ Now use the add_data_store tool to create the data stores.`;
       generatedStores.length > 0; // We have successful tool results
 
     if (isVertexMetadataError) {
-      logger.warn("[DataSchemaBuilder] Ignoring Vertex AI metadata-only response error (tools succeeded)", {
-        storesCreated: generatedStores.length,
-        errorMessage: error.message,
-      });
 
       // Return what we have - the tool calls succeeded
       return {
@@ -532,10 +515,6 @@ Now use the add_data_store tool to create the data stores.`;
       };
     }
 
-    logger.error("[DataSchemaBuilder] Error generating data schema", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
     throw error;
   }
 }
@@ -721,10 +700,6 @@ export async function refineDataSchema({
       error.message?.includes("candidates");
 
     if (isVertexMetadataError) {
-      logger.warn("[DataSchemaBuilder] Ignoring Vertex AI metadata-only response error (refinement may have completed)", {
-        errorMessage: error.message,
-      });
-
       // Return empty text - the tool calls may have succeeded
       return {
         text: "",

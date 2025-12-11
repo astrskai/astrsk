@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { ChevronRight, ChevronLeft, X } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
@@ -28,6 +28,7 @@ import { CardType, Lorebook, Entry } from "@/entities/card/domain";
 import { Session, CardListItem } from "@/entities/session/domain";
 import { defaultChatStyles } from "@/entities/session/domain/chat-styles";
 import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
+import { useCreateSession } from "@/entities/session/api";
 import { useModelStore } from "@/shared/stores/model-store";
 import { SessionService } from "@/app/services/session-service";
 import { CardService } from "@/app/services/card-service";
@@ -143,7 +144,7 @@ Ground Rules:`;
   const [isWorkflowGenerating, setIsWorkflowGenerating] = useState(false);
   const [workflowProgress, setWorkflowProgress] = useState<WorkflowBuilderProgress | null>(null);
   const workflowGenerationPromiseRef =
-    useRef<Promise<WorkflowState | null> | null>(null);
+    useRef<Promise<{ state: WorkflowState; sessionName: string } | null> | null>(null);
   // Show waiting dialog only when user tries to create session and workflow is still generating
   const [isWaitingForWorkflow, setIsWaitingForWorkflow] = useState(false);
 
@@ -158,6 +159,13 @@ Ground Rules:`;
   const userExplicitlyStoppedRef = useRef(false);
   const scenarioBackgroundRef = useRef(scenarioBackground);
   scenarioBackgroundRef.current = scenarioBackground;
+
+  // Callback to update both state and ref when stats data stores change
+  // This ensures workflow generation always has access to current data via ref
+  const handleStatsDataStoresChange = useCallback((stores: StatsDataStore[]) => {
+    setStatsDataStores(stores);
+    generatingStoresRef.current = stores;
+  }, []);
   const currentStepRef = useRef(currentStep);
   currentStepRef.current = currentStep;
   const handleGenerateStatsRef = useRef<() => Promise<void>>(() => Promise.resolve());
@@ -180,6 +188,7 @@ Ground Rules:`;
 
   const selectSession = useSessionStore.use.selectSession();
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isCreatingSession, setIsCreatingSession] = useState<boolean>(false);
 
   // Get default model settings for workflow generation
   const defaultLiteModel = useModelStore.use.defaultLiteModel();
@@ -188,6 +197,9 @@ Ground Rules:`;
   // Get default flow (first available)
   const { data: flows } = useQuery(flowQueries.list());
   const defaultFlow = flows?.[0];
+
+  // Session creation hook
+  const { createSession, isCreating, isGenerating } = useCreateSession();
 
   // Track if user has made changes
   const hasUnsavedChanges =
@@ -199,11 +211,11 @@ Ground Rules:`;
     scenarioLorebook.length > 0 ||
     statsDataStores.length > 0;
 
-  // Block navigation when there are unsaved changes (but not during save)
+  // Block navigation when there are unsaved changes (but not during save/create)
   const { proceed, reset, status } = useBlocker({
-    shouldBlockFn: () => hasUnsavedChanges && !isSaving,
+    shouldBlockFn: () => hasUnsavedChanges && !isSaving && !isCreatingSession,
     withResolver: true,
-    enableBeforeUnload: hasUnsavedChanges && !isSaving,
+    enableBeforeUnload: hasUnsavedChanges && !isSaving && !isCreatingSession,
   });
 
   // Leave without cleanup - draft characters are not saved to DB yet
@@ -383,7 +395,6 @@ Ground Rules:`;
       const scenario = scenarioBackgroundRef.current;
 
       // Step 1: Load template
-      logger.info("[CreateSession] Starting stats generation with Simple template");
       setSelectedFlowTemplate(SIMPLE_TEMPLATE);
 
       const response = await fetch(`/default/flow/${SIMPLE_TEMPLATE.filename}`);
@@ -416,6 +427,8 @@ Ground Rules:`;
       // Step 3: Generate AI fields (if scenario is substantial)
       const MIN_SCENARIO_LENGTH_FOR_AI_STATS = 200;
       const MAX_TOTAL_STORES = 5;
+      const MAX_RETRIES = 2;
+      const RETRY_DELAY_MS = 2000; // 2 seconds
 
       if (scenario.length >= MIN_SCENARIO_LENGTH_FOR_AI_STATS) {
         const existingStores: DataSchemaEntry[] = templateFields.map((store) => ({
@@ -431,35 +444,88 @@ Ground Rules:`;
         // Track if max limit was reached (to show different completion message)
         let maxLimitReached = false;
 
-        await generateDataSchemaAI({
-          context: { scenario },
-          currentStores: existingStores,
-          callbacks: {
-            onAddStore: (store) => {
-              if (statsAbortControllerRef.current?.signal.aborted) return;
-              if (generatingStoresRef.current.length >= MAX_TOTAL_STORES) {
-                maxLimitReached = true;
-                statsAbortControllerRef.current?.abort();
-                return;
+        // Retry logic for AI generation
+        let lastError: Error | null = null;
+        let retryCount = 0;
+
+        while (retryCount <= MAX_RETRIES) {
+          try {
+            await generateDataSchemaAI({
+              context: { scenario },
+              currentStores: existingStores,
+              callbacks: {
+                onAddStore: (store) => {
+                  if (statsAbortControllerRef.current?.signal.aborted) return;
+                  if (generatingStoresRef.current.length >= MAX_TOTAL_STORES) {
+                    maxLimitReached = true;
+                    statsAbortControllerRef.current?.abort();
+                    return;
+                  }
+                  generatingStoresRef.current = [
+                    ...generatingStoresRef.current,
+                    dataSchemaEntryToStatsDataStore(store),
+                  ];
+                  setStatsDataStores(generatingStoresRef.current);
+                },
+                onRemoveStore: () => {},
+                onClearAll: () => {},
+              },
+              abortSignal: statsAbortControllerRef.current.signal,
+            });
+
+            // Success - break out of retry loop
+            break;
+          } catch (error) {
+            lastError = error as Error;
+            retryCount++;
+
+            // Check if it's an abort error (user stopped) - don't retry
+            if (statsAbortControllerRef.current?.signal.aborted || isUserStoppedRef.current) {
+              throw error;
+            }
+
+            // If we already generated at least one field, don't retry - we got some useful data
+            const generatedAnyFields = generatingStoresRef.current.length > templateFields.length;
+            if (generatedAnyFields) {
+              break; // Exit retry loop - we have partial success
+            }
+
+            // Check if it's a Gemini API error that should be retried
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const isRetryableError = errorMessage.includes("Invalid JSON response") ||
+                                     errorMessage.includes("candidates") ||
+                                     errorMessage.includes("API");
+
+            if (isRetryableError && retryCount <= MAX_RETRIES) {
+
+              // Show user-friendly message for first retry
+              if (retryCount === 1) {
+                addChatMessage({
+                  id: `stats-retry-${retryCount}`,
+                  role: "assistant",
+                  content: "Hmm, there was a glitch. Let me try that again...",
+                  step: "stats",
+                  isSystemGenerated: true,
+                });
               }
-              generatingStoresRef.current = [
-                ...generatingStoresRef.current,
-                dataSchemaEntryToStatsDataStore(store),
-              ];
-              setStatsDataStores(generatingStoresRef.current);
-            },
-            onRemoveStore: () => {},
-            onClearAll: () => {},
-          },
-          abortSignal: statsAbortControllerRef.current.signal,
-        });
+
+              // Wait before retrying (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS * retryCount));
+            } else {
+              // Not retryable or max retries reached
+              throw error;
+            }
+          }
+        }
+
+        // If we exhausted all retries, throw the last error
+        if (retryCount > MAX_RETRIES && lastError) {
+          throw lastError;
+        }
 
         // Completion message is now handled by stats-step.tsx when isGenerating changes to false
       }
 
-      logger.info("[CreateSession] Stats generation complete", {
-        count: generatingStoresRef.current.length,
-      });
     } catch (e) {
       const errorName = (e as Error).name;
       // Handle abort-related errors (AbortError, AI SDK errors, or user-initiated stop)
@@ -470,11 +536,7 @@ Ground Rules:`;
       if (isAbortRelated) {
         // User stop or abort-related error: keep hasAttemptedGeneration=true so Regenerate button shows
         if (isUserStoppedRef.current) {
-          logger.info("[CreateSession] Stats generation stopped by user");
           isUserStoppedRef.current = false;
-        } else {
-          // Max limit reached - completion message handled by stats-step.tsx
-          logger.info("[CreateSession] Stats generation completed (max limit)");
         }
         setStatsGenerating(false);
         return;
@@ -490,7 +552,7 @@ Ground Rules:`;
     } finally {
       setStatsGenerating(false);
     }
-  }, [templateFieldToStatsDataStore, dataSchemaEntryToStatsDataStore, setStatsAttempted, setStatsGenerating]);
+  }, [templateFieldToStatsDataStore, dataSchemaEntryToStatsDataStore, setStatsAttempted, setStatsGenerating, generatedWorkflow]);
 
   // Keep ref updated to latest handleGenerateStats (avoids dependency chain in handleStepChange)
   handleGenerateStatsRef.current = handleGenerateStats;
@@ -543,29 +605,22 @@ Ground Rules:`;
 
   // Generate workflow handler (separate from session creation for testing)
   // Returns a promise that resolves when workflow is generated
-  // Now uses the selected template from HUD step as the initial state for AI to enhance
+  // Uses the selected template from HUD step as the initial state for AI to enhance
   const handleGenerateWorkflow =
-    useCallback(async (): Promise<WorkflowState | null> => {
+    useCallback(async (): Promise<{ state: WorkflowState; sessionName: string } | null> => {
       // Use the selected template from HUD step, or fall back to Simple_vf.json
       const templateFilename =
         selectedFlowTemplate?.filename || "Simple_vf.json";
 
       setIsWorkflowGenerating(true);
-      logger.info("[CreateSession] Starting workflow generation...", {
-        template: templateFilename,
-        dataStoreCount: statsDataStores.length,
-      });
+
+      // IMPORTANT: Use ref instead of state to get current stats data stores
+      // State can be stale due to closure capture in useCallback
+      const currentStatsDataStores = generatingStoresRef.current;
 
       try {
-        // Load the selected flow template JSON
-        const response = await fetch(`/default/flow/${templateFilename}`);
-        if (!response.ok) {
-          throw new Error(`Failed to load flow template: ${templateFilename}`);
-        }
-        const flowJson = await response.json();
-
         // Convert StatsDataStore to StatsDataStoreField for workflow context
-        const dataStoreSchema: StatsDataStoreField[] = statsDataStores.map(
+        const dataStoreSchema: StatsDataStoreField[] = currentStatsDataStores.map(
           (store) => ({
             id: store.id,
             name: store.name,
@@ -577,10 +632,18 @@ Ground Rules:`;
           }),
         );
 
+        const currentScenario = scenarioBackgroundRef.current;
         const workflowContext: WorkflowBuilderContext = {
-          scenario: scenarioBackground,
+          scenario: currentScenario,
           dataStoreSchema,
         };
+
+        // Load template and build initial state
+        const response = await fetch(`/default/flow/${templateFilename}`);
+        if (!response.ok) {
+          throw new Error(`Failed to load flow template: ${templateFilename}`);
+        }
+        const flowJson = await response.json();
 
         // Build initial state from the selected flow template
         // This preserves the entire template structure for AI to enhance
@@ -602,63 +665,54 @@ Ground Rules:`;
             description: field.description,
             initialValue: String(field.initial),
           })),
-        };
+          };
 
-        // Convert agents from template (keyed by node ID)
-        if (flowJson.agents) {
-          for (const [nodeId, agentConfig] of Object.entries(flowJson.agents)) {
-            const config = agentConfig as any;
-            initialState.agents.set(nodeId, {
-              id: nodeId,
-              nodeId: nodeId,
-              name: config.name || "Agent",
-              description: config.description || "",
-              modelTier:
-                config.modelTier === "heavy"
-                  ? ModelTier.Heavy
-                  : ModelTier.Light,
-              promptMessages: config.promptMessages || [],
-              historyEnabled: config.historyEnabled ?? true,
-              historyCount: config.historyCount ?? 10,
-              enabledStructuredOutput: config.enabledStructuredOutput || false,
-              schemaFields: config.schemaFields || [],
-            });
+          // Convert agents from template (keyed by node ID)
+          if (flowJson.agents) {
+            for (const [nodeId, agentConfig] of Object.entries(flowJson.agents)) {
+              const config = agentConfig as any;
+              initialState.agents.set(nodeId, {
+                id: nodeId,
+                nodeId: nodeId,
+                name: config.name || "Agent",
+                description: config.description || "",
+                modelTier:
+                  config.modelTier === "heavy"
+                    ? ModelTier.Heavy
+                    : ModelTier.Light,
+                promptMessages: config.promptMessages || [],
+                historyEnabled: config.historyEnabled ?? true,
+                historyCount: config.historyCount ?? 10,
+                enabledStructuredOutput: config.enabledStructuredOutput || false,
+                schemaFields: config.schemaFields || [],
+              });
+            }
           }
-        }
 
-        // Extract if nodes from template nodes
-        for (const node of flowJson.nodes || []) {
-          if (node.type === "if" && node.data) {
-            initialState.ifNodes.set(node.id, {
-              id: node.id,
-              nodeId: node.id,
-              name: node.data.name || "Condition",
-              logicOperator: node.data.logicOperator || "AND",
-              conditions: node.data.conditions || [],
-            });
+          // Extract if nodes from template nodes
+          for (const node of flowJson.nodes || []) {
+            if (node.type === "if" && node.data) {
+              initialState.ifNodes.set(node.id, {
+                id: node.id,
+                nodeId: node.id,
+                name: node.data.name || "Condition",
+                logicOperator: node.data.logicOperator || "AND",
+                conditions: node.data.conditions || [],
+              });
+            }
           }
-        }
 
-        // Extract data store nodes from template nodes
-        for (const node of flowJson.nodes || []) {
-          if (node.type === "dataStore" && node.data) {
-            initialState.dataStoreNodes.set(node.id, {
-              id: node.id,
-              nodeId: node.id,
-              name: node.data.name || "Data Store",
-              fields: node.data.dataStoreFields || [],
-            });
+          // Extract data store nodes from template nodes
+          for (const node of flowJson.nodes || []) {
+            if (node.type === "dataStore" && node.data) {
+              initialState.dataStoreNodes.set(node.id, {
+                id: node.id,
+                nodeId: node.id,
+                name: node.data.name || "Data Store",
+                fields: node.data.dataStoreFields || [],
+              });
+            }
           }
-        }
-
-        logger.info("[CreateSession] Initial state from template", {
-          template: selectedFlowTemplate?.templateName || "Simple",
-          nodeCount: initialState.nodes.length,
-          edgeCount: initialState.edges.length,
-          agentCount: initialState.agents.size,
-          ifNodeCount: initialState.ifNodes.size,
-          dataStoreNodeCount: initialState.dataStoreNodes.size,
-        });
 
         // Generate workflow using AI, starting from the template's initial state
         const workflowResult = await generateWorkflow({
@@ -669,34 +723,19 @@ Ground Rules:`;
               // State changes are logged via console.log in service
             },
             onProgress: (progress) => {
-              logger.info("[CreateSession] Workflow progress", progress);
               setWorkflowProgress(progress);
             },
           },
         });
 
-      logger.info("[CreateSession] Workflow generated", {
-        template: selectedFlowTemplate?.templateName || "Simple",
-        nodeCount: workflowResult.state.nodes.length,
-        edgeCount: workflowResult.state.edges.length,
-        agentCount: workflowResult.state.agents.size,
-        sessionName: workflowResult.sessionName,
-      });
-
       // Store the generated workflow and session name for use in handleFinish
       setGeneratedWorkflow(workflowResult.state);
       setGeneratedSessionName(workflowResult.sessionName);
 
-        toastSuccess("Workflow generated!", {
-          description: `Enhanced ${selectedFlowTemplate?.templateName || "Simple"} template with ${workflowResult.state.agents.size} agents`,
-        });
-
-        console.log(
-          "[CreateSession] Generated workflow state:",
-          workflowResult.state,
-        );
-
-        return workflowResult.state;
+        return {
+          state: workflowResult.state,
+          sessionName: workflowResult.sessionName,
+        };
       } catch (workflowError) {
         logger.error("Workflow generation failed", workflowError);
         toastError("Workflow generation failed", {
@@ -709,354 +748,90 @@ Ground Rules:`;
       } finally {
         setIsWorkflowGenerating(false);
       }
-    }, [statsDataStores, scenarioBackground, selectedFlowTemplate]);
+    }, [
+      selectedFlowTemplate,
+      defaultLiteModel,
+      defaultStrongModel,
+      flowResponseTemplate,
+    ]);
 
   const handleFinish = useCallback(async () => {
-    // Must have at least one character
-    const allCharacters = [
-      ...(playerCharacter ? [playerCharacter] : []),
-      ...aiCharacters,
-    ];
-    if (allCharacters.length === 0) {
-      toastError("No characters selected", {
-        description: "Please select at least one character.",
-      });
-      return;
-    }
+    // Set local loading state immediately (synchronous) - MUST be first!
+    setIsCreatingSession(true);
 
-    // Wait for workflow generation if still in progress or just started
-    let workflowToUse = generatedWorkflow;
-    if (workflowGenerationPromiseRef.current && !generatedWorkflow) {
-      setIsWaitingForWorkflow(true);
-      workflowToUse = await workflowGenerationPromiseRef.current;
-      setIsWaitingForWorkflow(false);
-    }
-
-    // Need either generated workflow or default flow
-    if (!workflowToUse && !defaultFlow) {
-      toastError("No flow available", {
-        description: "Please generate a workflow or create a flow first.",
-      });
-      return;
-    }
-
-    setIsSaving(true);
     try {
-      // Use generated session name, or fallback to character names
-      const sessionName =
-        generatedSessionName ||
-        "New Session";
+      // Must have at least one character
+      const allCharacters = [
+        ...(playerCharacter ? [playerCharacter] : []),
+        ...aiCharacters,
+      ];
+      if (allCharacters.length === 0) {
+        toastError("No characters selected", {
+          description: "Please select at least one character.",
+        });
+        setIsCreatingSession(false);
+        return;
+      }
 
-      // Step 1: Create session FIRST (without resources) to satisfy foreign key constraints
-      // Resources with session_id require the session to exist first
-      // Mark as play session so it appears in the sidebar
-      const sessionOrError = Session.create({
-        title: sessionName,
-        flowId: undefined, // Will be set after cloning flow
-        allCards: [], // Will be populated after cloning cards
-        userCharacterCardId: undefined, // Will be set after cloning player character
-        turnIds: [],
-        autoReply: AutoReply.Random,
+      // Don't wait for workflow - pass promise to hook for background generation
+      let workflowToUse: WorkflowState | null = generatedWorkflow;
+      const workflowPromiseToUse = workflowGenerationPromiseRef.current;
+      let sessionNameToUse = generatedSessionName;
+
+      // If we still don't have a session name (e.g., no data stores = no workflow generation),
+      // generate it directly from the scenario
+      if (!sessionNameToUse && scenarioBackground.trim().length >= 50) {
+        const { generateSessionName } = await import("@/app/services/system-agents/session-name-generator");
+        sessionNameToUse = await generateSessionName(scenarioBackground);
+      }
+
+      // Use session creation hook - it will create session with default flow immediately
+      // (or import Simple template if no default flow exists)
+      // Then replace with AI workflow in background
+      const sessionName = sessionNameToUse || "New Session";
+
+      // Start session creation (async)
+      createSession({
+        sessionName,
+        workflow: workflowToUse, // Already generated workflow (or null)
+        workflowPromise: workflowPromiseToUse, // Promise to resolve in background (or null)
+        characters: allCharacters,
+        playerCharacterId: playerCharacter?.tempId,
+        scenarioBackground,
+        scenarioFirstMessages,
+        scenarioLorebook,
         chatStyles: defaultChatStyles,
-        isPlaySession: true, // Play sessions appear in sidebar
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      if (sessionOrError.isFailure) {
-        logger.error("Failed to create session", sessionOrError.getError());
-        toastError("Failed to create session", {
-          description: "Could not initialize session.",
-        });
-        setIsSaving(false);
-        return;
-      }
-
-      const session = sessionOrError.getValue();
-      const sessionId = session.id;
-
-      // Save the empty session first (so foreign keys will work)
-      const initialSaveResult = await SessionService.saveSession.execute({
-        session,
-      });
-
-      if (initialSaveResult.isFailure) {
-        logger.error(
-          "Failed to save initial session",
-          initialSaveResult.getError(),
-        );
-        toastError("Failed to create session", {
-          description: "Could not save session.",
-        });
-        setIsSaving(false);
-        return;
-      }
-
-      // Step 2: Create or clone the flow with sessionId
-      let clonedFlow;
-
-      if (workflowToUse) {
-        // Use the AI-generated workflow
-        const flowData = workflowStateToFlowData(
-          workflowToUse,
-          "Session Workflow",
-          {
-            liteModel: defaultLiteModel,
-            strongModel: defaultStrongModel,
-          },
-          flowResponseTemplate, // Pass responseTemplate from the selected flow template
-        );
-        const importResult =
-          await FlowService.importFlowWithNodes.importFromJson(
-            flowData,
-            sessionId,
-          );
-
-        if (importResult.isFailure) {
-          logger.error(
-            "Failed to import generated workflow",
-            importResult.getError(),
-          );
-          toastError("Failed to create session", {
-            description: "Could not import generated workflow.",
-          });
-          setIsSaving(false);
-          return;
+        defaultFlow,
+        flowResponseTemplate,
+        defaultLiteModel,
+        defaultStrongModel,
+        createCharacterMutation,
+      }).then((result) => {
+        setIsCreatingSession(false);
+        if (result) {
+          // Navigate back to sessions list after creation completes
+          navigate({ to: "/sessions" });
         }
-
-        clonedFlow = importResult.getValue();
-        logger.info("[CreateSession] Imported generated workflow", {
-          flowId: clonedFlow.id.toString(),
-          nodeCount: clonedFlow.props.nodes.length,
-        });
-      } else {
-        // Fall back to cloning the default flow
-        const clonedFlowResult = await FlowService.cloneFlow.execute({
-          flowId: defaultFlow!.id,
-          sessionId: sessionId,
-          shouldRename: false, // Don't rename for session-local copy
-        });
-
-        if (clonedFlowResult.isFailure) {
-          logger.error("Failed to clone flow", clonedFlowResult.getError());
-          toastError("Failed to create session", {
-            description: "Could not copy workflow for session.",
-          });
-          setIsSaving(false);
-          return;
-        }
-
-        clonedFlow = clonedFlowResult.getValue();
-      }
-
-      // Step 3: Process all draft characters
-      // - Library characters: clone with sessionId
-      // - Import/Chat characters: create new character then clone for session
-      const allCards: CardListItem[] = [];
-      let sessionPlayerCharacterId: UniqueEntityID | undefined;
-
-      for (const draft of allCharacters) {
-        let finalCardId: UniqueEntityID;
-
-        if (draft.source === "library" && draft.existingCardId) {
-          // Library character: clone existing card for session
-          const clonedCardResult = await CardService.cloneCard.execute({
-            cardId: new UniqueEntityID(draft.existingCardId),
-            sessionId: sessionId,
-          });
-
-          if (clonedCardResult.isFailure) {
-            logger.error(
-              "Failed to clone character card",
-              clonedCardResult.getError(),
-            );
-            toastError("Failed to create session", {
-              description: `Could not copy character for session.`,
-            });
-            setIsSaving(false);
-            return;
-          }
-
-          finalCardId = clonedCardResult.getValue().id;
-        } else if (needsCreation(draft) && draft.data) {
-          // Import/Chat character: create directly as session-local (no clone needed)
-          try {
-            const newCard = await createCharacterMutation.mutateAsync({
-              name: draft.data.name,
-              description: draft.data.description,
-              tags: draft.data.tags,
-              cardSummary: draft.data.cardSummary,
-              exampleDialogue: draft.data.exampleDialogue,
-              creator: draft.data.creator,
-              version: draft.data.version,
-              conceptualOrigin: draft.data.conceptualOrigin,
-              imageFile: draft.data.imageFile,
-              lorebookEntries: draft.data.lorebook,
-              scenario: draft.data.scenario,
-              firstMessages: draft.data.firstMessages,
-              // Create as session-local character (not in global library)
-              sessionId: sessionId,
-            });
-
-            finalCardId = newCard.id;
-          } catch (error) {
-            logger.error("Failed to create character", error);
-            toastError("Failed to create session", {
-              description: `Could not create character "${draft.data.name}".`,
-            });
-            setIsSaving(false);
-            return;
-          }
-        } else {
-          // Invalid draft character state
-          logger.error("Invalid draft character", draft);
-          continue;
-        }
-
-        // Track the player character ID
-        if (playerCharacter && draft.tempId === playerCharacter.tempId) {
-          sessionPlayerCharacterId = finalCardId;
-        }
-
-        allCards.push({
-          id: finalCardId,
-          type: CardType.Character,
-          enabled: true,
-        });
-      }
-
-      // Step 4: Create scenario card with sessionId if there's any scenario data
-      const hasScenarioData =
-        scenarioBackground.trim() !== "" ||
-        scenarioFirstMessages.length > 0 ||
-        scenarioLorebook.length > 0;
-
-      if (hasScenarioData) {
-        // Convert lorebook entries to domain Entry objects
-        // LorebookEntry type: { id, title, keys (string), desc, range, expanded }
-        const lorebookEntries = scenarioLorebook.map((entry) =>
-          Entry.create({
-            id: new UniqueEntityID(entry.id),
-            name: entry.title,
-            enabled: true,
-            keys: entry.keys
-              .split(",")
-              .map((k) => k.trim())
-              .filter(Boolean),
-            recallRange: entry.range,
-            content: entry.desc,
-          }).getValue(),
-        );
-
-        // Create lorebook
-        const lorebookResult = Lorebook.create({ entries: lorebookEntries });
-        const lorebook = lorebookResult.isSuccess
-          ? lorebookResult.getValue()
-          : undefined;
-
-        // Convert first messages to the expected format
-        // FirstMessage type: { id, title, content, expanded }
-        const firstMessages = scenarioFirstMessages.map((msg) => ({
-          name: msg.title,
-          description: msg.content,
-        }));
-
-        // Create scenario card with sessionId (session-local)
-        const scenarioCardResult = ScenarioCard.create({
-          title: `Scenario - ${sessionName}`,
-          name: `Scenario - ${sessionName}`,
-          type: CardType.Scenario,
-          description: scenarioBackground,
-          firstMessages: firstMessages.length > 0 ? firstMessages : undefined,
-          lorebook,
-          sessionId: sessionId, // Session-local resource
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-
-        if (scenarioCardResult.isFailure) {
-          logger.error(
-            "Failed to create scenario card",
-            scenarioCardResult.getError(),
-          );
-          toastError("Failed to create scenario", {
-            description: scenarioCardResult.getError(),
-          });
-          setIsSaving(false);
-          return;
-        }
-
-        const scenarioCard = scenarioCardResult.getValue();
-
-        // Save the scenario card
-        const savedCardResult =
-          await CardService.saveCard.execute(scenarioCard);
-
-        if (savedCardResult.isFailure) {
-          logger.error(
-            "Failed to save scenario card",
-            savedCardResult.getError(),
-          );
-          toastError("Failed to save scenario", {
-            description: savedCardResult.getError(),
-          });
-          setIsSaving(false);
-          return;
-        }
-
-        const savedScenarioCard = savedCardResult.getValue() as ScenarioCard;
-
-        // Add scenario card to allCards
-        allCards.push({
-          id: savedScenarioCard.id,
-          type: CardType.Scenario,
-          enabled: true,
-        });
-      }
-
-      // Step 5: Update session with cloned resources
-      session.update({
-        flowId: clonedFlow.id,
-        allCards,
-        userCharacterCardId: sessionPlayerCharacterId,
-      });
-
-      // Save the updated session
-      const savedSessionOrError = await SessionService.saveSession.execute({
-        session,
-      });
-
-      if (savedSessionOrError.isFailure) {
-        logger.error("Failed to save session", savedSessionOrError.getError());
-        setIsSaving(false);
-        return;
-      }
-
-      const savedSession = savedSessionOrError.getValue();
-
-      // Update session store and invalidate queries
-      selectSession(savedSession.id, savedSession.title);
-      queryClient.invalidateQueries({ queryKey: [TableName.Sessions] });
-
-      // Navigate to session
-      navigate({
-        to: "/sessions/$sessionId",
-        params: { sessionId: savedSession.id.toString() },
+      }).catch((error) => {
+        setIsCreatingSession(false);
+        logger.error("[CreateSession] Error in createSession", error);
       });
     } catch (error) {
-      logger.error("Error creating session", error);
-      setIsSaving(false);
+      // Handle any errors in the synchronous part (before createSession call)
+      setIsCreatingSession(false);
+      logger.error("[CreateSession] Error in handleFinish", error);
     }
   }, [
-    defaultFlow,
-    generatedWorkflow,
-    isWorkflowGenerating,
+    createSession,
     playerCharacter,
     aiCharacters,
+    generatedWorkflow,
+    generatedSessionName,
+    workflowGenerationPromiseRef,
     scenarioBackground,
     scenarioFirstMessages,
     scenarioLorebook,
-    selectSession,
+    defaultFlow,
     navigate,
     defaultLiteModel,
     defaultStrongModel,
@@ -1067,11 +842,10 @@ Ground Rules:`;
   const handleNext = () => {
     const currentIndex = SESSION_STEPS.findIndex((s) => s.id === currentStep);
 
-    // When on last step (Stats), start workflow generation and then finish
+    // When on last step (Stats), run workflow generation then finish
     if (currentStep === "stats") {
-      // Start workflow generation if needed, then finish
-      if (statsDataStores.length > 0 && !generatedWorkflow && !isWorkflowGenerating) {
-        // Start workflow generation and store promise immediately (avoid race condition)
+      // Start workflow generation when user clicks "Start Session"
+      if (statsDataStores.length > 0) {
         workflowGenerationPromiseRef.current = handleGenerateWorkflow();
       }
       // handleFinish will await the workflow generation if in progress
@@ -1216,7 +990,7 @@ Ground Rules:`;
                 isScenarioGenerating ||
                 (currentStep === "stats" && isStatsGenerating)
               }
-              loading={isSaving || isWaitingForWorkflow}
+              loading={isCreatingSession || isSaving || isWaitingForWorkflow}
             >
               <span className="md:hidden">{isLastStep ? "Create" : "Next"}</span>
               <span className="hidden md:inline">{isLastStep ? "Create Session" : "Next"}</span>
@@ -1259,6 +1033,8 @@ Ground Rules:`;
                 // Add new draft character at the front of library (not directly to roster)
                 setDraftCharacters((prev) => [draftCharacter, ...prev]);
               }}
+              scenarioBackground={scenarioBackground}
+              firstMessages={scenarioFirstMessages}
             />
           )}
 
@@ -1299,7 +1075,7 @@ Ground Rules:`;
               <StatsStep
                 currentStep={currentStep}
                 dataStores={statsDataStores}
-                onDataStoresChange={setStatsDataStores}
+                onDataStoresChange={handleStatsDataStoresChange}
                 sessionContext={{
                   scenario: scenarioBackground,
                   character: playerCharacter

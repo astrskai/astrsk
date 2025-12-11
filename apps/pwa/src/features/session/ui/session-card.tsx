@@ -5,6 +5,7 @@ import {
   MessagesSquare,
   CircleAlert,
   User,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
@@ -65,6 +66,7 @@ interface SessionCardProps {
   characterAvatars?: CharacterAvatar[];
   areCharactersLoading?: boolean;
   showTypeIndicator?: boolean;
+  isGenerating?: boolean;
 }
 
 const SessionCard = ({
@@ -79,19 +81,32 @@ const SessionCard = ({
   characterAvatars = [],
   areCharactersLoading = false,
   showTypeIndicator = false,
+  isGenerating = false,
 }: SessionCardProps) => {
+  // Disable card interaction while generating
+  const cardDisabled = isDisabled || isGenerating;
+
   return (
     <BaseCard
       className={cn(
         "min-h-[320px] w-full border-zinc-700 ring-1 ring-zinc-800",
-        !isDisabled && onClick && "hover:ring-zinc-600",
+        !cardDisabled && onClick && "hover:ring-zinc-600",
+        isGenerating && "cursor-not-allowed",
         className,
       )}
-      isDisabled={isDisabled}
-      onClick={onClick}
+      isDisabled={cardDisabled}
+      onClick={cardDisabled ? undefined : onClick}
     >
-      {/* Header Image Area */}
-      <div className="relative h-48 overflow-hidden bg-zinc-800">
+      {/* Generating Overlay - fully covers card content */}
+      {isGenerating ? (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-zinc-900">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+          <p className="mt-3 text-sm font-medium text-zinc-300">Generating workflow...</p>
+        </div>
+      ) : (
+        <>
+          {/* Header Image Area */}
+          <div className="relative h-48 overflow-hidden bg-zinc-800">
         {/* Cover Image - use placeholder if no cover image */}
         <img
           src={imageUrl || "/img/placeholder/scenario-placeholder.png"}
@@ -184,6 +199,8 @@ const SessionCard = ({
           )}
         </div>
       </div>
+        </>
+      )}
     </BaseCard>
   );
 };

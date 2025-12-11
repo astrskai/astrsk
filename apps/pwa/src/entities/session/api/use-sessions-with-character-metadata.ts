@@ -68,9 +68,21 @@ export interface SessionListFilters {
  */
 export function useSessionsWithCharacterMetadata(filters: SessionListFilters = {}) {
   // 1. Fetch all sessions with filters
-  const { data: sessions = [], ...sessionQuery } = useQuery(
-    sessionQueries.list(filters)
-  );
+  const { data: sessions = [], ...sessionQuery } = useQuery({
+    ...sessionQueries.list(filters),
+    // Poll every 3 seconds if any session is generating workflow
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data) return false;
+
+      // Check if any session has generationStatus === "generating"
+      const hasGenerating = data.some(
+        (session) => session.config?.generationStatus === "generating"
+      );
+
+      return hasGenerating ? 3000 : false; // Poll every 3s if generating, otherwise don't poll
+    },
+  });
 
   // 2. Extract unique character IDs from all sessions (only enabled characters)
   const uniqueCharacterIds = Array.from(

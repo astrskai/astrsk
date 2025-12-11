@@ -13,6 +13,11 @@ export interface CardListItem {
 }
 
 /**
+ * Session generation status
+ */
+export type SessionGenerationStatus = "generating" | "completed" | "failed";
+
+/**
  * Session configuration stored in JSONB.
  * Used for persistent UI state and preferences.
  */
@@ -22,6 +27,9 @@ export interface SessionConfig {
   isSettingsPanelOpen?: boolean;
   // Character fallback tracking
   lastNonUserCharacterId?: string;
+  // Generation status tracking
+  generationStatus?: SessionGenerationStatus;
+  generationError?: string;
 }
 
 export interface SessionProps {

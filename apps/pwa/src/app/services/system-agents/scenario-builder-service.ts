@@ -670,21 +670,9 @@ export async function* generateScenarioResponse({
       (errorJson.includes("Invalid input: expected array, received undefined") ||
        (errorJson.includes("expected") && errorJson.includes("array")));
 
-    // Log detailed error info for debugging
-    logger.info("[ScenarioBuilder] Caught error", {
-      isVertexMetadataError,
-      toolResultsCount: allToolResults.length,
-      errorType: error?.constructor?.name,
-      errorJsonPreview: errorJson.substring(0, 500),
-    });
-
     // If this is a Vertex AI metadata error, it means the API response was malformed
     // This is a known issue with Gemini/Vertex AI - just ignore and return what we have
     if (isVertexMetadataError) {
-      logger.warn("[ScenarioBuilder] Ignoring Vertex AI metadata-only response error", {
-        toolResultsCount: allToolResults.length,
-        message: "This is a known Vertex AI API response format issue",
-      });
 
       // Yield what we have (may be empty if error happened before any tools)
       yield {

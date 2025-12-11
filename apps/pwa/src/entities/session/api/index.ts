@@ -23,3 +23,7 @@ export {
 // Custom query hooks
 export { useSessionsWithCharacterMetadata } from "./use-sessions-with-character-metadata";
 export type { SessionWithCharacterMetadata, CharacterMetadata } from "./use-sessions-with-character-metadata";
+
+// Session creation hook
+export { useCreateSession } from "./use-create-session";
+export type { CreateSessionInput, CreateSessionResult } from "./use-create-session";

@@ -69,6 +69,9 @@ function SessionGridItem({
   const coverId = session.props.coverId;
   const [coverImageUrl] = useAsset(coverId);
 
+  // Check if session is generating workflow
+  const isGenerating = session.config?.generationStatus === "generating";
+
   // Simple validation: check if session has AI character cards
   // Avoid expensive per-card queries (useSessionValidation with nested flow queries)
   // TODO: Disabled validation - no validation needed atm
@@ -118,6 +121,7 @@ function SessionGridItem({
       className={className}
       characterAvatars={characterAvatars}
       areCharactersLoading={areCharactersLoading}
+      isGenerating={isGenerating}
     />
   );
 }
