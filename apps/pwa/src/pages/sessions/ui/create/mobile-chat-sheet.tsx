@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
-import { motion, AnimatePresence, useDragControls, type PanInfo } from "motion/react";
-import { ChevronDown, Sparkles, Send, Square } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { ChevronUp, ChevronDown, Maximize2, Minimize2, Sparkles, Send, Square } from "lucide-react";
 import { cn } from "@/shared/lib";
 
 import type { ChatMessage, ChatAgentConfig } from "./chat-panel";
@@ -34,10 +34,10 @@ interface MobileChatSheetProps {
 type SheetState = "collapsed" | "peek" | "expanded";
 
 const SHEET_HEIGHTS = {
-  collapsed: 56, // Just input bar
-  peek: 280,     // Input + last few messages
-  expanded: "85vh" as const,
-};
+  collapsed: 100,      // Handle + message preview + input bar
+  peek: "50vh",        // Half screen
+  expanded: "85vh",    // Full screen
+} as const;
 
 /**
  * Mobile Chat Bottom Sheet
@@ -58,7 +58,6 @@ export function MobileChatSheet({
   const [sheetState, setSheetState] = useState<SheetState>("collapsed");
   const inputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const dragControls = useDragControls();
 
   const {
     visibleMessages,
@@ -72,17 +71,6 @@ export function MobileChatSheet({
     showTypingIndicator,
   });
 
-  // Auto-expand when new message arrives and we're not collapsed
-  useEffect(() => {
-    if (visibleMessages.length > 0 && sheetState === "collapsed") {
-      // Auto-peek when AI responds
-      const lastMessage = visibleMessages[visibleMessages.length - 1];
-      if (lastMessage?.role === "assistant") {
-        setSheetState("peek");
-      }
-    }
-  }, [visibleMessages, sheetState]);
-
   // Scroll to bottom when visible messages change (in expanded/peek state)
   useEffect(() => {
     if (sheetState !== "collapsed") {
@@ -95,46 +83,16 @@ export function MobileChatSheet({
     e.preventDefault();
     if (!inputValue.trim() || disabled) return;
     onSubmit();
-    // Auto-expand to peek when user sends message
-    if (sheetState === "collapsed") {
-      setSheetState("peek");
-    }
   };
 
-  // Handle drag end to snap to states
-  const handleDragEnd = (_: unknown, info: PanInfo) => {
-    const velocity = info.velocity.y;
-    const offset = info.offset.y;
-
-    // Fast swipe detection
-    if (Math.abs(velocity) > 500) {
-      if (velocity < 0) {
-        // Swiping up
-        setSheetState(sheetState === "collapsed" ? "peek" : "expanded");
-      } else {
-        // Swiping down
-        setSheetState(sheetState === "expanded" ? "peek" : "collapsed");
-      }
-      return;
-    }
-
-    // Position-based snapping
-    if (offset < -50) {
-      setSheetState(sheetState === "collapsed" ? "peek" : "expanded");
-    } else if (offset > 50) {
-      setSheetState(sheetState === "expanded" ? "peek" : "collapsed");
-    }
-  };
-
-  // Toggle between states on header click
+  // Header tap: always collapse, or open to peek if collapsed
   const handleHeaderClick = () => {
-    if (sheetState === "collapsed") {
-      setSheetState("peek");
-    } else if (sheetState === "peek") {
-      setSheetState("expanded");
-    } else {
-      setSheetState("collapsed");
-    }
+    setSheetState(sheetState === "collapsed" ? "peek" : "collapsed");
+  };
+
+  // Toggle between peek and expanded
+  const handleSizeToggle = () => {
+    setSheetState(sheetState === "expanded" ? "peek" : "expanded");
   };
 
   const getSheetHeight = () => {
@@ -143,9 +101,8 @@ export function MobileChatSheet({
     return SHEET_HEIGHTS.collapsed;
   };
 
-  // Get last visible message for preview
-  const lastVisibleMessage = visibleMessages[visibleMessages.length - 1];
-  const hasUnreadResponse = lastVisibleMessage?.role === "assistant" && sheetState === "collapsed";
+  // Get last message for preview in collapsed state
+  const lastMessage = visibleMessages[visibleMessages.length - 1];
 
   return (
     <motion.div
@@ -160,36 +117,80 @@ export function MobileChatSheet({
         damping: 30,
         stiffness: 300,
       }}
-      drag="y"
-      dragControls={dragControls}
-      dragConstraints={{ top: 0, bottom: 0 }}
-      dragElastic={0.2}
-      onDragEnd={handleDragEnd}
     >
       <div className="flex h-full flex-col rounded-t-2xl border-t border-zinc-700 bg-zinc-900 shadow-2xl">
-        {/* Drag Handle & Header */}
-        <div
-          className="flex flex-shrink-0 cursor-grab flex-col items-center pt-2 pb-1 active:cursor-grabbing"
-          onClick={handleHeaderClick}
-          onPointerDown={(e) => dragControls.start(e)}
-        >
-          <div className="mb-2 h-1 w-8 rounded-full bg-zinc-600" />
+        {/* Header */}
+        <div className="flex flex-shrink-0 items-center gap-2 px-3 pt-2 pb-1">
+          {/* Drag handle - tappable to toggle collapsed/peek */}
+          <button
+            type="button"
+            className="flex min-w-0 flex-1 flex-col items-center overflow-hidden rounded-lg py-1 active:bg-zinc-800/50"
+            onClick={handleHeaderClick}
+          >
+            <div className="mb-1 h-1 w-8 rounded-full bg-zinc-600" />
 
-          {/* Collapsed state: Show preview of last message */}
-          {sheetState === "collapsed" && hasUnreadResponse && lastVisibleMessage && (
-            <div className="flex w-full items-center gap-2 px-3 pb-1">
-              <div className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-full">
-                <img
-                  src={lastVisibleMessage.step ? ASSISTANT_AVATARS[lastVisibleMessage.step] : ASSISTANT_AVATARS.scenario}
-                  alt="AI"
-                  className="h-full w-full object-cover"
-                />
+            {/* Collapsed: show last message preview or typing indicator */}
+            {sheetState === "collapsed" && (
+              <div className="flex w-full min-w-0 items-center gap-2 overflow-hidden">
+                {shouldShow ? (
+                  <>
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-overlay">
+                      <img
+                        src={typingIndicatorStep ? ASSISTANT_AVATARS[typingIndicatorStep] : ASSISTANT_AVATARS.scenario}
+                        alt="AI"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="animate-bounce-typing bg-fg-muted h-1.5 w-1.5 rounded-full" />
+                      <span className="animate-bounce-typing bg-fg-muted h-1.5 w-1.5 rounded-full [animation-delay:0.2s]" />
+                      <span className="animate-bounce-typing bg-fg-muted h-1.5 w-1.5 rounded-full [animation-delay:0.4s]" />
+                    </div>
+                    <ChevronUp size={14} className="ml-auto text-zinc-500" />
+                  </>
+                ) : lastMessage ? (
+                  <>
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-overlay">
+                      {lastMessage.role === "user" ? (
+                        <span className="text-[8px] font-bold text-brand-400">U</span>
+                      ) : (
+                        <img
+                          src={lastMessage.step ? ASSISTANT_AVATARS[lastMessage.step] : ASSISTANT_AVATARS.scenario}
+                          alt="AI"
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <p className="min-w-0 flex-1 truncate text-xs text-zinc-400">
+                      {lastMessage.content}
+                    </p>
+                    <ChevronUp size={14} className="flex-shrink-0 text-zinc-500" />
+                  </>
+                ) : (
+                  <ChevronUp size={14} className="text-zinc-500" />
+                )}
               </div>
-              <p className="flex-1 truncate text-xs text-zinc-400">
-                {lastVisibleMessage.content}
-              </p>
-              <ChevronDown size={14} className="rotate-180 text-zinc-500" />
-            </div>
+            )}
+
+            {/* Peek/Expanded: show collapse indicator */}
+            {sheetState !== "collapsed" && (
+              <ChevronDown size={14} className="text-zinc-500" />
+            )}
+          </button>
+
+          {/* Expand/Minimize button (visible in peek/expanded) */}
+          {sheetState !== "collapsed" && (
+            <button
+              type="button"
+              onClick={handleSizeToggle}
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-zinc-400 active:bg-zinc-800"
+            >
+              {sheetState === "expanded" ? (
+                <Minimize2 size={16} />
+              ) : (
+                <Maximize2 size={16} />
+              )}
+            </button>
           )}
         </div>
 
@@ -284,11 +285,6 @@ export function MobileChatSheet({
                 "bg-zinc-800 text-fg-default placeholder:text-fg-subtle flex-1 rounded-full border-0 px-4 py-2 text-sm",
                 "focus:ring-brand-500/30 ring-1 ring-transparent outline-none",
               )}
-              onFocus={() => {
-                if (sheetState === "collapsed") {
-                  setSheetState("peek");
-                }
-              }}
             />
             {isLoading && onStop ? (
               <button
