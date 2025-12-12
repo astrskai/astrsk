@@ -381,9 +381,9 @@ interface DraftCharacterCardProps {
   draft: DraftCharacter;
   isPlayer: boolean;
   isAI: boolean;
-  onAssignPlayer: (e: React.MouseEvent) => void;
-  onAddAI: (e: React.MouseEvent) => void;
-  onOpenDetails: () => void;
+  onAssignPlayer: (e: React.MouseEvent, imageUrl?: string) => void;
+  onAddAI: (e: React.MouseEvent, imageUrl?: string) => void;
+  onOpenDetails: (imageUrl?: string) => void;
   onEdit: () => void;
 }
 
@@ -415,14 +415,14 @@ function DraftCharacterCard({
       tags={draft.data?.tags || []}
       badges={badges}
       className="border-dashed border-amber-500/50"
-      onClick={onOpenDetails}
+      onClick={() => onOpenDetails(imageUrl)}
       renderMetadata={() => null}
       footerActions={
         <>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (!isSelected) onAssignPlayer(e);
+              if (!isSelected) onAssignPlayer(e, imageUrl);
             }}
             disabled={isSelected}
             className={cn(
@@ -438,7 +438,7 @@ function DraftCharacterCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (!isSelected) onAddAI(e);
+              if (!isSelected) onAddAI(e, imageUrl);
             }}
             disabled={isSelected}
             className={cn(
@@ -1257,31 +1257,31 @@ export function CastStep({
                                 draft={draft}
                                 isPlayer={isPlayer}
                                 isAI={isAI}
-                                onAssignPlayer={(e) => {
+                                onAssignPlayer={(e, imageUrl) => {
                                   triggerFlyingTrail(
                                     e,
                                     "player",
                                     draft.data?.name || "Character",
-                                    draft.data?.imageUrl,
+                                    imageUrl,
                                   );
                                   handleAssignDraftPlayer(draft);
                                 }}
-                                onAddAI={(e) => {
+                                onAddAI={(e, imageUrl) => {
                                   triggerFlyingTrail(
                                     e,
                                     "ai",
                                     draft.data?.name || "Character",
-                                    draft.data?.imageUrl,
+                                    imageUrl,
                                   );
                                   handleAddDraftAI(draft);
                                 }}
-                                onOpenDetails={() =>
+                                onOpenDetails={(imageUrl) =>
                                   setSelectedDetailsChar({
                                     name: draft.data?.name || "Unnamed",
                                     description: draft.data?.description,
                                     cardSummary: draft.data?.cardSummary,
                                     tags: draft.data?.tags,
-                                    imageUrl: draft.data?.imageUrl,
+                                    imageUrl,
                                   })
                                 }
                                 onEdit={() => setEditingCharacter(draft)}
