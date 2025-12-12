@@ -822,7 +822,7 @@ export function CastStep({
         {/* Library Panel OR Edit Panel */}
         <div
           className={cn(
-            "relative flex min-w-0 flex-1 flex-col overflow-hidden md:rounded-xl md:border md:border-zinc-800",
+            "relative flex min-w-0 flex-1 flex-col overflow-hidden md:rounded-xl md:border md:border-border-default",
             mobileTab === "library" ? "flex" : "hidden md:flex",
           )}
         >

@@ -686,9 +686,14 @@ export function StatsStep({
             {/* Header with action button - only show when stores exist */}
             {dataStores.length > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-fg-muted">
-                  {dataStores.length} tracker{dataStores.length !== 1 ? "s" : ""}
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="flex h-6 min-w-6 items-center justify-center rounded-md bg-brand-500/15 px-1.5 font-mono text-xs font-semibold text-brand-400">
+                    {dataStores.length}
+                  </div>
+                  <span className="text-xs font-semibold text-neutral-400">
+                    Tracker{dataStores.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
                 <Button
                   onClick={handleAddStore}
                   variant="ghost"
