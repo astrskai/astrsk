@@ -597,8 +597,6 @@ export async function* generateScenarioResponse({
 
     if (useNonStreaming) {
       // Use non-streaming generateText (model requires it)
-      logger.info("[ScenarioBuilder] Using non-streaming mode");
-
       const result = await generateText({
         model,
         messages: formattedMessages,
@@ -610,17 +608,9 @@ export async function* generateScenarioResponse({
       // Collect all tool results
       if (result.toolResults && result.toolResults.length > 0) {
         allToolResults.push(...result.toolResults);
-        logger.info("[ScenarioBuilder] Tool results", {
-          count: result.toolResults.length,
-        });
       }
 
       const finalText = result.text || "";
-
-      logger.info("[ScenarioBuilder] Response generated (non-streaming)", {
-        text: finalText.substring(0, 100),
-        totalToolResults: allToolResults.length,
-      });
 
       // Yield final result once
       yield {
@@ -639,9 +629,6 @@ export async function* generateScenarioResponse({
           // This callback fires after each step, allowing UI to update
           if (toolResults && toolResults.length > 0) {
             allToolResults.push(...toolResults);
-            logger.info("[ScenarioBuilder] Step completed", {
-              toolResultsInStep: toolResults.length,
-            });
           }
         },
       });
@@ -656,11 +643,6 @@ export async function* generateScenarioResponse({
           toolResults: allToolResults,
         };
       }
-
-      logger.info("[ScenarioBuilder] Response generated (streaming)", {
-        text: accumulatedText?.substring(0, 100),
-        totalToolResults: allToolResults.length,
-      });
 
       // Yield final result with complete text
       yield {

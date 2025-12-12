@@ -129,6 +129,15 @@ function MainLayoutContent({
   // Hide mobile header on session chat page (has its own header)
   const isSessionChatPage = /^\/sessions\/[^/]+$/.test(location.pathname);
 
+  // Close mobile menu when navigating to a new page on desktop
+  useEffect(() => {
+    // Only close on desktop (md breakpoint and above)
+    const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+    if (isDesktop && isMobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+  }, [location.pathname, isMobileMenuOpen, setMobileMenuOpen]);
+
   return (
     <div
       className={cn(

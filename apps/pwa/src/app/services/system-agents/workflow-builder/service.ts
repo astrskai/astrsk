@@ -124,7 +124,6 @@ export async function generateWorkflow({
       message,
       timestamp: new Date(),
     };
-    logger.info(`[WorkflowBuilder] Progress: ${phase} - ${message}`);
     callbacks.onProgress?.(progress);
   };
 
@@ -139,13 +138,6 @@ export async function generateWorkflow({
     }
 
     const modelInfo = await getModelFromStore(gemini3ProModel, "strong");
-
-    logger.info("[WorkflowBuilder] Starting configuration", {
-      nodeCount: state.nodes.length,
-      agentCount: state.agents.size,
-      dataStoreFieldCount: context.dataStoreSchema.length,
-      modelId: modelInfo.modelId,
-    });
 
     sendProgress("initializing", "Preparing workflow tools...");
 
@@ -183,12 +175,6 @@ export async function generateWorkflow({
           },
         }),
         onStepFinish: ({ toolCalls, text }) => {
-          logger.info(`[WorkflowBuilder] Step completed`, {
-            toolCallCount: toolCalls?.length || 0,
-            toolNames: toolCalls?.map((tc) => tc.toolName) || [],
-            hasText: !!text,
-          });
-
           // Send progress for each tool call
           if (toolCalls && toolCalls.length > 0) {
             for (const tc of toolCalls) {
@@ -200,14 +186,6 @@ export async function generateWorkflow({
       }),
       generateSessionName(context.scenario || "New Session"),
     ]);
-
-    const totalTime = ((performance.now() - startTime) / 1000).toFixed(2);
-    logger.info("[WorkflowBuilder] Configuration complete", {
-      totalTime: `${totalTime}s`,
-      agentCount: state.agents.size,
-      dataStoreNodeCount: state.dataStoreNodes.size,
-      sessionName,
-    });
 
     sendProgress("complete", "Workflow configuration complete!");
 
