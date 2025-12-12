@@ -51,7 +51,7 @@ export function SessionRosterPanel({
     <div
       ref={panelRef}
       className={cn(
-        "relative w-full flex-col overflow-hidden border-zinc-800 md:w-72 md:rounded-xl md:border lg:w-80",
+        "relative w-full flex-col overflow-hidden border-border-default md:w-72 md:rounded-xl md:border lg:w-80",
         mobileTab === "cast" ? "flex h-full" : "hidden md:flex",
       )}
     >
