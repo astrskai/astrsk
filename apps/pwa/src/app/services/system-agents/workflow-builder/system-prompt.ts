@@ -137,6 +137,7 @@ You do NOT need to add any history-related prompts or instructions - the system 
    - **Only add datastore field references** to existing prompts if they're missing
    - Use \`upsert_prompt_messages\` with \`messageId\` to update existing messages
    - Add variables like "Current mood: {{mood}}", "Health: {{health}}" etc. where appropriate
+   - **CRITICAL**: DO NOT modify the LAST "Must Follow" prompt message - it contains crucial formatting instructions
    - **REQUIRED**: Ensure the LAST user-role message ends with "Make character response in a concise manner."
    - **Do NOT rewrite or significantly modify existing prompts** - just inject datastore variables
    - Keep the existing structure and tone of the prompts
@@ -158,6 +159,7 @@ export function buildUserPrompt(fieldCount: number): string {
 1. **RP Agents** (rp_agent_character, rp_agent_user, rp_agent_scenario):
    - **Minimal updates**: Only add missing datastore field references to existing prompts
    - Inject variables like "Current mood: {{mood}}", "Health: {{health}}" where appropriate
+   - **CRITICAL**: DO NOT modify the LAST "Must Follow" prompt message - it contains crucial formatting instructions
    - **REQUIRED**: Ensure the LAST user-role message ends with "Make character response in a concise manner."
    - Do NOT rewrite prompts - just add datastore variables to existing text
    - Use \`upsert_prompt_messages\` with \`messageId\` to update existing messages
