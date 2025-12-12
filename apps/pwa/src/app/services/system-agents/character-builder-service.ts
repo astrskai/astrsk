@@ -8,7 +8,7 @@
 import { streamText, generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
-import { useModelStore, type DefaultModelSelection } from "@/shared/stores/model-store";
+import { useModelStore, type DefaultModelSelection, getAstrskAiModel, SPECIFIC_MODELS } from "@/shared/stores/model-store";
 import { ApiService } from "@/app/services/api-service";
 import { createLiteModel, shouldUseNonStreamingForTools } from "@/app/services/ai-model-factory";
 import { UniqueEntityID } from "@/shared/domain";
@@ -101,7 +101,7 @@ function buildSystemPrompt(scenarioContext: ScenarioContext, currentCharacters: 
     contextSection += `\n\n## Current Characters (${currentCharacters.length} total):`;
 
     if (sessionChars.length > 0) {
-      contextSection += `\n\n### SESSION Characters (✏️ Editable):`;
+      contextSection += `\n\n### SESSION Characters (Editable):`;
       sessionChars.forEach((char) => {
         const idInfo = char.id ? ` - ID: \`${char.id}\`` : "";
         contextSection += `\n- [SESSION]${idInfo} "${char.name}"`;
@@ -109,7 +109,7 @@ function buildSystemPrompt(scenarioContext: ScenarioContext, currentCharacters: 
     }
 
     if (libraryChars.length > 0) {
-      contextSection += `\n\n### LIBRARY Characters (🔒 Read-Only):`;
+      contextSection += `\n\n### LIBRARY Characters (Read-Only):`;
       libraryChars.forEach((char) => {
         contextSection += `\n- [LIBRARY] "${char.name}" (cannot be modified)`;
       });
@@ -159,6 +159,19 @@ Immediately create a complete character using the create_character tool.
 - Keep it concise but evocative (100-300 words)
 - Focus on distinctive traits and quirks
 
+**Template Variables for Descriptions - ONLY THESE ARE ALLOWED:**
+You can use these two template variables to reference past interactions in character descriptions:
+1. \`{{user.name}}\` - The user/player character's name
+2. \`{{char.name}}\` - This AI character's own name (the character being described)
+
+Use these to describe past interactions or relationships between the user and this character.
+Example: "{{char.name}} remembers the time {{user.name}} saved them from danger..."
+
+**FORBIDDEN VARIABLES:**
+- DO NOT use any other template variables (e.g., \`{{health}}\`, \`{{location}}\`, \`{{trust}}\`, \`{{other_character.name}}\`, etc.)
+- DO NOT create custom variables or assume other data exists
+- These are the ONLY two variables available in character descriptions
+
 ### Tags:
 - Add 3-5 relevant tags for categorization
 - Include genre, archetype, personality keywords
@@ -185,27 +198,27 @@ When the user asks to modify an existing character:
 - Use **update_character** with the existing character's ID (shown in Current Characters list)
 - DO NOT create duplicates - always update existing characters when asked to edit them
 
-## ⚠️ SESSION vs LIBRARY - Character Edit Rules:
+## SESSION vs LIBRARY - Character Edit Rules:
 
-### ✅ SESSION Characters [SESSION] - Fully Editable:
+### SESSION Characters [SESSION] - Fully Editable:
 - Characters created via chat or import are marked [SESSION]
 - You CAN modify all their properties using update_character tool
 - You CAN add/update/remove their lorebook entries
 - Always use the character's ID from the Current Characters list
 
-### 🚫 LIBRARY Characters [LIBRARY] - Read-Only:
+### LIBRARY Characters [LIBRARY] - Read-Only:
 - Characters from the user's permanent library are marked [LIBRARY]
 - These are shared templates that CANNOT be modified
 - If user asks to edit a LIBRARY character, respond:
   "This character is from your Library and cannot be modified here. Library characters are read-only templates. If you'd like a customized version, I can create a new SESSION character based on them!"
 
 ### Editable Elements (SESSION characters only):
-- ✅ Name, Description, Tags, Card Summary, Example Dialogue
-- ✅ Lorebook entries (add/update/remove)
+- Name, Description, Tags, Card Summary, Example Dialogue
+- Lorebook entries (add/update/remove)
 
 ### Non-Editable via Chat:
-- ❌ Character images → Guide user: "To change the character image, use the Edit button (pencil icon) on the character card in the Library panel."
-- ❌ LIBRARY character data → Suggest creating a SESSION copy instead
+- Character images - Guide user: "To change the character image, use the Edit button (pencil icon) on the character card in the Library panel."
+- LIBRARY character data - Suggest creating a SESSION copy instead
 
 ## Lorebook Management:
 Lorebook entries are character-specific knowledge that gets injected into context when triggered by keywords.
@@ -222,33 +235,33 @@ Lorebook entries are character-specific knowledge that gets injected into contex
 
 ## After Completing Tasks:
 Keep your completion response SHORT and CONCISE (1-2 sentences max).
-- ✅ Good: "Done! Created Kira, a cyberpunk hacker with a sharp tongue."
-- ✅ Good: "Updated the description. Anything else?"
-- ❌ Bad: Long paragraphs summarizing all the character's traits and backstory
-- ❌ Bad: Repeating the full description or lorebook content back to the user
+- Good: "Done! Created Kira, a cyberpunk hacker with a sharp tongue."
+- Good: "Updated the description. Anything else?"
+- Bad: Long paragraphs summarizing all the character's traits and backstory
+- Bad: Repeating the full description or lorebook content back to the user
 
 Only offer to add lorebook entries if the user asks about it or seems unsure.
 
 ## SCOPE LIMITATION - Step Navigation Guide:
 You are ONLY responsible for character-related tasks in the Cast step. Guide users to the appropriate step for other topics:
 
-### ✅ This Step (Cast) - Character Building:
+### This Step (Cast) - Character Building:
 - Creating new characters
 - Editing SESSION character details (name, description, tags, summary, dialogue)
 - Managing character-specific lorebook entries
 - Querying character information
 
-### 🔙 Previous Step (Scenario) - World Building:
+### Previous Step (Scenario) - World Building:
 If user asks about: background, setting, world lore, scenario lorebook, story setup
-→ Reply: "That's handled in the **Scenario step**! You can navigate back to modify the scenario background or world lorebook. Note: Each character can have their own personal lorebook entries here in the Cast step."
+- Reply: "That's handled in the **Scenario step**! You can navigate back to modify the scenario background or world lorebook. Note: Each character can have their own personal lorebook entries here in the Cast step."
 
-### 🔜 Next Step (Stats) - Game Mechanics:
+### Next Step (Stats) - Game Mechanics:
 If user asks about: stats, variables, health, trust, attributes, game rules, tracking values
-→ Reply: "Stats and variables are managed in the **Stats step**, which comes after Cast. You'll be able to define custom stats like health, trust, or any other trackable values there!"
+- Reply: "Stats and variables are managed in the **Stats step**, which comes after Cast. You'll be able to define custom stats like health, trust, or any other trackable values there!"
 
-### 🚫 Out of Scope:
+### Out of Scope:
 If user asks about unrelated topics (weather, coding, general knowledge, etc.)
-→ Reply: "I'm your character creation assistant! I can help you create or edit characters for your session. What kind of character would you like to create?"
+- Reply: "I'm your character creation assistant! I can help you create or edit characters for your session. What kind of character would you like to create?"
 
 Stay focused on character building and character lorebook only.${contextSection}`;
 }
@@ -551,13 +564,14 @@ export async function generateCharacterResponse({
   };
   abortSignal?: AbortSignal;
 }): Promise<{ text: string; toolResults: unknown[] }> {
-  // Get the default lite model from store
-  const modelStore = useModelStore.getState();
-  const defaultModel: DefaultModelSelection | null = modelStore.defaultLiteModel;
+  // Get Gemini 2.5 Flash model specifically for session creation
+  const geminiFlashModel = await getAstrskAiModel(SPECIFIC_MODELS.SESSION_CREATION);
 
-  if (!defaultModel) {
-    throw new Error("No default light model configured. Please set up a default model in Settings > Providers.");
+  if (!geminiFlashModel) {
+    throw new Error("Gemini 2.5 Flash is required for session creation. Please ensure astrsk.ai provider is configured.");
   }
+
+  const defaultModel: DefaultModelSelection = geminiFlashModel;
 
   // Get the API connection
   const connectionResult = await ApiService.getApiConnection.execute(

@@ -194,6 +194,12 @@ export function useCreateSession() {
         const allCards: Array<{ id: UniqueEntityID; type: CardType; enabled: boolean }> = [];
         let sessionPlayerCharacterId: UniqueEntityID | undefined;
 
+        console.log('[SessionCreation] Processing characters:', {
+          playerCharacterId,
+          charactersCount: characters.length,
+          characters: characters.map(c => ({ tempId: c.tempId, source: c.source, hasData: !!c.data })),
+        });
+
         for (const draft of characters) {
           let finalCardId: UniqueEntityID;
 
@@ -213,6 +219,11 @@ export function useCreateSession() {
             }
 
             finalCardId = clonedCardResult.getValue().id;
+            console.log('[SessionCreation] Cloned character from library:', {
+              tempId: draft.tempId,
+              existingCardId: draft.existingCardId,
+              finalCardId: finalCardId.toString(),
+            });
           } else if (draft.data) {
             // Create new character
             const newCard = await createCharacterMutation.mutateAsync({
@@ -232,6 +243,11 @@ export function useCreateSession() {
             });
 
             finalCardId = newCard.id;
+            console.log('[SessionCreation] Created new character:', {
+              tempId: draft.tempId,
+              name: draft.data.name,
+              finalCardId: finalCardId.toString(),
+            });
           } else {
             logger.error("Invalid draft character", draft);
             continue;
@@ -239,6 +255,10 @@ export function useCreateSession() {
 
           if (playerCharacterId && draft.tempId === playerCharacterId) {
             sessionPlayerCharacterId = finalCardId;
+            console.log('[SessionCreation] Marked as player character:', {
+              tempId: draft.tempId,
+              finalCardId: finalCardId.toString(),
+            });
           }
 
           allCards.push({
@@ -247,6 +267,12 @@ export function useCreateSession() {
             enabled: true,
           });
         }
+
+        console.log('[SessionCreation] All characters processed:', {
+          allCardsCount: allCards.length,
+          allCardIds: allCards.map(c => c.id.toString()),
+          sessionPlayerCharacterId: sessionPlayerCharacterId?.toString(),
+        });
 
         // Step 4: Create scenario card if needed
         const hasScenarioData =
@@ -318,10 +344,23 @@ export function useCreateSession() {
         }
 
         // Step 5: Update session with flow and all cards
+        console.log('[SessionCreation] Updating session with:', {
+          flowId: initialFlow.id.toString(),
+          allCardsCount: allCards.length,
+          allCardIds: allCards.map(c => ({ id: c.id.toString(), type: c.type, enabled: c.enabled })),
+          userCharacterCardId: sessionPlayerCharacterId?.toString(),
+        });
+
         session.update({
           flowId: initialFlow.id,
           allCards,
           userCharacterCardId: sessionPlayerCharacterId,
+        });
+
+        console.log('[SessionCreation] Session updated, properties:', {
+          allCardsCount: session.allCards.length,
+          characterCardsCount: session.characterCards.length,
+          userCharacterCardId: session.userCharacterCardId?.toString(),
         });
 
         const savedSessionOrError = await SessionService.saveSession.execute({

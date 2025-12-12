@@ -166,25 +166,17 @@ const getGlobalDefaultModel = (
  */
 const removeCharacterNamePrefix = (content: string): string => {
   // Match character name at start followed by colon
-  // Pattern: Start of string → 2-30 non-colon characters → Optional space → Colon → Optional space
+  // Pattern: Start of string → Any non-colon, non-newline characters → Optional space → Colon → Optional space
   // Min 2 chars: Avoids matching single letters like "A:" (likely not a character name)
   // Max 30 chars: Typical character name length limit
-  const characterNamePattern = /^[^:\n]{2,30}\s*:\s*/;
+  // Matches common name patterns including quotes, symbols, etc. (e.g., john "Doe" nam:, @username:)
+  const characterNamePattern = /^[^:\n]{2,30}?\s*:\s*/;
 
   const match = content.match(characterNamePattern);
   if (match) {
     const prefix = match[0];
-    const nameWithoutColon = prefix.replace(/\s*:\s*$/, '').trim();
-
-    // Additional validation: Check if it looks like a name
-    // Names typically contain letters and possibly spaces, hyphens, apostrophes, periods
-    // Reject if it's mostly numbers or special characters
-    const namePattern = /^[A-Za-z][\w\s\-'.]{1,28}[A-Za-z.]?$/;
-
-    if (namePattern.test(nameWithoutColon)) {
-      // Remove the matched prefix and trim any leading whitespace
-      return content.slice(prefix.length).trimStart();
-    }
+    // Remove the matched prefix and trim any leading whitespace
+    return content.slice(prefix.length).trimStart();
   }
 
   return content;

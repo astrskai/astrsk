@@ -7,7 +7,7 @@
 
 import { generateText, stepCountIs } from "ai";
 
-import { useModelStore, type DefaultModelSelection } from "@/shared/stores/model-store";
+import { useModelStore, type DefaultModelSelection, getAstrskAiModel, SPECIFIC_MODELS } from "@/shared/stores/model-store";
 import { ApiService } from "@/app/services/api-service";
 import { createLiteModel } from "@/app/services/ai-model-factory";
 import { UniqueEntityID } from "@/shared/domain";
@@ -131,16 +131,14 @@ export async function generateWorkflow({
   try {
     sendProgress("initializing", "Loading AI model...");
 
-    // Get lite model
-    const modelStore = useModelStore.getState();
-    if (!modelStore.defaultLiteModel) {
-      toastError("No AI model configured", {
-        description: "Please set up a lite model in Settings > Providers to use workflow generation.",
-      });
-      throw new Error("No AI model configured. Please set up a lite model in Settings > Providers.");
+    // Get Gemini 3 Pro model specifically for workflow generation
+    const gemini3ProModel = await getAstrskAiModel(SPECIFIC_MODELS.WORKFLOW_GENERATION);
+
+    if (!gemini3ProModel) {
+      throw new Error("Gemini 3 Pro model not available. Please ensure astrsk.ai provider is configured.");
     }
 
-    const modelInfo = await getModelFromStore(modelStore.defaultLiteModel, "lite");
+    const modelInfo = await getModelFromStore(gemini3ProModel, "strong");
 
     logger.info("[WorkflowBuilder] Starting configuration", {
       nodeCount: state.nodes.length,
