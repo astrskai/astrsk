@@ -215,7 +215,7 @@ function AISection({ aiCharacters, libraryCards, onRemoveAI }: AISectionProps) {
           AI Characters
         </span>
         {aiCharacters.length > 0 && (
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/20 text-[10px] font-semibold text-purple-300">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-700 text-[10px] font-semibold text-zinc-300">
             {aiCharacters.length}
           </span>
         )}
