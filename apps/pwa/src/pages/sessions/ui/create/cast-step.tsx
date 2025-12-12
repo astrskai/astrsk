@@ -3,22 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import { createPortal } from "react-dom";
 import {
-  User,
-  Cpu,
   X,
   Plus,
   LayoutGrid,
   Users,
   Import,
-  Activity,
   Info,
   Sparkles,
   AlertTriangle,
   Globe,
-  Pencil,
   Search,
 } from "lucide-react";
-import { CharacterCard as DesignSystemCharacterCard } from "@astrsk/design-system/character-card";
 import { Button } from "@astrsk/design-system/button";
 import { IconInput } from "@astrsk/design-system/input";
 import {
@@ -27,13 +22,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
-import { DialogBase } from "@/shared/ui/dialogs/base";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
 import { cn, logger } from "@/shared/lib";
 import { SESSION_STORAGE_KEYS } from "@/shared/storage";
-import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useFilePreviewUrl } from "@/shared/hooks/use-file-preview-url";
 import type { ChatMessage } from "./chat-panel";
@@ -53,6 +46,12 @@ import {
 import { type FirstMessage } from "./scenario-step";
 import { CharacterEditPanel } from "./character-edit-panel";
 import { SessionRosterPanel } from "./session-roster-panel";
+import { LibraryCharacterCard } from "./library-character-card";
+import { DraftCharacterCard } from "./draft-character-card";
+import {
+  CharacterDetailsModal,
+  type CharacterDetailsData,
+} from "./character-details-modal";
 
 interface CastStepProps {
   // Current step for tagging chat messages
@@ -86,8 +85,6 @@ interface CastStepProps {
   onChatLoadingChange: (loading: boolean) => void;
 }
 
-const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
-
 // Initial welcome message for character creation
 const WELCOME_MESSAGE_CONTENT =
   "Need a character? Describe who you're looking for — their personality, role, or vibe — and I'll help bring them to life. You can also browse existing characters in the library.";
@@ -97,71 +94,6 @@ const TRAIL_ICON_SIZE = 48; // 12 * 4 = h-12 w-12
 const TRAIL_ICON_OFFSET = TRAIL_ICON_SIZE / 2; // Center the icon on cursor
 const PLAYER_SECTION_Y_OFFSET = 120; // Distance from roster top to player section
 const AI_SECTION_Y_OFFSET = 300; // Distance from roster top to AI section
-
-/**
- * Build character card badges based on selection state and source type
- * Labels are hidden on mobile (icon only) and shown on sm+ screens
- */
-function buildCharacterBadges(
-  isPlayer: boolean,
-  isAI: boolean,
-  isLocal: boolean,
-  isLibrary: boolean = false,
-) {
-  // Mobile: icon only with compact padding (px-1.5), no gap (gap-0)
-  // Desktop (sm+): icon + label with normal padding (px-2) and gap (sm:gap-1)
-  const responsiveStyles = "px-1.5 sm:px-2 gap-0 sm:gap-1";
-  const responsiveLabel = (text: string) => (
-    <span className="hidden sm:inline">{text}</span>
-  );
-
-  return [
-    // Source badge (left position) - icon only on mobile, with label on sm+
-    ...(isLocal
-      ? [
-          {
-            label: responsiveLabel("SESSION"),
-            variant: "default" as const,
-            position: "left" as const,
-            className: `border-amber-500/30 bg-amber-950/50 text-amber-300 ${responsiveStyles}`,
-            icon: <Sparkles size={10} />,
-          },
-        ]
-      : isLibrary
-        ? [
-            {
-              label: responsiveLabel("LIBRARY"),
-              variant: "default" as const,
-              position: "left" as const,
-              className: `border-blue-500/30 bg-blue-950/50 text-blue-300 ${responsiveStyles}`,
-              icon: <Globe size={10} />,
-            },
-          ]
-        : []),
-    // Selection badge (right position)
-    ...(isPlayer
-      ? [
-          {
-            label: responsiveLabel("PLAYER"),
-            variant: "default" as const,
-            position: "right" as const,
-            className: `border-emerald-500/30 bg-emerald-950/50 text-emerald-300 ${responsiveStyles}`,
-            icon: <User size={10} />,
-          },
-        ]
-      : isAI
-        ? [
-            {
-              label: responsiveLabel("AI"),
-              variant: "default" as const,
-              position: "right" as const,
-              className: `border-purple-500/30 bg-purple-950/50 text-purple-300 ${responsiveStyles}`,
-              icon: <Cpu size={10} />,
-            },
-          ]
-        : []),
-  ];
-}
 
 /**
  * Flying Trail Animation
@@ -266,200 +198,6 @@ function FlyingTrailOverlay({
       })}
     </AnimatePresence>,
     document.body,
-  );
-}
-
-/**
- * Library Character Card Wrapper
- * Wraps design-system CharacterCard with asset loading and footer actions
- */
-interface LibraryCharacterCardProps {
-  card: CharacterCard;
-  isPlayer: boolean;
-  isAI: boolean;
-  isLocal: boolean;
-  onAssignPlayer: () => void;
-  onAddAI: () => void;
-  onOpenDetails: () => void;
-  triggerFlyingTrail?: (
-    event: React.MouseEvent,
-    targetType: "player" | "ai",
-    name: string,
-    imageUrl?: string,
-  ) => void;
-}
-
-function LibraryCharacterCard({
-  card,
-  isPlayer,
-  isAI,
-  isLocal,
-  onAssignPlayer,
-  onAddAI,
-  onOpenDetails,
-  triggerFlyingTrail,
-}: LibraryCharacterCardProps) {
-  const [imageUrl] = useAsset(card.props.iconAssetId);
-  const isSelected = isPlayer || isAI;
-  // Library cards: isLocal=false, isLibrary=true
-  const badges = buildCharacterBadges(isPlayer, isAI, isLocal, true);
-
-  return (
-    <DesignSystemCharacterCard
-      name={card.props.name || "Unnamed"}
-      imageUrl={imageUrl}
-      placeholderImageUrl={PLACEHOLDER_IMAGE_URL}
-      summary={card.props.cardSummary}
-      tags={card.props.tags || []}
-      badges={badges}
-      onClick={onOpenDetails}
-      renderMetadata={() => null}
-      footerActions={
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isSelected) {
-                triggerFlyingTrail?.(
-                  e,
-                  "player",
-                  card.props.name || "Character",
-                  imageUrl ?? undefined,
-                );
-                onAssignPlayer();
-              }
-            }}
-            disabled={isSelected}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
-              "border-r border-zinc-800",
-              isSelected
-                ? "cursor-not-allowed text-zinc-600"
-                : "text-zinc-400 hover:bg-emerald-600/10 hover:text-emerald-300",
-            )}
-          >
-            <User size={10} className="sm:h-3 sm:w-3" /> PLAY AS
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isSelected) {
-                triggerFlyingTrail?.(
-                  e,
-                  "ai",
-                  card.props.name || "Character",
-                  imageUrl ?? undefined,
-                );
-                onAddAI();
-              }
-            }}
-            disabled={isSelected}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
-              isSelected
-                ? "cursor-not-allowed text-zinc-600"
-                : "text-zinc-400 hover:bg-purple-600/10 hover:text-purple-300",
-            )}
-          >
-            <Cpu size={10} className="sm:h-3 sm:w-3" /> ADD AS AI
-          </button>
-        </>
-      }
-    />
-  );
-}
-
-/**
- * Draft Character Card for Library
- * Displays import/chat/create characters in the library with SESSION badge
- * Includes edit action on hover (session characters are editable)
- */
-interface DraftCharacterCardProps {
-  draft: DraftCharacter;
-  isPlayer: boolean;
-  isAI: boolean;
-  onAssignPlayer: (e: React.MouseEvent, imageUrl?: string) => void;
-  onAddAI: (e: React.MouseEvent, imageUrl?: string) => void;
-  onOpenDetails: (imageUrl?: string) => void;
-  onEdit: () => void;
-}
-
-function DraftCharacterCard({
-  draft,
-  isPlayer,
-  isAI,
-  onAssignPlayer,
-  onAddAI,
-  onOpenDetails,
-  onEdit,
-}: DraftCharacterCardProps) {
-  const isSelected = isPlayer || isAI;
-  const name = draft.data?.name || "Unnamed";
-  // Use hook to manage object URL lifecycle from imageFile
-  const imageUrl = useFilePreviewUrl(
-    draft.data?.imageFile,
-    draft.data?.imageUrl,
-  );
-  // Draft characters are always local (session)
-  const badges = buildCharacterBadges(isPlayer, isAI, true);
-
-  return (
-    <DesignSystemCharacterCard
-      name={name}
-      imageUrl={imageUrl}
-      placeholderImageUrl={PLACEHOLDER_IMAGE_URL}
-      summary={draft.data?.cardSummary}
-      tags={draft.data?.tags || []}
-      badges={badges}
-      className="border-dashed border-amber-500/50"
-      onClick={() => onOpenDetails(imageUrl)}
-      renderMetadata={() => null}
-      footerActions={
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isSelected) onAssignPlayer(e, imageUrl);
-            }}
-            disabled={isSelected}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
-              "border-r border-zinc-800",
-              isSelected
-                ? "cursor-not-allowed text-zinc-600"
-                : "text-zinc-400 hover:bg-emerald-600/10 hover:text-emerald-300",
-            )}
-          >
-            <User size={10} className="sm:h-3 sm:w-3" /> PLAY AS
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isSelected) onAddAI(e, imageUrl);
-            }}
-            disabled={isSelected}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 py-2 text-[9px] font-bold transition-all sm:gap-1.5 sm:py-3 sm:text-[10px]",
-              "border-r border-zinc-800",
-              isSelected
-                ? "cursor-not-allowed text-zinc-600"
-                : "text-zinc-400 hover:bg-purple-600/10 hover:text-purple-300",
-            )}
-          >
-            <Cpu size={10} className="sm:h-3 sm:w-3" /> ADD AS AI
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            className="flex items-center justify-center px-2 py-2 text-zinc-400 transition-all hover:bg-zinc-600/10 hover:text-zinc-200 sm:px-3 sm:py-3"
-          >
-            <Pencil size={12} className="sm:h-3.5 sm:w-3.5" />
-          </button>
-        </>
-      }
-    />
   );
 }
 
@@ -1372,145 +1110,5 @@ export function CastStep({
         />
       </div>
     </div>
-  );
-}
-
-/**
- * Unified character data for details modal
- * Supports both CharacterCard (from DB) and DraftCharacter (local)
- */
-interface CharacterDetailsData {
-  name: string;
-  description?: string;
-  cardSummary?: string;
-  tags?: string[];
-  version?: string;
-  imageUrl?: string;
-  // For library characters, we need asset ID to load image
-  iconAssetId?: UniqueEntityID;
-}
-
-/**
- * Character Details Modal
- * Shows full character information when clicking on a card
- * Supports both library characters (CharacterCard) and draft characters (DraftCharacter)
- * Uses DialogBase for consistent styling, accessibility, and proper mobile viewport handling
- */
-function CharacterDetailsModal({
-  character,
-  onClose,
-}: {
-  character: CharacterDetailsData | null;
-  onClose: () => void;
-}) {
-  // Load image from asset if iconAssetId is provided (library characters)
-  const [assetImageUrl] = useAsset(character?.iconAssetId);
-  // Use asset URL if available, otherwise use direct imageUrl (draft characters)
-  const imageUrl = assetImageUrl || character?.imageUrl;
-
-  return (
-    <DialogBase
-      open={!!character}
-      onOpenChange={(open) => !open && onClose()}
-      title={character?.name || "Character Details"}
-      hideTitle
-      size="lg"
-      isShowCloseButton
-      className="overflow-hidden p-0"
-      contentClassName="md:overflow-hidden!"
-      content={
-        character && (
-          <div className="flex flex-col md:h-[400px] md:flex-row">
-            {/* Visual Side - Character Image */}
-            {/* Mobile: sticky top, Desktop: fixed left column */}
-            <div className="bg-surface-raised sticky top-0 z-10 md:relative md:top-auto md:z-auto md:h-full md:w-2/5">
-              <div className="from-brand-600 to-brand-800 relative flex h-48 w-full flex-col justify-end overflow-hidden bg-gradient-to-br md:h-full">
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={character.name || ""}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-5xl font-black text-white/50 md:text-6xl">
-                      {(character.name || "??").substring(0, 2).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-                {/* Character Name Overlay */}
-                <div className="relative z-10 p-4 md:p-6">
-                  <h2 className="text-lg leading-tight font-bold text-white md:text-2xl">
-                    {character.name || "Unnamed"}
-                  </h2>
-                  {character.version && (
-                    <p className="mt-1 font-mono text-xs text-white/70 md:text-sm">
-                      v{character.version}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Data Side - Character Info */}
-            <div className="relative flex flex-1 flex-col md:h-full md:min-h-0">
-              {/* Header - sticky on mobile, fixed on desktop */}
-              <div className="bg-surface-raised sticky top-48 z-10 px-4 pt-4 pb-4 md:relative md:top-auto md:z-auto md:px-6 md:pt-6 md:pb-4">
-                <h3 className="text-fg-muted mb-1 flex items-center gap-2 text-xs font-bold tracking-widest uppercase">
-                  <Activity size={12} /> Character Info
-                </h3>
-                <div className="bg-brand-500 h-0.5 w-12" />
-              </div>
-
-              {/* Content (scrollable on desktop) */}
-              <div className="flex-1 space-y-4 px-4 pb-8 md:space-y-5 md:overflow-y-auto md:px-6 md:pb-10">
-                {/* Summary */}
-                {character.cardSummary && (
-                  <p className="text-fg-muted border-border-default border-l-2 pl-3 text-sm leading-relaxed md:pl-4">
-                    {character.cardSummary}
-                  </p>
-                )}
-
-                {/* Description */}
-                {character.description && (
-                  <div>
-                    <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
-                      Description
-                    </h4>
-                    <p className="text-fg-muted text-sm leading-relaxed whitespace-pre-wrap">
-                      {character.description}
-                    </p>
-                  </div>
-                )}
-
-                {/* Tags */}
-                {character.tags && character.tags.length > 0 && (
-                  <div>
-                    <h4 className="text-fg-subtle mb-2 font-mono text-[10px] uppercase">
-                      Tags
-                    </h4>
-                    <div className="flex flex-wrap gap-1.5 md:gap-2">
-                      {character.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="bg-surface-raised text-brand-300 border-border-default rounded border px-1.5 py-0.5 text-xs md:px-2 md:py-1"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom fade overlay - sticky on mobile, absolute on desktop */}
-              <div className="from-surface-raised pointer-events-none sticky bottom-0 h-12 w-full bg-gradient-to-t to-transparent md:absolute md:inset-x-0" />
-            </div>
-          </div>
-        )
-      }
-    />
   );
 }

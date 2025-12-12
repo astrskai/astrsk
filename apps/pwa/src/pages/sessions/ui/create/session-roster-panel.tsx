@@ -171,7 +171,9 @@ function PlayerSection({
 
               {/* Remove button */}
               <button
+                type="button"
                 onClick={onRemove}
+                aria-label="Remove player character"
                 className="rounded p-1 text-zinc-600 transition-colors hover:bg-zinc-700/50 hover:text-zinc-400 md:opacity-0 md:group-hover:opacity-100"
               >
                 <X size={14} />
@@ -322,7 +324,9 @@ function AICharacterListItem({
 
       {/* Remove button */}
       <button
+        type="button"
         onClick={onRemove}
+        aria-label="Remove AI character"
         className="rounded p-1 text-zinc-600 transition-colors hover:bg-zinc-700/50 hover:text-zinc-400 md:opacity-0 md:group-hover:opacity-100"
       >
         <X size={14} />

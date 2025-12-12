@@ -20,8 +20,10 @@ import {
   X,
 } from "lucide-react";
 import { Input, Textarea, Button } from "@/shared/ui/forms";
+import { toastError } from "@/shared/ui/toast";
 import { useFilePreviewUrl } from "@/shared/hooks/use-file-preview-url";
 import type { LorebookEntryData } from "@/entities/character/types";
+import { TAG_DEFAULT } from "@/entities/card/domain/tag-constants";
 import type { DraftCharacter } from "./draft-character";
 
 export interface CharacterEditPanelProps {
@@ -67,6 +69,14 @@ function characterToFormData(character: DraftCharacter): CharacterFormData {
         content: entry.content || "",
       })) || [],
   };
+}
+
+/**
+ * Deep compare two form data objects to detect if they're the same
+ * Used to distinguish our own save echoing back from external changes
+ */
+function isSameFormData(a: CharacterFormData, b: CharacterFormData): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
 }
 
 /**
@@ -157,6 +167,14 @@ export function CharacterEditPanel({
     onSave(updatedCharacter);
   }, 500);
 
+  // Cancel pending debounced saves on character switch or unmount
+  // to avoid saving stale data to the wrong character
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, [debouncedSave]);
+
   // Watch form changes and trigger debounced save
   // Using watch() subscription - the official react-hook-form API
   // Note: We don't check isDirty here because the callback fires BEFORE
@@ -182,19 +200,11 @@ export function CharacterEditPanel({
     }
 
     // Case 2: Same character - check if this is our own save echoing back
+    // Use deep comparison to detect all field changes (tags, lorebook content, etc.)
     const lastSaved = lastSavedDataRef.current;
-    if (lastSaved) {
-      // Compare key fields to detect if this is our save or external change
-      const isSameAsLastSave =
-        lastSaved.name === incomingFormData.name &&
-        lastSaved.description === incomingFormData.description &&
-        lastSaved.cardSummary === incomingFormData.cardSummary &&
-        lastSaved.lorebook.length === incomingFormData.lorebook.length;
-
-      if (isSameAsLastSave) {
-        // Our own save echoed back - don't reset
-        return;
-      }
+    if (lastSaved && isSameFormData(lastSaved, incomingFormData)) {
+      // Our own save echoed back - don't reset
+      return;
     }
 
     // External change detected (AI modified character) - reset form
@@ -211,10 +221,15 @@ export function CharacterEditPanel({
     // Validate file type
     const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
+      toastError("Unsupported file type. Please use PNG, JPEG, or WebP.");
+      // Reset input to allow re-selecting the same file
+      e.target.value = "";
       return;
     }
 
     imageFileRef.current = file;
+    // Reset input to allow re-selecting the same file
+    e.target.value = "";
     // Trigger save for image change
     debouncedSave();
   };
@@ -239,6 +254,19 @@ export function CharacterEditPanel({
       watchedTags.filter((tag) => tag !== tagToRemove),
       { shouldDirty: true },
     );
+  };
+
+  // Toggle default tag (add if not present, remove if present)
+  const handleToggleDefaultTag = (tag: string) => {
+    if (watchedTags.includes(tag)) {
+      setValue(
+        "tags",
+        watchedTags.filter((t) => t !== tag),
+        { shouldDirty: true },
+      );
+    } else {
+      setValue("tags", [...watchedTags, tag], { shouldDirty: true });
+    }
   };
 
   // Add new lorebook entry
@@ -362,33 +390,57 @@ export function CharacterEditPanel({
           </section>
 
           {/* Tags Section */}
-          <section className="space-y-2">
+          <section className="space-y-3">
             <h3 className="text-xs text-zinc-200">Tags</h3>
 
-            {watchedTags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {watchedTags.map((tag) => (
-                  <span
+            {/* Default Tags - toggleable preset tags */}
+            <div className="flex flex-wrap gap-1.5">
+              {TAG_DEFAULT.map((tag) => {
+                const isSelected = watchedTags.includes(tag);
+                return (
+                  <button
                     key={tag}
-                    className="bg-brand-500/20 text-brand-400 flex items-center gap-2 rounded-md px-2 py-1 text-xs font-medium"
+                    type="button"
+                    onClick={() => handleToggleDefaultTag(tag)}
+                    className={`rounded-md px-2 py-1 text-xs font-medium shadow-sm transition-colors ${
+                      isSelected
+                        ? "bg-brand-500/20 text-brand-400"
+                        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300"
+                    }`}
                   >
                     {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-brand-300"
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom Tags - user-added tags (excludes default tags) */}
+            {watchedTags.filter((tag) => !TAG_DEFAULT.includes(tag)).length >
+              0 && (
+              <div className="flex flex-wrap gap-2">
+                {watchedTags
+                  .filter((tag) => !TAG_DEFAULT.includes(tag))
+                  .map((tag) => (
+                    <span
+                      key={tag}
+                      className="bg-brand-500/20 text-brand-400 flex items-center gap-2 rounded-md px-2 py-1 text-xs font-medium"
                     >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="hover:text-brand-300"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
               </div>
             )}
 
             <div className="relative">
               <Input
                 ref={tagInputRef}
-                labelPosition="inner"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
