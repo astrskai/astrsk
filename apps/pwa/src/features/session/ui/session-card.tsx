@@ -106,7 +106,7 @@ const SessionCard = ({
       ) : (
         <>
           {/* Header Image Area */}
-          <div className="relative h-48 overflow-hidden bg-zinc-800">
+          <div className="relative h-56 overflow-hidden bg-zinc-800">
         {/* Cover Image - use placeholder if no cover image */}
         <img
           src={imageUrl || "/img/placeholder/scenario-placeholder.png"}
@@ -150,26 +150,8 @@ const SessionCard = ({
       {/* Session Details */}
       <div className="flex flex-grow flex-col justify-between p-5">
         <div className="space-y-3">
-          {/* Message Count */}
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-2 text-sm">
-            {messageCount === 0 ? (
-              <span className="text-zinc-400">New session</span>
-            ) : (
-              <div className="flex items-center gap-2">
-                {messageCount === 1 ? (
-                  <MessageSquare className="h-4 w-4 text-white" />
-                ) : (
-                  <MessagesSquare className="h-4 w-4 text-white" />
-                )}
-                <span className="font-semibold text-zinc-300">
-                  {messageCount.toLocaleString()}
-                </span>
-                <span className="text-zinc-400">
-                  {messageCount === 1 ? "Message" : "Messages"}
-                </span>
-              </div>
-            )}
-          </div>
+          {/* Separator */}
+          <div className="border-b border-zinc-800 pb-2" />
 
           {/* Character Avatars */}
           {areCharactersLoading ? (

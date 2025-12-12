@@ -35,7 +35,7 @@ import {
 } from "@/features/character/ui/persona-selection-dialog";
 
 const PLACEHOLDER_IMAGE_URL = "/img/placeholder/character-placeholder.png";
-const DEFAULT_FLOW_FILE = "Simple.json";
+const DEFAULT_FLOW_FILE = "Simple_complete.json";
 
 /**
  * Lorebook Item Title - View Mode (matches editor styling)
