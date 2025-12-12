@@ -21,6 +21,7 @@ import { DrizzleSessionRepo } from "@/entities/session/repos/impl/drizzle-sessio
 import {
   AddMessage,
   BulkDeleteMessage,
+  ClonePlaySession,
   CloneSession,
   DeleteMessage,
   DeleteSession,
@@ -58,6 +59,7 @@ export class SessionService {
 
   public static addMessage: AddMessage;
   public static bulkDeleteMessage: BulkDeleteMessage;
+  public static clonePlaySession: ClonePlaySession;
   public static cloneSession: CloneSession;
   public static deleteMessage: DeleteMessage;
   public static deleteSession: DeleteSession;
@@ -126,6 +128,10 @@ export class SessionService {
       cloneFlow,
       cloneAsset,
       cloneBackground,
+    );
+    this.clonePlaySession = new ClonePlaySession(
+      this.cloneSession,
+      this.sessionRepo,
     );
     this.deleteMessage = new DeleteMessage(
       turnRepo,

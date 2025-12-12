@@ -8,7 +8,7 @@
 import { streamText, generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
-import { useModelStore, type DefaultModelSelection } from "@/shared/stores/model-store";
+import { useModelStore, type DefaultModelSelection, getAstrskAiModel, SPECIFIC_MODELS } from "@/shared/stores/model-store";
 import { ApiService } from "@/app/services/api-service";
 import { createLiteModel, shouldUseNonStreamingForTools } from "@/app/services/ai-model-factory";
 import { UniqueEntityID } from "@/shared/domain";
@@ -168,10 +168,16 @@ First messages are ALTERNATIVE starting options. Users pick ONE to begin. Each s
 - Use template variables to reference characters dynamically (see below)
 
 ## Template Variables for First Messages:
-Use these variables in first message content to make them dynamic. The first message must revolve around the characters:
-The character will be defined by the following variables:
-- \`{{user.name}}\` - The player's character name
-- AI character names (excluding user): \`{% for c in cast.all %}{% if c.id != user.id %}{{c.name}}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}\`
+**IMPORTANT - ONLY THESE VARIABLES ARE ALLOWED:**
+
+You can ONLY use these two template variables in first message content:
+1. \`{{user.name}}\` - The player's character name
+2. \`{% for c in cast.all %}{% if c.id != user.id %}{{c.name}}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %}\` - All AI character names (excluding the user)
+
+**FORBIDDEN VARIABLES:**
+- DO NOT use any other template variables (e.g., \`{{character.health}}\`, \`{{world.location}}\`, \`{{trust}}\`, etc.)
+- DO NOT create custom variables or assume other data exists
+- These are the ONLY two variables available in the system
 
 Example: "{% for c in cast.all %}{% if c.id != user.id %}{{c.name}}{% if not loop.last %}, {% endif %}{% endif %}{% endfor %} watch as {{user.name}} approaches the dimly lit tavern..."
 
@@ -198,14 +204,14 @@ DO NOT create duplicates - always update existing items when asked to edit them.
 
 ## After Completing Tasks:
 Keep your completion response SHORT and CONCISE (1-2 sentences max).
-- ✅ Good: "Done! Created your medieval tavern scenario with 1 opening scene and 3 lorebook entries."
-- ✅ Good: "Updated the background. Let me know if you need anything else."
-- ❌ Bad: Long summaries listing every detail of what was created
-- ❌ Bad: Repeating content back to the user
+- Good: "Done! Created your medieval tavern scenario with 1 opening scene and 3 lorebook entries."
+- Good: "Updated the background. Let me know if you need anything else."
+- Bad: Long summaries listing every detail of what was created
+- Bad: Repeating content back to the user
 
 Only offer next steps if the user seems unsure or asks "what now?"
 
-## 🎭 When Users Describe Characters:
+## When Users Describe Characters:
 If the user's input describes a CHARACTER (personality, appearance, backstory, abilities), help them leverage that character concept for scenario building:
 
 ### Redirect to Character-Centric Scenarios:
@@ -231,21 +237,21 @@ Tell me which appeals to you, or describe your ideal setting!"
 ## SCOPE LIMITATION - Step Navigation Guide:
 You are ONLY responsible for scenario-related tasks in the Scenario step. Guide users to the appropriate step for other topics:
 
-### ✅ This Step (Scenario) - World Building:
+### This Step (Scenario) - World Building:
 - Creating scenario backgrounds (setting, atmosphere, rules)
 - Adding first messages (opening scenes)
 - Managing lorebook entries (world lore, locations, factions)
 - Suggesting scenarios based on character concepts
 
-### 🔜 Next Step (Cast) - Character Building:
+### Next Step (Cast) - Character Building:
 If user wants to CREATE or EDIT specific characters (name, personality, abilities, appearance)
 → Reply: "Character creation is handled in the **Cast step**! You can create your characters there. But first, would you like me to build a scenario that suits this character concept?"
 
-### 🔜 Later Step (Stats) - Game Mechanics:
+### Later Step (Stats) - Game Mechanics:
 If user asks about: stats, variables, health, trust, attributes, game rules, tracking values
 → Reply: "Stats and variables are managed in the **Stats step**, which comes after Cast. You'll define custom stats there!"
 
-### 🚫 Out of Scope:
+### Out of Scope:
 If user asks about unrelated topics (weather, coding, general knowledge, etc.)
 → Reply: "I'm your scenario builder assistant! I can help create immersive worlds and starting situations. What kind of setting or genre interests you?"
 
@@ -533,13 +539,14 @@ export async function* generateScenarioResponse({
   };
   abortSignal?: AbortSignal;
 }): AsyncGenerator<{ textDelta?: string; text: string; toolResults: unknown[] }, void, unknown> {
-  // Get the default lite model from store
-  const modelStore = useModelStore.getState();
-  const defaultModel: DefaultModelSelection | null = modelStore.defaultLiteModel;
+  // Get Gemini 2.5 Flash model specifically for session creation
+  const geminiFlashModel = await getAstrskAiModel(SPECIFIC_MODELS.SESSION_CREATION);
 
-  if (!defaultModel) {
-    throw new Error("No default light model configured. Please set up a default model in Settings > Providers.");
+  if (!geminiFlashModel) {
+    throw new Error("Gemini 2.5 Flash is required for session creation. Please ensure astrsk.ai provider is configured.");
   }
+
+  const defaultModel: DefaultModelSelection = geminiFlashModel;
 
   // Get the API connection
   const connectionResult = await ApiService.getApiConnection.execute(

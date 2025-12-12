@@ -258,6 +258,11 @@ export class Session extends AggregateRoot<SessionProps> {
     this.props.allCards = this.allCards.filter(
       (card) => !card.id.equals(cardId),
     );
+
+    // Clear userCharacterCardId if the deleted card was the user character
+    if (this.props.userCharacterCardId?.equals(cardId)) {
+      this.props.userCharacterCardId = undefined;
+    }
   }
 
   public setCardEnabled(cardId: UniqueEntityID, enabled: boolean): void {

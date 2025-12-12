@@ -5,13 +5,25 @@ import { immer } from "zustand/middleware/immer";
 import { createSelectors } from "@/shared/lib/zustand-utils";
 import { LocalPersistStorage } from "@/shared/stores/local-persist-storage";
 
-// Language model options - using provider/modelId format for AstrskAi backend
+// Language model options - using openai-compatible format for AstrskAi backend
+// These match the model IDs from list-astrskai-model-strategy.ts
 export const LANGUAGE_MODELS = {
-  GEMINI_2_5_PRO: "google/gemini-2.5-pro",
-  GEMINI_2_5_FLASH: "google/gemini-2.5-flash",
-  GEMINI_2_5_FLASH_LITE: "google/gemini-2.5-flash-lite",
-  DEEPSEEK_V3: "deepseek/deepseek-chat-v3.1",
-  DEEPSEEK_V3_0324: "deepseek/deepseek-chat-v3-0324",
+  DEEPSEEK_OFFICIAL: "openai-compatible:deepseek/deepseek-chat",
+  GEMINI_3_PRO: "openai-compatible:google/gemini-3-pro",
+  GEMINI_2_5_FLASH: "openai-compatible:google/gemini-2.5-flash",
+  GEMINI_2_5_FLASH_LITE: "openai-compatible:google/gemini-2.5-flash-lite",
+  GLM_4_6_FRIENDLI: "openai-compatible:zai-org/GLM-4.6",
+  GLM_4_6_OFFICIAL: "openai-compatible:glm-4.6",
+  DEEPSEEK_V3_1_BYTEPLUS: "openai-compatible:byteplus/deepseek-v3-1",
+  OSS_120B_BYTEPLUS: "openai-compatible:byteplus/oss-120b",
+} as const;
+
+// Specific model IDs for different use cases (astrsk.ai provider)
+export const SPECIFIC_MODELS = {
+  // For session creation - use Gemini 2.5 Flash
+  SESSION_CREATION: "openai-compatible:google/gemini-2.5-flash",
+  // For workflow generation - use Gemini 3 Pro
+  WORKFLOW_GENERATION: "openai-compatible:google/gemini-3-pro",
 } as const;
 
 export type LanguageModel =
@@ -113,3 +125,52 @@ const useModelStoreBase = create<ModelState>()(
 );
 
 export const useModelStore = createSelectors(useModelStoreBase);
+
+/**
+ * Helper function to get a specific model configuration for astrsk.ai provider
+ * This is used for hardcoded model selections (session creation, workflow generation)
+ * @param modelId - The model ID (e.g., "google/gemini-2.5-flash")
+ * @returns DefaultModelSelection or null if astrsk.ai provider not found
+ */
+export async function getAstrskAiModel(modelId: string): Promise<DefaultModelSelection | null> {
+  const { ApiService } = await import("@/app/services");
+  const { ApiSource } = await import("@/entities/api/domain");
+
+  // Get astrsk.ai provider
+  const connectionsResult = await ApiService.listApiConnection.execute({});
+  if (connectionsResult.isFailure) {
+    return null;
+  }
+
+  const connections = connectionsResult.getValue();
+  const astrskaiProvider = connections.find(
+    (conn) => conn.source === ApiSource.AstrskAi
+  );
+
+  if (!astrskaiProvider) {
+    return null;
+  }
+
+  // Get models from provider to find the model name
+  const modelsResult = await ApiService.listApiModel.execute({
+    apiConnectionId: astrskaiProvider.id,
+  });
+
+  if (modelsResult.isFailure) {
+    return null;
+  }
+
+  const models = modelsResult.getValue();
+  const model = models.find((m) => m.id === modelId);
+
+  if (!model) {
+    return null;
+  }
+
+  return {
+    apiConnectionId: astrskaiProvider.id.toString(),
+    apiSource: ApiSource.AstrskAi,
+    modelId: model.id,
+    modelName: model.name,
+  };
+}

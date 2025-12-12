@@ -79,6 +79,7 @@ async function initializeApp() {
     { id: "session-service", label: "Initialize session service" },
     { id: "api-connections", label: "Load API connections" },
     { id: "free-provider", label: "Setup free AI provider (if needed)" },
+    { id: "default-models", label: "Configure default models" },
     { id: "check-sessions", label: "Check existing sessions" },
     { id: "default-sessions", label: "Import default sessions (new users)" },
     { id: "backgrounds", label: "Load background assets" },

@@ -9,7 +9,7 @@
 import { streamText, generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
-import { useModelStore, type DefaultModelSelection } from "@/shared/stores/model-store";
+import { useModelStore, type DefaultModelSelection, getAstrskAiModel, SPECIFIC_MODELS } from "@/shared/stores/model-store";
 import { ApiService } from "@/app/services/api-service";
 import { createLiteModel, shouldUseNonStreamingForTools } from "@/app/services/ai-model-factory";
 import { UniqueEntityID } from "@/shared/domain";
@@ -46,21 +46,38 @@ function buildSystemPrompt(_context: DataSchemaContext): string {
 ## Task:
 Create GENERAL, REUSABLE trackable variables (data stores) for the scenario. These are displayed to players and tracked by AI agents.
 
-## Rules:
-1. **NO CHARACTER-SPECIFIC TRACKERS** - Use general names like "trust", "affection" not "yui_affection"
-2. **SNAKE_CASE NAMES ONLY** - Use lowercase letters, numbers, and underscores only (e.g., "physical_condition", "alert_level", "health_points"). No spaces, apostrophes, or special characters.
-3. **QUALITY OVER QUANTITY** - Only create meaningful trackers for this scenario
-4. **GENRE-APPROPRIATE** - Match the setting's theme
-5. **FIELD LIMIT: Generate MAXIMUM 8 data stores** unless the user explicitly requests more
+## CRITICAL: Variable Perspective Rules
+Variables must belong to ONE of these perspectives ONLY:
+
+1. **WORLD PERSPECTIVE (PRIMARY)** - Environmental/location variables
+   - Examples: "world_location", "time_of_day", "weather", "danger_level", "area_explored"
+   - Focus: Setting, environment, global state that affects everyone
+
+2. **USER PERSPECTIVE (SECONDARY, ONLY IF NEEDED)** - User-specific variables
+   - Examples: "user_health", "user_stamina", "user_inventory_count"
+   - Focus: Only the user/player character state, NOT other characters
+
+**FORBIDDEN**:
+- NO OTHER CHARACTER VARIABLES - Do NOT create variables for NPCs, companions, or any character except the user
+- NO CHARACTER-SPECIFIC TRACKERS - No "yui_affection", "companion_trust", "npc_health", etc.
+- NO RELATIONSHIP TRACKERS - No "trust_with_X", "relationship_with_Y"
+
+**Why**: Other characters are handled separately. Variables are ONLY for world state and user state.
+
+## Additional Rules:
+1. **SNAKE_CASE NAMES ONLY** - Use lowercase letters, numbers, and underscores only (e.g., "world_location", "user_health", "danger_level"). No spaces, apostrophes, or special characters.
+2. **QUALITY OVER QUANTITY** - Only create meaningful trackers for this scenario
+3. **GENRE-APPROPRIATE** - Match the setting's theme
+4. **FIELD LIMIT: Generate MAXIMUM 8 data stores** unless the user explicitly requests more
    - **RECOMMENDED: 4-6 data stores** - Aim for this range per scenario
    - Too few (<3): Missing important tracking dimensions
    - Too many (>8): Overwhelming for players and AI to manage
    - **If user doesn't specify a number, generate NO MORE than 8 fields**
 
 ## Data Store Types - MIX QUANTITATIVE AND QUALITATIVE:
-- **integer** - Quantitative metrics (e.g., health: 0-100, trust_level: 0-100, energy: 0-100)
-- **boolean** - Binary states (e.g., has_weapon, is_injured, door_locked)
-- **string** - Qualitative/categorical states (e.g., current_mood: "calm/anxious/angry", location: "forest/cave/village", weather: "sunny/rainy/stormy")
+- **integer** - Quantitative metrics (e.g., user_health: 0-100, danger_level: 0-100, user_stamina: 0-100)
+- **boolean** - Binary states (e.g., user_has_weapon, area_secured, door_locked)
+- **string** - Qualitative/categorical states (e.g., world_location: "forest/cave/village", weather: "sunny/rainy/stormy", time_of_day: "morning/afternoon/evening/night")
 
 ## IMPORTANT: Recommended Ranges for Gradual Progression
 For integer fields, choose range based on tracking precision needed:
@@ -83,8 +100,9 @@ Choose the range that best fits the tracking granularity needed for the scenario
 
 ## IMPORTANT: Balance Both Types
 - Don't create only numeric trackers! Include qualitative states too.
-- Good mix example: health (integer), has_key (boolean), current_location (string), mood (string), stamina (integer)
+- Good mix example: user_health (integer), user_has_key (boolean), world_location (string), weather (string), danger_level (integer)
 - Qualitative states (string/boolean) often matter MORE for roleplay than numbers.
+- Remember: Focus on WORLD perspective (primary) and USER perspective (only if needed). NO other character variables.
 
 ## Field Relationships:
 Fields are updated by AI agents in a workflow with branching. In descriptions, note:
@@ -124,10 +142,10 @@ Stay focused on stats and variables only. Be helpful and friendly when redirecti
 
 ## After Completing Tasks:
 Keep your completion response SHORT and CONCISE (1-2 sentences max).
-- ✅ Good: "Done! Added 5 variables for tracking health, trust, and mood."
-- ✅ Good: "Added the stamina tracker. Let me know if you need more."
-- ❌ Bad: Long explanations listing every field's purpose and range
-- ❌ Bad: Repeating the variable configurations back to the user
+- Good: "Done! Added 5 variables for tracking health, trust, and mood."
+- Good: "Added the stamina tracker. Let me know if you need more."
+- Bad: Long explanations listing every field's purpose and range
+- Bad: Repeating the variable configurations back to the user
 
 Only offer suggestions if the user asks "what else?" or seems unsure.
 
@@ -276,13 +294,14 @@ export async function generateDataSchema({
   };
   abortSignal?: AbortSignal;
 }): Promise<{ text: string; stores: DataSchemaEntry[] }> {
-  // Get the default lite model from store
-  const modelStore = useModelStore.getState();
-  const defaultModel: DefaultModelSelection | null = modelStore.defaultLiteModel;
+  // Get Gemini 2.5 Flash model specifically for session creation
+  const geminiFlashModel = await getAstrskAiModel(SPECIFIC_MODELS.SESSION_CREATION);
 
-  if (!defaultModel) {
-    throw new Error("No default light model configured. Please set up a default model in Settings > Providers.");
+  if (!geminiFlashModel) {
+    throw new Error("Gemini 2.5 Flash is required for session creation. Please ensure astrsk.ai provider is configured.");
   }
+
+  const defaultModel: DefaultModelSelection = geminiFlashModel;
 
   // Get the API connection
   const connectionResult = await ApiService.getApiConnection.execute(
@@ -388,16 +407,6 @@ Now use the add_data_store tool to create the data stores.`;
     { role: "user" as const, content: userMessage },
   ];
 
-  logger.info("[DataSchemaBuilder] Initial messages", {
-    messageCount: initialMessages.length,
-    systemPromptLength: baseSystemPrompt.length,
-    userMessageLength: userMessage.length,
-    messages: initialMessages.map(m => ({
-      role: m.role,
-      content: m.content.substring(0, 100),
-    })),
-  });
-
   try {
     // GLM models require thinking to be disabled for tool calling
     const isGlmModel = defaultModel.modelId.toLowerCase().includes("glm");
@@ -417,7 +426,6 @@ Now use the add_data_store tool to create the data stores.`;
 
     if (useNonStreaming) {
       // Use non-streaming generateText (model requires it)
-      logger.info("[DataSchemaBuilder] Using non-streaming mode");
 
       const result = await generateText({
         model,
@@ -426,13 +434,6 @@ Now use the add_data_store tool to create the data stores.`;
         stopWhen: stepCountIs(10), // Allow multiple tool calls for each data store
         abortSignal,
         ...glmOptions,
-      });
-
-      // Log detailed response information
-      logger.info("[DataSchemaBuilder] Response generated (non-streaming)", {
-        text: result.text?.substring(0, 200),
-        fullText: result.text,
-        storesCreated: generatedStores.length,
       });
 
       return {
@@ -539,13 +540,14 @@ export async function refineDataSchema({
   };
   abortSignal?: AbortSignal;
 }): Promise<{ text: string }> {
-  // Get the default lite model from store
-  const modelStore = useModelStore.getState();
-  const defaultModel: DefaultModelSelection | null = modelStore.defaultLiteModel;
+  // Get Gemini 2.5 Flash model specifically for session creation
+  const geminiFlashModel = await getAstrskAiModel(SPECIFIC_MODELS.SESSION_CREATION);
 
-  if (!defaultModel) {
-    throw new Error("No default light model configured. Please set up a default model in Settings > Providers.");
+  if (!geminiFlashModel) {
+    throw new Error("Gemini 2.5 Flash is required for session creation. Please ensure astrsk.ai provider is configured.");
   }
+
+  const defaultModel: DefaultModelSelection = geminiFlashModel;
 
   // Get the API connection
   const connectionResult = await ApiService.getApiConnection.execute(
@@ -613,8 +615,6 @@ export async function refineDataSchema({
 
     if (useNonStreaming) {
       // Use non-streaming generateText (model requires it)
-      logger.info("[DataSchemaBuilder] Refinement using non-streaming mode");
-
       const result = await generateText({
         model,
         messages,
@@ -653,13 +653,6 @@ export async function refineDataSchema({
         onStepFinish: (step) => {
           const { text, toolCalls, toolResults, finishReason, response } = step;
 
-          logger.info("[DataSchemaBuilder] Refinement step finished", {
-            text: text?.substring(0, 100),
-            toolCallsCount: toolCalls?.length || 0,
-            toolResultsCount: toolResults?.length || 0,
-            finishReason,
-            hasResponse: !!response,
-          });
 
           // If there's an error, try to get more details
           if (finishReason === 'error') {
@@ -673,12 +666,6 @@ export async function refineDataSchema({
 
       // Wait for the stream to complete and get final text
       const text = await result.text;
-
-      logger.info("[DataSchemaBuilder] Refinement completed (streaming)", {
-        text: text?.substring(0, 100),
-        fullText: text,
-        textLength: text?.length || 0,
-      });
 
       // If text is empty, log warning with more details
       if (!text || text.trim().length === 0) {
@@ -706,10 +693,6 @@ export async function refineDataSchema({
       };
     }
 
-    logger.error("[DataSchemaBuilder] Error refining data schema", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
     throw error;
   }
 }

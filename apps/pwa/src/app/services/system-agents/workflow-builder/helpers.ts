@@ -345,15 +345,24 @@ export function workflowStateToFlowData(
       ? modelSettings?.strongModel
       : modelSettings?.liteModel;
 
+    // Determine if we should use default model or specific model
+    // If model info is available, use specific model (useDefaultModel: false)
+    // Otherwise, fall back to tier-based defaults (useDefaultModel: true)
+    const hasModelInfo = modelInfo && modelInfo.apiSource && modelInfo.modelId;
+
     agents[nodeId] = {
       name: agent.name,
       description: agent.description,
       targetApiType: ApiType.Chat,
       modelTier: agent.modelTier,
+      // Use specific models from generation if available, otherwise use tier-based defaults
+      useDefaultModel: !hasModelInfo,
       // Apply API connection from model settings if available
-      apiSource: modelInfo?.apiSource,
-      modelId: modelInfo?.modelId,
-      modelName: modelInfo?.modelName,
+      ...(hasModelInfo && {
+        apiSource: modelInfo.apiSource,
+        modelId: modelInfo.modelId,
+        modelName: modelInfo.modelName,
+      }),
       promptMessages: agent.promptMessages,
       textPrompt: "",
       enabledStructuredOutput: agent.enabledStructuredOutput,

@@ -6,7 +6,7 @@
 
 import { generateText } from "ai";
 
-import { useModelStore } from "@/shared/stores/model-store";
+import { useModelStore, getAstrskAiModel, SPECIFIC_MODELS } from "@/shared/stores/model-store";
 import { ApiService } from "@/app/services/api-service";
 import { createLiteModel } from "@/app/services/ai-model-factory";
 import { UniqueEntityID } from "@/shared/domain";
@@ -21,14 +21,15 @@ import { logger } from "@/shared/lib";
  */
 export async function generateSessionName(scenario: string): Promise<string> {
   try {
-    // Get lite model
-    const modelStore = useModelStore.getState();
-    if (!modelStore.defaultLiteModel) {
-      logger.warn("[SessionNameGenerator] No lite model configured, using fallback name");
+    // Get Gemini 2.5 Flash model specifically for session creation
+    const geminiFlashModel = await getAstrskAiModel(SPECIFIC_MODELS.SESSION_CREATION);
+
+    if (!geminiFlashModel) {
+      logger.warn("[SessionNameGenerator] Gemini 2.5 Flash not available, using fallback name");
       return generateFallbackName(scenario);
     }
 
-    const modelSelection = modelStore.defaultLiteModel;
+    const modelSelection = geminiFlashModel;
 
     const connectionResult = await ApiService.getApiConnection.execute(
       new UniqueEntityID(modelSelection.apiConnectionId)

@@ -3,20 +3,20 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { Play } from "lucide-react";
 
 import { SessionSettings } from "./ui/chat/session-settings";
-import { fetchSession, useCloneSession, useSaveSession } from "@/entities/session/api";
+import { fetchSession, useSaveSession } from "@/entities/session/api";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import { useMobileNavigationStore } from "@/shared/stores/mobile-navigation-context";
 import { Button } from "@/shared/ui/forms/button";
+import { SessionService } from "@/app/services/session-service";
 
 export function SessionSettingsPage() {
   const { sessionId } = useParams({ from: "/_layout/sessions/settings/$sessionId" });
   const navigate = useNavigate();
   const selectSession = useSessionStore.use.selectSession();
   const setIsLeftSidebarOpen = useMobileNavigationStore.use.setIsOpen();
-  const cloneSessionMutation = useCloneSession();
   const saveSessionMutation = useSaveSession();
 
   const [isStarting, setIsStarting] = useState(false);
@@ -25,7 +25,7 @@ export function SessionSettingsPage() {
   const refEditCards = useRef<HTMLDivElement>(null);
   const refInitCardTab = useRef<CardTab>("ai-character" as CardTab) as MutableRefObject<CardTab>;
 
-  // Handle Start Session - clone session and navigate
+  // Handle Start Session - clone session as play session and navigate
   const handleStartSession = useCallback(async () => {
     if (!sessionId) return;
 
@@ -35,32 +35,19 @@ export function SessionSettingsPage() {
       // Fetch the latest session data
       const session = await fetchSession(new UniqueEntityID(sessionId));
 
-      // Clone the session (without chat history)
-      const clonedSession = await cloneSessionMutation.mutateAsync({
+      // Clone as play session (centralized logic)
+      const clonedPlaySessionResult = await SessionService.clonePlaySession.execute({
         sessionId: session.id,
         includeHistory: false,
       });
 
-      // Remove the original user character from allCards
-      // The user will select a persona in the chat page
-      const originalUserCardId = clonedSession.props.userCharacterCardId;
-      let updatedAllCards = clonedSession.props.allCards;
-
-      if (originalUserCardId) {
-        updatedAllCards = clonedSession.props.allCards.filter(
-          (card) => !card.id.equals(originalUserCardId)
-        );
+      if (clonedPlaySessionResult.isFailure) {
+        throw new Error(clonedPlaySessionResult.getError());
       }
 
-      // Set isPlaySession: true, fix title, and keep userCharacterCardId for suggestion
-      clonedSession.update({
-        isPlaySession: true,
-        title: session.props.title, // Use original title, not "Copy of..."
-        userCharacterCardId: originalUserCardId, // Keep it so ChatPage prompts for persona as suggestion
-        allCards: updatedAllCards,
-      });
+      const clonedSession = clonedPlaySessionResult.getValue();
 
-      // Save the updated session
+      // Save the play session (title and isPlaySession already set by ClonePlaySession)
       await saveSessionMutation.mutateAsync({ session: clonedSession });
 
       // Success toast
@@ -89,7 +76,6 @@ export function SessionSettingsPage() {
     }
   }, [
     sessionId,
-    cloneSessionMutation,
     saveSessionMutation,
     selectSession,
     setIsLeftSidebarOpen,
