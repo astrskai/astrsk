@@ -11,14 +11,7 @@
 import { useRef, useMemo, useEffect } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
-import {
-  ArrowLeft,
-  ImagePlus,
-  Pencil,
-  Plus,
-  Trash2,
-  X,
-} from "lucide-react";
+import { ArrowLeft, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Input, Textarea, Button } from "@/shared/ui/forms";
 import { toastError } from "@/shared/ui/toast";
 import { useFilePreviewUrl } from "@/shared/hooks/use-file-preview-url";
@@ -569,7 +562,6 @@ function LorebookEntryForm({
         <Input
           label="Trigger keywords"
           labelPosition="inner"
-          placeholder="Comma-separated keywords"
           {...register(`lorebook.${index}.keys`)}
         />
         {keyTags.length > 0 && (

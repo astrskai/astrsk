@@ -1079,9 +1079,16 @@ export function ScenarioStep({
           {/* First Messages Section */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-neutral-400">
-                First messages
-              </label>
+              <div className="flex items-center gap-2">
+                {firstMessages.length > 0 && (
+                  <div className="flex h-6 min-w-6 items-center justify-center rounded-md bg-brand-500/15 px-1.5 font-mono text-xs font-semibold text-brand-400">
+                    {firstMessages.length}
+                  </div>
+                )}
+                <label className="text-xs font-semibold text-neutral-400">
+                  First messages
+                </label>
+              </div>
               <Button
                 type="button"
                 variant="ghost"
@@ -1094,16 +1101,16 @@ export function ScenarioStep({
             </div>
 
             {firstMessages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-900/30 px-4 py-5 text-center">
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800">
-                  <MessageSquare size={14} className="text-zinc-400" />
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border-default bg-surface-raised/30 px-4 py-5 text-center">
+                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-surface">
+                  <MessageSquare size={14} className="text-fg-muted" />
                 </div>
-                <p className="text-[11px] font-medium text-zinc-400">
+                <p className="text-[11px] font-medium text-fg-muted">
                   No first messages yet
                 </p>
                 <button
                   onClick={addMessage}
-                  className="mt-1 text-[10px] text-zinc-500 hover:text-zinc-400"
+                  className="mt-1 text-[10px] text-fg-subtle hover:text-fg-muted"
                 >
                   Click to add one
                 </button>
@@ -1121,9 +1128,16 @@ export function ScenarioStep({
           {/* Lorebook Section */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-neutral-400">
-                Lorebook
-              </label>
+              <div className="flex items-center gap-2">
+                {lorebook.length > 0 && (
+                  <div className="flex h-6 min-w-6 items-center justify-center rounded-md bg-brand-500/15 px-1.5 font-mono text-xs font-semibold text-brand-400">
+                    {lorebook.length}
+                  </div>
+                )}
+                <label className="text-xs font-semibold text-neutral-400">
+                  Lorebook
+                </label>
+              </div>
               <Button
                 type="button"
                 variant="ghost"
@@ -1136,16 +1150,16 @@ export function ScenarioStep({
             </div>
 
             {lorebook.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 bg-zinc-900/30 px-4 py-5 text-center">
-                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800">
-                  <BookOpen size={14} className="text-zinc-400" />
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border-default bg-surface-raised/30 px-4 py-5 text-center">
+                <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-surface">
+                  <BookOpen size={14} className="text-fg-muted" />
                 </div>
-                <p className="text-[11px] font-medium text-zinc-400">
+                <p className="text-[11px] font-medium text-fg-muted">
                   No lorebook entries yet
                 </p>
                 <button
                   onClick={addLorebook}
-                  className="mt-1 text-[10px] text-zinc-500 hover:text-zinc-400"
+                  className="mt-1 text-[10px] text-fg-subtle hover:text-fg-muted"
                 >
                   Click to add one
                 </button>

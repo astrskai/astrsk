@@ -158,8 +158,7 @@ const AccordionBase = ({
           value={item.value}
           disabled={item.disabled}
           className={cn(
-            "overflow-hidden rounded-lg border border-neutral-600 bg-transparent",
-            "data-[state=open]:bg-neutral-900",
+            "overflow-hidden rounded-lg border border-border-default bg-surface-raised",
             "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
             itemClassName,
             item.className, // Per-item className support
@@ -169,18 +168,18 @@ const AccordionBase = ({
             <AccordionPrimitive.Trigger
               className={cn(
                 "group flex flex-1 items-center justify-between gap-4 px-4 py-3 text-left text-sm font-medium transition-all",
-                "hover:bg-neutral-800",
-                "data-[state=open]:bg-neutral-900",
+                "hover:bg-surface",
+                "data-[state=open]:bg-surface-raised",
                 "focus-visible:ring-brand-500 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
                 "disabled:pointer-events-none disabled:opacity-50",
                 triggerClassName,
               )}
             >
-              <span className="flex-1 text-neutral-200">{item.title}</span>
+              <span className="flex-1 text-fg-default">{item.title}</span>
               {showChevron && (
                 <ChevronDown
                   className={cn(
-                    "h-5 w-5 shrink-0 text-neutral-400 transition-transform duration-200",
+                    "h-5 w-5 shrink-0 text-fg-muted transition-transform duration-200",
                     "group-data-[state=open]:rotate-180",
                   )}
                 />
@@ -196,7 +195,7 @@ const AccordionBase = ({
           >
             <div
               className={cn(
-                "px-4 pt-2 pb-4 text-sm text-neutral-400",
+                "px-4 pt-2 pb-4 text-sm text-fg-muted",
                 contentClassName,
               )}
             >
