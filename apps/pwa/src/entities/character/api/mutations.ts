@@ -12,26 +12,10 @@ import { CharacterCard } from "@/entities/card/domain/character-card";
 import { cardKeys } from "@/entities/card/api/query-factory";
 import { characterKeys } from "@/entities/character/api/query-factory";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
-
-/**
- * Lorebook entry data structure for mutations
- */
-export interface LorebookEntryData {
-  id: string;
-  name: string;
-  enabled: boolean;
-  keys: string[];
-  recallRange: number;
-  content: string;
-}
-
-/**
- * First message data structure for 1:1 session config
- */
-export interface FirstMessageData {
-  name: string;
-  description: string;
-}
+import type {
+  LorebookEntryData,
+  FirstMessageData,
+} from "@/entities/character/types";
 
 /**
  * Data for creating a new character

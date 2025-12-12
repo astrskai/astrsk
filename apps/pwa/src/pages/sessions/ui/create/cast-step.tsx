@@ -16,16 +16,11 @@ import {
   AlertTriangle,
   Globe,
   Pencil,
-  ArrowLeft,
-  ImagePlus,
-  Trash2,
   Search,
 } from "lucide-react";
 import { CharacterCard as DesignSystemCharacterCard } from "@astrsk/design-system/character-card";
 import { Button } from "@astrsk/design-system/button";
 import { IconInput } from "@astrsk/design-system/input";
-import { Badge } from "@/shared/ui/badge";
-import { Input, Textarea } from "@/shared/ui/forms";
 import {
   Tooltip,
   TooltipContent,
@@ -56,6 +51,8 @@ import {
   getDraftCharacterName,
 } from "./draft-character";
 import { type FirstMessage } from "./scenario-step";
+import { CharacterEditPanel } from "./character-edit-panel";
+import { SessionRosterPanel } from "./session-roster-panel";
 
 interface CastStepProps {
   // Current step for tagging chat messages
@@ -508,9 +505,13 @@ export function CastStep({
         SESSION_STORAGE_KEYS.CAST_STEP_WARNING_BANNER_DISMISSED,
       ) !== "true",
   );
-  // Character being edited (null = library view, DraftCharacter = edit view)
-  const [editingCharacter, setEditingCharacter] =
-    useState<DraftCharacter | null>(null);
+  // Character being edited - store tempId only, derive actual character from draftCharacters
+  // This ensures form always gets latest data when draftCharacters updates (e.g., AI edits)
+  const [editingTempId, setEditingTempId] = useState<string | null>(null);
+  const editingCharacter = useMemo(
+    () => draftCharacters.find((d) => d.tempId === editingTempId) ?? null,
+    [draftCharacters, editingTempId],
+  );
   const abortControllerRef = useRef<AbortController | null>(null);
   const onChatMessagesChangeRef = useRef(onChatMessagesChange);
 
@@ -518,37 +519,6 @@ export function CastStep({
   useEffect(() => {
     onChatMessagesChangeRef.current = onChatMessagesChange;
   }, [onChatMessagesChange]);
-
-  // Sync editingCharacter when draftCharacters changes (e.g., from AI chat updates)
-  // Only sync when draftCharacters actually changes AND we're currently editing
-  const prevDraftCharactersRef = useRef(draftCharacters);
-  const prevEditingTempIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    const currentTempId = editingCharacter?.tempId ?? null;
-
-    // Skip if editingCharacter just changed (user action, not external update)
-    if (prevEditingTempIdRef.current !== currentTempId) {
-      prevEditingTempIdRef.current = currentTempId;
-      prevDraftCharactersRef.current = draftCharacters;
-      return;
-    }
-
-    // Only run if draftCharacters reference actually changed
-    if (prevDraftCharactersRef.current === draftCharacters) {
-      return;
-    }
-    prevDraftCharactersRef.current = draftCharacters;
-
-    // Only sync if we're currently editing a character
-    if (editingCharacter) {
-      const updatedDraft = draftCharacters.find(
-        (d) => d.tempId === editingCharacter.tempId,
-      );
-      if (updatedDraft && updatedDraft !== editingCharacter) {
-        setEditingCharacter(updatedDraft);
-      }
-    }
-  }, [draftCharacters, editingCharacter]);
 
   // Flying trail animation state
   const [flyingTrails, setFlyingTrails] = useState<FlyingTrail[]>([]);
@@ -684,12 +654,35 @@ export function CastStep({
 
       onDraftCharactersChange(updatedDrafts);
 
+      // Also update Roster if this character is assigned
+      const updatedDraft = updatedDrafts.find((d) => d.tempId === id);
+      if (updatedDraft) {
+        // Update player character if it matches
+        if (playerCharacter?.tempId === id) {
+          onPlayerCharacterChange(updatedDraft);
+        }
+
+        // Update AI characters if it matches
+        if (aiCharacters.some((c) => c.tempId === id)) {
+          onAiCharactersChange(
+            aiCharacters.map((c) => (c.tempId === id ? updatedDraft : c)),
+          );
+        }
+      }
+
       logger.info("[CastStep] Draft character updated from chat", {
         tempId: id,
         updates: Object.keys(updates),
       });
     },
-    [draftCharacters, onDraftCharactersChange],
+    [
+      draftCharacters,
+      onDraftCharactersChange,
+      playerCharacter,
+      onPlayerCharacterChange,
+      aiCharacters,
+      onAiCharactersChange,
+    ],
   );
 
   // Handle chat submit with AI character generation
@@ -1091,7 +1084,7 @@ export function CastStep({
         {/* Library Panel OR Edit Panel */}
         <div
           className={cn(
-            "relative flex min-w-0 flex-1 flex-col overflow-hidden border border-zinc-800 md:rounded-xl",
+            "relative flex min-w-0 flex-1 flex-col overflow-hidden md:rounded-xl md:border md:border-zinc-800",
             mobileTab === "library" ? "flex" : "hidden md:flex",
           )}
         >
@@ -1119,7 +1112,7 @@ export function CastStep({
               >
                 <CharacterEditPanel
                   character={editingCharacter}
-                  onBack={() => setEditingCharacter(null)}
+                  onBack={() => setEditingTempId(null)}
                   onSave={handleSaveEditedCharacter}
                 />
               </motion.div>
@@ -1284,7 +1277,7 @@ export function CastStep({
                                     imageUrl,
                                   })
                                 }
-                                onEdit={() => setEditingCharacter(draft)}
+                                onEdit={() => setEditingTempId(draft.tempId)}
                               />
                             </motion.div>
                           );
@@ -1365,269 +1358,19 @@ export function CastStep({
           </AnimatePresence>
         </div>
 
-        {/* Right Panel: Session Roster - border provides visual distinction */}
-        <div
-          ref={rosterPanelRef}
-          className={cn(
-            "relative w-full flex-col overflow-hidden rounded-xl border border-zinc-800 md:w-72 lg:w-80",
-            mobileTab === "cast" ? "flex h-full" : "hidden md:flex",
-          )}
-        >
-          {/* Roster Header */}
-          <div className="flex-shrink-0 p-4">
-            <div className="flex items-center gap-2.5 rounded-lg bg-zinc-800/40 px-3.5 py-2.5">
-              <div className="bg-brand-500/20 flex h-6 w-6 items-center justify-center rounded-md">
-                <Users size={14} className="text-brand-400" />
-              </div>
-              <h2 className="text-sm font-semibold tracking-wide text-zinc-200">
-                Session Roster
-              </h2>
-            </div>
-          </div>
-
-          {/* Roster Content */}
-          <div className="flex-1 space-y-8 overflow-y-auto p-5">
-            {/* Player Character Section */}
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <label className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
-                  <User size={12} /> User Persona
-                </label>
-              </div>
-
-              <AnimatePresence mode="wait">
-                {playerCharacter ? (
-                  <motion.div
-                    key={playerCharacter.tempId}
-                    initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    className="group relative overflow-hidden rounded-xl border border-emerald-500/30 bg-emerald-950/20"
-                  >
-                    <div className="relative flex items-center gap-3 rounded-xl bg-emerald-950/40 p-3">
-                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-emerald-500 font-bold text-white">
-                        {playerDisplayImageUrl ? (
-                          <img
-                            src={playerDisplayImageUrl}
-                            alt={playerDisplayName}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          (playerDisplayName || "??")
-                            .substring(0, 2)
-                            .toUpperCase()
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-bold text-white">
-                          {playerDisplayName}
-                        </div>
-                        <div className="mt-1 flex gap-1">
-                          <div className="inline-block rounded border border-emerald-500/20 bg-emerald-950/30 px-1.5 py-0.5 text-[10px] text-emerald-300">
-                            PLAYER
-                          </div>
-                          {playerCharacter.source !== "library" && (
-                            <div className="inline-block rounded border border-amber-500/30 bg-amber-950/50 px-1.5 py-0.5 text-[10px] text-amber-300">
-                              SESSION
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleRemovePlayer}
-                        className="rounded-lg p-1.5 text-zinc-500 transition-all hover:bg-red-500/10 hover:text-rose-400 md:opacity-0 md:group-hover:opacity-100"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="empty-player"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-emerald-500/40 bg-emerald-950/20 px-4 py-5 text-center"
-                  >
-                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20">
-                      <User size={14} className="text-emerald-400" />
-                    </div>
-                    <p className="text-[11px] font-medium text-emerald-300">
-                      No persona selected
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-emerald-400">
-                      Use PLAY AS to assign
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* AI Support Characters Section */}
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <label className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-zinc-500 uppercase">
-                  <Cpu size={12} /> AI Character(s)
-                </label>
-                <Badge
-                  variant="outline"
-                  className="border-zinc-700 bg-zinc-900 text-zinc-400"
-                >
-                  {aiCharacters.length}
-                </Badge>
-              </div>
-
-              <AnimatePresence mode="popLayout">
-                {aiCharacters.length > 0 ? (
-                  aiCharacters.map((draft) => (
-                    <motion.div
-                      key={draft.tempId}
-                      layout
-                      initial={{ opacity: 0, scale: 0.9, x: -20 }}
-                      animate={{ opacity: 1, scale: 1, x: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, x: 20 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 30,
-                      }}
-                      className="mb-2 last:mb-0"
-                    >
-                      <AIRosterItem
-                        draft={draft}
-                        libraryCards={characterCards || []}
-                        onRemove={() => handleRemoveAI(draft.tempId)}
-                      />
-                    </motion.div>
-                  ))
-                ) : (
-                  <motion.div
-                    key="empty-ai"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-purple-500/40 bg-purple-950/20 px-4 py-5 text-center"
-                  >
-                    <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/20">
-                      <Cpu size={14} className="text-purple-400" />
-                    </div>
-                    <p className="text-[11px] font-medium text-purple-300">
-                      No AI companions selected
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-purple-400">
-                      Use ADD AS AI to assign
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex-shrink-0 p-4">
-            {totalSelected === 0 ? (
-              <div className="flex items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2.5">
-                <AlertTriangle
-                  size={14}
-                  className="flex-shrink-0 text-zinc-400"
-                />
-                <p className="text-[11px] font-medium text-zinc-400">
-                  Select at least one character
-                </p>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2.5">
-                <span className="bg-brand-500/20 text-brand-400 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">
-                  {totalSelected}
-                </span>
-                <p className="text-[11px] font-medium text-zinc-300">
-                  character{totalSelected > 1 ? "s" : ""} selected
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Right Panel: Session Roster */}
+        <SessionRosterPanel
+          panelRef={rosterPanelRef}
+          playerCharacter={playerCharacter}
+          playerDisplayName={playerDisplayName}
+          playerDisplayImageUrl={playerDisplayImageUrl}
+          aiCharacters={aiCharacters}
+          libraryCards={characterCards || []}
+          onRemovePlayer={handleRemovePlayer}
+          onRemoveAI={handleRemoveAI}
+          mobileTab={mobileTab}
+        />
       </div>
-    </div>
-  );
-}
-
-/**
- * AI Roster Item
- * Single AI character in the roster (supports both library and draft characters)
- * Uses consistent rounded-xl to match system design
- */
-function AIRosterItem({
-  draft,
-  libraryCards,
-  onRemove,
-}: {
-  draft: DraftCharacter;
-  libraryCards: CharacterCard[];
-  onRemove: () => void;
-}) {
-  // For library characters, find the actual CharacterCard
-  const libraryCard = useMemo(() => {
-    if (draft.source === "library" && draft.existingCardId) {
-      return libraryCards.find((c) => c.id.toString() === draft.existingCardId);
-    }
-    return null;
-  }, [draft, libraryCards]);
-
-  // Get asset from library card's iconAssetId
-  const [libraryImageUrl] = useAsset(libraryCard?.props.iconAssetId);
-
-  // Use hook to manage object URL lifecycle from imageFile (for draft characters)
-  const draftImageUrl = useFilePreviewUrl(
-    draft.data?.imageFile,
-    draft.data?.imageUrl,
-  );
-
-  // Resolve display name and image
-  const displayName =
-    libraryCard?.props.name || draft.data?.name || getDraftCharacterName(draft);
-  const displayImageUrl = libraryImageUrl || draftImageUrl;
-
-  // Check if this is a local (non-library) character
-  const isLocal = draft.source !== "library";
-
-  return (
-    <div className="group relative flex items-center gap-3 rounded-xl border border-purple-500/30 bg-purple-950/40 p-3 transition-all hover:border-purple-500/40">
-      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-purple-500 text-xs font-bold text-white">
-        {displayImageUrl ? (
-          <img
-            src={displayImageUrl}
-            alt={displayName}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          (displayName || "??").substring(0, 2).toUpperCase()
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-zinc-200">
-          {displayName}
-        </div>
-        <div className="mt-0.5 flex gap-1">
-          <div className="inline-block rounded border border-purple-500/30 bg-purple-950/30 px-1.5 py-0.5 text-[10px] text-purple-300">
-            AI
-          </div>
-          {isLocal && (
-            <div className="inline-block rounded border border-amber-500/30 bg-amber-950/50 px-1.5 py-0.5 text-[10px] text-amber-300">
-              SESSION
-            </div>
-          )}
-        </div>
-      </div>
-      <button
-        onClick={onRemove}
-        className="rounded-lg p-1.5 text-zinc-500 transition-all hover:bg-red-500/10 hover:text-rose-400 md:opacity-0 md:group-hover:opacity-100"
-      >
-        <X size={14} />
-      </button>
     </div>
   );
 }
@@ -1769,495 +1512,5 @@ function CharacterDetailsModal({
         )
       }
     />
-  );
-}
-
-/**
- * Character Edit Panel
- * Full-panel editor for session characters (draft characters)
- * Replaces the Character Library when editing
- */
-interface CharacterEditPanelProps {
-  character: DraftCharacter;
-  onBack: () => void;
-  onSave: (updatedCharacter: DraftCharacter) => void;
-}
-
-/**
- * Local lorebook entry state for editing
- * Maps to LorebookEntryData on save
- */
-interface EditableLorebookEntry {
-  id: string;
-  name: string;
-  enabled: boolean;
-  keys: string; // comma-separated string for easier editing
-  recallRange: number;
-  content: string;
-}
-
-function CharacterEditPanel({
-  character,
-  onBack,
-  onSave,
-}: CharacterEditPanelProps) {
-  // Form state initialized from character data
-  const [name, setName] = useState(character.data?.name || "");
-  const [summary, setSummary] = useState(character.data?.cardSummary || "");
-  const [description, setDescription] = useState(
-    character.data?.description || "",
-  );
-  const [tags, setTags] = useState<string[]>(character.data?.tags || []);
-  const [tagInput, setTagInput] = useState("");
-  const [imageFile, setImageFile] = useState<File | undefined>(
-    character.data?.imageFile,
-  );
-  const [lorebook, setLorebook] = useState<EditableLorebookEntry[]>(
-    character.data?.lorebook?.map((entry) => ({
-      id: entry.id || crypto.randomUUID(),
-      name: entry.name || "",
-      enabled: entry.enabled ?? true,
-      keys: entry.keys?.join(", ") || "",
-      recallRange: entry.recallRange ?? 1000,
-      content: entry.content || "",
-    })) || [],
-  );
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Use hook to get cached Object URL for imageFile
-  // Cleanup happens when session creation flow unmounts via revokeAllFilePreviewUrls()
-  const previewImageUrl = useFilePreviewUrl(
-    imageFile,
-    character.data?.imageUrl,
-  );
-  // Track if we're currently syncing from prop to avoid infinite loop
-  const isSyncingFromPropRef = useRef(false);
-  // Track the last synced character tempId to detect external changes
-  const lastSyncedTempIdRef = useRef(character.tempId);
-  // Track if this is the initial mount to skip first auto-save
-  const isInitialMountRef = useRef(true);
-
-  // Sync local state when character prop changes from EXTERNAL source (e.g., AI chat updates)
-  // Only sync if the data actually changed externally, not from our own onSave
-  useEffect(() => {
-    // Skip if this is a self-triggered update (same tempId, data changed by us)
-    if (isSyncingFromPropRef.current) {
-      return;
-    }
-
-    // Check if lorebook count changed (external update indicator - e.g., AI added lorebook entry)
-    const currentLorebookCount = character.data?.lorebook?.length ?? 0;
-    const localLorebookCount = lorebook.length;
-    const lorebookCountChanged = currentLorebookCount !== localLorebookCount;
-
-    // Only sync if there's a meaningful external change (lorebook count or different character)
-    if (
-      lorebookCountChanged ||
-      lastSyncedTempIdRef.current !== character.tempId
-    ) {
-      isSyncingFromPropRef.current = true;
-      lastSyncedTempIdRef.current = character.tempId;
-
-      setName(character.data?.name || "");
-      setSummary(character.data?.cardSummary || "");
-      setDescription(character.data?.description || "");
-      setTags(character.data?.tags || []);
-      setImageFile(character.data?.imageFile);
-      setLorebook(
-        character.data?.lorebook?.map((entry) => ({
-          id: entry.id || crypto.randomUUID(),
-          name: entry.name || "",
-          enabled: entry.enabled ?? true,
-          keys: entry.keys?.join(", ") || "",
-          recallRange: entry.recallRange ?? 1000,
-          content: entry.content || "",
-        })) || [],
-      );
-
-      // Reset flag after state updates are processed
-      requestAnimationFrame(() => {
-        isSyncingFromPropRef.current = false;
-      });
-    }
-  }, [character.tempId, character.data?.lorebook?.length]);
-
-
-  // Auto-save on changes
-  useEffect(() => {
-    // Skip initial mount - don't save on first render
-    if (isInitialMountRef.current) {
-      isInitialMountRef.current = false;
-      return;
-    }
-
-    // Skip if we're currently syncing from external prop changes
-    if (isSyncingFromPropRef.current) {
-      return;
-    }
-
-    const updatedCharacter: DraftCharacter = {
-      ...character,
-      data: {
-        ...character.data,
-        name,
-        cardSummary: summary,
-        description,
-        tags,
-        imageFile,
-        // When imageFile exists, don't store blob URL - useFilePreviewUrl will regenerate it
-        // When no imageFile, preserve existing external URL (e.g., from AI chat)
-        imageUrl: imageFile ? undefined : character.data?.imageUrl,
-        lorebook: lorebook.map((entry) => ({
-          id: entry.id,
-          name: entry.name,
-          enabled: entry.enabled,
-          keys: entry.keys
-            .split(",")
-            .map((k: string) => k.trim())
-            .filter(Boolean),
-          recallRange: entry.recallRange,
-          content: entry.content,
-        })),
-      },
-    };
-    onSave(updatedCharacter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- character and onSave intentionally excluded to prevent infinite loops
-  }, [name, summary, description, tags, imageFile, lorebook]);
-
-  // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type is a safe image MIME type
-      const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
-      if (!allowedTypes.includes(file.type)) {
-        return;
-      }
-
-      // Just set the file - useFilePreviewUrl hook will handle object URL creation
-      setImageFile(file);
-    }
-  };
-
-  // Handle tag add
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
-
-  // Handle tag remove
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
-
-  // Handle lorebook entry add
-  const handleAddLorebookEntry = () => {
-    const newEntry: EditableLorebookEntry = {
-      id: crypto.randomUUID(),
-      name: "",
-      enabled: true,
-      keys: "",
-      recallRange: 1000,
-      content: "",
-    };
-    setLorebook([...lorebook, newEntry]);
-  };
-
-  // Handle lorebook entry remove
-  const handleRemoveLorebookEntry = (index: number) => {
-    setLorebook(lorebook.filter((_, i) => i !== index));
-  };
-
-  // Handle lorebook entry update
-  const handleUpdateLorebookEntry = (
-    index: number,
-    field: keyof EditableLorebookEntry,
-    value: string | number | boolean,
-  ) => {
-    setLorebook(
-      lorebook.map((entry, i) =>
-        i === index ? { ...entry, [field]: value } : entry,
-      ),
-    );
-  };
-
-  // Validate image URL to prevent XSS - only allow safe URLs
-  // Use URL parsing for proper validation instead of string prefix check
-  const safeImageUrl = useMemo((): string | null => {
-    if (!previewImageUrl) return null;
-    try {
-      // Allow relative URLs by resolving against current origin
-      const parsedUrl = new URL(previewImageUrl, window.location.origin);
-
-      const isAllowedProtocol =
-        parsedUrl.protocol === "blob:" || parsedUrl.protocol === "https:";
-      const isSameOrigin = parsedUrl.origin === window.location.origin;
-
-      // Allow same-origin relative/absolute URLs + blob/https URLs
-      if (isAllowedProtocol || isSameOrigin) {
-        return parsedUrl.href;
-      }
-    } catch {
-      // Invalid URL - return null
-    }
-    return null;
-  }, [previewImageUrl]);
-
-  return (
-    <div className="flex h-full flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex-shrink-0 border-b border-zinc-800 px-4 py-3 sm:px-6 sm:py-4">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div>
-            <h2 className="text-sm font-semibold text-zinc-200">
-              Edit Character
-            </h2>
-            <p className="text-[10px] font-medium tracking-widest text-amber-400 uppercase">
-              SESSION CHARACTER
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
-        <div className="space-y-6">
-          {/* Image Upload */}
-          <div className="flex flex-col items-center">
-            {safeImageUrl ? (
-              <div className="relative max-w-[160px]">
-                <img
-                  src={safeImageUrl}
-                  alt={name || "Character"}
-                  className="h-full w-full rounded-lg object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full border border-zinc-600 bg-zinc-900 text-white shadow-md transition-colors hover:bg-zinc-700"
-                  aria-label="Edit image"
-                >
-                  <Pencil size={14} />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex h-[160px] w-[160px] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-zinc-600 bg-zinc-800 text-zinc-400 transition-colors hover:border-zinc-500 hover:bg-zinc-700 hover:text-zinc-300"
-              >
-                <ImagePlus size={32} />
-                <span className="text-sm">Add image</span>
-              </button>
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </div>
-
-          {/* Metadata Section */}
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-zinc-200">Metadata</h2>
-
-            <Input
-              label="Character Name"
-              labelPosition="inner"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={50}
-              isRequired
-            />
-
-            <div className="space-y-1">
-              <Input
-                label="Character Summary"
-                labelPosition="inner"
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                maxLength={50}
-              />
-              <div className="px-2 text-left text-xs text-zinc-400">
-                {`(${summary.length}/50)`}
-              </div>
-            </div>
-          </section>
-
-          {/* Tags Section */}
-          <section className="space-y-2">
-            <h3 className="text-xs text-zinc-200">Tags</h3>
-
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-brand-500/20 text-brand-400 flex items-center gap-2 rounded-md px-2 py-1 text-xs font-medium"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-brand-300"
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <div className="relative">
-              <Input
-                labelPosition="inner"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-                className="pr-16"
-              />
-              <Button
-                type="button"
-                onClick={handleAddTag}
-                variant="secondary"
-                size="sm"
-                disabled={!tagInput.trim()}
-                className="absolute top-1/2 right-2 -translate-y-1/2"
-              >
-                Add
-              </Button>
-            </div>
-          </section>
-
-          {/* Character Info Section */}
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold text-zinc-200">
-              Character Info
-            </h2>
-
-            <Textarea
-              label="Character Description"
-              labelPosition="inner"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              autoResize
-              isRequired
-            />
-          </section>
-
-          {/* Lorebook Section */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-zinc-200">Lorebook</h2>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleAddLorebookEntry}
-              >
-                <Plus size={14} />
-                Add lorebook
-              </Button>
-            </div>
-
-            {lorebook.length === 0 ? (
-              <p className="text-sm text-zinc-400">No lorebook entries</p>
-            ) : (
-              <div className="space-y-3">
-                {lorebook.map((entry, index) => (
-                  <div
-                    key={entry.id}
-                    className="space-y-4 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-zinc-400">
-                        {entry.name || `Entry ${index + 1}`}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveLorebookEntry(index)}
-                        className="text-zinc-500 hover:text-zinc-400"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-
-                    <Input
-                      label="Lorebook name"
-                      labelPosition="inner"
-                      value={entry.name}
-                      onChange={(e) =>
-                        handleUpdateLorebookEntry(index, "name", e.target.value)
-                      }
-                    />
-
-                    <div className="space-y-2">
-                      <Input
-                        label="Trigger keywords"
-                        labelPosition="inner"
-                        value={entry.keys}
-                        onChange={(e) =>
-                          handleUpdateLorebookEntry(
-                            index,
-                            "keys",
-                            e.target.value,
-                          )
-                        }
-                        placeholder="Comma-separated keywords"
-                      />
-                      {entry.keys && (
-                        <ul className="flex flex-wrap gap-2">
-                          {entry.keys
-                            .split(",")
-                            .filter((k) => k.trim())
-                            .map((key, keyIndex) => (
-                              <li
-                                key={`${entry.id}-${keyIndex}`}
-                                className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-200"
-                              >
-                                {key.trim()}
-                              </li>
-                            ))}
-                        </ul>
-                      )}
-                    </div>
-
-                    <Textarea
-                      label="Description"
-                      labelPosition="inner"
-                      value={entry.content}
-                      onChange={(e) =>
-                        handleUpdateLorebookEntry(
-                          index,
-                          "content",
-                          e.target.value,
-                        )
-                      }
-                      autoResize
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-      </div>
-    </div>
   );
 }

@@ -6,7 +6,7 @@
  * until the user clicks the final "Create Session" button.
  */
 
-import type { LorebookEntryData } from "@/entities/character/api/mutations";
+import type { LorebookEntryData } from "@/entities/character/types";
 
 /**
  * Source of the draft character

@@ -1164,6 +1164,7 @@ export function ScenarioStep({
         {/* Bottom gradient overlay - animates with same timing as indicator, fades at bottom */}
         <motion.div
           className="pointer-events-none absolute inset-x-0 h-10 bg-gradient-to-t from-black to-transparent"
+          initial={false}
           animate={{
             bottom: isGenerating || showCompletion ? 64 : 0,
             opacity: isAtBottom && !isGenerating && !showCompletion ? 0 : 1,

@@ -12,7 +12,7 @@ import { isArray } from "lodash-es";
 import { Result, UseCase } from "@/shared/core";
 import { readFileToString } from "@/shared/lib/file-utils";
 import { PNGMetadata } from "@/shared/lib/png-metadata";
-import type { LorebookEntryData } from "@/entities/character/api/mutations";
+import type { LorebookEntryData } from "@/entities/character/types";
 
 const validSpecs = [
   "chara_card_v2",
