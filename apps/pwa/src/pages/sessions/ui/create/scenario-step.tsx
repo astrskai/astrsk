@@ -1026,7 +1026,8 @@ export function ScenarioStep({
         >
           {/* Scenario Description */}
           <section className="space-y-3">
-            <div
+            <motion.div
+              layoutId="prompt-input-card"
               className={cn(
                 "rounded-xl transition-all duration-300",
                 isBackgroundAnimating && "animate-pulse-highlight",
@@ -1073,7 +1074,7 @@ export function ScenarioStep({
                   );
                 })()}
               />
-            </div>
+            </motion.div>
           </section>
 
           {/* First Messages Section */}

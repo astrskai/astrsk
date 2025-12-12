@@ -426,13 +426,26 @@ export function createLiteModel(
   const provider = createProvider({ source, apiKey, baseUrl, modelId });
 
   // Parse model ID for AstrskAi - strip "openai-compatible:" prefix
-  const parsedModelId = source === ApiSource.AstrskAi
+  let parsedModelId = source === ApiSource.AstrskAi
     ? parseAstrskAiModelId(modelId)
     : modelId;
+
+  // Determine if this is using Google Generative AI provider
+  // Only strip "google/" prefix when using the actual Google provider
+  const isUsingGoogleProvider =
+    (source === ApiSource.AstrskAi && modelId.includes("google/gemini")) ||
+    source === ApiSource.GoogleGenerativeAI;
+
+  // For Google Generative AI provider, strip "google/" prefix from model ID
+  // Google provider expects just "gemini-3-pro", not "google/gemini-3-pro"
+  if (isUsingGoogleProvider && parsedModelId.startsWith("google/")) {
+    parsedModelId = parsedModelId.substring("google/".length);
+  }
 
   logger.info(`[createLiteModel] Creating model for ${source}`, {
     originalModelId: modelId,
     parsedModelId,
+    isUsingGoogleProvider,
   });
 
   // Get the model from the provider

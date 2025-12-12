@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import { useNavigate, useBlocker } from "@tanstack/react-router";
+import { useNavigate, useBlocker, useLocation } from "@tanstack/react-router";
 import { ChevronRight, ChevronLeft, X } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
@@ -76,6 +76,7 @@ import * as Dialog from "@radix-ui/react-dialog";
  */
 export function CreateSessionPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [currentStep, setCurrentStep] = useState<SessionStep>("scenario");
 
@@ -134,6 +135,41 @@ Ground Rules:`;
     setChatMessages((prev) => [...prev, message]);
   }, []);
 
+  // Normalize text for API compatibility (handles Unicode, special chars, hashtags, etc.)
+  const normalizeTextForAPI = useCallback((text: string): string => {
+    return text
+      .normalize("NFKC") // Normalize Unicode characters to standard form
+      .trim(); // Remove leading/trailing whitespace
+  }, []);
+
+  // Handle initial prompt from home page navigation
+  useEffect(() => {
+    const state = location.state as { initialPrompt?: string } | undefined;
+    const initialPrompt = state?.initialPrompt;
+
+    if (initialPrompt && initialPrompt.length > 0) {
+      // Normalize text for API compatibility
+      const normalizedPrompt = normalizeTextForAPI(initialPrompt);
+
+      // Add the user's message to chat
+      addChatMessage({
+        id: `initial-prompt-${Date.now()}`,
+        role: "user",
+        content: normalizedPrompt,
+        step: "scenario",
+      });
+
+      // Auto-trigger scenario generation by submitting the prompt to the chat
+      // The ScenarioStep's chat handler will process this
+      // Note: We need to delay this slightly to ensure chatHandlersRef is set
+      setTimeout(() => {
+        if (chatHandlersRef.current?.onSubmit) {
+          chatHandlersRef.current.onSubmit(normalizedPrompt);
+        }
+      }, 100);
+    }
+  }, [addChatMessage, normalizeTextForAPI]); // Run only once on mount
+
   // Chat forms - separate instances for Desktop and Mobile to avoid form context conflicts
   // Using react-hook-form for uncontrolled input (no re-renders on typing)
   // mode: "onChange" enables real-time validation for isValid state
@@ -160,23 +196,23 @@ Ground Rules:`;
   // Desktop chat submit handler
   const handleDesktopChatSubmit = useCallback(
     (data: { message: string }) => {
-      const prompt = data.message.trim();
+      const prompt = normalizeTextForAPI(data.message);
       if (!prompt) return;
       chatHandlersRef.current?.onSubmit(prompt);
       desktopChatForm.reset();
     },
-    [desktopChatForm],
+    [desktopChatForm, normalizeTextForAPI],
   );
 
   // Mobile chat submit handler
   const handleMobileChatSubmit = useCallback(
     (data: { message: string }) => {
-      const prompt = data.message.trim();
+      const prompt = normalizeTextForAPI(data.message);
       if (!prompt) return;
       chatHandlersRef.current?.onSubmit(prompt);
       mobileChatForm.reset();
     },
-    [mobileChatForm],
+    [mobileChatForm, normalizeTextForAPI],
   );
 
   // Unified chat stop handler - delegates to current step's handler
