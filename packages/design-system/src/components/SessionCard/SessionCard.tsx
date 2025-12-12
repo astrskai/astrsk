@@ -235,8 +235,8 @@ export function SessionCard({
   return (
     <BaseCard
       className={cn(
-        'min-h-[320px] w-full border-zinc-700 ring-1 ring-zinc-800',
-        !isDisabled && onClick && 'hover:ring-zinc-600',
+        'min-h-[320px] w-full border-zinc-800 ring-1 ring-zinc-800/50',
+        !isDisabled && onClick && 'hover:ring-zinc-700',
         className
       )}
       isDisabled={isDisabled}
