@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { useNavigate, useBlocker } from "@tanstack/react-router";
 import { ChevronRight, ChevronLeft, X } from "lucide-react";
@@ -22,6 +22,7 @@ import {
   type ChatHandlers,
 } from "./ui/create";
 import { logger } from "@/shared/lib";
+import { revokeAllFilePreviewUrls } from "@/shared/hooks/use-file-preview-url";
 import {
   DraftCharacter,
   needsCreation,
@@ -286,6 +287,13 @@ Ground Rules:`;
     withResolver: true,
     enableBeforeUnload: hasUnsavedChanges && !isSaving && !isCreatingSession,
   });
+
+  // Clean up Object URLs when component unmounts (any navigation away from page)
+  useEffect(() => {
+    return () => {
+      revokeAllFilePreviewUrls();
+    };
+  }, []);
 
   // Leave without cleanup - draft characters are not saved to DB yet
   const handleCleanupAndLeave = useCallback(() => {
