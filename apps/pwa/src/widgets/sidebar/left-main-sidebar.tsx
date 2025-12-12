@@ -497,6 +497,9 @@ export const LeftMainSidebar = ({
   // Mobile always shows expanded sidebar, collapse only applies to desktop
   const isCollapsed = isMobileOpen ? false : isCollapsedProp;
 
+  // Check if we're on the home page
+  const isHomePage = location.pathname === "/" || location.pathname === "/home";
+
   // Check if path is active
   // Special case: /sessions should only match exactly, not /sessions/{id}
   const isActivePath = (path: string) => {
@@ -528,10 +531,14 @@ export const LeftMainSidebar = ({
       {/* Sidebar Container */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-zinc-800 bg-zinc-950 transition-all duration-300 ease-in-out md:relative md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r transition-all duration-300 ease-in-out md:relative md:translate-x-0",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
           isCollapsed ? "md:w-20" : "md:w-64",
           "w-64",
+          // Home page blended background when collapsed on desktop
+          isHomePage
+            ? "md:border-zinc-800/30 md:bg-zinc-950/50 md:backdrop-blur-xl"
+            : "border-zinc-800 bg-zinc-950",
         )}
       >
         <SidebarHeader
@@ -580,17 +587,17 @@ export const LeftMainSidebar = ({
           closeMobileMenu={closeMobileMenu}
         />
 
-        {/* Footer with UpdaterNew and Version */}
-        <div className="flex flex-col gap-2 border-t border-zinc-800 px-4 py-2">
+        {/* Footer with UpdaterNew and Version - hidden when collapsed on desktop */}
+        <div
+          className={cn(
+            "flex flex-col gap-2 border-t border-zinc-800 px-4 py-2",
+            isCollapsed ? "md:hidden" : "block",
+          )}
+        >
           <div className="flex justify-center">
             <UpdaterNew />
           </div>
-          <div
-            className={cn(
-              "text-center text-[10px] text-zinc-400",
-              isCollapsed ? "hidden" : "block",
-            )}
-          >
+          <div className="text-center text-[10px] text-zinc-400">
             v{__APP_VERSION__}
           </div>
         </div>

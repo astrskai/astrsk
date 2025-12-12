@@ -88,7 +88,6 @@ Return ONLY the name, nothing else.`;
       name = words.slice(0, MAX_WORDS).join(" ");
     }
 
-    logger.info("[SessionNameGenerator] Generated session name", { name, scenario: scenario.substring(0, 100) });
     return name;
 
   } catch (error) {

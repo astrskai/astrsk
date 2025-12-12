@@ -621,8 +621,6 @@ export async function generateCharacterResponse({
 
     if (useNonStreaming) {
       // Use non-streaming generateText (model requires it)
-      logger.info("[CharacterBuilder] Using non-streaming mode");
-
       const result = await generateText({
         model,
         messages: formattedMessages,
@@ -634,17 +632,9 @@ export async function generateCharacterResponse({
       // Collect all tool results
       if (result.toolResults && result.toolResults.length > 0) {
         allToolResults.push(...result.toolResults);
-        logger.info("[CharacterBuilder] Tool results", {
-          count: result.toolResults.length,
-        });
       }
 
       const finalText = result.text || "";
-
-      logger.info("[CharacterBuilder] Response generated (non-streaming)", {
-        text: finalText.substring(0, 100),
-        totalToolResults: allToolResults.length,
-      });
 
       return {
         text: finalText,
@@ -661,20 +651,12 @@ export async function generateCharacterResponse({
         onStepFinish: ({ toolResults }) => {
           if (toolResults && toolResults.length > 0) {
             allToolResults.push(...toolResults);
-            logger.info("[CharacterBuilder] Step completed", {
-              toolResultsInStep: toolResults.length,
-            });
           }
         },
       });
 
       // Wait for the stream to complete and get final text
       const text = await result.text;
-
-      logger.info("[CharacterBuilder] Response generated (streaming)", {
-        text: text?.substring(0, 100),
-        totalToolResults: allToolResults.length,
-      });
 
       return {
         text,

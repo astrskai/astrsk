@@ -373,14 +373,6 @@ Now use the add_data_store tool to create the data stores.`;
 
   const userMessage = buildUserMessage();
 
-  // Log the actual user message being sent
-  logger.info("[DataSchemaBuilder] User message", {
-    userMessage: userMessage.substring(0, 200),
-    fullUserMessage: userMessage,
-    hasScenario: !!(context.scenario && context.scenario.trim()),
-    scenarioLength: context.scenario?.length || 0,
-  });
-
   // Helper to build dynamic system prompt with current stores
   const buildDynamicSystemPrompt = (stores: DataSchemaEntry[]): string => {
     if (stores.length === 0) {
@@ -622,12 +614,6 @@ export async function refineDataSchema({
         stopWhen: stepCountIs(5),
         abortSignal,
         ...glmOptions,
-      });
-
-      logger.info("[DataSchemaBuilder] Refinement completed (non-streaming)", {
-        text: result.text?.substring(0, 100),
-        fullText: result.text,
-        textLength: result.text?.length || 0,
       });
 
       // If text is empty, log warning with more details

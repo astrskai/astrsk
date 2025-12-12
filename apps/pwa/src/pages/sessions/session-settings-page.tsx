@@ -50,9 +50,6 @@ export function SessionSettingsPage() {
       // Save the play session (title and isPlaySession already set by ClonePlaySession)
       await saveSessionMutation.mutateAsync({ session: clonedSession });
 
-      // Success toast
-      toastSuccess("Session started successfully");
-
       // Select and navigate to the cloned session
       selectSession(clonedSession.id, clonedSession.props.title);
 
