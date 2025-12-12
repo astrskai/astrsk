@@ -423,6 +423,7 @@ export function CharacterEditPanel({
                         type="button"
                         onClick={() => handleRemoveTag(tag)}
                         className="hover:text-brand-300"
+                        aria-label={`Remove tag: ${tag}`}
                       >
                         <X size={12} />
                       </button>
@@ -547,6 +548,7 @@ function LorebookEntryForm({
           type="button"
           onClick={onRemove}
           className="text-zinc-500 hover:text-zinc-400"
+          aria-label={`Remove lorebook entry${entryName ? `: ${entryName}` : ` ${index + 1}`}`}
         >
           <Trash2 size={14} />
         </button>

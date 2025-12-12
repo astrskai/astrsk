@@ -267,7 +267,7 @@ export function MobileChatSheet({
             <input
               type="text"
               {...register("message", { required: true })}
-              placeholder={agent.inputPlaceholder || "Ask AI..."}
+              placeholder={agent.inputPlaceholder}
               disabled={isLoading}
               className={cn(
                 "bg-zinc-800 text-fg-default placeholder:text-fg-subtle flex-1 rounded-full border-0 px-4 py-2 text-sm",
