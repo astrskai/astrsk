@@ -110,6 +110,11 @@ function PlayerSection({
   displayImageUrl,
   onRemove,
 }: PlayerSectionProps) {
+  // Resolve name with fallback from playerCharacter
+  const resolvedName =
+    displayName ??
+    (playerCharacter ? getDraftCharacterName(playerCharacter) : undefined);
+
   return (
     <section>
       <h3 className="mb-2.5 flex items-center gap-1.5 text-[10px] font-semibold tracking-wider text-zinc-500 uppercase">
@@ -134,11 +139,11 @@ function PlayerSection({
                   {displayImageUrl ? (
                     <img
                       src={displayImageUrl}
-                      alt={displayName}
+                      alt={resolvedName ?? "Player character"}
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    (displayName || "??").substring(0, 2).toUpperCase()
+                    (resolvedName || "??").substring(0, 2).toUpperCase()
                   )}
                 </div>
                 <div className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-zinc-900 bg-emerald-500" />
@@ -147,7 +152,7 @@ function PlayerSection({
               {/* Info */}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-zinc-200">
-                  {displayName}
+                  {resolvedName}
                 </p>
                 {playerCharacter.source !== "library" && (
                   <span className="text-[10px] text-amber-400/80">Session</span>
