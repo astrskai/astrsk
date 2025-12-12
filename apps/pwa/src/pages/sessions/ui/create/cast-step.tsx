@@ -1826,7 +1826,7 @@ function CharacterEditPanel({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use hook to get cached Object URL for imageFile
-  // Cleanup happens when CreateSessionPage unmounts via revokeAllFilePreviewUrls()
+  // Cleanup happens when session creation flow unmounts via revokeAllFilePreviewUrls()
   const previewImageUrl = useFilePreviewUrl(
     imageFile,
     character.data?.imageUrl,
@@ -1984,15 +1984,20 @@ function CharacterEditPanel({
     );
   };
 
-  // Validate image URL to prevent XSS - only allow blob URLs and https URLs
+  // Validate image URL to prevent XSS - only allow safe URLs
   // Use URL parsing for proper validation instead of string prefix check
   const safeImageUrl = useMemo((): string | null => {
     if (!previewImageUrl) return null;
     try {
-      const parsedUrl = new URL(previewImageUrl);
-      // Only allow blob: and https: protocols
-      if (parsedUrl.protocol === "blob:" || parsedUrl.protocol === "https:") {
-        // Return the sanitized href from URL parser
+      // Allow relative URLs by resolving against current origin
+      const parsedUrl = new URL(previewImageUrl, window.location.origin);
+
+      const isAllowedProtocol =
+        parsedUrl.protocol === "blob:" || parsedUrl.protocol === "https:";
+      const isSameOrigin = parsedUrl.origin === window.location.origin;
+
+      // Allow same-origin relative/absolute URLs + blob/https URLs
+      if (isAllowedProtocol || isSameOrigin) {
         return parsedUrl.href;
       }
     } catch {
