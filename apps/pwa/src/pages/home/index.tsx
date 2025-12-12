@@ -1,53 +1,16 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "motion/react";
-import {
-  ArrowRight,
-  Plus,
-  Sparkles,
-  Box,
-  Terminal,
-  Search,
-  Ghost,
-  Heart,
-  Coffee,
-  Book,
-  ShieldCheck,
-  Zap,
-  CloudRain,
-  Anchor,
-  Crown,
-  Mountain,
-  Skull,
-} from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { useSessionsWithCharacterMetadata } from "@/entities/session/api";
 import { characterQueries } from "@/entities/character/api";
-import { CharacterCard as CharacterCardDomain } from "@/entities/card/domain";
+import { CharacterCard as CharacterCardDomain, GENRE_SUGGESTIONS } from "@/entities/card/domain";
 import { Session } from "@/entities/session/domain";
 import SessionCard from "@/features/session/ui/session-card";
 import CharacterCard from "@/features/character/ui/character-card";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { useTypewriterPlaceholder } from "@/shared/hooks/use-typewriter-placeholder";
 import { Button } from "@/shared/ui/button";
-
-// Genre suggestions for quick scenario creation
-const GENRE_SUGGESTIONS = [
-  { label: "Fantasy", icon: <Sparkles size={12} /> },
-  { label: "SciFi", icon: <Box size={12} /> },
-  { label: "Cyberpunk", icon: <Terminal size={12} /> },
-  { label: "Mystery", icon: <Search size={12} /> },
-  { label: "Horror", icon: <Ghost size={12} /> },
-  { label: "Romance", icon: <Heart size={12} /> },
-  { label: "SliceOfLife", icon: <Coffee size={12} /> },
-  { label: "Historical", icon: <Book size={12} /> },
-  { label: "Survival", icon: <ShieldCheck size={12} /> },
-  { label: "Steampunk", icon: <Zap size={12} /> },
-  { label: "Dystopian", icon: <CloudRain size={12} /> },
-  { label: "Pirates", icon: <Anchor size={12} /> },
-  { label: "Kingdom", icon: <Crown size={12} /> },
-  { label: "Western", icon: <Mountain size={12} /> },
-  { label: "Zombies", icon: <Skull size={12} /> },
-];
 
 /**
  * Session Card Wrapper
@@ -136,20 +99,58 @@ export function HomePage() {
   const navigate = useNavigate();
   const [prompt, setPrompt] = useState("");
 
-  // Fetch top 3 recent sessions with character metadata
+  // Generate random genre hashtag combinations for typewriter animation (shuffle and create pairs)
+  const genreVariations = useMemo(() => {
+    const shuffled = [...GENRE_SUGGESTIONS].sort(() => Math.random() - 0.5);
+    // Create combinations of two hashtags with "..." after them
+    const combinations: string[] = [];
+    for (let i = 0; i < Math.min(5, shuffled.length - 1); i++) {
+      const first = shuffled[i];
+      const second = shuffled[i + 1];
+      combinations.push(`#${first} #${second} ...`);
+    }
+    return combinations;
+  }, []);
+
+  // Typewriter placeholder animation
+  const typewriterPlaceholder = useTypewriterPlaceholder({
+    baseText: "Describe a scenario to play in ",
+    variations: genreVariations,
+    typingSpeed: 80,
+    erasingSpeed: 40,
+    pauseAfterTyping: 2000,
+    pauseAfterErasing: 300,
+  });
+
+  // Fetch recent sessions with character metadata
+  // Mobile: 2 items, Desktop: 3 items
   const { sessions: allSessionsWithMeta, areCharactersLoading } = useSessionsWithCharacterMetadata({
     keyword: "",
     sort: "updatedAt",
     isPlaySession: false,
   });
-  const sessionsWithMeta = allSessionsWithMeta.slice(0, 3);
 
-  // Fetch top 3 recent characters
+  // Fetch recent characters
   // Note: characterQueries.list already returns CharacterCard[] domain objects
   const { data: allCharacters = [] } = useQuery(
     characterQueries.list({ keyword: "", sort: "updatedAt" })
   );
-  const characters = allCharacters.slice(0, 3);
+
+  // Responsive slicing: 2 items on mobile, 3 items on desktop
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const itemLimit = isMobile ? 2 : 3;
+  const sessionsWithMeta = allSessionsWithMeta.slice(0, itemLimit);
+  const characters = allCharacters.slice(0, itemLimit);
 
   const handleAddTag = (label: string) => {
     setPrompt((prev) => {
@@ -183,7 +184,7 @@ export function HomePage() {
       {/* Main Content Area */}
       <main className="relative z-10 flex w-full flex-1 flex-col">
         {/* Centered Hero Section */}
-        <div className="flex min-h-[80vh] w-full flex-col items-center justify-center px-6 text-center">
+        <div className="flex pt-20 min-h-[75vh] w-full flex-col items-center justify-center px-6 text-center">
           <div className="flex flex-col items-center">
             {/* Headline */}
             <h1 className="mb-16 text-5xl font-bold leading-[1.1] tracking-tight drop-shadow-2xl md:text-7xl">
@@ -195,16 +196,11 @@ export function HomePage() {
             </h1>
 
             {/* Large Input Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="group mb-8 w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0A0A0A]/80 p-2 shadow-2xl shadow-black/50 backdrop-blur-xl transition-colors duration-300 focus-within:border-blue-500/50"
-            >
+            <div className="group mb-8 w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0A0A0A]/80 p-2 shadow-2xl shadow-black/50 backdrop-blur-xl transition-colors duration-300 focus-within:border-blue-500/50">
               <div className="relative flex h-auto flex-col">
                 <textarea
                   className="h-32 w-full resize-none bg-transparent px-4 py-4 text-lg font-normal text-white placeholder-gray-500 outline-none md:text-xl"
-                  placeholder="Describe a scenario to create and play..."
+                  placeholder={typewriterPlaceholder}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                 />
@@ -219,7 +215,7 @@ export function HomePage() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Genre Tags */}
             <div className="flex w-full flex-col items-center gap-4">
@@ -228,14 +224,14 @@ export function HomePage() {
               </span>
 
               <div className="flex max-w-3xl flex-wrap justify-center gap-2">
-                {GENRE_SUGGESTIONS.map((item, i) => (
+                {GENRE_SUGGESTIONS.map((genre, i) => (
                   <button
                     key={i}
-                    onClick={() => handleAddTag(item.label)}
-                    className="group flex items-center gap-1.5 rounded-full border border-white/5 bg-[#161616]/60 px-3 py-1.5 text-xs font-medium text-gray-400 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-blue-500/30 hover:bg-[#202020]/80 hover:text-blue-300 active:scale-95"
+                    onClick={() => handleAddTag(genre)}
+                    className="group flex items-center gap-1.5 rounded-full border border-white/5 bg-[#161616]/60 px-2 py-1.5 text-xs font-medium text-gray-400 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-blue-500/30 hover:bg-[#202020]/80 hover:text-blue-300 active:scale-95"
                   >
                     <Plus size={12} className="text-gray-600 transition-colors group-hover:text-blue-400" />
-                    <span>{item.label}</span>
+                    <span>{genre}</span>
                   </button>
                 ))}
               </div>
@@ -248,11 +244,11 @@ export function HomePage() {
           <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-10 pt-10 text-left">
             <div className="mb-6 flex items-center justify-between px-1">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Recent Sessions
+                Or Play Sessions
               </h3>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               {sessionsWithMeta.map(({ session, characterAvatars }) => (
                 <SessionCardWrapper
                   key={session.id.toString()}
@@ -270,11 +266,11 @@ export function HomePage() {
           <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-20 pt-10 text-left">
             <div className="mb-6 flex items-center justify-between px-1">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Recent Characters
+                Or start session with a Character
               </h3>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               {characters.map((character) => (
                 <CharacterCardWrapper key={character.id.toString()} character={character} />
               ))}

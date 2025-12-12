@@ -8,23 +8,9 @@ import { AccordionBase } from "@/shared/ui";
 import { toastSuccess, toastError } from "@/shared/ui/toast";
 import { useCreateCharacterCard } from "@/entities/character/api";
 import { CharacterCard } from "@/entities/card/domain/character-card";
+import { TAG_DEFAULT } from "@/entities/card/domain";
 
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
-
-const TAG_DEFAULT: readonly string[] = [
-  "Female",
-  "Male",
-  "Villain",
-  "Fictional",
-  "OC",
-  "LGBTQA+",
-  "Platonic",
-  "Angst",
-  "Dead Dove",
-  "Fluff",
-  "Historical",
-  "Royalty",
-];
 
 interface LorebookEntryFormData {
   id: string;

@@ -82,6 +82,8 @@ interface ScenarioStepProps {
   chatHandlersRef: React.MutableRefObject<ChatHandlers | null>;
   // Chat UI state callbacks
   onChatLoadingChange: (loading: boolean) => void;
+  // Skip welcome message (true when initial prompt from home page)
+  skipWelcomeMessage?: boolean;
 }
 
 export interface FirstMessage {
@@ -403,6 +405,7 @@ export function ScenarioStep({
   onIsGeneratingChange,
   chatHandlersRef,
   onChatLoadingChange,
+  skipWelcomeMessage = false,
 }: ScenarioStepProps) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -498,8 +501,9 @@ export function ScenarioStep({
 
   // Add initial welcome message with typing indicator and animation
   // useTypingIndicator hook handles both typing indicator and typewriter animation
+  // Skip welcome message when user comes from home page with initial prompt
   useEffect(() => {
-    if (chatMessages.length === 0) {
+    if (chatMessages.length === 0 && !skipWelcomeMessage) {
       const welcomeMessage: ChatMessage = {
         id: "welcome",
         role: "assistant",
@@ -511,7 +515,7 @@ export function ScenarioStep({
       };
       onChatMessagesChange([welcomeMessage]);
     }
-  }, []); // Only run on mount
+  }, [skipWelcomeMessage, chatMessages.length, onChatMessagesChange]); // Only run on mount
 
   // Clear animation flags after animation completes
   useEffect(() => {
