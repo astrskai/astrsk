@@ -3,7 +3,8 @@ import { useMemo } from "react";
 // Global cache to reuse Object URLs for the same File object
 // This prevents creating multiple URLs for the same file and avoids
 // the URL being revoked while another component still needs it
-const fileUrlCache = new WeakMap<File, string>();
+// Using let so we can reset the cache when revoking all URLs
+let fileUrlCache = new WeakMap<File, string>();
 
 // Track all created URLs for cleanup (WeakMap doesn't allow iteration)
 const allCreatedUrls = new Set<string>();
@@ -58,6 +59,6 @@ export function revokeAllFilePreviewUrls(): void {
     URL.revokeObjectURL(url);
   });
   allCreatedUrls.clear();
-  // Note: WeakMap entries will be garbage collected automatically
-  // when File objects are no longer referenced
+  // Reset the cache so future calls create fresh URLs instead of returning revoked ones
+  fileUrlCache = new WeakMap<File, string>();
 }

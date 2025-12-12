@@ -365,9 +365,8 @@ Ground Rules:`;
               version: parsed.version,
               conceptualOrigin: parsed.conceptualOrigin,
               imageFile: parsed.imageFile,
-              imageUrl: parsed.imageFile
-                ? URL.createObjectURL(parsed.imageFile)
-                : undefined,
+              // Don't create Object URL here - useFilePreviewUrl hook will handle it
+              imageUrl: undefined,
               scenario: parsed.scenario,
               firstMessages: parsed.firstMessages,
               lorebook: parsed.lorebook,
