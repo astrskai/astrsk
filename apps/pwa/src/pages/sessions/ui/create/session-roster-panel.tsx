@@ -73,8 +73,8 @@ export function SessionRosterPanel({
         />
       </div>
 
-      {/* Footer Status */}
-      <div className="flex-shrink-0 border-t border-zinc-800 px-4 py-3">
+      {/* Footer Status - Desktop only (mobile shows count in tab) */}
+      <div className="hidden flex-shrink-0 border-t border-zinc-800 px-4 py-3 md:block">
         <AnimatePresence mode="wait">
           {totalSelected === 0 ? (
             <motion.div
