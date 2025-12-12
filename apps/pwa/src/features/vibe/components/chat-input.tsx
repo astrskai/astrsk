@@ -98,17 +98,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             <SelectItem value={LANGUAGE_MODELS.GEMINI_2_5_FLASH}>
               Gemini 2.5 Flash
             </SelectItem>
-            <SelectItem value={LANGUAGE_MODELS.GEMINI_2_5_PRO}>
-              Gemini 2.5 Pro
+            <SelectItem value={LANGUAGE_MODELS.GEMINI_3_PRO}>
+              Gemini 3 Pro
             </SelectItem>
             <SelectItem value={LANGUAGE_MODELS.GEMINI_2_5_FLASH_LITE}>
               Gemini 2.5 Flash Lite
             </SelectItem>
-            <SelectItem value={LANGUAGE_MODELS.DEEPSEEK_V3}>
-              DeepSeek Chat v3.1
+            <SelectItem value={LANGUAGE_MODELS.DEEPSEEK_OFFICIAL}>
+              DeepSeek Chat
             </SelectItem>
-            <SelectItem value={LANGUAGE_MODELS.DEEPSEEK_V3_0324}>
-              DeepSeek Chat v3 (0324)
+            <SelectItem value={LANGUAGE_MODELS.DEEPSEEK_V3_1_BYTEPLUS}>
+              DeepSeek V3.1 (BytePlus)
             </SelectItem>
           </SelectContent>
         </Select>
