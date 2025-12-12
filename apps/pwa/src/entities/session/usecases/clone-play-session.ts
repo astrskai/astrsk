@@ -58,11 +58,17 @@ export class ClonePlaySession implements UseCase<Command, Result<Session>> {
 
     // Mark as play session and restore original title (not "Copy of...")
     // IMPORTANT: Keep all cards including user character (data integrity)
-    clonedSession.update({
+    const updateResult = clonedSession.update({
       isPlaySession: true,
       title: originalTitle,
     });
 
+    if (updateResult.isFailure) {
+      return formatFail(
+        "Failed to update cloned session",
+        updateResult.getError(),
+      );
+    }
 
     return Result.ok(clonedSession);
   }
