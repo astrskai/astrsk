@@ -656,21 +656,26 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   };
 
   return (
-    <header className="flex flex-shrink-0 items-center justify-between border-b border-zinc-800 bg-zinc-950 px-4 py-3 md:hidden">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onMenuClick}
-          className="text-zinc-400 hover:text-white"
-        >
-          <Menu size={20} />
-        </button>
+    <header className="flex flex-shrink-0 items-center border-b border-zinc-800 bg-zinc-950 px-4 py-3 md:hidden">
+      {/* Left: Menu Button */}
+      <button
+        onClick={onMenuClick}
+        className="text-zinc-400 hover:text-white"
+      >
+        <Menu size={20} />
+      </button>
+
+      {/* Center: Logo */}
+      <div className="absolute left-1/2 -translate-x-1/2">
         <AstrskLogo
           className="h-4 cursor-pointer"
           onClick={() => navigate({ to: "/" })}
         />
       </div>
+
+      {/* Right: Avatar */}
       <div
-        className="h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
+        className="ml-auto h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
         onClick={handleAvatarClick}
       >
         {user?.user_metadata?.avatar_url ? (

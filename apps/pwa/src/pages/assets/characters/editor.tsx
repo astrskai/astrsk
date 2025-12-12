@@ -24,6 +24,7 @@ import {
 } from "@/entities/character/api";
 import { CardService } from "@/app/services/card-service";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
+import { TAG_DEFAULT } from "@/entities/card/domain";
 
 import { Loading } from "@/shared/ui";
 import { Button } from "@/shared/ui/forms";
@@ -72,21 +73,6 @@ interface CharacterFormData {
 }
 
 // Constants
-const TAG_DEFAULT: readonly string[] = [
-  "Female",
-  "Male",
-  "Villain",
-  "Fictional",
-  "OC",
-  "LGBTQA+",
-  "Platonic",
-  "Angst",
-  "Dead Dove",
-  "Fluff",
-  "Historical",
-  "Royalty",
-];
-
 const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 
 const LorebookItemTitle = ({

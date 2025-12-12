@@ -1,241 +1,302 @@
-import { useState, useEffect } from "react";
-import { ShieldCheck, Play, HardDrive } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { cn } from "@/shared/lib";
-import { TutorialDialog } from "@/widgets/onboarding/tutorial-dialog";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, Plus } from "lucide-react";
+import { useSessionsWithCharacterMetadata } from "@/entities/session/api";
+import { characterQueries } from "@/entities/character/api";
+import { CharacterCard as CharacterCardDomain, GENRE_SUGGESTIONS } from "@/entities/card/domain";
+import { Session } from "@/entities/session/domain";
+import SessionCard from "@/features/session/ui/session-card";
+import CharacterCard from "@/features/character/ui/character-card";
+import { useAsset } from "@/shared/hooks/use-asset";
+import { useTypewriterPlaceholder } from "@/shared/hooks/use-typewriter-placeholder";
+import { Button } from "@/shared/ui/button";
 
-// Typewriter effect component
-const TypewriterText = ({
-  text,
-  delay = 0,
-}: {
-  text: string;
-  delay?: number;
-}) => {
-  const [displayedText, setDisplayedText] = useState("");
-
-  useEffect(() => {
-    let i = 0;
-    let interval: ReturnType<typeof setInterval> | undefined;
-    const timer = setTimeout(() => {
-      interval = setInterval(() => {
-        setDisplayedText(text.slice(0, i + 1));
-        i++;
-        if (i === text.length) clearInterval(interval);
-      }, 30);
-    }, delay);
-    return () => {
-      clearTimeout(timer);
-      if (interval) clearInterval(interval);
-    };
-  }, [text, delay]);
-
-  return <span>{displayedText}</span>;
-};
-
-// Chat Demo Component
-const ChatDemo = () => {
-  return (
-    <div className="bg-surface shadow-brand-500/10 relative mx-auto max-w-2xl overflow-hidden rounded-2xl border border-neutral-800 shadow-2xl">
-      {/* Header */}
-      <div className="bg-surface-raised/50 flex items-center gap-2 border-b border-neutral-800 px-4 py-3">
-        <div className="flex gap-1.5">
-          <div className="bg-status-error/20 h-3 w-3 rounded-full" />
-          <div className="bg-status-warning/20 h-3 w-3 rounded-full" />
-          <div className="bg-status-success/20 h-3 w-3 rounded-full" />
-        </div>
-        <div className="text-fg-subtle mx-auto flex items-center gap-2 text-xs font-medium">
-          <HardDrive size={10} className="text-status-success" />
-          <span>Local Session: The Clockwork Spire</span>
-        </div>
-      </div>
-
-      {/* Chat Area */}
-      <div className="flex min-h-[300px] flex-col gap-4 p-6">
-        {/* AI Message */}
-        <div className="flex gap-4">
-          <div className="border-accent-purple/30 h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2864&auto=format&fit=crop"
-              alt="AI"
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-accent-orange text-sm font-bold">
-                Sakuraba Yui
-              </span>
-              <span className="text-fg-subtle rounded bg-neutral-800 px-1.5 py-0.5 text-[10px]">
-                NPC
-              </span>
-            </div>
-            <p className="text-fg-muted max-w-md text-sm leading-relaxed">
-              <TypewriterText text="She hesitates, looking around nervously. 'Are you sure no one is listening? What we're about to discuss... it can't leave this room.'" />
-            </p>
-          </div>
-        </div>
-
-        {/* User Message */}
-        <div className="flex flex-row-reverse gap-4">
-          <div className="text-fg-subtle flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-neutral-800 text-xs">
-            You
-          </div>
-          <div className="space-y-1 text-right">
-            <div className="text-accent-indigo text-sm font-bold">Player</div>
-            <div className="bg-brand-600/20 text-brand-300 inline-block rounded-2xl rounded-tr-sm px-4 py-2 text-left text-sm">
-              "Don't worry, Yui. This data stays on my device. We're completely
-              off the grid."
-            </div>
-          </div>
-        </div>
-
-        {/* AI Response (Simulated loading) */}
-        <div className="flex gap-4 opacity-80">
-          <div className="border-accent-purple/30 h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=2864&auto=format&fit=crop"
-              alt="AI"
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-accent-orange text-sm font-bold">
-                Sakuraba Yui
-              </span>
-            </div>
-            <div className="flex gap-1">
-              <span
-                className="bg-fg-subtle h-1.5 w-1.5 animate-bounce rounded-full"
-                style={{ animationDelay: "0ms" }}
-              />
-              <span
-                className="bg-fg-subtle h-1.5 w-1.5 animate-bounce rounded-full"
-                style={{ animationDelay: "150ms" }}
-              />
-              <span
-                className="bg-fg-subtle h-1.5 w-1.5 animate-bounce rounded-full"
-                style={{ animationDelay: "300ms" }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Input Mock */}
-      <div className="bg-surface border-t border-neutral-800 p-4">
-        <div className="bg-canvas text-fg-subtle flex items-center gap-2 rounded-lg border border-neutral-800 px-3 py-2">
-          <span className="text-sm">What do you do next?</span>
-          <div className="bg-brand-500 ml-auto h-4 w-0.5 animate-pulse" />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Company Info Component
-const CompanyInfo = () => (
-  <div className="text-fg-disabled flex flex-col items-center gap-6 text-center text-xs">
-    <div className="flex flex-col gap-1 md:flex-row md:gap-4">
-      <span>
-        <strong>Company Name:</strong> harpy chat(jejoon yoo)
-      </span>
-      <span className="hidden text-neutral-800 md:inline">|</span>
-      <span>
-        <strong>Address:</strong> 165, Yeoksam-ro, Gangnam-gu, Seoul, Republic
-        of Korea, 06247
-      </span>
-    </div>
-    <div className="flex flex-col gap-1 md:flex-row md:gap-4">
-      <span>
-        <strong>Contact:</strong> +82-10-7490-1918 or cyoo@astrsk.ai
-      </span>
-      <span className="hidden text-neutral-800 md:inline">|</span>
-      <span>
-        <strong>BRN:</strong> 299-88-02625
-      </span>
-    </div>
-  </div>
-);
-
-interface HomePageProps {
-  className?: string;
+/**
+ * Session Card Wrapper
+ * Wraps SessionCard with data fetching logic
+ */
+interface SessionCardWrapperProps {
+  session: Session;
+  characterAvatars: Array<{ name: string; iconAssetId?: string }>;
+  areCharactersLoading?: boolean;
 }
 
-export function HomePage({ className }: HomePageProps) {
+function SessionCardWrapper({ session, characterAvatars, areCharactersLoading }: SessionCardWrapperProps) {
   const navigate = useNavigate();
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const sessionId = session?.id?.toString() || "";
+  const coverId = session?.props?.coverId;
 
-  const handleStartSession = () => {
-    navigate({ to: "/sessions/new" });
-  };
+  // Call hooks unconditionally (before any early returns)
+  const [coverImageUrl] = useAsset(coverId);
 
-  const handleWatchTutorial = () => {
-    setIsTutorialOpen(true);
+  // Safety check - ensure session and props exist
+  if (!session || !session.props) {
+    return null;
+  }
+
+  const messageCount = session.props.turnIds?.length || 0;
+
+  const handleSessionClick = () => {
+    navigate({
+      to: "/sessions/settings/$sessionId",
+      params: { sessionId },
+    });
   };
 
   return (
-    <div
-      className={cn(
-        "bg-canvas flex h-full flex-col items-center overflow-y-auto px-4 py-8",
-        className,
-      )}
-    >
-      {/* Main Content - Centered */}
-      <div className="flex flex-1 flex-col items-center justify-center gap-8">
-        {/* Hero Text */}
-        <h1 className="text-fg-default text-center text-4xl leading-[1.1] font-extrabold tracking-tight sm:text-5xl lg:text-7xl">
-          Chat Privately.
-          <br />
-          <span className="from-brand-400 to-brand-600 bg-gradient-to-r bg-clip-text text-transparent">
-            Run Locally.
-          </span>
-        </h1>
+    <SessionCard
+      title={session.props.title || "Untitled Session"}
+      imageUrl={coverImageUrl}
+      messageCount={messageCount}
+      onClick={handleSessionClick}
+      characterAvatars={characterAvatars}
+      areCharactersLoading={areCharactersLoading}
+    />
+  );
+}
 
-        {/* Privacy Badge */}
-        <div className="bg-surface-raised/50 text-fg-muted hover:border-brand-500/50 hover:bg-brand-500/5 flex items-center gap-2 rounded-full border border-neutral-800 px-4 py-2 text-xs backdrop-blur-xl transition-all sm:gap-3 sm:px-5 sm:py-2.5 sm:text-sm">
-          <ShieldCheck
-            size={16}
-            className="text-brand-400 shrink-0 sm:size-[18px]"
-          />
-          <span className="text-center sm:text-left">
-            Your sessions are stored locally — <br className="sm:hidden" />
-            <span className="text-brand-400 font-bold">only on your device</span>
-          </span>
-        </div>
+/**
+ * Character Card Wrapper
+ * Wraps CharacterCard with data fetching logic
+ */
+interface CharacterCardWrapperProps {
+  character: CharacterCardDomain;
+}
 
-        {/* Action Buttons */}
-        <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <button
-            onClick={handleStartSession}
-            className="bg-brand-600 shadow-brand-600/25 hover:bg-brand-500 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:scale-95 sm:w-auto"
-          >
-            Start Creating Session
-          </button>
-          <button
-            onClick={handleWatchTutorial}
-            className="border-border-default text-fg-muted hover:border-brand-500 hover:text-brand-500 flex w-full items-center justify-center gap-2 rounded-xl border bg-transparent px-6 py-3 font-semibold transition-all duration-300 active:scale-95 sm:w-auto"
-          >
-            <Play size={18} /> Watch Tutorial
-          </button>
-        </div>
+function CharacterCardWrapper({ character }: CharacterCardWrapperProps) {
+  const navigate = useNavigate();
+  const cardId = character?.id?.toString() || "";
 
-        {/* Tutorial Dialog */}
-        <TutorialDialog open={isTutorialOpen} onOpenChange={setIsTutorialOpen} />
+  // Call hooks unconditionally (before any early returns)
+  const [imageUrl] = useAsset(character?.props?.iconAssetId);
 
-        {/* Chat Demo */}
-        <div className="hidden w-full max-w-2xl">
-          <div className="transform transition-transform duration-500 hover:scale-[1.01]">
-            <ChatDemo />
+  // Safety check
+  if (!character || !character.props) {
+    return null;
+  }
+
+  const handleCharacterClick = () => {
+    navigate({
+      to: "/assets/characters/{-$characterId}",
+      params: { characterId: cardId },
+    });
+  };
+
+  return (
+    <CharacterCard
+      imageUrl={imageUrl}
+      name={character.props.name || "Untitled Character"}
+      summary={character.props.cardSummary}
+      tags={character.props.tags || []}
+      tokenCount={character.props.tokenCount}
+      onClick={handleCharacterClick}
+    />
+  );
+}
+
+export function HomePage() {
+  const navigate = useNavigate();
+  const [prompt, setPrompt] = useState("");
+
+  // Generate random genre hashtag combinations for typewriter animation (shuffle and create pairs)
+  const genreVariations = useMemo(() => {
+    const shuffled = [...GENRE_SUGGESTIONS].sort(() => Math.random() - 0.5);
+    // Create combinations of two hashtags with "..." after them
+    const combinations: string[] = [];
+    for (let i = 0; i < Math.min(5, shuffled.length - 1); i++) {
+      const first = shuffled[i];
+      const second = shuffled[i + 1];
+      combinations.push(`#${first} #${second} ...`);
+    }
+    return combinations;
+  }, []);
+
+  // Typewriter placeholder animation
+  const typewriterPlaceholder = useTypewriterPlaceholder({
+    baseText: "Describe a scenario to play in ",
+    variations: genreVariations,
+    typingSpeed: 80,
+    erasingSpeed: 40,
+    pauseAfterTyping: 2000,
+    pauseAfterErasing: 300,
+  });
+
+  // Fetch recent sessions with character metadata
+  // Mobile: 2 items, Desktop: 3 items
+  const { sessions: allSessionsWithMeta, areCharactersLoading } = useSessionsWithCharacterMetadata({
+    keyword: "",
+    sort: "updatedAt",
+    isPlaySession: false,
+  });
+
+  // Fetch recent characters
+  // Note: characterQueries.list already returns CharacterCard[] domain objects
+  const { data: allCharacters = [] } = useQuery(
+    characterQueries.list({ keyword: "", sort: "updatedAt" })
+  );
+
+  // Responsive slicing: 2 items on mobile, 3 items on desktop
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const itemLimit = isMobile ? 2 : 3;
+  const sessionsWithMeta = allSessionsWithMeta.slice(0, itemLimit);
+  const characters = allCharacters.slice(0, itemLimit);
+
+  const handleAddTag = (label: string) => {
+    setPrompt((prev) => {
+      const tagText = ` #${label}`;
+      return prev ? prev + tagText : tagText.trim();
+    });
+  };
+
+  const handleCreateRoleplay = () => {
+    // Navigate to session creation with the prompt as initial scenario data
+    // The session creation page will use this to pre-fill and auto-start generation
+    navigate({
+      to: "/sessions/new",
+      // @ts-expect-error - TanStack Router state typing
+      state: { initialPrompt: prompt.trim() }
+    });
+  };
+
+  return (
+    <div className="relative flex min-h-full flex-col items-center overflow-y-auto bg-black font-sans text-gray-100 selection:bg-blue-500/30">
+      {/* Animated Background Blobs */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-[-10%] top-[-20%] h-[500px] w-[500px] animate-blob rounded-full bg-purple-600/30 mix-blend-screen blur-[100px] filter"></div>
+        <div className="animation-delay-2000 absolute right-[-20%] top-[-10%] h-[400px] w-[400px] animate-blob rounded-full bg-blue-600/30 mix-blend-screen blur-[100px] filter"></div>
+        <div className="animation-delay-4000 absolute bottom-[-20%] left-[20%] h-[600px] w-[600px] animate-blob rounded-full bg-pink-600/20 mix-blend-screen blur-[120px] filter"></div>
+        <div className="animation-delay-2000 absolute bottom-[10%] right-[10%] h-[300px] w-[300px] animate-blob rounded-full bg-cyan-600/20 mix-blend-screen blur-[80px] filter"></div>
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
+      </div>
+
+
+      {/* Main Content Area */}
+      <main className="relative z-10 flex w-full flex-1 flex-col">
+        {/* Centered Hero Section */}
+        <div className="flex pt-20 min-h-[75vh] w-full flex-col items-center justify-center px-6 text-center">
+          <div className="flex flex-col items-center">
+            {/* Headline */}
+            <h1 className="mb-16 text-5xl font-bold leading-[1.1] tracking-tight drop-shadow-2xl md:text-7xl">
+              Dream It. Play It.
+              <br />
+              <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Infinite Stories Await.
+              </span>
+            </h1>
+
+            {/* Large Input Card */}
+            <div className="group mb-8 w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0A0A0A]/80 p-2 shadow-2xl shadow-black/50 backdrop-blur-xl transition-colors duration-300 focus-within:border-blue-500/50">
+              <div className="relative flex h-auto flex-col">
+                <textarea
+                  className="h-32 w-full resize-none bg-transparent px-4 py-4 text-lg font-normal text-white placeholder-gray-500 outline-none md:text-xl"
+                  placeholder={typewriterPlaceholder}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                />
+
+                <div className="mt-2 flex items-center justify-between px-4 pb-2">
+                  <div className="flex gap-2">{/* Optional tool icons */}</div>
+                  <div className="flex items-center gap-3">
+                    <Button onClick={handleCreateRoleplay} variant="accent" size="lg">
+                      Create Roleplay
+                      <ArrowRight size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Genre Tags */}
+            <div className="flex w-full flex-col items-center gap-4">
+              <span className="flex items-center gap-2 rounded-full bg-black/20 px-3 py-1 text-xs font-medium uppercase tracking-widest text-gray-400 backdrop-blur-sm">
+                <Plus size={10} /> Click to add genre
+              </span>
+
+              <div className="flex max-w-3xl flex-wrap justify-center gap-2">
+                {GENRE_SUGGESTIONS.map((genre, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleAddTag(genre)}
+                    className="group flex items-center gap-1.5 rounded-full border border-white/5 bg-[#161616]/60 px-2 py-1.5 text-xs font-medium text-gray-400 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-blue-500/30 hover:bg-[#202020]/80 hover:text-blue-300 active:scale-95"
+                  >
+                    <Plus size={12} className="text-gray-600 transition-colors group-hover:text-blue-400" />
+                    <span>{genre}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Company Info */}
-      <div className="pt-8">
-        <CompanyInfo />
-      </div>
+        {/* Recent Sessions Section */}
+        {sessionsWithMeta.length > 0 && (
+          <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-10 pt-10 text-left">
+            <div className="mb-6 flex items-center justify-between px-1">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Or Play Sessions
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+              {sessionsWithMeta.map(({ session, characterAvatars }) => (
+                <SessionCardWrapper
+                  key={session.id.toString()}
+                  session={session}
+                  characterAvatars={characterAvatars}
+                  areCharactersLoading={areCharactersLoading}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Characters Section */}
+        {characters.length > 0 && (
+          <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-20 pt-10 text-left">
+            <div className="mb-6 flex items-center justify-between px-1">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Or start session with a Character
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+              {characters.map((character) => (
+                <CharacterCardWrapper key={character.id.toString()} character={character} />
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Animation Styles */}
+      <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
-import { useNavigate, useBlocker } from "@tanstack/react-router";
+import { useNavigate, useBlocker, useLocation } from "@tanstack/react-router";
 import { ChevronRight, ChevronLeft, X } from "lucide-react";
 import { Button } from "@/shared/ui/forms";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
@@ -77,6 +77,7 @@ import * as Dialog from "@radix-ui/react-dialog";
  */
 export function CreateSessionPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [currentStep, setCurrentStep] = useState<SessionStep>("scenario");
 
@@ -135,6 +136,58 @@ Ground Rules:`;
     setChatMessages((prev) => [...prev, message]);
   }, []);
 
+  // Normalize text for API compatibility (handles Unicode, special chars, hashtags, etc.)
+  const normalizeTextForAPI = useCallback((text: string): string => {
+    return text
+      .normalize("NFKC") // Normalize Unicode characters to standard form
+      .trim(); // Remove leading/trailing whitespace
+  }, []);
+
+  // Step-specific chat handlers (registered by each step via ref)
+  // Declared early so useEffect can reference it
+  const chatHandlersRef = useRef<{
+    onSubmit: (prompt: string) => void;
+    onStop: () => void;
+  } | null>(null);
+
+  // Track initial prompt to process once handlers are ready
+  const initialPromptRef = useRef<string | null>(null);
+  const hasProcessedInitialPrompt = useRef(false);
+
+  // Check for initial prompt during render (before ScenarioStep mounts)
+  const state = location.state as { initialPrompt?: string } | undefined;
+  const hasInitialPromptFromState = !!(state?.initialPrompt && state.initialPrompt.length > 0);
+  const [hasInitialPrompt, setHasInitialPrompt] = useState(hasInitialPromptFromState);
+  const [handlersReady, setHandlersReady] = useState(false);
+
+  // Watch for handler registration
+  useEffect(() => {
+    if (chatHandlersRef.current?.onSubmit && !handlersReady) {
+      setHandlersReady(true);
+    }
+  });
+
+  // Capture initial prompt from navigation state
+  useEffect(() => {
+    if (hasInitialPromptFromState && !hasProcessedInitialPrompt.current) {
+      initialPromptRef.current = normalizeTextForAPI(state!.initialPrompt!);
+    }
+  }, [hasInitialPromptFromState, normalizeTextForAPI, state]);
+
+  // Process initial prompt once chat handlers are registered
+  useEffect(() => {
+    if (
+      initialPromptRef.current &&
+      !hasProcessedInitialPrompt.current &&
+      handlersReady &&
+      chatHandlersRef.current?.onSubmit
+    ) {
+      hasProcessedInitialPrompt.current = true;
+      chatHandlersRef.current.onSubmit(initialPromptRef.current);
+      initialPromptRef.current = null;
+    }
+  }, [handlersReady]); // Trigger when handlers become ready
+
   // Chat forms - separate instances for Desktop and Mobile to avoid form context conflicts
   // Using react-hook-form for uncontrolled input (no re-renders on typing)
   // mode: "onChange" enables real-time validation for isValid state
@@ -147,13 +200,6 @@ Ground Rules:`;
     mode: "onChange",
   });
 
-  // Step-specific chat handlers (registered by each step via ref)
-  // Using ref to avoid re-renders when handlers change
-  const chatHandlersRef = useRef<{
-    onSubmit: (prompt: string) => void;
-    onStop: () => void;
-  } | null>(null);
-
   // Chat UI state (controlled by current step)
   // isLoading = AI is generating (blocks input until response complete)
   const [isChatLoading, setIsChatLoading] = useState(false);
@@ -161,23 +207,23 @@ Ground Rules:`;
   // Desktop chat submit handler
   const handleDesktopChatSubmit = useCallback(
     (data: { message: string }) => {
-      const prompt = data.message.trim();
+      const prompt = normalizeTextForAPI(data.message);
       if (!prompt) return;
       chatHandlersRef.current?.onSubmit(prompt);
       desktopChatForm.reset();
     },
-    [desktopChatForm],
+    [desktopChatForm, normalizeTextForAPI],
   );
 
   // Mobile chat submit handler
   const handleMobileChatSubmit = useCallback(
     (data: { message: string }) => {
-      const prompt = data.message.trim();
+      const prompt = normalizeTextForAPI(data.message);
       if (!prompt) return;
       chatHandlersRef.current?.onSubmit(prompt);
       mobileChatForm.reset();
     },
-    [mobileChatForm],
+    [mobileChatForm, normalizeTextForAPI],
   );
 
   // Unified chat stop handler - delegates to current step's handler
@@ -303,7 +349,13 @@ Ground Rules:`;
   }, [proceed]);
 
   const handleCancel = () => {
-    navigate({ to: "/sessions" });
+    // Navigate back to home if user came from there with initial prompt
+    // Otherwise go to sessions list
+    if (hasInitialPrompt) {
+      navigate({ to: "/" });
+    } else {
+      navigate({ to: "/sessions" });
+    }
   };
 
   // Handle character import from file (PNG or JSON)
@@ -1198,6 +1250,7 @@ Ground Rules:`;
               onIsGeneratingChange={setIsScenarioGenerating}
               chatHandlersRef={chatHandlersRef}
               onChatLoadingChange={setIsChatLoading}
+              skipWelcomeMessage={hasInitialPrompt}
             />
           )}
 
