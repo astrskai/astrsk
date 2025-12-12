@@ -57,6 +57,24 @@ export function SessionRosterPanel({
     >
       {/* Content */}
       <div className="flex-1 space-y-6 overflow-y-auto p-4">
+        {/* Warning - shown when no character selected */}
+        <AnimatePresence initial={false}>
+          {totalSelected === 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", marginBottom: 0 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="mb-2 flex items-center justify-center gap-2 rounded-lg bg-zinc-800/50 py-2 text-zinc-500">
+                <AlertTriangle size={12} />
+                <span className="text-xs">Select at least one character</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Player Character Section */}
         <PlayerSection
           playerCharacter={playerCharacter}
@@ -71,39 +89,6 @@ export function SessionRosterPanel({
           libraryCards={libraryCards}
           onRemoveAI={onRemoveAI}
         />
-      </div>
-
-      {/* Footer Status - Desktop only (mobile shows count in tab) */}
-      <div className="hidden flex-shrink-0 border-t border-zinc-800 px-4 py-3 md:block">
-        <AnimatePresence mode="wait">
-          {totalSelected === 0 ? (
-            <motion.div
-              key="warning"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              className="flex items-center justify-center gap-2 text-zinc-500"
-            >
-              <AlertTriangle size={14} />
-              <span className="text-xs">Select at least one character</span>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="count"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              className="flex items-center justify-center gap-2 text-zinc-400"
-            >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-semibold text-zinc-300">
-                {totalSelected}
-              </span>
-              <span className="text-xs">
-                character{totalSelected > 1 ? "s" : ""} ready
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );
