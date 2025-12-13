@@ -37,6 +37,7 @@ interface ChatMessageProps {
   onEdit?: (messageId: UniqueEntityID, content: string) => Promise<void> | void;
   onDelete?: (messageId: UniqueEntityID) => void;
   onRegenerate?: (messageId: UniqueEntityID) => void;
+  onEvaluate?: (messageId: UniqueEntityID) => void;
 }
 
 const ChatMessage = ({
@@ -52,6 +53,7 @@ const ChatMessage = ({
   onEdit,
   onDelete,
   onRegenerate,
+  onEvaluate,
 }: ChatMessageProps) => {
   const [editedContent, setEditedContent] = useState<string>("");
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -418,6 +420,7 @@ const ChatMessage = ({
                 onShowDataStore={handleShowDataStore}
                 onSelectOption={handleSelectOption}
                 onRegenerate={(id) => onRegenerate?.(id)}
+                onEvaluate={onEvaluate ? (id) => onEvaluate(id) : undefined}
               />
             </div>
           )}

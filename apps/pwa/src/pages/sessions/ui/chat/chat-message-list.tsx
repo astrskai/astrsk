@@ -23,6 +23,7 @@ interface ChatMessageListProps {
   onEditMessage?: (messageId: UniqueEntityID, content: string) => void;
   onDeleteMessage?: (messageId: UniqueEntityID) => void;
   onRegenerateMessage?: (messageId: UniqueEntityID) => void;
+  onEvaluateMessage?: (messageId: UniqueEntityID) => void;
   className?: string;
 }
 
@@ -38,6 +39,7 @@ interface RenderMessageProps {
   onEditMessage?: (messageId: UniqueEntityID, content: string) => void;
   onDeleteMessage?: (messageId: UniqueEntityID) => void;
   onRegenerateMessage?: (messageId: UniqueEntityID) => void;
+  onEvaluateMessage?: (messageId: UniqueEntityID) => void;
 }
 
 const RenderMessage = ({
@@ -52,6 +54,7 @@ const RenderMessage = ({
   onEditMessage,
   onDeleteMessage,
   onRegenerateMessage,
+  onEvaluateMessage,
 }: RenderMessageProps) => {
   const {
     data: message,
@@ -103,6 +106,7 @@ const RenderMessage = ({
         onEdit={onEditMessage}
         onDelete={onDeleteMessage}
         onRegenerate={onRegenerateMessage}
+        onEvaluate={onEvaluateMessage}
       />
     )
   ) : null;
@@ -117,6 +121,7 @@ export default function ChatMessageList({
   onEditMessage,
   onDeleteMessage,
   onRegenerateMessage,
+  onEvaluateMessage,
   className,
 }: ChatMessageListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -259,6 +264,7 @@ export default function ChatMessageList({
                   onEditMessage={onEditMessage}
                   onDeleteMessage={onDeleteMessage}
                   onRegenerateMessage={onRegenerateMessage}
+                  onEvaluateMessage={onEvaluateMessage}
                 />
               </div>
             );
