@@ -5,6 +5,9 @@ import { toastError, toastInfo } from "@/shared/ui/toast";
 import ChatInput from "./chat-input";
 import ChatMessageList from "./chat-message-list";
 import { showErrorDetails } from "@/shared/stores/error-dialog-store";
+import { useEvaluateMessage } from "@/features/evaluation";
+import { EvaluationReportModal } from "@/widgets/evaluation";
+import { useEvaluationStore } from "@/shared/stores/evaluation-store";
 
 import {
   createMessage,
@@ -91,6 +94,10 @@ export default function ChatMainArea({
   const addMessageMutation = useAddMessage(data.id);
   const deleteMessageMutation = useDeleteMessage(data.id);
   const updateTurnMutation = useUpdateTurn();
+
+  // Evaluation
+  const { evaluate } = useEvaluateMessage();
+  const { currentReport, isReportModalOpen, closeReportModal } = useEvaluationStore();
 
   const generateCharacterMessage = useCallback(
     async (
@@ -544,6 +551,21 @@ export default function ChatMainArea({
     [generateCharacterMessage],
   );
 
+  const handleEvaluateMessage = useCallback(
+    async (messageId: UniqueEntityID) => {
+      try {
+        await evaluate({
+          messageId: messageId.toString(),
+          sessionId: data.id.toString(),
+        });
+      } catch (error) {
+        logger.error('[Evaluation] Failed to evaluate message', error);
+        toastError('Failed to evaluate message');
+      }
+    },
+    [evaluate, data.id],
+  );
+
   const handleAddScenario = useCallback(
     async (scenarioIndex: number) => {
       // Check session
@@ -714,6 +736,14 @@ export default function ChatMainArea({
         onEditMessage={handleEditMessage}
         onDeleteMessage={handleDeleteMessage}
         onRegenerateMessage={handleRegenerateMessage}
+        onEvaluateMessage={handleEvaluateMessage}
+      />
+
+      {/* Evaluation Report Modal */}
+      <EvaluationReportModal
+        report={currentReport}
+        isOpen={isReportModalOpen}
+        onClose={closeReportModal}
       />
 
       <ChatInput

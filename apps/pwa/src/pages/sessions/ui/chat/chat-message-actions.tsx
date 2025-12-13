@@ -7,6 +7,7 @@ import {
   RefreshCcw,
   ChevronRight,
   ChevronLeft,
+  FlaskConical,
 } from "lucide-react";
 import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
@@ -34,6 +35,7 @@ interface ChatMessageActionsProps {
     direction: "prev" | "next",
   ) => void;
   onRegenerate: (messageId: UniqueEntityID) => void;
+  onEvaluate?: (messageId: UniqueEntityID) => void;
 }
 
 const ChatMessageActions = ({
@@ -55,6 +57,7 @@ const ChatMessageActions = ({
   onShowDataStore,
   onSelectOption,
   onRegenerate,
+  onEvaluate,
 }: ChatMessageActionsProps) => {
   const buttonVariants = isUser
     ? "hover:bg-fg-muted/80"
@@ -206,6 +209,21 @@ const ChatMessageActions = ({
               onClick={() => onRegenerate(messageId)}
             >
               <RefreshCcw className="h-4 w-4" />
+            </button>
+          )}
+
+          {isLastMessage && onEvaluate && !isUser && (
+            <button
+              type="button"
+              className={cn(
+                "flex items-center justify-center rounded p-1.5 transition-colors",
+                buttonVariants,
+              )}
+              aria-label="Evaluate Message"
+              title="Evaluate agent behavior, context, and state updates"
+              onClick={() => onEvaluate(messageId)}
+            >
+              <FlaskConical className="h-4 w-4" />
             </button>
           )}
         </>
