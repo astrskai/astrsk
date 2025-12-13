@@ -6,7 +6,16 @@ import {
   useMemo,
   useId,
 } from "react";
-import { Plus, Trash2, ArrowLeft, FileUp, Image, Pencil, Check, X } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  ArrowLeft,
+  FileUp,
+  Image,
+  Pencil,
+  Check,
+  X,
+} from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "@/shared/lib";
 import { useSession } from "@/shared/hooks/use-session";
@@ -19,13 +28,27 @@ import { fetchSession, useSaveSession } from "@/entities/session/api";
 import { CardTab } from "@/features/session/create-session/step-cards";
 import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
 import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/shared/ui";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/shared/ui";
 import { DialogBase } from "@/shared/ui/dialogs/base";
-import CharacterCardUI from "@/features/character/ui/character-card";
+import {
+  CharacterCard as CharacterCardUI,
+  type CardAction,
+  type CardBadge,
+} from "@astrsk/design-system/character-card";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useQuery } from "@tanstack/react-query";
-import { backgroundQueries, getDefaultBackground, getBackgroundAssetId } from "@/entities/background/api";
+import {
+  backgroundQueries,
+  getDefaultBackground,
+  getBackgroundAssetId,
+} from "@/entities/background/api";
 import { AssetService } from "@/app/services/asset-service";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import BackgroundGrid from "./settings/background-grid";
@@ -55,12 +78,12 @@ const Section = ({
   return (
     <div
       className={cn(
-        "bg-surface-raised rounded-xl border border-border-muted p-6",
-        className
+        "bg-surface-raised border-border-muted rounded-xl border p-6",
+        className,
       )}
     >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-fg-default">{title}</h3>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-fg-default text-lg font-bold">{title}</h3>
       </div>
       {children}
     </div>
@@ -70,15 +93,15 @@ const Section = ({
 const SectionCarousel = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Carousel>
-      <CarouselContent className="mr-4 ml-0 max-md:mr-2 max-md:ml-0 gap-4">
+      <CarouselContent className="mr-4 ml-0 gap-4 max-md:mr-2 max-md:ml-0">
         {children}
       </CarouselContent>
       <CarouselPrevious
-        className="bg-surface-raised border-border-muted border disabled:hidden left-4 max-md:left-2 max-md:h-8 max-md:w-8"
+        className="bg-surface-raised border-border-muted left-4 border disabled:hidden max-md:left-2 max-md:h-8 max-md:w-8"
         variant="ghost_white"
       />
       <CarouselNext
-        className="bg-surface-raised border-border-muted border disabled:hidden right-4 max-md:right-2 max-md:h-8 max-md:w-8"
+        className="bg-surface-raised border-border-muted right-4 border disabled:hidden max-md:right-2 max-md:h-8 max-md:w-8"
         variant="ghost_white"
       />
     </Carousel>
@@ -101,10 +124,10 @@ const CharacterCardContent = ({
   isEmpty?: boolean;
   label?: string;
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const [card] = useCard(cardId);
   const [iconUrl] = useAsset(card?.props?.iconAssetId);
   const navigate = useNavigate();
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleCardClick = useCallback(() => {
     if (cardId && !isEmpty) {
@@ -116,15 +139,26 @@ const CharacterCardContent = ({
     }
   }, [cardId, isEmpty, navigate]);
 
-  const handleDeleteClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete?.();
-  }, [onDelete]);
+  const handleDeleteClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onDelete?.();
+    },
+    [onDelete],
+  );
 
-  const handleAddClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onAdd?.();
-  }, [onAdd]);
+  const handleAddClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onAdd?.();
+    },
+    [onAdd],
+  );
+
+  // Build badges array
+  const badges: CardBadge[] = label
+    ? [{ label: label.toUpperCase(), variant: "default" as const }]
+    : [];
 
   // Empty state - "No persona" using CharacterCard component
   if (isEmpty) {
@@ -140,22 +174,16 @@ const CharacterCardContent = ({
           summary=""
           tags={[]}
           tokenCount={0}
-          className="w-full !min-h-[320px] !h-[320px]"
+          className="!h-[320px] !min-h-[320px] w-full"
+          badges={badges}
         />
-
-        {/* Label overlay */}
-        {label && (
-          <div className="absolute top-2 left-2 text-xs font-bold text-white uppercase tracking-wider bg-black/70 px-2 py-1 rounded z-10">
-            {label}
-          </div>
-        )}
 
         {/* Hover overlay with add button */}
         {isHovered && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity rounded-lg z-10">
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-black/50 transition-opacity">
             <button
               onClick={handleAddClick}
-              className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform z-20"
+              className="z-20 rounded-full bg-white p-3 text-black transition-transform hover:scale-110"
             >
               <Plus className="h-5 w-5" />
             </button>
@@ -165,44 +193,32 @@ const CharacterCardContent = ({
     );
   }
 
-  // Character card with click navigation and delete button on top-right
+  // Build actions array
+  const actions: CardAction[] = onDelete
+    ? [
+        {
+          icon: Trash2,
+          label: "Delete",
+          onClick: handleDeleteClick,
+          className: "text-red-400 hover:text-red-300",
+        },
+      ]
+    : [];
+
+  // Character card with click navigation and delete action
   return (
-    <div
-      className="relative w-full"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div
-        className="relative cursor-pointer"
-        onClick={handleCardClick}
-      >
-        <CharacterCardUI
-          name={card?.props?.title || card?.props?.name || "Loading..."}
-          imageUrl={iconUrl ?? null}
-          summary={card?.props?.description || ""}
-          tags={card?.props?.tags || []}
-          tokenCount={card?.props?.tokenCount ?? 0}
-          className="w-full !min-h-[320px] !h-[320px]"
-        />
-
-        {/* Label overlay */}
-        {label && (
-          <div className="absolute top-2 left-2 text-xs font-bold text-white uppercase tracking-wider bg-black/70 px-2 py-1 rounded z-10">
-            {label}
-          </div>
-        )}
-
-        {/* Delete button on top-right corner */}
-        {isHovered && onDelete && (
-          <button
-            onClick={handleDeleteClick}
-            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:scale-110 transition-transform z-20 shadow-lg"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-    </div>
+    <CharacterCardUI
+      name={card?.props?.title || card?.props?.name || "Loading..."}
+      imageUrl={iconUrl ?? null}
+      summary={card?.props?.description || ""}
+      tags={card?.props?.tags || []}
+      maxVisibleTags={2}
+      tokenCount={card?.props?.tokenCount ?? 0}
+      className="!h-[320px] !min-h-[320px] w-full"
+      onClick={handleCardClick}
+      actions={actions}
+      badges={badges}
+    />
   );
 };
 
@@ -217,7 +233,7 @@ const InteractiveCharacterCard = (props: {
   label?: string;
 }) => {
   return (
-    <CarouselItem className="relative basis-1/5 py-6 pl-6 lg:basis-1/6 min-w-[220px]">
+    <CarouselItem className="relative min-w-[220px] basis-1/5 py-6 pl-6 lg:basis-1/6">
       <div className="w-[220px]">
         <CharacterCardContent {...props} />
       </div>
@@ -249,10 +265,10 @@ const AddCharacterCardContent = ({ onAdd }: { onAdd: () => void }) => {
   return (
     <button
       onClick={onAdd}
-      className="flex flex-col items-center justify-start gap-2 group w-full"
+      className="group flex w-full flex-col items-center justify-start gap-2"
     >
-      <div className="w-full h-[320px] rounded-lg border-2 border-dashed border-border-muted bg-surface-raised hover:border-fg-muted hover:bg-surface-overlay transition-all flex items-center justify-center">
-        <Plus className="h-8 w-8 text-fg-subtle group-hover:text-fg-default transition-colors" />
+      <div className="border-border-muted bg-surface-raised hover:border-fg-muted hover:bg-surface-overlay flex h-[320px] w-full items-center justify-center rounded-lg border-2 border-dashed transition-all">
+        <Plus className="text-fg-subtle group-hover:text-fg-default h-8 w-8 transition-colors" />
       </div>
     </button>
   );
@@ -263,7 +279,7 @@ const AddCharacterCardContent = ({ onAdd }: { onAdd: () => void }) => {
  */
 const AddCharacterCard = ({ onAdd }: { onAdd: () => void }) => {
   return (
-    <CarouselItem className="basis-1/5 py-6 pl-6 lg:basis-1/6 min-w-[220px]">
+    <CarouselItem className="min-w-[220px] basis-1/5 py-6 pl-6 lg:basis-1/6">
       <div className="w-[220px]">
         <AddCharacterCardContent onAdd={onAdd} />
       </div>
@@ -285,8 +301,14 @@ const AddCharacterCardGrid = ({ onAdd }: { onAdd: () => void }) => {
 /**
  * Background Preview Component
  */
-const BackgroundPreview = ({ backgroundId }: { backgroundId: UniqueEntityID | null | undefined }) => {
-  const defaultBg = backgroundId ? getDefaultBackground(backgroundId) : undefined;
+const BackgroundPreview = ({
+  backgroundId,
+}: {
+  backgroundId: UniqueEntityID | null | undefined;
+}) => {
+  const defaultBg = backgroundId
+    ? getDefaultBackground(backgroundId)
+    : undefined;
 
   const { data: background } = useQuery({
     ...backgroundQueries.detail(backgroundId ?? undefined),
@@ -310,7 +332,7 @@ const BackgroundPreview = ({ backgroundId }: { backgroundId: UniqueEntityID | nu
     <img
       src={backgroundImageSrc}
       alt="Background"
-      className="w-full h-full object-cover"
+      className="h-full w-full object-cover"
     />
   );
 };
@@ -345,7 +367,8 @@ export const SessionSettings = ({
   } = useSessionSettingsHandlers(session);
 
   // Character selection dialog state
-  const [isUserCharacterDialogOpen, setIsUserCharacterDialogOpen] = useState(false);
+  const [isUserCharacterDialogOpen, setIsUserCharacterDialogOpen] =
+    useState(false);
   const [isAICharacterDialogOpen, setIsAICharacterDialogOpen] = useState(false);
 
   // Scenario selection dialog state
@@ -443,7 +466,8 @@ export const SessionSettings = ({
 
   const handleUserCharacterSelected = useCallback(
     async (characters: CharacterCard[]) => {
-      const characterId = characters.length > 0 ? characters[0].id.toString() : null;
+      const characterId =
+        characters.length > 0 ? characters[0].id.toString() : null;
       await handleSetUserCharacter(characterId);
       setIsUserCharacterDialogOpen(false);
     },
@@ -496,26 +520,29 @@ export const SessionSettings = ({
     setEditedTitle("");
   }, []);
 
-  const handleTitleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSaveTitle();
-    } else if (e.key === "Escape") {
-      handleCancelEditTitle();
-    }
-  }, [handleSaveTitle, handleCancelEditTitle]);
+  const handleTitleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        handleSaveTitle();
+      } else if (e.key === "Escape") {
+        handleCancelEditTitle();
+      }
+    },
+    [handleSaveTitle, handleCancelEditTitle],
+  );
 
   if (!session) return null;
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-10 space-y-6">
+    <div className="mx-auto w-full max-w-[1400px] space-y-6 p-6 md:p-10">
       {/* Header: Session Title + Start Button */}
-      <header className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <button
             type="button"
             aria-label="Back to sessions"
             onClick={() => navigate({ to: "/sessions" })}
-            className="cursor-pointer text-fg-subtle hover:text-fg-default"
+            className="text-fg-subtle hover:text-fg-default cursor-pointer"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
@@ -530,30 +557,32 @@ export const SessionSettings = ({
                 value={editedTitle}
                 onChange={(e) => setEditedTitle(e.target.value)}
                 onKeyDown={handleTitleKeyDown}
-                className="px-2 py-1 text-fg-default font-medium bg-surface-overlay border border-border-subtle rounded focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                className="text-fg-default bg-surface-overlay border-border-subtle focus:ring-accent-primary rounded border px-2 py-1 font-medium focus:ring-2 focus:outline-none"
                 placeholder="Session title"
               />
               <button
                 onClick={handleSaveTitle}
-                className="p-1 text-fg-subtle hover:text-fg-default transition-colors"
+                className="text-fg-subtle hover:text-fg-default p-1 transition-colors"
                 aria-label="Save title"
               >
                 <Check className="h-4 w-4" />
               </button>
               <button
                 onClick={handleCancelEditTitle}
-                className="p-1 text-fg-subtle hover:text-fg-default transition-colors"
+                className="text-fg-subtle hover:text-fg-default p-1 transition-colors"
                 aria-label="Cancel editing"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 group">
-              <span className="text-fg-default font-medium">{session.title || "Untitled Session"}</span>
+            <div className="group flex items-center gap-2">
+              <span className="text-fg-default font-medium">
+                {session.title || "Untitled Session"}
+              </span>
               <button
                 onClick={handleStartEditTitle}
-                className="p-1 text-fg-muted opacity-0 group-hover:opacity-100 hover:text-fg-default transition-all"
+                className="text-fg-muted hover:text-fg-default p-1 opacity-0 transition-all group-hover:opacity-100"
                 aria-label="Edit title"
               >
                 <Pencil className="h-4 w-4" />
@@ -572,8 +601,14 @@ export const SessionSettings = ({
           <InteractiveCharacterCardGrid
             cardId={session?.userCharacterCardId}
             isEmpty={!session?.userCharacterCardId}
-            onDelete={session?.userCharacterCardId ? handleDeleteUserCharacter : undefined}
-            onAdd={!session?.userCharacterCardId ? handleAddUserCharacter : undefined}
+            onDelete={
+              session?.userCharacterCardId
+                ? handleDeleteUserCharacter
+                : undefined
+            }
+            onAdd={
+              !session?.userCharacterCardId ? handleAddUserCharacter : undefined
+            }
             label="User"
           />
 
@@ -597,8 +632,16 @@ export const SessionSettings = ({
             <InteractiveCharacterCard
               cardId={session?.userCharacterCardId}
               isEmpty={!session?.userCharacterCardId}
-              onDelete={session?.userCharacterCardId ? handleDeleteUserCharacter : undefined}
-              onAdd={!session?.userCharacterCardId ? handleAddUserCharacter : undefined}
+              onDelete={
+                session?.userCharacterCardId
+                  ? handleDeleteUserCharacter
+                  : undefined
+              }
+              onAdd={
+                !session?.userCharacterCardId
+                  ? handleAddUserCharacter
+                  : undefined
+              }
               label="User"
             />
 
@@ -635,47 +678,51 @@ export const SessionSettings = ({
       />
 
       {/* Row 2: Narrative (Scenario + Workflow) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Scenario - 2/3 width */}
-        <Section title="Scenario" className="lg:col-span-2 h-80 flex flex-col">
+        <Section title="Scenario" className="flex h-80 flex-col lg:col-span-2">
           <button
             onClick={() => {
               if (plotCard?.id) {
                 navigate({
                   to: "/assets/scenarios/{-$scenarioId}",
-                  params: { scenarioId: plotCard.id.toString() }
+                  params: { scenarioId: plotCard.id.toString() },
                 });
               }
             }}
-            className="flex-grow space-y-4 overflow-y-auto pr-2 cursor-pointer hover:bg-surface-overlay/50 rounded-lg transition-colors text-left"
+            className="hover:bg-surface-overlay/50 flex-grow cursor-pointer space-y-4 overflow-y-auto rounded-lg pr-2 text-left transition-colors"
           >
             {plotCard ? (
               <>
                 <div>
-                  <label className="text-xs text-fg-subtle uppercase font-bold tracking-wider mb-2 block">
+                  <label className="text-fg-subtle mb-2 block text-xs font-bold tracking-wider uppercase">
                     Description
                   </label>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="h-18 w-1 bg-accent-primary rounded-full"></div>
-                    <p className="text-sm text-fg-default font-medium line-clamp-4">{plotCard.props.description}</p>
+                  <div className="mb-2 flex items-center gap-2">
+                    <div className="bg-accent-primary h-18 w-1 rounded-full"></div>
+                    <p className="text-fg-default line-clamp-4 text-sm font-medium">
+                      {plotCard.props.description}
+                    </p>
                   </div>
                 </div>
 
-                {plotCard.props.firstMessages && plotCard.props.firstMessages.length > 0 && (
-                  <div>
-                    <label className="text-xs text-fg-subtle uppercase font-bold tracking-wider mb-2 block">
-                      First Message
-                    </label>
-                    <div className="bg-surface-overlay p-3 rounded-lg border border-border-subtle overflow-hidden">
-                      <div className="text-sm text-fg-muted leading-5 line-clamp-2">
-                        {plotCard.props.firstMessages[0].description || "No first message"}
+                {plotCard.props.firstMessages &&
+                  plotCard.props.firstMessages.length > 0 && (
+                    <div>
+                      <label className="text-fg-subtle mb-2 block text-xs font-bold tracking-wider uppercase">
+                        First Message
+                      </label>
+                      <div className="bg-surface-overlay border-border-subtle overflow-hidden rounded-lg border p-3">
+                        <div className="text-fg-muted line-clamp-2 text-sm leading-5">
+                          {plotCard.props.firstMessages[0].description ||
+                            "No first message"}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </>
             ) : (
-              <div className="flex items-center justify-center h-full text-fg-subtle">
+              <div className="text-fg-subtle flex h-full items-center justify-center">
                 <p className="text-sm">No scenario selected</p>
               </div>
             )}
@@ -683,47 +730,55 @@ export const SessionSettings = ({
         </Section>
 
         {/* Workflow - 1/3 width */}
-        <Section title="Workflow" className="h-80 flex flex-col">
+        <Section title="Workflow" className="flex h-80 flex-col">
           <button
             onClick={() => {
               if (session?.props.flowId) {
-                navigate({ to: "/assets/workflows/$workflowId", params: { workflowId: session.props.flowId.toString() } });
+                navigate({
+                  to: "/assets/workflows/$workflowId",
+                  params: { workflowId: session.props.flowId.toString() },
+                });
               }
             }}
-            className="flex-grow rounded-lg border border-border-subtle relative overflow-hidden flex items-center justify-center transition-colors cursor-pointer group"
+            className="border-border-subtle group relative flex flex-grow cursor-pointer items-center justify-center overflow-hidden rounded-lg border transition-colors"
           >
-            <IconWorkflow className="w-16 h-16 text-fg-subtle group-hover:text-fg-default transition-colors" />
+            <IconWorkflow className="text-fg-subtle group-hover:text-fg-default h-16 w-16 transition-colors" />
           </button>
         </Section>
       </div>
 
       {/* Row 3: Visuals & Styling */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Cover Image - 1 column */}
-        <Section title="Cover Image" className="h-72 flex flex-col">
-          <div className={cn(
-            "flex-grow rounded-lg relative overflow-hidden border border-border-subtle",
-            coverImageSrc && "border-2"
-          )}>
-            <label htmlFor={coverImageInputId} className="cursor-pointer h-full block">
+        <Section title="Cover Image" className="flex h-72 flex-col">
+          <div
+            className={cn(
+              "border-border-subtle relative flex-grow overflow-hidden rounded-lg border",
+              coverImageSrc && "border-2",
+            )}
+          >
+            <label
+              htmlFor={coverImageInputId}
+              className="block h-full cursor-pointer"
+            >
               {coverImageSrc ? (
-                <div className="relative h-full group">
+                <div className="group relative h-full">
                   <img
                     src={coverImageSrc}
                     alt="Cover image"
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover"
                   />
                   {/* Delete button on hover */}
                   <button
                     onClick={handleDeleteCoverImage}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:scale-110 transition-transform opacity-0 group-hover:opacity-100 z-10 shadow-lg"
+                    className="absolute top-2 right-2 z-10 rounded-full bg-red-500 p-2 text-white opacity-0 shadow-lg transition-transform group-hover:opacity-100 hover:scale-110"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center">
-                  <div className="flex cursor-pointer items-center justify-center gap-2 rounded-lg text-fg-subtle hover:text-fg-default text-sm font-medium transition-colors md:text-base">
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-fg-subtle hover:text-fg-default flex cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors md:text-base">
                     <FileUp className="h-5 w-5" />
                     <p>Upload cover image</p>
                   </div>
@@ -741,20 +796,22 @@ export const SessionSettings = ({
         </Section>
 
         {/* Background - 1 column */}
-        <Section title="Background" className="h-72 flex flex-col">
-          <div className={cn(
-            "flex-grow rounded-lg relative overflow-hidden border border-border-subtle",
-            session?.backgroundId && "border-2"
-          )}>
+        <Section title="Background" className="flex h-72 flex-col">
+          <div
+            className={cn(
+              "border-border-subtle relative flex-grow overflow-hidden rounded-lg border",
+              session?.backgroundId && "border-2",
+            )}
+          >
             <button
               onClick={() => setIsBackgroundDialogOpen(true)}
-              className="w-full h-full cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-full w-full cursor-pointer transition-opacity hover:opacity-80"
             >
               {session?.backgroundId ? (
                 <BackgroundPreview backgroundId={session.backgroundId} />
               ) : (
-                <div className="h-full flex items-center justify-center">
-                  <div className="flex cursor-pointer items-center justify-center gap-2 rounded-lg text-fg-subtle hover:text-fg-default text-sm font-medium transition-colors md:text-base">
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-fg-subtle hover:text-fg-default flex cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors md:text-base">
                     <Image className="h-5 w-5" />
                     <p>Select background</p>
                   </div>
@@ -765,8 +822,11 @@ export const SessionSettings = ({
         </Section>
 
         {/* Message Styling - 2 columns */}
-        <Section title="Message Styling" className="lg:col-span-2 h-72 flex flex-col">
-          <div className="flex-grow flex items-center">
+        <Section
+          title="Message Styling"
+          className="flex h-72 flex-col lg:col-span-2"
+        >
+          <div className="flex flex-grow items-center">
             <div className="flex-grow overflow-y-auto">
               <MessageStyling
                 sessionId={session.id}

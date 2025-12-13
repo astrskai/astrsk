@@ -9,3 +9,4 @@ export {
   CharacterCardSkeleton,
   type CharacterCardSkeletonProps,
 } from './CharacterCardSkeleton';
+export { type CardBadge, type CardBadgeVariant } from '../Card';
