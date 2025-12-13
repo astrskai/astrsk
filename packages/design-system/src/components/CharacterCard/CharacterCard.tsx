@@ -24,6 +24,11 @@ export interface CharacterCardProps {
   summary?: string;
   /** Character tags */
   tags: string[];
+  /**
+   * Maximum number of tags to display before showing "+n" indicator.
+   * @default 3
+   */
+  maxVisibleTags?: number;
   /** Token count for the character (used in default metadata) */
   tokenCount?: number;
   /** Last updated timestamp (used in default metadata) */
@@ -121,6 +126,7 @@ export function CharacterCard({
   imageUrl,
   summary,
   tags,
+  maxVisibleTags = 3,
   tokenCount = 0,
   updatedAt,
   className,
@@ -184,7 +190,7 @@ export function CharacterCard({
             </span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
 
         {/* Like Button (top-right, always visible) */}
         {likeButton && (
@@ -224,17 +230,23 @@ export function CharacterCard({
         <div className="mb-2 md:mb-4 flex flex-wrap gap-2">
           {tags.length > 0 ? (
             <>
-              {tags.slice(0, 3).map((tag, index) => (
-                <span
-                  key={`${tag}-${index}`}
-                  className="rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300"
-                >
-                  {tag}
-                </span>
-              ))}
-              {tags.length > 3 && (
-                <span className="rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300">
-                  +{tags.length - 3}
+              {tags.slice(0, maxVisibleTags).map((tag, index) => {
+                // Calculate max-width based on maxVisibleTags
+                // Formula: ~85% / (n + 1) to leave room for "+n" badge and gaps
+                const maxWidthPercent = Math.floor(85 / (maxVisibleTags + 1));
+                return (
+                  <span
+                    key={`${tag}-${index}`}
+                    className="truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300"
+                    style={{ maxWidth: `${maxWidthPercent}%` }}
+                  >
+                    {tag}
+                  </span>
+                );
+              })}
+              {tags.length > maxVisibleTags && (
+                <span className="shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                  +{tags.length - maxVisibleTags}
                 </span>
               )}
             </>
