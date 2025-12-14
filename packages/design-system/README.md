@@ -166,15 +166,18 @@ import Image from 'next/image';
   name="Alice"
   imageUrl="/image.jpg"
   tags={['fantasy']}
-  renderImage={({ src, alt, className, sizes, onError }) => (
+  priority={true}  // This card loads with priority
+  renderImage={({ src, alt, className, sizes, loading, onError, fill, priority }) => (
     <Image
       src={src}
       alt={alt}
       className={className}
       sizes={sizes}
+      loading={loading}
       onError={onError}
-      fill
-      priority  // Only this card loads with priority
+      fill={fill}
+      priority={priority}
+      style={{ objectFit: 'cover' }}
     />
   )}
 />
@@ -197,10 +200,10 @@ Use the `priority` prop for above-the-fold images to improve Largest Contentful 
 ))}
 ```
 
-When `priority={true}`:
-- Next.js adds `<link rel="preload">` to HTML head
-- Browser fetches image before JS bundle parsing
-- Significantly reduces LCP time (e.g., 2.6s → 290ms)
+When `priority={true}` (behavior varies by framework):
+- In Next.js, the image may be preloaded via `<link rel="preload">` in the HTML head
+- This allows the browser to fetch the image earlier in the loading sequence
+- Can significantly improve LCP scores (actual improvement depends on your app and network conditions)
 
 ### Without Provider (Default)
 
