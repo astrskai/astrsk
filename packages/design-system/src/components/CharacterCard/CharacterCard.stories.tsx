@@ -622,7 +622,7 @@ export const FullFeatured: Story = {
     updatedAt: '2 days ago',
     badges: [
       { label: 'CHARACTER', icon: <Layers size={12} /> },
-      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} /> },
     ],
     likeButton: {
       isLiked: true,
@@ -902,4 +902,26 @@ export const GridLayoutWithPopularity: Story = {
       />
     </>
   ),
+};
+
+// Demonstrates that right badges are hidden when likeButton is present
+export const LikeButtonHidesRightBadge: Story = {
+  args: {
+    ...Default.args,
+    badges: [
+      { label: 'CHARACTER', icon: <Layers size={12} />, position: 'left' },
+      { label: 'Private', variant: 'private', icon: <Lock size={12} />, position: 'right' },
+    ],
+    likeButton: {
+      isLiked: false,
+      onClick: () => console.log('Like clicked'),
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'When `likeButton` is provided, right-positioned badges are automatically hidden to prevent visual overlap. Use left-positioned badges instead when using likeButton.',
+      },
+    },
+  },
 };

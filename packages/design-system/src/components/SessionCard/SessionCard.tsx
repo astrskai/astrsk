@@ -15,6 +15,23 @@ import {
 import { type ImageComponentProps } from '../../provider';
 import { useImageRenderer } from '../../hooks';
 
+/**
+ * Custom class names for internal elements of SessionCard.
+ * Classes are merged with default styles using cn(), so you can:
+ * - Add new classes (e.g., "font-serif" adds to existing styles)
+ * - Override classes (e.g., "text-3xl" overrides default "text-xl md:text-2xl")
+ */
+export interface SessionCardClassNames {
+  /** Classes for the title heading */
+  title?: string;
+  /** Classes for the summary/description text */
+  summary?: string;
+  /** Classes for individual tag elements */
+  tag?: string;
+  /** Classes for the tags container */
+  tagsContainer?: string;
+}
+
 export interface CharacterAvatar {
   /** Character name */
   name: string;
@@ -96,6 +113,20 @@ export interface SessionCardProps {
    * ```
    */
   renderImage?: (props: ImageComponentProps) => React.ReactNode;
+  /**
+   * Custom class names for internal elements.
+   * Classes are merged with defaults, allowing you to add or override styles.
+   * @example
+   * ```tsx
+   * <SessionCard
+   *   classNames={{
+   *     title: "font-serif text-3xl",
+   *     summary: "italic",
+   *   }}
+   * />
+   * ```
+   */
+  classNames?: SessionCardClassNames;
 }
 
 /**
@@ -211,6 +242,7 @@ export function SessionCard({
   loading = 'lazy',
   priority = false,
   renderImage,
+  classNames,
 }: SessionCardProps) {
   const [imageError, setImageError] = useState(false);
   const renderImageWithProvider = useImageRenderer({ renderImage });
@@ -306,8 +338,8 @@ export function SessionCard({
           </div>
         )}
 
-        {/* Right Badges */}
-        {badges.some((b) => b.position === 'right') && (
+        {/* Right Badges - hidden when likeButton is present to avoid overlap */}
+        {!likeButton && badges.some((b) => b.position === 'right') && (
           <div className='absolute top-3 right-3 z-10 max-w-[45%]'>
             <CardBadges badges={badges} position='right' />
           </div>
@@ -315,7 +347,12 @@ export function SessionCard({
 
         {/* Session Title */}
         <div className='absolute bottom-0 left-0 w-full p-5'>
-          <h2 className='line-clamp-2 text-xl md:text-2xl leading-tight font-bold text-ellipsis text-white'>
+          <h2
+            className={cn(
+              'line-clamp-2 text-xl md:text-2xl leading-tight font-bold text-ellipsis text-white',
+              classNames?.title
+            )}
+          >
             {title}
           </h2>
         </div>
@@ -326,17 +363,25 @@ export function SessionCard({
         <div className='space-y-2 md:space-y-3'>
           {/* Tags */}
           {tags.length > 0 && (
-            <div className='flex flex-wrap gap-2'>
+            <div className={cn('flex flex-wrap gap-2', classNames?.tagsContainer)}>
               {tags.slice(0, 3).map((tag, index) => (
                 <span
                   key={`${tag}-${index}`}
-                  className='rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300'
+                  className={cn(
+                    'rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    classNames?.tag
+                  )}
                 >
                   {tag}
                 </span>
               ))}
               {tags.length > 3 && (
-                <span className='rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300'>
+                <span
+                  className={cn(
+                    'rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    classNames?.tag
+                  )}
+                >
                   +{tags.length - 3}
                 </span>
               )}
@@ -345,7 +390,12 @@ export function SessionCard({
 
           {/* Summary */}
           {summary && (
-            <p className='line-clamp-2 text-xs leading-relaxed break-all text-ellipsis text-zinc-400'>
+            <p
+              className={cn(
+                'line-clamp-2 text-xs leading-relaxed break-all text-ellipsis text-zinc-400',
+                classNames?.summary
+              )}
+            >
               {summary}
             </p>
           )}

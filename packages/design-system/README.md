@@ -215,6 +215,39 @@ Without `DesignSystemProvider`, components use standard `<img>` tags:
 <SessionCard title="Adventure" imageUrl="/session.jpg" />
 ```
 
+### Customizing Internal Element Styles
+
+Use the `classNames` prop to customize styles of internal elements. Classes are **merged** with defaults using `cn()`, so you can add new styles or override existing ones:
+
+```tsx
+<CharacterCard
+  name="Alice"
+  imageUrl="/image.jpg"
+  tags={['fantasy']}
+  classNames={{
+    name: "font-serif text-2xl",     // Override font and size
+    summary: "italic",                // Add italic style
+    tag: "bg-blue-800",               // Override tag background
+    tagsContainer: "gap-4",           // Override gap between tags
+  }}
+/>
+
+<SessionCard
+  title="Adventure"
+  classNames={{
+    title: "font-serif text-3xl",
+    summary: "text-zinc-300",
+  }}
+/>
+```
+
+**Available classNames keys:**
+
+| Component | Keys |
+|-----------|------|
+| `CharacterCard` | `name`, `summary`, `tag`, `tagsContainer` |
+| `SessionCard` | `title`, `summary`, `tag`, `tagsContainer` |
+
 ## Components
 
 ### Button
