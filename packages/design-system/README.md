@@ -36,14 +36,16 @@ import Image from 'next/image';
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <DesignSystemProvider
-      imageComponent={({ src, alt, className, sizes, onError, fill }) => (
+      imageComponent={({ src, alt, className, sizes, loading, onError, fill, priority }) => (
         <Image
           src={src}
           alt={alt}
           className={className}
           sizes={sizes}
+          loading={loading}
           onError={onError}
           fill={fill}
+          priority={priority}
           style={{ objectFit: 'cover' }}
         />
       )}
@@ -140,6 +142,7 @@ interface ImageComponentProps {
   loading?: 'lazy' | 'eager';  // Loading strategy
   onError?: () => void;  // Error handler
   fill?: boolean;        // Whether image should fill container
+  priority?: boolean;    // Priority loading for LCP optimization
 }
 ```
 
@@ -163,19 +166,44 @@ import Image from 'next/image';
   name="Alice"
   imageUrl="/image.jpg"
   tags={['fantasy']}
-  renderImage={({ src, alt, className, sizes, onError }) => (
+  priority={true}  // This card loads with priority
+  renderImage={({ src, alt, className, sizes, loading, onError, fill, priority }) => (
     <Image
       src={src}
       alt={alt}
       className={className}
       sizes={sizes}
+      loading={loading}
       onError={onError}
-      fill
-      priority  // Only this card loads with priority
+      fill={fill}
+      priority={priority}
+      style={{ objectFit: 'cover' }}
     />
   )}
 />
 ```
+
+### LCP Optimization with Priority
+
+Use the `priority` prop for above-the-fold images to improve Largest Contentful Paint (LCP) scores:
+
+```tsx
+// First card in a list - use priority for LCP optimization
+{cards.map((card, index) => (
+  <CharacterCard
+    key={card.id}
+    name={card.name}
+    imageUrl={card.imageUrl}
+    tags={card.tags}
+    priority={index === 0}  // Only first card gets priority
+  />
+))}
+```
+
+When `priority={true}` (behavior varies by framework):
+- In Next.js, the image may be preloaded via `<link rel="preload">` in the HTML head
+- This allows the browser to fetch the image earlier in the loading sequence
+- Can significantly improve LCP scores (actual improvement depends on your app and network conditions)
 
 ### Without Provider (Default)
 
