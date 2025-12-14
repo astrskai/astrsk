@@ -15,6 +15,23 @@ import {
 import { type ImageComponentProps } from '../../provider';
 import { useImageRenderer } from '../../hooks';
 
+/**
+ * Custom class names for internal elements of CharacterCard.
+ * Classes are merged with default styles using cn(), so you can:
+ * - Add new classes (e.g., "font-serif" adds to existing styles)
+ * - Override classes (e.g., "text-2xl" overrides default "text-lg md:text-xl")
+ */
+export interface CharacterCardClassNames {
+  /** Classes for the name/title heading */
+  name?: string;
+  /** Classes for the summary/description text */
+  summary?: string;
+  /** Classes for individual tag elements */
+  tag?: string;
+  /** Classes for the tags container */
+  tagsContainer?: string;
+}
+
 export interface CharacterCardProps {
   /** Character name */
   name: string;
@@ -122,6 +139,20 @@ export interface CharacterCardProps {
    * ```
    */
   footerActions?: React.ReactNode;
+  /**
+   * Custom class names for internal elements.
+   * Classes are merged with defaults, allowing you to add or override styles.
+   * @example
+   * ```tsx
+   * <CharacterCard
+   *   classNames={{
+   *     name: "font-serif text-2xl",
+   *     summary: "italic",
+   *   }}
+   * />
+   * ```
+   */
+  classNames?: CharacterCardClassNames;
 }
 
 // Re-export for backward compatibility
@@ -152,6 +183,7 @@ export function CharacterCard({
   priority = false,
   footerActions,
   renderImage,
+  classNames,
 }: CharacterCardProps) {
   const [imageError, setImageError] = useState(false);
   const renderImageWithProvider = useImageRenderer({ renderImage });
@@ -221,8 +253,8 @@ export function CharacterCard({
           </div>
         )}
 
-        {/* Right Badges */}
-        {badges.some((b) => b.position === 'right') && (
+        {/* Right Badges - hidden when likeButton is present to avoid overlap */}
+        {!likeButton && badges.some((b) => b.position === 'right') && (
           <div className="absolute top-3 right-3 z-10 max-w-[45%]">
             <CardBadges badges={badges} position="right" />
           </div>
@@ -231,12 +263,17 @@ export function CharacterCard({
 
       {/* Content Area - Overlapping with image */}
       <div className="relative z-10 -mt-12 flex flex-grow flex-col p-4">
-        <h3 className="mb-1 line-clamp-2 text-lg md:text-xl font-bold break-words text-white drop-shadow-md">
+        <h3
+          className={cn(
+            'mb-1 line-clamp-2 text-lg md:text-xl font-bold break-words text-white drop-shadow-md',
+            classNames?.name
+          )}
+        >
           {name}
         </h3>
 
         {/* Tags */}
-        <div className="mb-2 md:mb-4 flex flex-wrap gap-2">
+        <div className={cn('mb-2 md:mb-4 flex flex-wrap gap-2', classNames?.tagsContainer)}>
           {tags.length > 0 ? (
             <>
               {tags.slice(0, maxVisibleTags).map((tag, index) => {
@@ -246,7 +283,10 @@ export function CharacterCard({
                 return (
                   <span
                     key={`${tag}-${index}`}
-                    className="truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300"
+                    className={cn(
+                      'truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                      classNames?.tag
+                    )}
                     style={{ maxWidth: `${maxWidthPercent}%` }}
                   >
                     {tag}
@@ -254,7 +294,12 @@ export function CharacterCard({
                 );
               })}
               {tags.length > maxVisibleTags && (
-                <span className="shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                <span
+                  className={cn(
+                    'shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    classNames?.tag
+                  )}
+                >
                   +{tags.length - maxVisibleTags}
                 </span>
               )}
@@ -265,7 +310,12 @@ export function CharacterCard({
         </div>
 
         {(summary || emptySummaryText) && (
-          <p className="mb-2 md:mb-4 line-clamp-2 flex-grow text-xs leading-relaxed break-all text-ellipsis text-zinc-400">
+          <p
+            className={cn(
+              'mb-2 md:mb-4 line-clamp-2 flex-grow text-xs leading-relaxed break-all text-ellipsis text-zinc-400',
+              classNames?.summary
+            )}
+          >
             {summary || emptySummaryText}
           </p>
         )}
