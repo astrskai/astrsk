@@ -19,6 +19,13 @@ export interface ImageComponentProps {
   onError?: () => void;
   /** Fill mode - image should fill its container */
   fill?: boolean;
+  /**
+   * Priority loading hint for LCP optimization.
+   * When true, the image will be preloaded with high priority.
+   * Use for above-the-fold images (e.g., first visible card in a list).
+   * @see https://nextjs.org/docs/app/api-reference/components/image#priority
+   */
+  priority?: boolean;
 }
 
 /**

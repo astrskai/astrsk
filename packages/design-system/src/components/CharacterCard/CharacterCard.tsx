@@ -88,6 +88,13 @@ export interface CharacterCardProps {
    */
   loading?: 'lazy' | 'eager';
   /**
+   * Priority loading hint for LCP optimization.
+   * When true, the image will be preloaded with high priority (adds <link rel="preload">).
+   * Use for the first visible card in a list to improve LCP score.
+   * @default false
+   */
+  priority?: boolean;
+  /**
    * Custom image renderer for framework-specific optimization.
    * Takes precedence over DesignSystemProvider's imageComponent.
    * @example Next.js usage:
@@ -142,6 +149,7 @@ export function CharacterCard({
   downloadCount,
   imageSizes,
   loading = 'lazy',
+  priority = false,
   footerActions,
   renderImage,
 }: CharacterCardProps) {
@@ -171,6 +179,7 @@ export function CharacterCard({
       loading,
       onError: () => setImageError(true),
       fill: true,
+      priority,
     });
   };
 

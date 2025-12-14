@@ -79,6 +79,13 @@ export interface SessionCardProps {
    */
   loading?: 'lazy' | 'eager';
   /**
+   * Priority loading hint for LCP optimization.
+   * When true, the image will be preloaded with high priority (adds <link rel="preload">).
+   * Use for the first visible card in a list to improve LCP score.
+   * @default false
+   */
+  priority?: boolean;
+  /**
    * Custom image renderer for framework-specific optimization.
    * Takes precedence over DesignSystemProvider's imageComponent.
    * @example Next.js usage:
@@ -202,6 +209,7 @@ export function SessionCard({
   downloadCount,
   imageSizes,
   loading = 'lazy',
+  priority = false,
   renderImage,
 }: SessionCardProps) {
   const [imageError, setImageError] = useState(false);
@@ -229,6 +237,7 @@ export function SessionCard({
       loading,
       onError: () => setImageError(true),
       fill: true,
+      priority,
     });
   };
 
