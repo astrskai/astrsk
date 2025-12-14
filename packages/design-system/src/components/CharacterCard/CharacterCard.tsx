@@ -208,7 +208,7 @@ export function CharacterCard({
       className:
         'absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105',
       sizes: imageSizes,
-      loading,
+      loading: priority ? undefined : loading,
       onError: () => setImageError(true),
       fill: true,
       priority,

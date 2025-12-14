@@ -266,7 +266,7 @@ export function SessionCard({
       className:
         'absolute inset-0 h-full w-full object-cover opacity-80 transition-all duration-700 group-hover:scale-105 group-hover:opacity-90',
       sizes: imageSizes,
-      loading,
+      loading: priority ? undefined : loading,
       onError: () => setImageError(true),
       fill: true,
       priority,
