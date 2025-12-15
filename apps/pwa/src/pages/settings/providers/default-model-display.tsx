@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { cn } from "@/shared/lib";
 import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
-import { apiSourceLabel } from "@/entities/api/domain";
+import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
 import { ApiModel } from "@/entities/api/domain/api-model";
 import type { ApiConnectionWithModels } from "@/shared/hooks/use-api-connections-with-models";
 import { Combobox, ComboboxOption } from "@/shared/ui";
