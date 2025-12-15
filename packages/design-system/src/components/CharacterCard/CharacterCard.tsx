@@ -39,13 +39,12 @@ export interface CharacterCardProps {
   imageUrl?: string | null;
   /** Character summary/description */
   summary?: string;
-  /** Character tags */
-  tags: string[];
   /**
-   * Maximum number of tags to display before showing "+n" indicator.
-   * @default 3
+   * Character tags.
+   * Container Query responsive: 2 tags on narrow cards (<240px), 3 on wider cards.
+   * Remaining tags shown as "+n" indicator.
    */
-  maxVisibleTags?: number;
+  tags: string[];
   /** Token count for the character (used in default metadata) */
   tokenCount?: number;
   /** Last updated timestamp (used in default metadata) */
@@ -164,7 +163,6 @@ export function CharacterCard({
   imageUrl,
   summary,
   tags,
-  maxVisibleTags = 3,
   tokenCount = 0,
   updatedAt,
   className,
@@ -217,7 +215,7 @@ export function CharacterCard({
 
   return (
     <BaseCard
-      className={cn('min-h-[380px]', className)}
+      className={cn('min-h-[380px] bg-zinc-900 border-zinc-800 hover:border-zinc-600', className)}
       isDisabled={isDisabled}
       onClick={onClick}
     >
@@ -272,35 +270,52 @@ export function CharacterCard({
           {name}
         </h3>
 
-        {/* Tags */}
-        <div className={cn('mb-2 md:mb-4 flex flex-wrap gap-2', classNames?.tagsContainer)}>
+        {/* Tags - Container Query: 2 tags on narrow (<240px), 3 tags on wider cards */}
+        <div className={cn('mb-2 @[240px]:mb-4 flex flex-wrap gap-2', classNames?.tagsContainer)}>
           {tags.length > 0 ? (
             <>
-              {tags.slice(0, maxVisibleTags).map((tag, index) => {
-                // Calculate max-width based on maxVisibleTags
-                // Formula: ~85% / (n + 1) to leave room for "+n" badge and gaps
-                const maxWidthPercent = Math.floor(85 / (maxVisibleTags + 1));
-                return (
-                  <span
-                    key={`${tag}-${index}`}
-                    className={cn(
-                      'truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
-                      classNames?.tag
-                    )}
-                    style={{ maxWidth: `${maxWidthPercent}%` }}
-                  >
-                    {tag}
-                  </span>
-                );
-              })}
-              {tags.length > maxVisibleTags && (
+              {/* First 2 tags - always visible */}
+              {tags.slice(0, 2).map((tag, index) => (
                 <span
+                  key={`${tag}-${index}`}
                   className={cn(
-                    'shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    'max-w-[28%] @[240px]:max-w-[21%] truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
                     classNames?.tag
                   )}
                 >
-                  +{tags.length - maxVisibleTags}
+                  {tag}
+                </span>
+              ))}
+              {/* 3rd tag - only visible when card is 240px+ */}
+              {tags[2] && (
+                <span
+                  className={cn(
+                    'hidden @[240px]:inline max-w-[21%] truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    classNames?.tag
+                  )}
+                >
+                  {tags[2]}
+                </span>
+              )}
+              {/* +n badge - shows different counts based on card width */}
+              {tags.length > 2 && (
+                <span
+                  className={cn(
+                    '@[240px]:hidden shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    classNames?.tag
+                  )}
+                >
+                  +{tags.length - 2}
+                </span>
+              )}
+              {tags.length > 3 && (
+                <span
+                  className={cn(
+                    'hidden @[240px]:inline shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    classNames?.tag
+                  )}
+                >
+                  +{tags.length - 3}
                 </span>
               )}
             </>
@@ -333,7 +348,7 @@ export function CharacterCard({
         {renderMetadata ? (
           renderMetadata()
         ) : (
-          <CardMetadataContainer>
+          <CardMetadataContainer className="border-zinc-800 text-zinc-400">
             <CardMetadataItem>{formatCompactNumber(tokenCount)} Tokens</CardMetadataItem>
             {updatedAt && <CardMetadataItem>{updatedAt}</CardMetadataItem>}
           </CardMetadataContainer>

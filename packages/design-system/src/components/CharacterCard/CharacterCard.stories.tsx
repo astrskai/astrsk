@@ -181,11 +181,42 @@ export const ManyTags: Story = {
   args: {
     name: 'Multi-Tagged Character',
     imageUrl: SAMPLE_IMAGE_2,
-    summary: 'This character has many different tags to demonstrate overflow.',
+    summary: 'Shows +n indicator for overflow. Mobile: 2 tags + "+4", Desktop: 3 tags + "+3".',
     tags: ['Fantasy', 'Romance', 'Drama', 'Action', 'Comedy', 'Slice of Life'],
     tokenCount: 2500,
     updatedAt: '1 week ago',
   },
+};
+
+// Responsive tags - Container Query based (card width, not viewport)
+export const ResponsiveTags: Story = {
+  args: {
+    name: 'Responsive Tags Demo',
+    imageUrl: SAMPLE_IMAGE_2,
+    summary: 'Container Query: 2 tags on narrow cards (<240px), 3 tags on wider cards.',
+    tags: ['Fantasy', 'Romance', 'Drama', 'Action', 'Comedy'],
+    tokenCount: 2500,
+    updatedAt: '1 week ago',
+  },
+};
+
+// Narrow card width test - Container Query in action
+export const NarrowCardWidth: Story = {
+  args: {
+    name: 'Narrow Card (160px)',
+    imageUrl: SAMPLE_IMAGE,
+    summary: 'Card <240px: shows 2 tags + "+2" badge (Container Query).',
+    tags: ['Fantasy', 'Adventure', 'Drama', 'Action'],
+    tokenCount: 1000,
+    updatedAt: '1 day ago',
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '160px' }}>
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 // No tags

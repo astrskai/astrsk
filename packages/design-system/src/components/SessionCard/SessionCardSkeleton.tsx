@@ -30,7 +30,7 @@ export function SessionCardSkeleton({ className }: SessionCardSkeletonProps) {
   return (
     <BaseCard
       className={cn(
-        'min-h-[320px] w-full border-zinc-700 ring-1 ring-zinc-800',
+        'min-h-[320px] w-full bg-zinc-900 border-zinc-800 ring-1 ring-zinc-800/50',
         className
       )}
       isDisabled

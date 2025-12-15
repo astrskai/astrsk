@@ -28,7 +28,7 @@ export interface CharacterCardSkeletonProps {
  */
 export function CharacterCardSkeleton({ className }: CharacterCardSkeletonProps) {
   return (
-    <BaseCard className={cn('min-h-[380px]', className)} isDisabled>
+    <BaseCard className={cn('min-h-[380px] bg-zinc-900 border-zinc-800', className)} isDisabled>
       {/* Image Area - Portrait ratio */}
       <div className="relative h-64 overflow-hidden bg-zinc-800">
         <Skeleton className="absolute inset-0 h-full w-full" variant="default" />

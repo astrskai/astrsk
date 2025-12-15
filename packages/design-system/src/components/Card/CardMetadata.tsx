@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { cn } from '../../lib/utils';
 
 /**
  * Container for metadata items in card components.
@@ -12,9 +13,20 @@ import * as React from 'react';
  * </CardMetadataContainer>
  * ```
  */
-export function CardMetadataContainer({ children }: { children: React.ReactNode }) {
+export function CardMetadataContainer({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="mt-auto flex items-center justify-between border-t border-zinc-800 pt-3 text-xs text-zinc-400">
+    <div
+      className={cn(
+        'mt-auto flex items-center justify-between border-t border-border-default pt-3 text-xs text-fg-subtle',
+        className
+      )}
+    >
       {children}
     </div>
   );
