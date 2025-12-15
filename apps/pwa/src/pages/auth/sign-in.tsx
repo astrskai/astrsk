@@ -6,7 +6,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms/button";
 import { Input } from "@/shared/ui/forms";
 import { logger } from "@/shared/lib/logger";
-import { IconGoogle, IconDiscord, IconApple } from "@/shared/assets/icons";
+import { IconGoogle, IconDiscord } from "@/shared/assets/icons";
 import { AuthLayout, AuthBadge } from "./ui";
 import { PasswordInput } from "@/shared/ui/forms";
 import { useAuth } from "@/shared/hooks/use-auth";
@@ -63,10 +63,19 @@ export function SignInPage() {
       const { error, action } = await signInOrSignUp({ email, password });
 
       switch (action) {
-        case "signed_in":
+        case "signed_in": {
           toastSuccess("Welcome back!");
-          navigate({ to: "/" });
+
+          // Check if there's a stored redirect path (e.g., from play session login)
+          const redirectPath = localStorage.getItem("authRedirectPath");
+          if (redirectPath) {
+            localStorage.removeItem("authRedirectPath");
+            window.location.href = redirectPath; // Use window.location for full page reload
+          } else {
+            navigate({ to: "/" });
+          }
           break;
+        }
 
         case "signed_up":
           toastSuccess("Account created!", {
@@ -151,12 +160,13 @@ export function SignInPage() {
           onClick={() => handleOAuthSignIn("discord")}
           disabled={isLoading}
         />
-        <SocialButton
+        {/* Apple login temporarily hidden */}
+        {/* <SocialButton
           icon={IconApple}
           label="Apple"
           onClick={() => handleOAuthSignIn("apple")}
           disabled={isLoading}
-        />
+        /> */}
       </div>
 
       {/* Divider */}
