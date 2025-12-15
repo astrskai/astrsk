@@ -6,6 +6,7 @@ import { apiSourceLabel } from "@/entities/api/domain";
 import { ApiModel } from "@/entities/api/domain/api-model";
 import type { ApiConnectionWithModels } from "@/shared/hooks/use-api-connections-with-models";
 import { Combobox, ComboboxOption } from "@/shared/ui";
+import { useAuth } from "@/shared/hooks/use-auth";
 
 export interface ModelOption {
   apiConnectionId: string;
@@ -74,11 +75,17 @@ const DefaultModelDisplay = ({
   value,
   onValueChange,
 }: DefaultModelDisplayProps) => {
+  const { isAuthenticated } = useAuth();
   const { data: apiConnectionsWithModels } = useQuery(
     apiConnectionQueries.listWithModels(),
   );
 
-  const options = buildModelOptions(apiConnectionsWithModels ?? []);
+  // Filter out AstrskAi models for non-authenticated users
+  const filteredConnections = (apiConnectionsWithModels ?? []).filter(
+    (conn: ApiConnectionWithModels) => conn.apiConnection.source !== ApiSource.AstrskAi || isAuthenticated
+  );
+
+  const options = buildModelOptions(filteredConnections);
 
   const handleChange = (selectedValue: string) => {
     if (!selectedValue) {

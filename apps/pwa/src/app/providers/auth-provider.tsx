@@ -65,7 +65,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = useCallback(async () => {
     const supabase = getSupabaseAuthClient();
-    await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        logger.error("Sign out error:", error);
+        throw error;
+      }
+
+      // Clear local state immediately
+      setSession(null);
+      setUser(null);
+
+      logger.debug("Signed out successfully");
+    } catch (error) {
+      logger.error("Failed to sign out:", error);
+      throw error;
+    }
   }, []);
 
   const refreshSession = useCallback(async () => {

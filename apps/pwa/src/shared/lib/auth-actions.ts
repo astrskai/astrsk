@@ -82,7 +82,7 @@ export async function signUp(credentials: SignUpCredentials) {
 export async function signInOrSignUp(credentials: SignInCredentials): Promise<{
   error: string | null;
   data: unknown;
-  action: "signed_in" | "signed_up" | "invalid_password" | "error";
+  action: "signed_in" | "signed_up" | "invalid_password" | "email_not_confirmed" | "error";
 }> {
   const supabase = getSupabaseAuthClient();
 
@@ -130,6 +130,16 @@ export async function signInOrSignUp(credentials: SignInCredentials): Promise<{
       };
     }
 
+    // Check if user is auto-signed-in (happens when email confirmation is disabled)
+    if (signUpResult.data.session) {
+      logger.debug("User auto-signed in after sign up (email confirmation disabled)");
+      return {
+        error: null,
+        data: signUpResult.data,
+        action: "signed_in",
+      };
+    }
+
     // User was created successfully - needs email confirmation
     return {
       error: null,
@@ -138,12 +148,30 @@ export async function signInOrSignUp(credentials: SignInCredentials): Promise<{
     };
   }
 
-  // Email not confirmed
+  // Email not confirmed - resend confirmation email
   if (errorMessage.includes("email not confirmed")) {
+    // Resend confirmation email
+    const { error: resendError } = await supabase.auth.resend({
+      type: "signup",
+      email: credentials.email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (resendError) {
+      logger.error("Failed to resend confirmation email:", resendError);
+      return {
+        error: "Your email is not confirmed. We tried to resend the confirmation email but encountered an error. Please try again later.",
+        data: null,
+        action: "error",
+      };
+    }
+
     return {
-      error: "Please check your email and confirm your account before signing in.",
+      error: null,
       data: null,
-      action: "error",
+      action: "email_not_confirmed" as const,
     };
   }
 

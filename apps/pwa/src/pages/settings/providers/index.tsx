@@ -8,6 +8,7 @@ import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { logger } from "@/shared/lib";
 
 import { useApiConnections } from "@/shared/hooks/use-api-connections";
+import { useAuth } from "@/shared/hooks/use-auth";
 import { ApiService } from "@/app/services";
 import { queryClient } from "@/shared/api/query-client";
 import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
@@ -294,6 +295,7 @@ export default function ProvidersPage() {
 
   // 3. Custom hooks (data fetching)
   const [apiConnections] = useApiConnections({});
+  const { isAuthenticated } = useAuth();
 
   // 3. Memoized callbacks (useCallback)
   const invalidateApiConnections = useCallback(() => {
@@ -632,7 +634,14 @@ export default function ProvidersPage() {
         {/* Provider list */}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {apiConnections
-              ?.map((apiConnection: ApiConnection) =>
+              ?.filter((apiConnection: ApiConnection) => {
+                // Hide AstrskAi for non-authenticated users
+                if (apiConnection.source === ApiSource.AstrskAi && !isAuthenticated) {
+                  return false;
+                }
+                return true;
+              })
+              .map((apiConnection: ApiConnection) =>
                 renderProviderListItem({
                   apiConnection,
                   onOpenEdit: () => {
@@ -651,6 +660,11 @@ export default function ProvidersPage() {
 
               // Skip already connected providers (except OpenAICompatible which allows multiple)
               if (apiConnection && apiSource !== ApiSource.OpenAICompatible) {
+                return null;
+              }
+
+              // Skip AstrskAi for non-authenticated users
+              if (apiSource === ApiSource.AstrskAi && !isAuthenticated) {
                 return null;
               }
 

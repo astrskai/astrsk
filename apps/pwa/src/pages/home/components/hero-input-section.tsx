@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight, ExternalLink, Plus } from "lucide-react";
 import { GENRE_SUGGESTIONS } from "@/entities/card/domain";
 import { useTypewriterPlaceholder } from "@/shared/hooks/use-typewriter-placeholder";
 import { Button } from "@/shared/ui/button";
@@ -52,7 +52,7 @@ export function HeroInputSection() {
   };
 
   return (
-    <div className="flex pt-20 min-h-[75vh] w-full flex-col items-center justify-center px-6 text-center">
+    <div className="flex pt-20 min-h-[100vh] w-full flex-col items-center justify-center px-6 text-center">
       <div className="flex flex-col items-center">
         {/* Headline */}
         <h1 className="mb-16 text-5xl font-bold leading-[1.1] tracking-tight drop-shadow-2xl md:text-7xl">
@@ -102,6 +102,17 @@ export function HeroInputSection() {
                 <span>{genre}</span>
               </button>
             ))}
+          </div>
+          <div className="flex pt-6 w-full flex-col items-center">
+            <a
+              href="https://harpy.chat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-full bg-black/20 px-3 py-1 text-xs font-medium uppercase tracking-widest text-gray-400 backdrop-blur-sm transition-colors hover:bg-black/30 hover:text-gray-300"
+            >
+              Or visit harpy.chat to discover sessions and characters
+              <ExternalLink size={12} className="text-gray-500" />
+            </a>
           </div>
         </div>
       </div>
