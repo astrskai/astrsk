@@ -31,6 +31,13 @@ interface DeleteDialogState {
   usedSessionsCount: number;
 }
 
+interface ExportDialogState {
+  isOpen: boolean;
+  cardId: string | null;
+  title: string;
+  exportType: ExportType;
+}
+
 interface LoadingStates {
   [key: string]: {
     exporting?: boolean;
@@ -77,101 +84,85 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
     },
   );
 
+  const [exportDialogState, setExportDialogState] = useState<ExportDialogState>(
+    {
+      isOpen: false,
+      cardId: null,
+      title: "",
+      exportType: "file",
+    },
+  );
+
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({});
 
   /**
-   * Export card (either to file or cloud)
-   * @param exportType - "file" for PNG download, "cloud" for Harpy cloud upload
+   * Open export dialog for card
    */
-  const handleExport = useCallback(
+  const handleExportClick = useCallback(
     (cardId: string, title: string, exportType: ExportType = "file") =>
-      async (e: MouseEvent) => {
+      (e: MouseEvent) => {
         e.stopPropagation();
-
-        setLoadingStates((prev) => ({
-          ...prev,
-          [cardId]: { ...(prev[cardId] ?? {}), exporting: true },
-        }));
-
-        try {
-          if (exportType === "cloud") {
-            // Generate cloned card ID upfront so we can open window immediately
-            const clonedCardId = new UniqueEntityID();
-            const resourceType = entityType === CardType.Character ? "character" : "scenario";
-            const shareUrl = `${HARPY_HUB_URL}/shared/${resourceType}/${clonedCardId.toString()}`;
-
-            // Open HarpyChat immediately with the cloned card ID (avoid popup blocker)
-            const newWindow = window.open(shareUrl, "_blank");
-
-            // Check if pop-up was blocked
-            if (!newWindow || newWindow.closed) {
-              toastError("Pop-up blocked!", {
-                description: "Please allow pop-ups for this site to open HarpyChat.",
-              });
-            } else {
-              toastSuccess("Opening HarpyChat...", {
-                description: "Export is processing in the background.",
-              });
-            }
-
-            // Export to cloud in the background (don't await)
-            // Export will use the predefined clonedCardId
-            const exportMethod =
-              entityType === CardType.Character
-                ? CardService.exportCharacterToCloud
-                : CardService.exportScenarioToCloud;
-
-            exportMethod.execute({
-              cardId: new UniqueEntityID(cardId),
-              expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
-              clonedCardId, // Pass predefined ID
-            }).then((shareResult) => {
-              if (shareResult.isFailure) {
-                toastError("Export failed", {
-                  description: shareResult.getError(),
-                });
-              }
-            }).catch((error) => {
-              toastError("Export failed", {
-                description: error instanceof Error ? error.message : "Unknown error",
-              });
-            });
-          } else {
-            // Export to file (PNG)
-            const result = await CardService.exportCardToFile.execute({
-              cardId: new UniqueEntityID(cardId),
-              options: { format: "png" },
-            });
-
-            if (result.isFailure) {
-              toastError("Failed to export", {
-                description: result.getError(),
-              });
-              return;
-            }
-
-            downloadFile(result.getValue());
-            toastSuccess("Successfully exported!", {
-              description: `"${title}" exported`,
-            });
-          }
-        } catch (error) {
-          toastError(
-            `Failed to export ${exportType === "cloud" ? "to cloud" : "to file"}`,
-            {
-              description:
-                error instanceof Error ? error.message : "Unknown error",
-            },
-          );
-        } finally {
-          setLoadingStates((prev) => ({
-            ...prev,
-            [cardId]: { ...(prev[cardId] ?? {}), exporting: false },
-          }));
-        }
+        // Open dialog - export starts automatically in the dialog
+        setExportDialogState({ isOpen: true, cardId, title, exportType });
       },
-    [entityType],
+    [],
   );
+
+  /**
+   * Export card (either to file or cloud)
+   * Returns share URL for cloud exports
+   */
+  const handleExportConfirm = useCallback(
+    async (): Promise<string | void> => {
+      const { cardId, title, exportType } = exportDialogState;
+      if (!cardId) return;
+
+      try {
+        if (exportType === "cloud") {
+          // Export to cloud and wait for completion
+          const exportMethod =
+            entityType === CardType.Character
+              ? CardService.exportCharacterToCloud
+              : CardService.exportScenarioToCloud;
+
+          const shareResult = await exportMethod.execute({
+            cardId: new UniqueEntityID(cardId),
+            expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
+          });
+
+          if (shareResult.isFailure) {
+            throw new Error(shareResult.getError());
+          }
+
+          // Return share URL to dialog
+          return shareResult.getValue().shareUrl;
+        } else {
+          // Export to file (PNG)
+          const result = await CardService.exportCardToFile.execute({
+            cardId: new UniqueEntityID(cardId),
+            options: { format: "png" },
+          });
+
+          if (result.isFailure) {
+            throw new Error(result.getError());
+          }
+
+          downloadFile(result.getValue());
+          // Close dialog immediately for file exports
+        }
+      } catch (error) {
+        throw error;
+      }
+    },
+    [exportDialogState, entityType],
+  );
+
+  /**
+   * Close export dialog
+   */
+  const closeExportDialog = useCallback(() => {
+    setExportDialogState((prev) => ({ ...prev, isOpen: false }));
+  }, []);
 
   /**
    * Clone/copy card
@@ -336,12 +327,15 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
     // State
     loadingStates,
     deleteDialogState,
+    exportDialogState,
 
     // Handlers
-    handleExport,
+    handleExportClick,
+    handleExportConfirm,
     handleCopy,
     handleDeleteClick,
     handleDeleteConfirm,
     closeDeleteDialog,
+    closeExportDialog,
   };
 }

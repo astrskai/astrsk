@@ -93,6 +93,19 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         mime_type: assetData.mime_type,
       });
 
+      // Check if this is a CDN reference (default background)
+      // CDN paths for default backgrounds: /backgrounds/ (not /assets/ which is local OPFS)
+      const isCdnReference = assetData.file_path.startsWith('/backgrounds/');
+
+      if (isCdnReference) {
+        // For CDN references (default backgrounds), just return the original asset ID
+        // The file_path is already a CDN path that the app can use directly
+        console.log(`[importAsset] ✓ CDN reference detected, using existing asset ID: ${assetData.id}`);
+        console.log(`[importAsset] CDN path will be used as-is: ${assetData.file_path}`);
+        return new UniqueEntityID(assetData.id);
+      }
+
+      // For user-uploaded assets, download and save locally
       // Construct full URL from file_path and download
       const fullUrl = getStorageUrl(assetData.file_path);
       console.log(`[importAsset] Converted file_path to full URL: ${fullUrl}`);
@@ -447,25 +460,38 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         }
 
         if (bgAssetData) {
-          const bgFullUrl = getStorageUrl(bgAssetData.file_path);
-          console.log(`[ImportSession] Downloading background from: ${bgFullUrl}`);
-          const blobResult = await downloadAssetFromUrl(bgFullUrl);
-          if (blobResult.isSuccess) {
-            const file = new File([blobResult.getValue()], bgAssetData.name, {
-              type: bgAssetData.mime_type,
-            });
-            const bgResult = await this.saveFileToBackground.execute({
-              file,
-              sessionId: newSessionId,
-            });
-            if (bgResult.isSuccess) {
-              backgroundId = bgResult.getValue().id;
-              console.log(`[ImportSession] ✓ Background saved successfully: ${backgroundId.toString()}`);
-            } else {
-              console.warn(`[ImportSession] Failed to save background: ${bgResult.getError()}`);
-            }
+          // Check if this is a CDN reference (default background)
+          // CDN paths for default backgrounds: /backgrounds/ (not /assets/ which is local OPFS)
+          const isCdnReference = bgAssetData.file_path.startsWith('/backgrounds/');
+
+          if (isCdnReference) {
+            // For CDN references (default backgrounds), just use the original asset ID
+            // The file_path is already a CDN path that the app can use directly
+            backgroundId = new UniqueEntityID(bgAssetData.id);
+            console.log(`[ImportSession] ✓ CDN background reference detected, using existing asset ID: ${backgroundId.toString()}`);
+            console.log(`[ImportSession] CDN path will be used as-is: ${bgAssetData.file_path}`);
           } else {
-            console.warn(`[ImportSession] Failed to download background: ${blobResult.getError()}`);
+            // For user-uploaded backgrounds, download and save locally
+            const bgFullUrl = getStorageUrl(bgAssetData.file_path);
+            console.log(`[ImportSession] Downloading background from: ${bgFullUrl}`);
+            const blobResult = await downloadAssetFromUrl(bgFullUrl);
+            if (blobResult.isSuccess) {
+              const file = new File([blobResult.getValue()], bgAssetData.name, {
+                type: bgAssetData.mime_type,
+              });
+              const bgResult = await this.saveFileToBackground.execute({
+                file,
+                sessionId: newSessionId,
+              });
+              if (bgResult.isSuccess) {
+                backgroundId = bgResult.getValue().id;
+                console.log(`[ImportSession] ✓ Background saved successfully: ${backgroundId.toString()}`);
+              } else {
+                console.warn(`[ImportSession] Failed to save background: ${bgResult.getError()}`);
+              }
+            } else {
+              console.warn(`[ImportSession] Failed to download background: ${blobResult.getError()}`);
+            }
           }
         } else {
           console.warn(`[ImportSession] Background asset not found: ${sessionData.background_id}`);

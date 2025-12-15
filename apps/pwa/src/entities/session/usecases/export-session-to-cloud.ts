@@ -16,10 +16,8 @@ import { CloneSession } from './clone-session';
 import { DeleteSession } from './delete-session';
 import { LoadSessionRepo, SaveSessionRepo } from '@/entities/session/repos';
 import { LoadAssetRepo } from '@/entities/asset/repos/load-asset-repo';
-import { SaveAssetRepo } from '@/entities/asset/repos/save-asset-repo';
 import { Asset } from '@/entities/asset/domain/asset';
 import { getDefaultBackground } from '@/entities/background/api/query-factory';
-import { write } from 'opfs-tools';
 
 interface Command {
   sessionId: UniqueEntityID;
@@ -49,7 +47,6 @@ export class ExportSessionToCloud
     private loadSessionRepo: LoadSessionRepo,
     private saveSessionRepo: SaveSessionRepo,
     private loadAssetRepo: LoadAssetRepo,
-    private saveAssetRepo: SaveAssetRepo,
   ) { }
 
   async execute({
@@ -127,31 +124,23 @@ export class ExportSessionToCloud
         // Try to load the background asset from local storage
         let backgroundAsset = await this.loadAssetRepo.getAssetById(backgroundId);
 
-        // If not found locally, check if it's a default background and download it
+        // If not found locally, check if it's a default background
         if (backgroundAsset.isFailure) {
           const defaultBackground = getDefaultBackground(backgroundId);
 
           if (defaultBackground && defaultBackground.src) {
-            console.log(`[EXPORT] Downloading default background from CDN: ${defaultBackground.name}`);
+            console.log(`[EXPORT] Found default background: ${defaultBackground.name}`);
+            console.log(`[EXPORT] Creating asset record with CDN URL (not downloading): ${defaultBackground.src}`);
 
             try {
-              // Download the background image from CDN
-              const response = await fetch(defaultBackground.src);
-              if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-              }
-
-              const blob = await response.blob();
-              const filename = `${defaultBackground.name.replace(/\s+/g, '_')}.jpg`;
-              const filePath = `backgrounds/${backgroundId.toString()}/${filename}`;
-
-              // Create Asset entity
+              // For default backgrounds, create an asset record with the CDN URL as file_path
+              // When importing, getStorageUrl() will detect it's a full URL and use it as-is
               const assetResult = Asset.create({
                 hash: `default-bg-${backgroundId.toString()}`,
-                name: filename,
-                sizeByte: blob.size,
-                mimeType: blob.type || 'image/jpeg',
-                filePath: filePath,
+                name: `${defaultBackground.name.replace(/\s+/g, '_')}.jpg`,
+                sizeByte: 0, // Size not needed for CDN reference
+                mimeType: 'image/jpeg',
+                filePath: defaultBackground.src, // Store CDN URL directly
                 updatedAt: new Date(),
               }, backgroundId);
 
@@ -159,21 +148,10 @@ export class ExportSessionToCloud
                 throw new Error(assetResult.getError());
               }
 
-              const asset = assetResult.getValue();
-
-              // Save to OPFS
-              await write(filePath, blob.stream());
-
-              // Save to database
-              const saveResult = await this.saveAssetRepo.saveAsset(asset);
-              if (saveResult.isFailure) {
-                throw new Error(saveResult.getError());
-              }
-
-              backgroundAsset = Result.ok(asset);
-              console.log(`[EXPORT] Downloaded and saved default background: ${filename}`);
+              backgroundAsset = Result.ok(assetResult.getValue());
+              console.log(`[EXPORT] Created asset record for default background with CDN URL`);
             } catch (error) {
-              console.error(`[EXPORT] Failed to download default background:`, error);
+              console.error(`[EXPORT] Failed to create asset record for default background:`, error);
               bundle.session.background_id = null;
             }
           } else {
@@ -183,15 +161,18 @@ export class ExportSessionToCloud
           }
         }
 
-        // Upload the background asset to Supabase
+        // Upload the background asset metadata to Supabase (with sessionId context)
         if (backgroundAsset.isSuccess) {
-          const uploadResult = await uploadAssetToSupabase(backgroundAsset.getValue());
+          const uploadResult = await uploadAssetToSupabase(
+            backgroundAsset.getValue(),
+            { sessionId: clonedSessionId.toString() } // Set session_id for RLS and claiming
+          );
           if (uploadResult.isFailure) {
             return Result.fail<ShareLinkResult>(
               `Failed to upload background asset: ${uploadResult.getError()}`
             );
           }
-          console.log(`[EXPORT] Uploaded background asset: ${bundle.session.background_id}`);
+          console.log(`[EXPORT] Uploaded background asset metadata: ${bundle.session.background_id}`);
         }
       }
       if (bundle.session.cover_id) {

@@ -33,39 +33,55 @@ export async function uploadAssetToSupabase(
   context?: AssetUploadContext,
 ): Promise<Result<SupabaseAssetRecord>> {
   try {
-    // Get asset file from OPFS
-    const assetFile = await file(asset.props.filePath).getOriginFile();
-    if (!assetFile) {
-      return Result.fail("Asset file not found");
-    }
+    // Check if file_path is an external URL or CDN path (e.g., default background)
+    // External URLs start with http:// or https://
+    // CDN paths for default backgrounds: /backgrounds/ (not /assets/ which is local OPFS)
+    const isExternalUrl = asset.props.filePath.startsWith('http://') ||
+                          asset.props.filePath.startsWith('https://') ||
+                          asset.props.filePath.startsWith('/backgrounds/');
 
-    // Generate storage path: {asset_id}.{extension}
-    // Use only asset ID to avoid issues with non-ASCII characters in filenames
-    const extension = asset.props.name.split('.').pop() || 'bin';
-    const storagePath = `${asset.id.toString()}.${extension}`;
+    let storagePath: string;
 
-    // Upload to Supabase Storage
-    const { error: uploadError } = await supabaseClient.storage
-      .from(ASSETS_BUCKET)
-      .upload(storagePath, assetFile, {
-        contentType: asset.props.mimeType,
-        upsert: true, // Overwrite if exists to avoid conflicts
-      });
+    if (isExternalUrl) {
+      // For external URLs/CDN paths (default backgrounds), use the path directly
+      // Skip file upload - just insert metadata with the CDN reference
+      storagePath = asset.props.filePath;
+      console.log(`[uploadAssetToSupabase] Skipping file upload for external URL/CDN path: ${storagePath}`);
+    } else {
+      // For local assets, upload file to Supabase Storage
+      const assetFile = await file(asset.props.filePath).getOriginFile();
+      if (!assetFile) {
+        return Result.fail("Asset file not found");
+      }
 
-    if (uploadError) {
-      console.error(`Failed to upload asset ${asset.id.toString()}:`, {
-        error: uploadError,
-        path: storagePath,
-        mimeType: asset.props.mimeType,
-      });
-      return Result.fail(
-        `Failed to upload asset to storage: ${uploadError.message}`,
-      );
+      // Generate storage path: {asset_id}.{extension}
+      // Use only asset ID to avoid issues with non-ASCII characters in filenames
+      const extension = asset.props.name.split('.').pop() || 'bin';
+      storagePath = `${asset.id.toString()}.${extension}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabaseClient.storage
+        .from(ASSETS_BUCKET)
+        .upload(storagePath, assetFile, {
+          contentType: asset.props.mimeType,
+          upsert: true, // Overwrite if exists to avoid conflicts
+        });
+
+      if (uploadError) {
+        console.error(`Failed to upload asset ${asset.id.toString()}:`, {
+          error: uploadError,
+          path: storagePath,
+          mimeType: asset.props.mimeType,
+        });
+        return Result.fail(
+          `Failed to upload asset to storage: ${uploadError.message}`,
+        );
+      }
     }
 
     // Insert metadata into astrsk_assets table
-    // Store only the relative path (after bucket name) so the hub can construct
-    // the full URL using its own getStorageUrl() function
+    // For external URLs: Store full URL so getStorageUrl() returns it as-is
+    // For local assets: Store relative path so hub can construct full URL
     const assetRecord: Omit<SupabaseAssetRecord, "created_at" | "updated_at"> =
     {
       id: asset.id.toString(),
@@ -73,7 +89,7 @@ export async function uploadAssetToSupabase(
       name: asset.props.name,
       size_byte: asset.props.sizeByte,
       mime_type: asset.props.mimeType,
-      file_path: storagePath, // Relative path only: {asset_id}/{filename}
+      file_path: storagePath, // Either full URL or relative path
       session_id: context?.sessionId ?? null,
       character_id: context?.characterId ?? null,
       scenario_id: context?.scenarioId ?? null,
