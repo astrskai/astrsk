@@ -1,7 +1,11 @@
 {
   "name": "pwa",
   "private": true,
+<<<<<<< HEAD
   "version": "3.1.6",
+=======
+  "version": "3.1.5",
+>>>>>>> origin/main
   "type": "module",
   "scripts": {
     "db:export": "npx tsx src/db/export-to-json.ts",
