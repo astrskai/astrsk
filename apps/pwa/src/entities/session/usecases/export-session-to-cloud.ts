@@ -24,6 +24,8 @@ import { write } from 'opfs-tools';
 interface Command {
   sessionId: UniqueEntityID;
   expirationDays?: number;
+  /** Optional predefined cloned session ID (avoids popup blocker by allowing immediate URL construction) */
+  clonedSessionId?: UniqueEntityID;
 }
 
 /**
@@ -53,8 +55,10 @@ export class ExportSessionToCloud
   async execute({
     sessionId,
     expirationDays = DEFAULT_SHARE_EXPIRATION_DAYS,
+    clonedSessionId: providedClonedSessionId,
   }: Command): Promise<Result<ShareLinkResult>> {
-    let clonedSessionId: UniqueEntityID | null = null;
+    // Use provided cloned session ID (for immediate URL construction) or generate new one
+    const clonedSessionId = providedClonedSessionId ?? new UniqueEntityID();
 
     try {
       // 0. Load the original session to get the original name
@@ -67,11 +71,12 @@ export class ExportSessionToCloud
       const originalSession = originalSessionResult.getValue();
       const originalName = originalSession.props.name;
 
-      // 1. Clone the session to generate new IDs for all resources
+      // 1. Clone the session with predefined ID to avoid popup blocker issues
       // Don't include chat history - we only want the structure
       const cloneResult = await this.cloneSession.execute({
         sessionId,
         includeHistory: false,
+        clonedSessionId, // Use predefined ID
       });
 
       if (cloneResult.isFailure) {
@@ -79,7 +84,6 @@ export class ExportSessionToCloud
       }
 
       const clonedSession = cloneResult.getValue();
-      clonedSessionId = clonedSession.id;
 
       // 1a. Restore original name (not "Copy of...")
       const updateResult = clonedSession.update({
