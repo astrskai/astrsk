@@ -14,7 +14,7 @@ import { DEFAULT_SHARE_EXPIRATION_DAYS } from '@/shared/lib/supabase-client';
 import { PrepareSessionCloudData } from './prepare-session-cloud-data';
 import { CloneSession } from './clone-session';
 import { DeleteSession } from './delete-session';
-import { LoadSessionRepo } from '@/entities/session/repos';
+import { LoadSessionRepo, SaveSessionRepo } from '@/entities/session/repos';
 import { LoadAssetRepo } from '@/entities/asset/repos/load-asset-repo';
 import { SaveAssetRepo } from '@/entities/asset/repos/save-asset-repo';
 import { Asset } from '@/entities/asset/domain/asset';
@@ -34,8 +34,9 @@ interface Command {
  * 1. Load original session to preserve its name
  * 2. Clone the session locally (generates new UUIDs for session and all resources including backgrounds)
  * 3. Restore original name to cloned session (not "Copy of...")
- * 4. Export the cloned session to cloud
- * 5. Delete the cloned session and all its resources
+ * 4. Save the updated cloned session to database
+ * 5. Export the cloned session to cloud
+ * 6. Delete the cloned session and all its resources
  */
 export class ExportSessionToCloud
   implements UseCase<Command, Result<ShareLinkResult>> {
@@ -44,6 +45,7 @@ export class ExportSessionToCloud
     private deleteSession: DeleteSession,
     private prepareSessionData: PrepareSessionCloudData,
     private loadSessionRepo: LoadSessionRepo,
+    private saveSessionRepo: SaveSessionRepo,
     private loadAssetRepo: LoadAssetRepo,
     private saveAssetRepo: SaveAssetRepo,
   ) { }
@@ -88,6 +90,14 @@ export class ExportSessionToCloud
       if (updateResult.isFailure) {
         return Result.fail<ShareLinkResult>(
           `Failed to restore original session name: ${updateResult.getError()}`
+        );
+      }
+
+      // 1b. Save the updated session to database
+      const saveResult = await this.saveSessionRepo.saveSession(clonedSession);
+      if (saveResult.isFailure) {
+        return Result.fail<ShareLinkResult>(
+          `Failed to save session with restored name: ${saveResult.getError()}`
         );
       }
 
