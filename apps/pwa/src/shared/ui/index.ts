@@ -71,6 +71,7 @@ export { default as VideoDisplay } from "./video-display";
 export * from "./confirm";
 export * from "./help-video-dialog";
 export * from "./import-dialog";
+export * from "./loading-dialog";
 
 // Editor (already has its own index.ts)
 export * from "./editor";
