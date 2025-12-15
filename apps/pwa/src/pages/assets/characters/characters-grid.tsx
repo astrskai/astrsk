@@ -7,6 +7,7 @@ import { DialogConfirm } from "@/shared/ui/dialogs";
 import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { IconHarpyLogo } from "@/shared/assets/icons";
+import { SessionExportDialog } from "@/features/session/ui/session-export-dialog";
 
 interface CharactersGridProps {
   characters: CharacterCardDomain[];
@@ -100,11 +101,14 @@ export function CharactersGrid({ characters }: CharactersGridProps) {
   const {
     loadingStates,
     deleteDialogState,
-    handleExport,
+    exportDialogState,
+    handleExportClick,
+    handleExportConfirm,
     handleCopy,
     handleDeleteClick,
     handleDeleteConfirm,
     closeDeleteDialog,
+    closeExportDialog,
   } = useCardActions({ entityType: "character" });
 
   const handleCharacterClick = (id: string) => {
@@ -130,7 +134,7 @@ export function CharactersGrid({ characters }: CharactersGridProps) {
                 character={character}
                 loading={loading}
                 onCharacterClick={handleCharacterClick}
-                onExport={handleExport}
+                onExport={handleExportClick}
                 onCopy={handleCopy}
                 onDeleteClick={handleDeleteClick}
               />
@@ -151,6 +155,13 @@ export function CharactersGrid({ characters }: CharactersGridProps) {
         confirmLabel="Delete"
         cancelLabel="Cancel"
         confirmVariant="destructive"
+      />
+
+      <SessionExportDialog
+        open={exportDialogState.isOpen}
+        onOpenChange={closeExportDialog}
+        onExport={handleExportConfirm}
+        exportType={exportDialogState.exportType}
       />
     </>
   );

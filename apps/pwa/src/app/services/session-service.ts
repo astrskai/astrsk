@@ -208,7 +208,6 @@ export class SessionService {
       this.sessionRepo,
       this.sessionRepo,
       loadAssetRepo,
-      saveAssetRepo,
     );
 
     this.importSessionFromFile = new ImportSessionFromFile(

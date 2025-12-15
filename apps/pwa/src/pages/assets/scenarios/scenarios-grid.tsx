@@ -9,6 +9,7 @@ import type { CardAction } from "@/features/common/ui";
 import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { ExportType } from "@/shared/lib/cloud-upload-helpers";
+import { SessionExportDialog } from "@/features/session/ui/session-export-dialog";
 
 interface ScenariosGridProps {
   scenarios: ScenarioCard[];
@@ -103,11 +104,14 @@ export function ScenariosGrid({ scenarios }: ScenariosGridProps) {
   const {
     loadingStates,
     deleteDialogState,
-    handleExport,
+    exportDialogState,
+    handleExportClick,
+    handleExportConfirm,
     handleCopy,
     handleDeleteClick,
     handleDeleteConfirm,
     closeDeleteDialog,
+    closeExportDialog,
   } = useCardActions({ entityType: CardType.Scenario });
 
   const handleScenarioClick = (plotId: string) => {
@@ -133,7 +137,7 @@ export function ScenariosGrid({ scenarios }: ScenariosGridProps) {
                 scenario={scenario}
                 loading={loading}
                 onScenarioClick={handleScenarioClick}
-                onExport={handleExport}
+                onExport={handleExportClick}
                 onCopy={handleCopy}
                 onDeleteClick={handleDeleteClick}
               />
@@ -154,6 +158,13 @@ export function ScenariosGrid({ scenarios }: ScenariosGridProps) {
         confirmLabel="Delete"
         cancelLabel="Cancel"
         confirmVariant="destructive"
+      />
+
+      <SessionExportDialog
+        open={exportDialogState.isOpen}
+        onOpenChange={closeExportDialog}
+        onExport={handleExportConfirm}
+        exportType={exportDialogState.exportType}
       />
     </>
   );

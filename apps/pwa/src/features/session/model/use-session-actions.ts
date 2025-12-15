@@ -85,47 +85,24 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
    * Export session (either to file or cloud)
    */
   const handleExportConfirm = useCallback(
-    async () => {
+    async (): Promise<string | void> => {
       const { sessionId, title, exportType } = exportDialogState;
       if (!sessionId) return;
 
       try {
         if (exportType === "cloud") {
-          // Generate cloned session ID upfront so we can open window immediately
-          const clonedSessionId = new UniqueEntityID();
-          const shareUrl = `${HARPY_HUB_URL}/shared/session/${clonedSessionId.toString()}`;
-
-          // Open HarpyChat immediately with the cloned session ID (avoid popup blocker)
-          const newWindow = window.open(shareUrl, "_blank");
-
-          // Check if pop-up was blocked
-          if (!newWindow || newWindow.closed) {
-            toastError("Pop-up blocked!", {
-              description: "Please allow pop-ups for this site to open HarpyChat.",
-            });
-          } else {
-            toastSuccess("Opening HarpyChat...", {
-              description: "Export is processing in the background.",
-            });
-          }
-
-          // Export session to cloud in the background (don't await)
-          // Export will use the predefined clonedSessionId
-          SessionService.exportSessionToCloud.execute({
+          // Export session to cloud and wait for completion
+          const shareResult = await SessionService.exportSessionToCloud.execute({
             sessionId: new UniqueEntityID(sessionId),
             expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
-            clonedSessionId, // Pass predefined ID
-          }).then((shareResult) => {
-            if (shareResult.isFailure) {
-              toastError("Export failed", {
-                description: shareResult.getError(),
-              });
-            }
-          }).catch((error) => {
-            toastError("Export failed", {
-              description: error instanceof Error ? error.message : "Unknown error",
-            });
           });
+
+          if (shareResult.isFailure) {
+            throw new Error(shareResult.getError());
+          }
+
+          // Return share URL to dialog
+          return shareResult.getValue().shareUrl;
         } else {
           // Export session to file (JSON download)
           const fileOrError = await SessionService.exportSessionToFile.execute({
