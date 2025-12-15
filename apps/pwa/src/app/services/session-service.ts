@@ -44,6 +44,7 @@ import { PrepareAgentsCloudData } from "@/entities/agent/usecases/prepare-agents
 import { PrepareDataStoreNodesCloudData } from "@/entities/data-store-node/usecases/prepare-data-store-nodes-cloud-data";
 import { PrepareIfNodesCloudData } from "@/entities/if-node/usecases/prepare-if-nodes-cloud-data";
 import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
+import { SaveAssetRepo } from "@/entities/asset/repos/save-asset-repo";
 import { LoadBackgroundRepo } from "@/entities/background/repos/load-background-repo";
 import { LoadCardRepo, SaveCardRepo } from "@/entities/card/repos";
 import { LoadFlowRepo, SaveFlowRepo } from "@/entities/flow/repos";
@@ -95,6 +96,7 @@ export class SessionService {
     cloneAsset: CloneAsset,
     cloneBackground: CloneBackground,
     loadAssetRepo: LoadAssetRepo,
+    saveAssetRepo: SaveAssetRepo,
     loadBackgroundRepo: LoadBackgroundRepo,
     loadCardRepo: LoadCardRepo,
     loadFlowRepo: LoadFlowRepo,
@@ -198,6 +200,7 @@ export class SessionService {
       this.deleteSession,
       prepareSessionData,
       loadAssetRepo,
+      saveAssetRepo,
     );
 
     this.importSessionFromFile = new ImportSessionFromFile(

@@ -15,7 +15,10 @@ import { PrepareSessionCloudData } from './prepare-session-cloud-data';
 import { CloneSession } from './clone-session';
 import { DeleteSession } from './delete-session';
 import { LoadAssetRepo } from '@/entities/asset/repos/load-asset-repo';
+import { SaveAssetRepo } from '@/entities/asset/repos/save-asset-repo';
+import { Asset } from '@/entities/asset/domain/asset';
 import { getDefaultBackground } from '@/entities/background/api/query-factory';
+import { write } from 'opfs-tools';
 
 interface Command {
   sessionId: UniqueEntityID;
@@ -38,6 +41,7 @@ export class ExportSessionToCloud
     private deleteSession: DeleteSession,
     private prepareSessionData: PrepareSessionCloudData,
     private loadAssetRepo: LoadAssetRepo,
+    private saveAssetRepo: SaveAssetRepo,
   ) { }
 
   async execute({
@@ -78,29 +82,76 @@ export class ExportSessionToCloud
 
       // 3a. Upload session assets (background, cover) - no session_id FK yet
       if (bundle.session.background_id) {
-        // Check if it's a default background (astrsk-provided)
-        const defaultBackground = getDefaultBackground(new UniqueEntityID(bundle.session.background_id));
+        const backgroundId = new UniqueEntityID(bundle.session.background_id);
 
-        if (defaultBackground) {
-          // Default backgrounds are CDN references, no need to upload assets
-          // The background_id in the session already contains the default background ID
-          console.log(`[EXPORT] Skipping default background upload: ${bundle.session.background_id}`);
-        } else {
-          // User-uploaded background: Upload the asset
-          const backgroundAsset = await this.loadAssetRepo.getAssetById(
-            new UniqueEntityID(bundle.session.background_id)
-          );
-          if (backgroundAsset.isSuccess) {
-            const uploadResult = await uploadAssetToSupabase(backgroundAsset.getValue());
-            if (uploadResult.isFailure) {
-              return Result.fail<ShareLinkResult>(
-                `Failed to upload background asset: ${uploadResult.getError()}`
-              );
+        // Try to load the background asset from local storage
+        let backgroundAsset = await this.loadAssetRepo.getAssetById(backgroundId);
+
+        // If not found locally, check if it's a default background and download it
+        if (backgroundAsset.isFailure) {
+          const defaultBackground = getDefaultBackground(backgroundId);
+
+          if (defaultBackground && defaultBackground.src) {
+            console.log(`[EXPORT] Downloading default background from CDN: ${defaultBackground.name}`);
+
+            try {
+              // Download the background image from CDN
+              const response = await fetch(defaultBackground.src);
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              }
+
+              const blob = await response.blob();
+              const filename = `${defaultBackground.name.replace(/\s+/g, '_')}.jpg`;
+              const filePath = `backgrounds/${backgroundId.toString()}/${filename}`;
+
+              // Create Asset entity
+              const assetResult = Asset.create({
+                hash: `default-bg-${backgroundId.toString()}`,
+                name: filename,
+                sizeByte: blob.size,
+                mimeType: blob.type || 'image/jpeg',
+                filePath: filePath,
+                updatedAt: new Date(),
+              }, backgroundId);
+
+              if (assetResult.isFailure) {
+                throw new Error(assetResult.getError());
+              }
+
+              const asset = assetResult.getValue();
+
+              // Save to OPFS
+              await write(filePath, blob.stream());
+
+              // Save to database
+              const saveResult = await this.saveAssetRepo.saveAsset(asset);
+              if (saveResult.isFailure) {
+                throw new Error(saveResult.getError());
+              }
+
+              backgroundAsset = Result.ok(asset);
+              console.log(`[EXPORT] Downloaded and saved default background: ${filename}`);
+            } catch (error) {
+              console.error(`[EXPORT] Failed to download default background:`, error);
+              bundle.session.background_id = null;
             }
           } else {
-            // Asset not found locally - clear the reference so session can be uploaded
+            // Neither local asset nor default background - clear reference
+            console.log(`[EXPORT] Background not found, clearing reference: ${bundle.session.background_id}`);
             bundle.session.background_id = null;
           }
+        }
+
+        // Upload the background asset to Supabase
+        if (backgroundAsset.isSuccess) {
+          const uploadResult = await uploadAssetToSupabase(backgroundAsset.getValue());
+          if (uploadResult.isFailure) {
+            return Result.fail<ShareLinkResult>(
+              `Failed to upload background asset: ${uploadResult.getError()}`
+            );
+          }
+          console.log(`[EXPORT] Uploaded background asset: ${bundle.session.background_id}`);
         }
       }
       if (bundle.session.cover_id) {
