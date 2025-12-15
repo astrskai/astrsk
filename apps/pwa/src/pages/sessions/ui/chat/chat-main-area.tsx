@@ -37,7 +37,6 @@ import { logger } from "@/shared/lib/logger";
 import { TurnService } from "@/app/services/turn-service";
 import { ScenarioCard } from "@/entities/card/domain";
 import { useCard } from "@/shared/hooks/use-card";
-import { cn } from "@/shared/lib";
 import SelectScenarioDialog from "./select-scenario-dialog";
 import { TemplateRenderer } from "@/shared/lib/template-renderer";
 
@@ -729,7 +728,7 @@ export default function ChatMainArea({
   }, [scenarioCardFirstMessageCount, messageCount, data?.id, data?.props.config?.hasSeenScenarioDialog, hasSkippedScenarioDialog]);
 
   return (
-    <div className="flex h-dvh flex-1 flex-col justify-end pt-12 md:justify-center">
+    <div className="flex h-dvh flex-1 flex-col justify-end pt-10 md:justify-center">
       <ChatMessageList
         data={data}
         streamingMessageId={streamingMessageId}

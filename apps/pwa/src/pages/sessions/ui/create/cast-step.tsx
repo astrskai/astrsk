@@ -907,16 +907,17 @@ export function CastStep({
                           className="mt-0.5 flex-shrink-0 text-blue-400"
                         />
                         <p className="flex-1 text-[11px] leading-relaxed text-blue-300">
+                          Characters from the{" "}
                           <span className="inline-flex items-center gap-1 align-middle font-semibold">
                             <Globe size={10} />
                             LIBRARY
                           </span>{" "}
-                          characters are read-only shared templates.{" "}
+                          can't be edited here,{" "}
                           <span className="inline-flex items-center gap-1 align-middle font-semibold text-amber-300">
                             <Sparkles size={10} />
                             SESSION
                           </span>{" "}
-                          characters are fully editable.
+                          characters can be.
                         </p>
                         <button
                           onClick={handleDismissInfoBanner}

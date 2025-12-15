@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Send, StopCircle } from "lucide-react";
 
 import ChatCharacterButton from "./chat-character-button";
@@ -46,6 +46,7 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [isOpenGuide, setIsOpenGuide] = useState<boolean>(false);
   const [messageContent, setMessageContent] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Get extension UI components for the session input buttons slot
   const extensionButtons = useExtensionUI("session-input-buttons", {
@@ -135,6 +136,7 @@ export default function ChatInput({
 
       <div className="relative mt-2 md:mt-4">
         <input
+          ref={inputRef}
           type="text"
           className={cn(
             "w-full rounded-full border border-fg-default/30 bg-transparent px-4 py-1 pr-25 text-sm text-fg-default placeholder:text-sm placeholder:text-fg-subtle focus:border-fg-default/50 focus:outline-none md:py-2 md:text-base md:placeholder:text-base",
@@ -155,6 +157,7 @@ export default function ChatInput({
 
               onSendMessage?.(messageContent);
               setMessageContent("");
+              inputRef.current?.focus();
             }
           }}
         />
@@ -170,6 +173,7 @@ export default function ChatInput({
 
             onSendMessage?.(messageContent);
             setMessageContent("");
+            inputRef.current?.focus();
           }}
           className={cn(
             "absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-2 rounded-full border border-fg-default/30 bg-fg-default/10 px-4 py-1.5 font-semibold text-fg-default transition-colors hover:bg-fg-default/20 md:right-1",

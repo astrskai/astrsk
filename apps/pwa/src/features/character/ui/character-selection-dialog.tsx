@@ -308,6 +308,12 @@ export function CharacterSelectionDialog({
       description={showMobileDetail && mobileDetailCharacter ? "" : description}
       isShowCloseButton={false}
       size="2xl"
+      onOpenAutoFocus={(e) => {
+        // Prevent auto-focus on mobile to avoid keyboard popup
+        if (window.innerWidth < 768) {
+          e.preventDefault();
+        }
+      }}
       content={
         <>
           {/* Mobile Detail Header */}

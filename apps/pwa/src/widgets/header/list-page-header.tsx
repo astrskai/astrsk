@@ -1,7 +1,5 @@
-import { ChevronDown, Download, Plus } from "lucide-react";
-import { Button, SearchInput } from "@/shared/ui/forms";
-import type { SelectOption } from "@/shared/ui/forms";
-import { SimpleDropdownMenu } from "@/shared/ui/simple-dropdown-menu";
+import { Download, Plus } from "lucide-react";
+import { Button, SearchInput, Select, type SelectOption } from "@astrsk/design-system";
 
 export interface ListPageHeaderProps {
   /**
@@ -84,7 +82,7 @@ export function ListPageHeader({
   const showSort = sortOptions && sortValue !== undefined && onSortChange;
 
   return (
-    <div className="sticky top-0 z-30 flex-shrink-0 bg-black p-2 md:px-8">
+    <div className="sticky top-0 z-30 flex-shrink-0 bg-black p-4 md:px-8">
       <div className="flex flex-col gap-2 md:gap-4">
         {/* Top Row: Title & Primary Actions */}
         <div className="flex items-center justify-between">
@@ -100,19 +98,15 @@ export function ListPageHeader({
             {/* Import - Icon only on mobile */}
             <Button
               variant="secondary"
-              size="md"
-              icon={<Download size={14} />}
               onClick={onImportClick}
               title="Import"
             >
+              <Download size={14} />
               <span className="hidden md:inline">Import</span>
             </Button>
             {/* Create (Primary Action) */}
-            <Button
-              size="md"
-              icon={<Plus size={14} />}
-              onClick={onCreateClick}
-            >
+            <Button onClick={onCreateClick}>
+              <Plus size={14} />
               {createLabel}
             </Button>
           </div>
@@ -125,29 +119,18 @@ export function ListPageHeader({
             name="page-search"
             value={keyword}
             onChange={(e) => onKeywordChange(e.target.value)}
+            onClear={() => onKeywordChange("")}
             placeholder={`Search ${title.toLowerCase()}...`}
             className="h-9 flex-1 md:h-10 md:max-w-lg"
           />
 
           {/* Sort Dropdown */}
           {showSort && (
-            <SimpleDropdownMenu
+            <Select
+              options={sortOptions}
+              value={sortValue}
+              onChange={onSortChange}
               align="end"
-              trigger={
-                <button className="flex h-9 cursor-pointer items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-700 md:h-10 md:px-3">
-                  <span className="mr-1 hidden text-xs font-bold tracking-wider text-zinc-500 uppercase md:inline">
-                    Sort:
-                  </span>
-                  <span className="max-w-[80px] truncate md:max-w-none">
-                    {sortOptions.find((o) => o.value === sortValue)?.label}
-                  </span>
-                  <ChevronDown size={14} className="text-zinc-500" />
-                </button>
-              }
-              items={sortOptions.map((option) => ({
-                label: option.label,
-                onClick: () => onSortChange(option.value),
-              }))}
             />
           )}
         </div>

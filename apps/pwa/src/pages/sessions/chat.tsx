@@ -199,7 +199,7 @@ export default function ChatPage() {
   }
 
   return session ? (
-    <div className="relative z-0 flex h-dvh flex-col">
+    <div className="relative z-0 flex h-dvh flex-col overflow-hidden">
       {shouldShowBackground ? (
         <div
           className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-60"
