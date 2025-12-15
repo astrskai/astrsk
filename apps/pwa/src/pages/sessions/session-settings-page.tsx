@@ -1,4 +1,10 @@
-import { useCallback, useState, useRef, MutableRefObject, useEffect } from "react";
+import {
+  useCallback,
+  useState,
+  useRef,
+  MutableRefObject,
+  useEffect,
+} from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Play } from "lucide-react";
 
@@ -13,7 +19,9 @@ import { Button } from "@/shared/ui/forms/button";
 import { SessionService } from "@/app/services/session-service";
 
 export function SessionSettingsPage() {
-  const { sessionId } = useParams({ from: "/_layout/sessions/settings/$sessionId" });
+  const { sessionId } = useParams({
+    from: "/_layout/sessions/settings/$sessionId",
+  });
   const navigate = useNavigate();
   const selectSession = useSessionStore.use.selectSession();
   const setIsLeftSidebarOpen = useMobileNavigationStore.use.setIsOpen();
@@ -23,7 +31,9 @@ export function SessionSettingsPage() {
 
   // Refs for session settings
   const refEditCards = useRef<HTMLDivElement>(null);
-  const refInitCardTab = useRef<CardTab>("ai-character" as CardTab) as MutableRefObject<CardTab>;
+  const refInitCardTab = useRef<CardTab>(
+    "ai-character" as CardTab,
+  ) as MutableRefObject<CardTab>;
 
   // Handle Start Session - clone session as play session and navigate
   const handleStartSession = useCallback(async () => {
@@ -36,10 +46,11 @@ export function SessionSettingsPage() {
       const session = await fetchSession(new UniqueEntityID(sessionId));
 
       // Clone as play session (centralized logic)
-      const clonedPlaySessionResult = await SessionService.clonePlaySession.execute({
-        sessionId: session.id,
-        includeHistory: false,
-      });
+      const clonedPlaySessionResult =
+        await SessionService.clonePlaySession.execute({
+          sessionId: session.id,
+          includeHistory: false,
+        });
 
       if (clonedPlaySessionResult.isFailure) {
         throw new Error(clonedPlaySessionResult.getError());
@@ -89,7 +100,7 @@ export function SessionSettingsPage() {
   if (!sessionId) return null;
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-surface">
+    <div className="bg-surface h-full w-full overflow-y-auto">
       <SessionSettings
         setIsOpenSettings={() => {
           // Navigate back to sessions list
@@ -99,13 +110,26 @@ export function SessionSettingsPage() {
         refInitCardTab={refInitCardTab}
         isSettingsOpen={true}
         actionButton={
-          <Button
-            onClick={handleStartSession}
-            loading={isStarting}
-            icon={<Play className="h-3 w-3" />}
-          >
-            Start Session
-          </Button>
+          <>
+            {/* Mobile: Icon only button - larger size */}
+            <Button
+              onClick={handleStartSession}
+              loading={isStarting}
+              className="h-10 w-10 p-0 md:hidden"
+              aria-label="Start Session"
+            >
+              <Play className="h-5 w-5" />
+            </Button>
+            {/* Desktop: Full button with text */}
+            <Button
+              onClick={handleStartSession}
+              loading={isStarting}
+              icon={<Play className="h-3 w-3" />}
+              className="hidden md:inline-flex"
+            >
+              Start Session
+            </Button>
+          </>
         }
       />
     </div>

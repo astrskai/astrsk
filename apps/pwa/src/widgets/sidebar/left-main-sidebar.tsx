@@ -23,7 +23,7 @@ import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 // --- Navigation Data ---
 const NAVIGATION_CATEGORIES = [
   {
-    title: "Playable assets", // No section title
+    title: "Play library", // No section title
     items: [
       {
         icon: IconSessions,
@@ -156,7 +156,10 @@ const PlaySessionNavItem = ({
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
-    return dateObj.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return dateObj.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -211,7 +214,7 @@ const PlaySessionNavItem = ({
             {/* Count shown by default, date on hover */}
             <span className="group-hover:hidden">{count ?? 0}</span>
             <span className="hidden group-hover:inline">
-              {updatedAt ? formatDate(updatedAt) : count ?? 0}
+              {updatedAt ? formatDate(updatedAt) : (count ?? 0)}
             </span>
           </span>
         )}
@@ -427,7 +430,9 @@ const UserProfile = ({
           {user?.user_metadata?.avatar_url ? (
             <div
               className="h-full w-full bg-cover bg-center"
-              style={{ backgroundImage: `url('${user.user_metadata.avatar_url}')` }}
+              style={{
+                backgroundImage: `url('${user.user_metadata.avatar_url}')`,
+              }}
             />
           ) : (
             <div className="h-full w-full bg-[url(/img/placeholder/avatar.png)] bg-size-[60px] bg-center" />
@@ -504,7 +509,9 @@ export const LeftMainSidebar = ({
   // Special case: /sessions should only match exactly, not /sessions/{id}
   const isActivePath = (path: string) => {
     if (path === "/sessions") {
-      return location.pathname === "/sessions" || location.pathname === "/sessions/";
+      return (
+        location.pathname === "/sessions" || location.pathname === "/sessions/"
+      );
     }
     return location.pathname.startsWith(path);
   };
@@ -665,10 +672,7 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
   return (
     <header className="flex flex-shrink-0 items-center border-b border-zinc-800 bg-zinc-950 px-4 py-3 md:hidden">
       {/* Left: Menu Button */}
-      <button
-        onClick={onMenuClick}
-        className="text-zinc-400 hover:text-white"
-      >
+      <button onClick={onMenuClick} className="text-zinc-400 hover:text-white">
         <Menu size={20} />
       </button>
 
@@ -688,7 +692,9 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
         {user?.user_metadata?.avatar_url ? (
           <div
             className="h-full w-full bg-cover bg-center"
-            style={{ backgroundImage: `url('${user.user_metadata.avatar_url}')` }}
+            style={{
+              backgroundImage: `url('${user.user_metadata.avatar_url}')`,
+            }}
           />
         ) : (
           <div className="h-full w-full bg-[url(/img/placeholder/avatar.png)] bg-size-[60px] bg-center" />
