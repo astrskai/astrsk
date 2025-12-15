@@ -24,6 +24,8 @@ interface ChatMessageListProps {
   onDeleteMessage?: (messageId: UniqueEntityID) => void;
   onRegenerateMessage?: (messageId: UniqueEntityID) => void;
   className?: string;
+  /** Max height for mobile keyboard handling */
+  maxHeight?: number;
 }
 
 interface RenderMessageProps {
@@ -118,6 +120,7 @@ export default function ChatMessageList({
   onDeleteMessage,
   onRegenerateMessage,
   className,
+  maxHeight,
 }: ChatMessageListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const messageCount = data.turnIds.length;
@@ -217,6 +220,8 @@ export default function ChatMessageList({
         overflowY: "auto",
         scrollbarGutter: "stable",
         contain: "strict",
+        // Mobile keyboard handling: limit height when keyboard is visible
+        ...(maxHeight !== undefined && { maxHeight: `${maxHeight}px` }),
       }}
     >
       {/* Virtual spacer - creates scroll height */}
