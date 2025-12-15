@@ -56,12 +56,6 @@ export default function ChatMainArea({
 }: ChatMainAreaProps) {
   const viewportHeight = useVisualViewport();
 
-  // Store initial viewport height on mount (includes address bar)
-  // This prevents container from shrinking when keyboard appears
-  const [initialHeight] = useState(() =>
-    typeof window !== "undefined" ? window.innerHeight : 0
-  );
-
   // Calculate message list max height for mobile keyboard handling
   // header: 48px (pt-12), input: ~120px
   const HEADER_HEIGHT = 48;
@@ -746,10 +740,7 @@ export default function ChatMainArea({
 
   return (
     <div
-      className="flex flex-1 flex-col justify-end pt-12 md:h-dvh md:justify-center"
-      // Mobile: use initial height to prevent shrinking when keyboard appears
-      // Desktop: h-dvh class handles it
-      style={{ height: initialHeight > 0 ? `${initialHeight}px` : "100dvh" }}
+      className="flex h-full flex-1 flex-col justify-end pt-12 md:justify-center"
     >
       <ChatMessageList
         data={data}

@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Route } from "@/routes/_layout/sessions/$sessionId";
@@ -27,6 +27,10 @@ import { useSaveSession } from "@/entities/session/api/mutations";
 import { useSessionConfig } from "@/shared/hooks/use-session-config";
 
 export default function ChatPage() {
+  // Store initial viewport height on mount to prevent keyboard from shrinking container
+  const [initialHeight] = useState(() =>
+    typeof window !== "undefined" ? window.innerHeight : 0
+  );
 
   const saveSessionMutation = useSaveSession();
 
@@ -187,7 +191,10 @@ export default function ChatPage() {
   return isLoading ? (
     <Loading />
   ) : session ? (
-    <div className="relative z-0 flex h-dvh flex-col">
+    <div
+      className="relative z-0 flex flex-col overflow-hidden md:h-dvh"
+      style={{ height: initialHeight > 0 ? `${initialHeight}px` : "100dvh" }}
+    >
       {shouldShowBackground ? (
         <div
           className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-60"
