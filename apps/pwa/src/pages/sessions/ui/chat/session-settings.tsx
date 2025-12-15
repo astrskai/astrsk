@@ -64,7 +64,7 @@ interface SessionSettingsProps {
 }
 
 /**
- * Section wrapper matching HTML example styling
+ * Section wrapper with consistent styling
  */
 const Section = ({
   title,
@@ -78,12 +78,15 @@ const Section = ({
   return (
     <div
       className={cn(
-        "bg-surface-raised border-border-muted rounded-xl border p-6",
+        "bg-surface-raised rounded-xl border p-3 md:p-5",
+        "border-border-muted hover:border-border-emphasis transition-colors",
         className,
       )}
     >
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-fg-default text-lg font-bold">{title}</h3>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-fg-default text-base font-bold md:text-lg">
+          {title}
+        </h3>
       </div>
       {children}
     </div>
@@ -93,15 +96,15 @@ const Section = ({
 const SectionCarousel = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Carousel>
-      <CarouselContent className="mr-4 ml-0 gap-4 max-md:mr-2 max-md:ml-0">
+      <CarouselContent className="mr-2 ml-0 gap-4 md:mr-4">
         {children}
       </CarouselContent>
       <CarouselPrevious
-        className="bg-surface-raised border-border-muted left-4 border disabled:hidden max-md:left-2 max-md:h-8 max-md:w-8"
+        className="bg-surface-raised border-border-muted left-2 h-8 w-8 border disabled:hidden md:left-4 md:h-10 md:w-10"
         variant="ghost_white"
       />
       <CarouselNext
-        className="bg-surface-raised border-border-muted right-4 border disabled:hidden max-md:right-2 max-md:h-8 max-md:w-8"
+        className="bg-surface-raised border-border-muted right-2 h-8 w-8 border disabled:hidden md:right-4 md:h-10 md:w-10"
         variant="ghost_white"
       />
     </Carousel>
@@ -533,63 +536,72 @@ export const SessionSettings = ({
   if (!session) return null;
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] space-y-6 p-6 md:p-10">
-      {/* Header: Session Name + Start Button */}
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
+    <div className="mx-auto w-full max-w-[1400px] space-y-3 p-4 md:space-y-4">
+      {/* Header: Session Name + Start Button - Always single row */}
+      <header className="bg-surface-raised border-border-muted rounded-xl border p-3 md:p-5">
+        <div className="flex items-center gap-3 md:gap-4">
           <button
             type="button"
             aria-label="Back to sessions"
             onClick={() => navigate({ to: "/sessions" })}
-            className="text-fg-subtle hover:text-fg-default cursor-pointer"
+            className="text-fg-subtle hover:text-fg-default -ml-1 flex-shrink-0 rounded-lg p-1.5 transition-colors hover:bg-white/5 md:p-2"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <span className="text-fg-muted font-semibold">Session</span>
 
-          {/* Session Name - Inline Edit */}
-          {isEditingTitle ? (
-            <div className="flex items-center gap-2">
-              <input
-                ref={titleInputRef}
-                type="text"
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                onKeyDown={handleTitleKeyDown}
-                className="text-fg-default bg-surface-overlay border-border-subtle focus:ring-accent-primary rounded border px-2 py-1 font-medium focus:ring-2 focus:outline-none"
-                placeholder="Session name"
-              />
-              <button
-                onClick={handleSaveTitle}
-                className="text-fg-subtle hover:text-fg-default p-1 transition-colors"
-                aria-label="Save title"
-              >
-                <Check className="h-4 w-4" />
-              </button>
-              <button
-                onClick={handleCancelEditTitle}
-                className="text-fg-subtle hover:text-fg-default p-1 transition-colors"
-                aria-label="Cancel editing"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="group flex items-center gap-2">
-              <span className="text-fg-default font-medium">
-                {session.name || "Untitled Session"}
-              </span>
-              <button
-                onClick={handleStartEditTitle}
-                className="text-fg-muted hover:text-fg-default p-1 opacity-0 transition-all group-hover:opacity-100"
-                aria-label="Edit name"
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5 md:gap-1">
+            <span className="text-fg-muted text-[10px] font-medium tracking-wider uppercase md:text-xs">
+              Session Template
+            </span>
+
+            {/* Session Name - Inline Edit */}
+            {isEditingTitle ? (
+              <div className="flex items-center gap-2">
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onKeyDown={handleTitleKeyDown}
+                  className="text-fg-default bg-surface-overlay border-border-subtle focus:border-accent-primary w-full min-w-0 rounded-lg border px-2 py-1 text-base font-bold focus:outline-none md:px-3 md:py-1.5 md:text-xl"
+                  placeholder="Session name"
+                />
+                <button
+                  onClick={handleSaveTitle}
+                  className="text-status-success hover:bg-status-success/10 flex-shrink-0 rounded-lg p-1.5 transition-colors"
+                  aria-label="Save title"
+                >
+                  <Check className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={handleCancelEditTitle}
+                  className="text-fg-subtle hover:text-fg-default hover:bg-surface-overlay flex-shrink-0 rounded-lg p-1.5 transition-colors"
+                  aria-label="Cancel editing"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            ) : (
+              <div className="group flex items-center gap-2">
+                <h1 className="text-fg-default truncate text-base font-bold md:text-2xl">
+                  {session.name || "Untitled Session"}
+                </h1>
+                <button
+                  onClick={handleStartEditTitle}
+                  className="text-fg-muted hover:text-fg-default flex-shrink-0 rounded-lg p-1 opacity-0 transition-all group-hover:opacity-100 hover:bg-white/5 md:p-1.5"
+                  aria-label="Edit name"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Action Button - Icon only on mobile, full button on desktop */}
+          {actionButton && (
+            <div className="flex-shrink-0">{actionButton}</div>
           )}
         </div>
-        {actionButton}
       </header>
 
       {/* Row 1: Characters */}
@@ -677,9 +689,12 @@ export const SessionSettings = ({
       />
 
       {/* Row 2: Narrative (Scenario + Workflow) */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Scenario - 2/3 width */}
-        <Section title="Scenario" className="flex h-80 flex-col lg:col-span-2">
+      <div className="grid grid-cols-1 gap-3 md:gap-4 lg:grid-cols-3">
+        {/* Scenario - 2/3 width on desktop */}
+        <Section
+          title="Scenario"
+          className="flex h-64 flex-col md:h-80 lg:col-span-2"
+        >
           <button
             onClick={() => {
               if (plotCard?.id) {
@@ -689,17 +704,17 @@ export const SessionSettings = ({
                 });
               }
             }}
-            className="hover:bg-surface-overlay/50 flex-grow cursor-pointer space-y-4 overflow-y-auto rounded-lg pr-2 text-left transition-colors"
+            className="hover:bg-surface-overlay/50 flex-grow cursor-pointer space-y-3 overflow-y-auto rounded-lg p-2 text-left transition-colors md:space-y-4"
           >
             {plotCard ? (
               <>
                 <div>
-                  <label className="text-fg-subtle mb-2 block text-xs font-bold tracking-wider uppercase">
+                  <label className="text-fg-subtle mb-1.5 block text-[10px] font-bold tracking-wider uppercase md:mb-2 md:text-xs">
                     Description
                   </label>
                   <div className="mb-2 flex items-center gap-2">
-                    <div className="bg-accent-primary h-18 w-1 rounded-full"></div>
-                    <p className="text-fg-default line-clamp-4 text-sm font-medium">
+                    <div className="bg-accent-primary h-14 w-1 rounded-full md:h-18"></div>
+                    <p className="text-fg-default line-clamp-3 text-sm font-medium md:line-clamp-4">
                       {plotCard.props.description}
                     </p>
                   </div>
@@ -708,10 +723,10 @@ export const SessionSettings = ({
                 {plotCard.props.firstMessages &&
                   plotCard.props.firstMessages.length > 0 && (
                     <div>
-                      <label className="text-fg-subtle mb-2 block text-xs font-bold tracking-wider uppercase">
+                      <label className="text-fg-subtle mb-1.5 block text-[10px] font-bold tracking-wider uppercase md:mb-2 md:text-xs">
                         First Message
                       </label>
-                      <div className="bg-surface-overlay border-border-subtle overflow-hidden rounded-lg border p-3">
+                      <div className="bg-surface-overlay border-border-subtle overflow-hidden rounded-lg border p-2 md:p-3">
                         <div className="text-fg-muted line-clamp-2 text-sm leading-5">
                           {plotCard.props.firstMessages[0].description ||
                             "No first message"}
@@ -728,8 +743,8 @@ export const SessionSettings = ({
           </button>
         </Section>
 
-        {/* Workflow - 1/3 width */}
-        <Section title="Workflow" className="flex h-80 flex-col">
+        {/* Workflow - 1/3 width on desktop */}
+        <Section title="Workflow" className="flex h-48 flex-col md:h-80">
           <button
             onClick={() => {
               if (session?.props.flowId) {
@@ -739,21 +754,21 @@ export const SessionSettings = ({
                 });
               }
             }}
-            className="border-border-subtle group relative flex flex-grow cursor-pointer items-center justify-center overflow-hidden rounded-lg border transition-colors"
+            className="border-border-subtle group hover:border-border-emphasis relative flex flex-grow cursor-pointer items-center justify-center overflow-hidden rounded-lg border transition-colors"
           >
-            <IconWorkflow className="text-fg-subtle group-hover:text-fg-default h-16 w-16 transition-colors" />
+            <IconWorkflow className="text-fg-subtle group-hover:text-fg-default h-12 w-12 transition-colors md:h-16 md:w-16" />
           </button>
         </Section>
       </div>
 
-      {/* Row 3: Visuals & Styling */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {/* Cover Image - 1 column */}
-        <Section title="Cover Image" className="flex h-72 flex-col">
+      {/* Row 3: Visuals & Styling - 3 equal columns */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+        {/* Cover Image */}
+        <Section title="Cover Image" className="flex h-56 flex-col md:h-72">
           <div
             className={cn(
-              "border-border-subtle relative flex-grow overflow-hidden rounded-lg border",
-              coverImageSrc && "border-2",
+              "border-border-subtle relative flex-grow overflow-hidden rounded-lg border transition-colors",
+              coverImageSrc ? "border-2" : "hover:border-border-emphasis",
             )}
           >
             <label
@@ -770,16 +785,16 @@ export const SessionSettings = ({
                   {/* Delete button on hover */}
                   <button
                     onClick={handleDeleteCoverImage}
-                    className="absolute top-2 right-2 z-10 rounded-full bg-red-500 p-2 text-white opacity-0 shadow-lg transition-transform group-hover:opacity-100 hover:scale-110"
+                    className="absolute top-2 right-2 z-10 rounded-full bg-black/60 p-1.5 text-white opacity-0 shadow-lg transition-all group-hover:opacity-100 hover:bg-red-500/80 md:p-2"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <div className="text-fg-subtle hover:text-fg-default flex cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors md:text-base">
-                    <FileUp className="h-5 w-5" />
-                    <p>Upload cover image</p>
+                  <div className="text-fg-subtle hover:text-fg-default flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors">
+                    <FileUp className="h-6 w-6 md:h-8 md:w-8" />
+                    <p>Upload cover</p>
                   </div>
                 </div>
               )}
@@ -794,24 +809,26 @@ export const SessionSettings = ({
           </div>
         </Section>
 
-        {/* Background - 1 column */}
-        <Section title="Background" className="flex h-72 flex-col">
+        {/* Background */}
+        <Section title="Background" className="flex h-56 flex-col md:h-72">
           <div
             className={cn(
-              "border-border-subtle relative flex-grow overflow-hidden rounded-lg border",
-              session?.backgroundId && "border-2",
+              "border-border-subtle relative flex-grow overflow-hidden rounded-lg border transition-colors",
+              session?.backgroundId
+                ? "border-2"
+                : "hover:border-border-emphasis",
             )}
           >
             <button
               onClick={() => setIsBackgroundDialogOpen(true)}
-              className="h-full w-full cursor-pointer transition-opacity hover:opacity-80"
+              className="h-full w-full cursor-pointer transition-opacity hover:opacity-90"
             >
               {session?.backgroundId ? (
                 <BackgroundPreview backgroundId={session.backgroundId} />
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <div className="text-fg-subtle hover:text-fg-default flex cursor-pointer items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors md:text-base">
-                    <Image className="h-5 w-5" />
+                  <div className="text-fg-subtle hover:text-fg-default flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors">
+                    <Image className="h-6 w-6 md:h-8 md:w-8" />
                     <p>Select background</p>
                   </div>
                 </div>
@@ -820,11 +837,8 @@ export const SessionSettings = ({
           </div>
         </Section>
 
-        {/* Message Styling - 2 columns */}
-        <Section
-          title="Message Styling"
-          className="flex h-72 flex-col lg:col-span-2"
-        >
+        {/* Message Styling */}
+        <Section title="Message Styling" className="flex h-56 flex-col md:h-72">
           <div className="flex flex-grow items-center">
             <div className="flex-grow overflow-y-auto">
               <MessageStyling

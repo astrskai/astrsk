@@ -1304,6 +1304,7 @@ Ground Rules:`;
             onSubmit={handleMobileChatSubmit}
             onStop={isChatLoading ? handleChatStop : undefined}
             isLoading={isChatLoading}
+            initialState="peek"
           />
         </FormProvider>
       </>
