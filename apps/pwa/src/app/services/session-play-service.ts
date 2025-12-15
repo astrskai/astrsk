@@ -2207,6 +2207,18 @@ async function* executeAgentNode({
         yield result;
       }
 
+      // Post-process: Remove character name prefix from structured output fields
+      if (result.output && typeof result.output === 'object') {
+        const typedOutput = result.output as any;
+        // Check for common response field names and remove character name prefix
+        const responseField = ['char_response', 'response', 'text', 'content'].find(field => field in typedOutput);
+        if (responseField && typeof typedOutput[responseField] === 'string') {
+          typedOutput[responseField] = removeCharacterNamePrefix(typedOutput[responseField]);
+          merge(result, { output: typedOutput });
+          yield result;
+        }
+      }
+
       // Extract metadata from stream result promises
       try {
         const metadata: any = {};
@@ -2220,6 +2232,11 @@ async function* executeAgentNode({
             if (delayedPromise.status?.type === 'resolved') {
               const resolvedValue = delayedPromise.status.value;
               if (resolvedValue && typeof resolvedValue === 'object' && Object.keys(resolvedValue).length > 0) {
+                // Post-process: Remove character name prefix from resolved structured output
+                const responseField = ['char_response', 'response', 'text', 'content'].find(field => field in resolvedValue);
+                if (responseField && typeof resolvedValue[responseField] === 'string') {
+                  resolvedValue[responseField] = removeCharacterNamePrefix(resolvedValue[responseField]);
+                }
                 merge(result, { output: resolvedValue });
                 yield result;
               }
@@ -2305,17 +2322,9 @@ async function* executeAgentNode({
           throw primaryError;
         }
 
-        logger.warn("[InferenceFallback] Primary model failed, trying lite model fallback", {
-          error: primaryError instanceof Error ? primaryError.message : "Unknown error",
-          primaryModel: actualModelName,
-        });
-
         // Try fallback to lite model
         const fallback = await getLiteModelFallback();
         if (fallback && fallback.modelId !== apiModelId) {
-          logger.info("[InferenceFallback] Retrying with lite model", {
-            fallbackModel: fallback.modelName,
-          });
 
           streamResult = await generateTextOutput({
             apiConnection: fallback.apiConnection,
@@ -2344,6 +2353,7 @@ async function* executeAgentNode({
       // This handles cases where LLMs incorrectly prefix responses with character names
       response = removeCharacterNamePrefix(response);
       merge(result, { output: { response } });
+      yield result;
 
       try {
         const metadata: any = {};

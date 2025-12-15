@@ -388,6 +388,7 @@ const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 const ScenarioEditorPage = () => {
   const navigate = useNavigate();
   const { scenarioId } = Route.useParams();
+  const { returnTo } = Route.useSearch();
 
   // Determine if we're in create mode (no scenarioId or "new")
   const isCreateMode = !scenarioId || scenarioId === "new";
@@ -735,8 +736,12 @@ const ScenarioEditorPage = () => {
         conceptualOrigin: normalizeField(data.conceptualOrigin),
       });
 
-      // Navigate back to scenarios list page
-      navigate({ to: "/assets/scenarios" });
+      // Navigate back - use returnTo if provided, otherwise scenarios list
+      if (returnTo) {
+        navigate({ to: returnTo as any });
+      } else {
+        navigate({ to: "/assets/scenarios" });
+      }
     } catch (error) {
       toastError("Failed to save scenario", {
         description:
@@ -803,7 +808,8 @@ const ScenarioEditorPage = () => {
       </div>
 
       <div className="mx-auto w-full max-w-4xl space-y-6 p-4">
-        <section className="flex w-full flex-col items-center justify-center gap-4">
+        {/* HIDDEN: Image setting section - commented out per user request */}
+        {/* <section className="flex w-full flex-col items-center justify-center gap-4">
           {displayImage ? (
             <div className="relative max-w-[200px]">
               <img
@@ -906,7 +912,6 @@ const ScenarioEditorPage = () => {
                   );
                 })}
 
-                {/* Custom tags (can be deleted) */}
                 {tags
                   .filter((tag) => !TAG_DEFAULT.includes(tag))
                   .map((tag, index) => (
@@ -956,7 +961,7 @@ const ScenarioEditorPage = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <section className="space-y-4">
           <h2 className="text-base font-semibold text-neutral-100">

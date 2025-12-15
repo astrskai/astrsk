@@ -915,18 +915,11 @@ Ground Rules:`;
     setIsCreatingSession(true);
 
     try {
-      // Must have at least one character
+      // Gather all selected characters (can be empty)
       const allCharacters = [
         ...(playerCharacter ? [playerCharacter] : []),
         ...aiCharacters,
       ];
-      if (allCharacters.length === 0) {
-        toastError("No characters selected", {
-          description: "Please select at least one character.",
-        });
-        setIsCreatingSession(false);
-        return;
-      }
 
       // Don't wait for workflow - pass promise to hook for background generation
       let workflowToUse: WorkflowState | null = generatedWorkflow;
@@ -1031,8 +1024,8 @@ Ground Rules:`;
           // Scenario step: requires minimum 400 characters
           return scenarioBackground.trim().length >= MIN_SCENARIO_LENGTH;
         case "cast":
-          // Cast step: needs at least one character (player or AI)
-          return playerCharacter !== null || aiCharacters.length > 0;
+          // Cast step: optional, no requirements
+          return true;
         case "stats":
           // Stats step: optional, always complete
           return true;
@@ -1040,7 +1033,7 @@ Ground Rules:`;
           return false;
       }
     },
-    [scenarioBackground, playerCharacter, aiCharacters],
+    [scenarioBackground],
   );
 
   // Calculate which steps are accessible (all previous steps must be complete)
