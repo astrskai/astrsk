@@ -25,41 +25,41 @@ export function HomePage() {
   }, []);
 
   // Featured data state
-  const [featuredSessions, setFeaturedSessions] = useState<FeaturedSessionData[]>([]);
-  const [featuredCharacters, setFeaturedCharacters] = useState<FeaturedCharacterData[]>([]);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
-  const [isLoadingCharacters, setIsLoadingCharacters] = useState(true);
+  // const [featuredSessions, setFeaturedSessions] = useState<FeaturedSessionData[]>([]);
+  // const [featuredCharacters, setFeaturedCharacters] = useState<FeaturedCharacterData[]>([]);
+  // const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  // const [isLoadingCharacters, setIsLoadingCharacters] = useState(true);
 
   // Fetch featured data on mount only (not on resize)
-  useEffect(() => {
-    // Guard against multiple fetches (e.g., React Strict Mode double-mounting)
-    if (hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
+  // useEffect(() => {
+  //   // Guard against multiple fetches (e.g., React Strict Mode double-mounting)
+  //   if (hasFetchedRef.current) return;
+  //   hasFetchedRef.current = true;
 
-    const sessionLimit = isMobile ? 2 : 3;
-    const characterLimit = isMobile ? 2 : 4;
+  //   const sessionLimit = isMobile ? 2 : 3;
+  //   const characterLimit = isMobile ? 2 : 4;
 
-    // Fetch sessions
-    fetchFeaturedSessions(sessionLimit).then((result) => {
-      if (result.isSuccess) {
-        setFeaturedSessions(result.getValue());
-      } else {
-        console.error("[HomePage] Failed to fetch sessions:", result.getError());
-      }
-      setIsLoadingSessions(false);
-    });
+  //   // Fetch sessions
+  //   fetchFeaturedSessions(sessionLimit).then((result) => {
+  //     if (result.isSuccess) {
+  //       setFeaturedSessions(result.getValue());
+  //     } else {
+  //       console.error("[HomePage] Failed to fetch sessions:", result.getError());
+  //     }
+  //     setIsLoadingSessions(false);
+  //   });
 
-    // Fetch characters
-    fetchFeaturedCharacters(characterLimit).then((result) => {
-      if (result.isSuccess) {
-        setFeaturedCharacters(result.getValue());
-      } else {
-        console.error("[HomePage] Failed to fetch characters:", result.getError());
-      }
-      setIsLoadingCharacters(false);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only fetch once on mount, ignore isMobile changes
+  //   // Fetch characters
+  //   fetchFeaturedCharacters(characterLimit).then((result) => {
+  //     if (result.isSuccess) {
+  //       setFeaturedCharacters(result.getValue());
+  //     } else {
+  //       console.error("[HomePage] Failed to fetch characters:", result.getError());
+  //     }
+  //     setIsLoadingCharacters(false);
+  //   });
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []); // Only fetch once on mount, ignore isMobile changes
 
   return (
     <div className="relative flex min-h-full flex-col items-center overflow-y-auto bg-black font-sans text-gray-100 selection:bg-blue-500/30">
@@ -79,7 +79,7 @@ export function HomePage() {
         <HeroInputSection />
 
         {/* Featured Sessions Section (from Harpy Chat Hub) */}
-        {!isLoadingSessions && featuredSessions.length > 0 && (
+        {/* {!isLoadingSessions && featuredSessions.length > 0 && (
           <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-10 pt-10 text-left">
             <div className="mb-6 flex items-center justify-between px-1">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -93,10 +93,10 @@ export function HomePage() {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Loading State for Sessions */}
-        {isLoadingSessions && (
+        {/* {isLoadingSessions && (
           <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-10 pt-10 text-left">
             <div className="mb-6 flex items-center justify-between px-1">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -109,10 +109,10 @@ export function HomePage() {
               {!isMobile && <div className="h-64 animate-pulse rounded-lg bg-white/5"></div>}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Featured Characters Section (from Harpy Chat Hub) */}
-        {!isLoadingCharacters && featuredCharacters.length > 0 && (
+        {/* {!isLoadingCharacters && featuredCharacters.length > 0 && (
           <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-20 pt-10 text-left">
             <div className="mb-6 flex items-center justify-between px-1">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -126,10 +126,10 @@ export function HomePage() {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Loading State for Characters */}
-        {isLoadingCharacters && (
+        {/* {isLoadingCharacters && (
           <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-20 pt-10 text-left">
             <div className="mb-6 flex items-center justify-between px-1">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -147,7 +147,7 @@ export function HomePage() {
               )}
             </div>
           </div>
-        )}
+        )} */}
       </main>
 
       {/* Animation Styles */}
