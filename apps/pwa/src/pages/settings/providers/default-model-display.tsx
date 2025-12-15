@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { cn } from "@/shared/lib";
 import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
-import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
+import { apiSourceLabel } from "@/entities/api/domain";
 import { ApiModel } from "@/entities/api/domain/api-model";
 import type { ApiConnectionWithModels } from "@/shared/hooks/use-api-connections-with-models";
 import { Combobox, ComboboxOption } from "@/shared/ui";
@@ -105,11 +105,19 @@ const DefaultModelDisplay = ({
   return (
     <div
       className={cn(
-        "flex flex-col justify-between rounded-xl border p-5 transition-colors",
-        "border-border-default bg-surface-raised",
-        "hover:border-border-muted",
+        "relative flex flex-col justify-between rounded-xl border p-5 transition-colors",
+        value
+          ? "border-border-default bg-surface-raised hover:border-border-muted"
+          : "border-amber-500/30 bg-amber-500/5",
       )}
     >
+      {/* Indicator dot - only show when no model selected */}
+      {!value && (
+        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+          <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-500" />
+        </span>
+      )}
       <div>
         <div className="mb-3 flex items-center gap-3">
           <div className={cn("rounded-lg p-2", iconBgClassName)}>{icon}</div>

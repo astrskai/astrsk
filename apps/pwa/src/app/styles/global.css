@@ -365,6 +365,19 @@
   }
 }
 
+@keyframes border-pulse {
+  0%, 100% {
+    border-color: rgba(245, 158, 11, 0.5);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.2);
+  }
+}
+
+.animate-border-pulse {
+  animation: border-pulse 2s ease-in-out infinite;
+}
+
 @layer base {
   * {
     border-color: var(--border);
