@@ -24,6 +24,8 @@ export {
   type IconInputProps,
   PasswordInput,
   type PasswordInputProps,
+  SearchInput,
+  type SearchInputProps,
 } from './components/Input';
 export { Label, type LabelProps } from './components/Label';
 export { LabeledInput, type LabeledInputProps } from './components/LabeledInput';

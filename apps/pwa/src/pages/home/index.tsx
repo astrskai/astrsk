@@ -38,8 +38,6 @@ function SessionCardWrapper({ session, characterAvatars, areCharactersLoading }:
     return null;
   }
 
-  const messageCount = session.props.turnIds?.length || 0;
-
   const handleSessionClick = () => {
     navigate({
       to: "/sessions/settings/$sessionId",
@@ -52,7 +50,6 @@ function SessionCardWrapper({ session, characterAvatars, areCharactersLoading }:
       title={session.props.name || "Untitled Session"}
       imageUrl={coverImageUrl}
       placeholderImageUrl={SESSION_PLACEHOLDER_IMAGE}
-      messageCount={messageCount}
       onClick={handleSessionClick}
       characterAvatars={resolvedAvatars}
       areCharactersLoading={areCharactersLoading}

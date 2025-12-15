@@ -51,8 +51,8 @@ export interface SessionCardProps {
   imageUrl?: string | null;
   /** Placeholder image URL when imageUrl is not provided */
   placeholderImageUrl?: string;
-  /** Number of messages in the session (used in default metadata) */
-  messageCount?: number;
+  // /** Number of messages in the session (used in default metadata) - temporarily hidden */
+  // messageCount?: number;
   /** Action buttons displayed on the card */
   actions?: CardAction[];
   /** Additional CSS classes */
@@ -69,12 +69,13 @@ export interface SessionCardProps {
    * Badges to display on the card (e.g., type indicator, private, owner).
    */
   badges?: CardBadge[];
-  /**
-   * Custom render function for the metadata section.
-   * When provided, replaces the default messageCount display.
-   * Use CardMetadataContainer and CardMetadataItem for consistent styling.
-   */
-  renderMetadata?: () => React.ReactNode;
+  // /**
+  //  * Custom render function for the metadata section.
+  //  * When provided, replaces the default messageCount display.
+  //  * Use CardMetadataContainer and CardMetadataItem for consistent styling.
+  //  * - temporarily hidden
+  //  */
+  // renderMetadata?: () => React.ReactNode;
   /**
    * Tags to display on the card.
    * Container Query responsive: 2 tags on narrow cards (<240px), 3 on wider cards.
@@ -183,25 +184,24 @@ function CharacterAvatarSkeleton() {
   );
 }
 
-/**
- * Message Icon Component (Internal)
+/* Message Icon Component (Internal) - temporarily hidden
  * Inline SVG to avoid external icon library dependency
  */
-function MessageIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox='0 0 24 24'
-      fill='none'
-      stroke='currentColor'
-      strokeWidth={2}
-      strokeLinecap='round'
-      strokeLinejoin='round'
-    >
-      <path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' />
-    </svg>
-  );
-}
+// function MessageIcon({ className }: { className?: string }) {
+//   return (
+//     <svg
+//       className={className}
+//       viewBox='0 0 24 24'
+//       fill='none'
+//       stroke='currentColor'
+//       strokeWidth={2}
+//       strokeLinecap='round'
+//       strokeLinejoin='round'
+//     >
+//       <path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' />
+//     </svg>
+//   );
+// }
 
 /**
  * SessionCard Component
@@ -231,7 +231,7 @@ export function SessionCard({
   title,
   imageUrl,
   placeholderImageUrl,
-  messageCount,
+  // messageCount, // temporarily hidden
   actions = [],
   className,
   isDisabled = false,
@@ -239,7 +239,7 @@ export function SessionCard({
   characterAvatars = [],
   areCharactersLoading = false,
   badges = [],
-  renderMetadata,
+  // renderMetadata, // temporarily hidden
   tags = [],
   summary,
   likeButton,
@@ -351,6 +351,7 @@ export function SessionCard({
 
       {/* Session Details */}
       <div className='flex flex-grow flex-col justify-between p-5'>
+        {/* Top content */}
         <div className='space-y-2 md:space-y-3'>
           {/* Tags - Container Query: 2 tags on narrow (<240px), 3 tags on wider cards */}
           {tags.length > 0 && (
@@ -422,7 +423,7 @@ export function SessionCard({
             />
           )}
 
-          {/* Metadata */}
+          {/* Metadata - temporarily hidden
           {renderMetadata ? (
             renderMetadata()
           ) : (
@@ -444,36 +445,37 @@ export function SessionCard({
               </div>
             )
           )}
-
-          {/* Character Avatars */}
-          {(areCharactersLoading || characterAvatars.length > 0) && (
-            <div className='border-t border-zinc-800 pt-3'>
-              {areCharactersLoading ? (
-                <div className='flex -space-x-2'>
-                  <CharacterAvatarSkeleton />
-                  <CharacterAvatarSkeleton />
-                  <CharacterAvatarSkeleton />
-                </div>
-              ) : (
-                <div className='flex -space-x-2'>
-                  {characterAvatars.slice(0, 3).map((avatar, idx) => (
-                    <CharacterAvatarImage
-                      key={`${avatar.name}-${idx}`}
-                      name={avatar.name}
-                      avatarUrl={avatar.avatarUrl}
-                      loading={avatar.loading ?? 'lazy'}
-                    />
-                  ))}
-                  {characterAvatars.length > 3 && (
-                    <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-400'>
-                      +{characterAvatars.length - 3}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          */}
         </div>
+
+        {/* Character Avatars - fixed to bottom */}
+        {(areCharactersLoading || characterAvatars.length > 0) && (
+          <div className='border-t border-zinc-800 pt-3 mt-3'>
+            {areCharactersLoading ? (
+              <div className='flex -space-x-2'>
+                <CharacterAvatarSkeleton />
+                <CharacterAvatarSkeleton />
+                <CharacterAvatarSkeleton />
+              </div>
+            ) : (
+              <div className='flex -space-x-2'>
+                {characterAvatars.slice(0, 3).map((avatar, idx) => (
+                  <CharacterAvatarImage
+                    key={`${avatar.name}-${idx}`}
+                    name={avatar.name}
+                    avatarUrl={avatar.avatarUrl}
+                    loading={avatar.loading ?? 'lazy'}
+                  />
+                ))}
+                {characterAvatars.length > 3 && (
+                  <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-400'>
+                    +{characterAvatars.length - 3}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </BaseCard>
   );
