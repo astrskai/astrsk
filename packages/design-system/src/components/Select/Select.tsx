@@ -8,6 +8,8 @@ export interface SelectOption {
 }
 
 export interface SelectProps {
+  /** ID for the select trigger (for label association) */
+  id?: string;
   /** Options to display */
   options: SelectOption[];
   /** Current value */
@@ -48,6 +50,7 @@ export interface SelectProps {
 const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
   (
     {
+      id,
       options,
       value,
       onChange,
@@ -58,6 +61,10 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
     },
     ref
   ) => {
+    const instanceId = React.useId();
+    const listboxId = `select-listbox-${instanceId}`;
+    const optionIdPrefix = `select-option-${instanceId}`;
+
     const [isOpen, setIsOpen] = React.useState(false);
     const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -180,11 +187,12 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
         {/* Trigger Button */}
         <button
           ref={ref}
+          id={id}
           type='button'
           role='combobox'
           aria-expanded={isOpen}
           aria-haspopup='listbox'
-          aria-controls='select-listbox'
+          aria-controls={listboxId}
           disabled={disabled}
           onClick={() => !disabled && setIsOpen(!isOpen)}
           onKeyDown={handleKeyDown}
@@ -234,11 +242,11 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
         {isOpen && (
           <ul
             ref={listRef}
-            id='select-listbox'
+            id={listboxId}
             role='listbox'
             aria-activedescendant={
               highlightedIndex >= 0
-                ? `select-option-${highlightedIndex}`
+                ? `${optionIdPrefix}-${highlightedIndex}`
                 : undefined
             }
             className={cn(
@@ -257,7 +265,7 @@ const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
             {options.map((option, index) => (
               <li
                 key={option.value}
-                id={`select-option-${index}`}
+                id={`${optionIdPrefix}-${index}`}
                 role='option'
                 aria-selected={option.value === value}
                 aria-disabled={option.disabled}

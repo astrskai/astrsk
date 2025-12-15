@@ -243,6 +243,7 @@ export const WithLabels: Story = {
             Country
           </label>
           <Select
+            id="country"
             options={countryOptions}
             placeholder="Select your country"
             value={country}
@@ -257,6 +258,7 @@ export const WithLabels: Story = {
             Preference
           </label>
           <Select
+            id="preference"
             options={sampleOptions}
             placeholder="Select preference"
             value={preference}

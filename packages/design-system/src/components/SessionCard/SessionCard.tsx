@@ -207,14 +207,13 @@ function CharacterAvatarSkeleton() {
  * SessionCard Component
  *
  * A card component for displaying session information including
- * cover image, title, message count, and character avatars.
+ * cover image, title, and character avatars.
  *
  * @example
  * ```tsx
  * <SessionCard
  *   title="Adventure in Wonderland"
  *   imageUrl="/sessions/cover.png"
- *   messageCount={42}
  *   characterAvatars={[
  *     { name: "Alice", avatarUrl: "/avatars/alice.png" },
  *     { name: "Bob", avatarUrl: "/avatars/bob.png" },
