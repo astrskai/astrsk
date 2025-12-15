@@ -9,18 +9,18 @@
    Also register in @theme for Tailwind utilities
    ----------------------------------------------- */
 :root {
-  /* Neutral Scale (cool-toned, pairs with blue brand) */
-  --color-neutral-950: #0a0a0c;
-  --color-neutral-900: #141416;
-  --color-neutral-800: #232328;
-  --color-neutral-700: #3a3a42;
-  --color-neutral-600: #4e4e58;
-  --color-neutral-500: #6b6b76;
-  --color-neutral-400: #9898a4;
-  --color-neutral-300: #c8c8d0;
-  --color-neutral-200: #e2e2e8;
-  --color-neutral-100: #f0f0f4;
-  --color-neutral-50: #f8f8fa;
+  /* Neutral Scale (aligned with Tailwind zinc for consistency) */
+  --color-neutral-950: #09090b;
+  --color-neutral-900: #18181b;
+  --color-neutral-800: #27272a;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-600: #52525b;
+  --color-neutral-500: #71717a;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-50: #fafafa;
   --color-white: #ffffff;
 
   /* Brand - Muted Blue */

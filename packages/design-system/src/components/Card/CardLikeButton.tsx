@@ -2,11 +2,11 @@ import * as React from 'react';
 import { cn } from '../../lib/utils';
 
 export interface LikeButtonProps {
-  /** 현재 좋아요 상태 */
+  /** Current like state */
   isLiked: boolean;
-  /** 클릭 핸들러 */
+  /** Click handler */
   onClick: (e: React.MouseEvent) => void;
-  /** 로딩 상태 */
+  /** Loading state */
   isLoading?: boolean;
 }
 

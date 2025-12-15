@@ -212,7 +212,6 @@ const CharacterCardContent = ({
       imageUrl={iconUrl ?? null}
       summary={card?.props?.description || ""}
       tags={card?.props?.tags || []}
-      maxVisibleTags={2}
       tokenCount={card?.props?.tokenCount ?? 0}
       className="!h-[320px] !min-h-[320px] w-full"
       onClick={handleCardClick}

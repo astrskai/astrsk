@@ -27,16 +27,16 @@ export function BaseCard({
   return (
     <article
       className={cn(
-        // Base structure
-        'group relative flex h-full flex-col overflow-hidden',
+        // Base structure - @container enables container queries for responsive children
+        '@container group relative flex h-full flex-col overflow-hidden',
         // Visual styling
-        'rounded-xl border border-zinc-800 bg-zinc-900 shadow-lg',
+        'rounded-xl border border-border-default bg-surface-raised shadow-lg',
         // Transitions
         'transition-all duration-300',
         // Interactive states
         !isDisabled &&
           onClick &&
-          'cursor-pointer hover:border-zinc-600 hover:shadow-xl',
+          'cursor-pointer hover:border-border-subtle hover:shadow-xl',
         // Disabled state
         isDisabled && 'pointer-events-none opacity-60',
         className

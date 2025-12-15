@@ -276,7 +276,7 @@ export function SessionCard({
   return (
     <BaseCard
       className={cn(
-        'min-h-[320px] w-full border-zinc-800 ring-1 ring-zinc-800/50',
+        'min-h-[320px] w-full bg-zinc-900 border-zinc-800 ring-1 ring-zinc-800/50 hover:border-zinc-600',
         !isDisabled && onClick && 'hover:ring-zinc-700',
         className
       )}

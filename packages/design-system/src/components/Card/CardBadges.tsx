@@ -27,7 +27,7 @@ interface CardBadgesProps {
 }
 
 const badgeVariantStyles: Record<CardBadgeVariant, string> = {
-  default: 'border-white/10 bg-black/50 text-white',
+  default: 'border-white/10 bg-black/60 text-white',
   private: 'border-amber-500/30 bg-amber-950/50 text-amber-300',
   owner: 'border-blue-500/30 bg-blue-950/50 text-blue-300',
 };
