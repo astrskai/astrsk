@@ -176,6 +176,12 @@ export async function signInWithOAuth(
 ) {
   const supabase = getSupabaseAuthClient();
 
+  // Store current path for redirect after OAuth
+  const currentPath = window.location.pathname;
+  if (currentPath && currentPath !== "/sign-in") {
+    localStorage.setItem("authRedirectPath", currentPath);
+  }
+
   // Build callback URL
   const callbackUrl = `${window.location.origin}/auth/callback`;
 

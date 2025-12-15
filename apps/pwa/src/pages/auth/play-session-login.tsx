@@ -66,7 +66,8 @@ export function PlaySessionLoginPage() {
         switch (action) {
           case "signed_in":
             toastSuccess("Welcome back!");
-            // Stay on the same page - user will be redirected by route logic
+            // Reload the page to trigger auth state change and continue to session
+            window.location.reload();
             break;
 
           case "signed_up":
@@ -162,12 +163,13 @@ export function PlaySessionLoginPage() {
           onClick={() => handleOAuthSignIn("discord")}
           disabled={isLoading}
         />
-        <SocialButton
+        {/* Apple login temporarily hidden */}
+        {/* <SocialButton
           icon={IconApple}
           label="Apple"
           onClick={() => handleOAuthSignIn("apple")}
           disabled={isLoading}
-        />
+        /> */}
       </div>
 
       {/* Divider */}

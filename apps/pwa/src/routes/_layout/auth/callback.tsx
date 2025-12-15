@@ -53,7 +53,15 @@ function AuthCallback() {
 
         if (session) {
           logger.debug("OAuth login successful");
-          navigate({ to: "/" });
+
+          // Check if there's a stored redirect path (e.g., from play session login)
+          const redirectPath = localStorage.getItem("authRedirectPath");
+          if (redirectPath) {
+            localStorage.removeItem("authRedirectPath");
+            window.location.href = redirectPath; // Use window.location for full page reload
+          } else {
+            navigate({ to: "/" });
+          }
         } else {
           logger.warn("No session after OAuth callback");
           navigate({ to: "/sign-in" });

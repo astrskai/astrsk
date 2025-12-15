@@ -65,7 +65,15 @@ export function SignInPage() {
       switch (action) {
         case "signed_in":
           toastSuccess("Welcome back!");
-          navigate({ to: "/" });
+
+          // Check if there's a stored redirect path (e.g., from play session login)
+          const redirectPath = localStorage.getItem("authRedirectPath");
+          if (redirectPath) {
+            localStorage.removeItem("authRedirectPath");
+            window.location.href = redirectPath; // Use window.location for full page reload
+          } else {
+            navigate({ to: "/" });
+          }
           break;
 
         case "signed_up":
@@ -151,12 +159,13 @@ export function SignInPage() {
           onClick={() => handleOAuthSignIn("discord")}
           disabled={isLoading}
         />
-        <SocialButton
+        {/* Apple login temporarily hidden */}
+        {/* <SocialButton
           icon={IconApple}
           label="Apple"
           onClick={() => handleOAuthSignIn("apple")}
           disabled={isLoading}
-        />
+        /> */}
       </div>
 
       {/* Divider */}
