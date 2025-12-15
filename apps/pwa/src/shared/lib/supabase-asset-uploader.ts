@@ -2,6 +2,7 @@ import { file } from "opfs-tools";
 import { supabaseClient, ASSETS_BUCKET } from "./supabase-client";
 import { Asset } from "@/entities/asset/domain/asset";
 import { Result } from "@/shared/core";
+import { maybeConvertToWebp } from "./webp-converter";
 
 export interface SupabaseAssetRecord {
   id: string;
@@ -48,21 +49,26 @@ export async function uploadAssetToSupabase(
       storagePath = asset.props.filePath;
     } else {
       // For local assets, upload file to Supabase Storage
-      const assetFile = await file(asset.props.filePath).getOriginFile();
+      let assetFile = await file(asset.props.filePath).getOriginFile();
       if (!assetFile) {
         return Result.fail("Asset file not found");
       }
 
+      // Convert PNG to WebP for cloud storage optimization
+      // This reduces storage costs and improves download performance
+      assetFile = await maybeConvertToWebp(assetFile);
+
       // Generate storage path: {asset_id}.{extension}
       // Use only asset ID to avoid issues with non-ASCII characters in filenames
-      const extension = asset.props.name.split('.').pop() || 'bin';
+      // Note: Extension may change from .png to .webp after conversion
+      const extension = assetFile.name.split('.').pop() || 'bin';
       storagePath = `${asset.id.toString()}.${extension}`;
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabaseClient.storage
         .from(ASSETS_BUCKET)
         .upload(storagePath, assetFile, {
-          contentType: asset.props.mimeType,
+          contentType: assetFile.type, // Use converted file's MIME type
           upsert: true, // Overwrite if exists to avoid conflicts
         });
 
@@ -70,7 +76,7 @@ export async function uploadAssetToSupabase(
         console.error(`Failed to upload asset ${asset.id.toString()}:`, {
           error: uploadError,
           path: storagePath,
-          mimeType: asset.props.mimeType,
+          mimeType: assetFile.type,
         });
         return Result.fail(
           `Failed to upload asset to storage: ${uploadError.message}`,
