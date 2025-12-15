@@ -43,7 +43,7 @@ export function SessionListItem({ session, isActive }: SessionListItemProps) {
       {/* Session Name */}
       <div className="flex items-start justify-between gap-2">
         <h4 className="truncate text-sm font-semibold">
-          {session.props.title || "Untitled Session"}
+          {session.props.name || "Untitled Session"}
         </h4>
         {/* TEMPORARILY DISABLED: Validation error icon
         {isInvalid && (

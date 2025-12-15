@@ -10,6 +10,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CardService } from "@/app/services/card-service";
 import { cardKeys } from "./query-factory";
 import { UniqueEntityID } from "@/shared/domain";
+import { TableName } from "@/db/schema/table-name";
+import { useSessionStore } from "@/shared/stores/session-store";
 
 /**
  * Hook for updating card title with edit mode support
@@ -1551,6 +1553,11 @@ export const useUpdateCardImagePrompt = (cardId: string) => {
 
 /**
  * Hook for importing a character from cloud storage by ID
+ *
+ * This hook imports a character and automatically creates a play session
+ * following the same pattern as the character detail page's Chat button.
+ *
+ * Returns: { characterId, sessionId } for navigation purposes
  */
 export const useImportCharacterFromCloud = () => {
   const queryClient = useQueryClient();
@@ -1559,26 +1566,186 @@ export const useImportCharacterFromCloud = () => {
     mutationKey: ["card", "importCharacterFromCloud"],
     mutationFn: async ({
       characterId,
-      sessionId,
     }: {
       characterId: string;
-      sessionId?: UniqueEntityID;
     }) => {
+      // Step 1: Import character from cloud (as global card, no sessionId)
       const result = await CardService.importCharacterFromCloud.execute({
         characterId,
-        sessionId,
+        sessionId: undefined, // Import as global card
       });
 
       if (result.isFailure) {
         throw new Error(result.getError());
       }
 
-      return result.getValue();
+      const importedCharacter = result.getValue();
+
+      // Step 2: Create play session with imported character
+      // (Same logic as character detail page's Chat button)
+      const { Session } = await import("@/entities/session/domain");
+      const { defaultChatStyles } = await import("@/entities/session/domain/chat-styles");
+      const { AutoReply } = await import("@/shared/stores/session-store");
+      const { SessionService } = await import("@/app/services/session-service");
+      const { FlowService } = await import("@/app/services/flow-service");
+      const { CardType, ScenarioCard } = await import("@/entities/card/domain");
+      const { logger } = await import("@/shared/lib");
+
+      const DEFAULT_FLOW_FILE = "Simple_complete.json";
+      const sessionName = importedCharacter.props.name || "Chat Session";
+
+      // Create empty session first (for foreign key constraints)
+      const sessionOrError = Session.create({
+        title: sessionName,
+        flowId: undefined,
+        allCards: [],
+        userCharacterCardId: undefined,
+        turnIds: [],
+        autoReply: AutoReply.Random,
+        chatStyles: defaultChatStyles,
+        isPlaySession: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      if (sessionOrError.isFailure) {
+        throw new Error(`Failed to create session: ${sessionOrError.getError()}`);
+      }
+
+      const session = sessionOrError.getValue();
+      const sessionId = session.id;
+
+      // Save empty session first
+      const initialSaveResult = await SessionService.saveSession.execute({
+        session,
+      });
+
+      if (initialSaveResult.isFailure) {
+        throw new Error(`Failed to save session: ${initialSaveResult.getError()}`);
+      }
+
+      // Import default flow from Simple.json
+      const response = await fetch(`/default/flow/${DEFAULT_FLOW_FILE}`);
+      if (!response.ok) {
+        throw new Error(`Failed to load default flow: ${DEFAULT_FLOW_FILE}`);
+      }
+      const flowJson = await response.json();
+
+      const importResult = await FlowService.importFlowWithNodes.importFromJson(
+        flowJson,
+        sessionId,
+      );
+
+      if (importResult.isFailure) {
+        throw new Error(`Failed to import flow: ${importResult.getError()}`);
+      }
+
+      const clonedFlow = importResult.getValue();
+
+      // Clone the imported character card with sessionId (AI character)
+      const clonedCardResult = await CardService.cloneCard.execute({
+        cardId: importedCharacter.id,
+        sessionId: sessionId,
+      });
+
+      if (clonedCardResult.isFailure) {
+        throw new Error(`Failed to clone character for session: ${clonedCardResult.getError()}`);
+      }
+
+      const clonedCard = clonedCardResult.getValue();
+
+      const allCards: {
+        id: UniqueEntityID;
+        type: "character" | "scenario";
+        enabled: boolean;
+      }[] = [
+        {
+          id: clonedCard.id,
+          type: CardType.Character,
+          enabled: true,
+        },
+      ];
+
+      // Create scenario card from character's 1:1 config if exists
+      const hasScenario = importedCharacter.props.scenario;
+      const hasFirstMessages =
+        importedCharacter.props.firstMessages &&
+        importedCharacter.props.firstMessages.length > 0;
+
+      if (hasScenario || hasFirstMessages) {
+        const scenarioCardResult = ScenarioCard.create({
+          title: `${importedCharacter.props.name} - Scenario`,
+          name: `${importedCharacter.props.name} - Scenario`,
+          type: CardType.Scenario,
+          tags: [],
+          description: importedCharacter.props.scenario || "",
+          firstMessages: importedCharacter.props.firstMessages || [],
+          sessionId: sessionId,
+        });
+
+        if (scenarioCardResult.isSuccess) {
+          const scenarioCard = scenarioCardResult.getValue();
+          const saveScenarioResult = await CardService.saveCard.execute(scenarioCard);
+
+          if (saveScenarioResult.isSuccess) {
+            const savedScenario = saveScenarioResult.getValue();
+            allCards.push({
+              id: savedScenario.id,
+              type: CardType.Scenario,
+              enabled: true,
+            });
+          } else {
+            logger.warn(
+              "Failed to save scenario card from character 1:1 config",
+              saveScenarioResult.getError(),
+            );
+          }
+        } else {
+          logger.warn(
+            "Failed to create scenario card from character 1:1 config",
+            scenarioCardResult.getError(),
+          );
+        }
+      }
+
+      // Update session with cloned resources
+      session.update({
+        flowId: clonedFlow.id,
+        allCards,
+        userCharacterCardId: undefined, // No persona for cloud imports
+      });
+
+      // Save the updated session
+      const savedSessionOrError = await SessionService.saveSession.execute({
+        session,
+      });
+
+      if (savedSessionOrError.isFailure) {
+        throw new Error(`Failed to save updated session: ${savedSessionOrError.getError()}`);
+      }
+
+      const savedSession = savedSessionOrError.getValue();
+
+      return {
+        characterId: importedCharacter.id.toString(),
+        sessionId: savedSession.id.toString(),
+        sessionTitle: savedSession.name,
+        characterTitle: importedCharacter.props.title,
+      };
     },
 
-    onSuccess: () => {
+    onSuccess: (result) => {
       // Invalidate card list queries to show the new imported card
       queryClient.invalidateQueries({ queryKey: cardKeys.lists() });
+
+      // Invalidate session queries to show the new session
+      queryClient.invalidateQueries({ queryKey: [TableName.Sessions] });
+
+      // Update session store
+      useSessionStore.getState().selectSession(
+        new UniqueEntityID(result.sessionId),
+        result.sessionTitle,
+      );
     },
   });
 };

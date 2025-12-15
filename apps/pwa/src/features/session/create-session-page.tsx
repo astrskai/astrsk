@@ -152,7 +152,7 @@ export default function CreateSessionPage({
     const savedSession = savedSessionOrError.getValue();
 
     // Select saved session
-    selectSession(savedSession.id, savedSession.title);
+    selectSession(savedSession.id, savedSession.name);
 
     // Invalidate sessions
     queryClient.invalidateQueries({

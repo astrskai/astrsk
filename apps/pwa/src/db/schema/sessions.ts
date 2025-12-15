@@ -10,10 +10,10 @@ import { CardListItemJson } from "@/entities/session/mappers/session-drizzle-map
 
 export const sessions = pgTable(TableName.Sessions, {
   id: uuid().primaryKey(),
-  title: varchar().notNull(),
+  title: varchar().notNull(), // TODO: Deprecated - use 'name' instead
 
   // Metadata fields (similar to flows and characters)
-  name: varchar(),
+  name: varchar().notNull(),
   tags: text().array().notNull().default(sql`'{}'`),
   summary: text(),
 

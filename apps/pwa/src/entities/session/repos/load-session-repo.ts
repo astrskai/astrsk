@@ -11,7 +11,7 @@ import { SortOptionValue } from "@/shared/config/sort-options";
  */
 export type SessionListItem = {
   id: string;
-  title: string;
+  name: string;
   messageCount: number;
   updatedAt: Date;
 };
@@ -64,7 +64,7 @@ export interface LoadSessionRepo {
 
   /**
    * Get lightweight session list items for sidebar
-   * Only fetches id, title, message count, and updatedAt
+   * Only fetches id, name, message count, and updatedAt
    */
   getSessionListItems(
     query: { isPlaySession?: boolean; pageSize?: number },

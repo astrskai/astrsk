@@ -29,6 +29,7 @@ import {
   ListSession,
   SaveSession,
 } from "@/entities/session/usecases";
+import { CloneTemplateSession } from "@/entities/session/usecases/clone-template-session";
 import { ExportSessionToFile } from "@/entities/session/usecases/export-session-to-file";
 import { ExportSessionToCloud } from "@/entities/session/usecases/export-session-to-cloud";
 import { ImportSessionFromCloud } from "@/entities/session/usecases/import-session-from-cloud";
@@ -44,6 +45,7 @@ import { PrepareAgentsCloudData } from "@/entities/agent/usecases/prepare-agents
 import { PrepareDataStoreNodesCloudData } from "@/entities/data-store-node/usecases/prepare-data-store-nodes-cloud-data";
 import { PrepareIfNodesCloudData } from "@/entities/if-node/usecases/prepare-if-nodes-cloud-data";
 import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
+import { SaveAssetRepo } from "@/entities/asset/repos/save-asset-repo";
 import { LoadBackgroundRepo } from "@/entities/background/repos/load-background-repo";
 import { LoadCardRepo, SaveCardRepo } from "@/entities/card/repos";
 import { LoadFlowRepo, SaveFlowRepo } from "@/entities/flow/repos";
@@ -60,6 +62,7 @@ export class SessionService {
   public static addMessage: AddMessage;
   public static bulkDeleteMessage: BulkDeleteMessage;
   public static clonePlaySession: ClonePlaySession;
+  public static cloneTemplateSession: CloneTemplateSession;
   public static cloneSession: CloneSession;
   public static deleteMessage: DeleteMessage;
   public static deleteSession: DeleteSession;
@@ -95,6 +98,7 @@ export class SessionService {
     cloneAsset: CloneAsset,
     cloneBackground: CloneBackground,
     loadAssetRepo: LoadAssetRepo,
+    saveAssetRepo: SaveAssetRepo,
     loadBackgroundRepo: LoadBackgroundRepo,
     loadCardRepo: LoadCardRepo,
     loadFlowRepo: LoadFlowRepo,
@@ -130,6 +134,10 @@ export class SessionService {
       cloneBackground,
     );
     this.clonePlaySession = new ClonePlaySession(
+      this.cloneSession,
+      this.sessionRepo,
+    );
+    this.cloneTemplateSession = new CloneTemplateSession(
       this.cloneSession,
       this.sessionRepo,
     );
@@ -197,7 +205,9 @@ export class SessionService {
       this.cloneSession,
       this.deleteSession,
       prepareSessionData,
+      this.sessionRepo,
       loadAssetRepo,
+      saveAssetRepo,
     );
 
     this.importSessionFromFile = new ImportSessionFromFile(

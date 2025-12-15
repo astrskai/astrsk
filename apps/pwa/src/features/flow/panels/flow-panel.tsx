@@ -1749,7 +1749,7 @@ function FlowPanelInner({ flowId }: FlowPanelProps) {
                           key={session.id.toString()}
                           value={session.id.toString()}
                         >
-                          {session.props.title ||
+                          {session.props.name ||
                             `Session ${session.id.toString().slice(0, 8)}`}
                         </SelectItem>
                       ))

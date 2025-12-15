@@ -39,7 +39,7 @@ describe("Session", () => {
       session.setName(name);
 
       // Then
-      expect(session.props.title).toBe(name);
+      expect(session.props.name).toBe(name);
     });
   });
 

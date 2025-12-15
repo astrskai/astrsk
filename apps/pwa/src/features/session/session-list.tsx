@@ -485,7 +485,7 @@ const SessionListItemMobile = ({
     if (isSelectionMode) {
       onToggleSelection?.();
     } else {
-      selectSession(sessionId, session.title);
+      selectSession(sessionId, session.name);
     }
   };
 
@@ -527,7 +527,7 @@ const SessionListItemMobile = ({
               </div>
             )}
             <div className="text-text-primary justify-start text-base leading-relaxed font-semibold">
-              {session.props.title}
+              {session.props.name}
             </div>
             <div className="text-neutral-300 justify-start text-xs font-medium">
               {lastMessage

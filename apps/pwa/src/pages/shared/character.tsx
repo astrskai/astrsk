@@ -46,15 +46,18 @@ export default function SharedCharacterPage() {
 
     const importCharacter = async () => {
       try {
-        const character = await importCharacterMutation.mutateAsync({
+        const result = await importCharacterMutation.mutateAsync({
           characterId: uuid,
         });
 
-        toastSuccess(`Character "${character.props.title}" imported successfully`);
+        toastSuccess("Session created!", {
+          description: `Started a chat with ${result.characterTitle}`,
+        });
 
-        // Navigate to character detail page
+        // Navigate to session chat page
         navigate({
-          to: "/assets/characters",
+          to: "/sessions/$sessionId",
+          params: { sessionId: result.sessionId },
           replace: true,
         });
       } catch (error) {
@@ -75,10 +78,13 @@ export default function SharedCharacterPage() {
     importCharacterMutation.mutate(
       { characterId: uuid },
       {
-        onSuccess: (character) => {
-          toastSuccess(`Character "${character.props.title}" imported successfully`);
+        onSuccess: (result) => {
+          toastSuccess("Session created!", {
+            description: `Started a chat with ${result.characterTitle}`,
+          });
           navigate({
-            to: "/assets/characters",
+            to: "/sessions/$sessionId",
+            params: { sessionId: result.sessionId },
             replace: true,
           });
         },

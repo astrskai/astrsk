@@ -129,7 +129,7 @@ export interface AgentCloudData {
   model_id: string | null;
   model_name: string | null;
   model_tier: string;
-  use_default_model?: boolean; // true = use tier-based default, false = use specific model
+  // Note: use_default_model is NOT included - it's a local-only field, not stored in Supabase
   prompt_messages: string;
   text_prompt: string;
   enabled_parameters: any;

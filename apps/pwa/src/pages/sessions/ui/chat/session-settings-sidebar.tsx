@@ -27,7 +27,7 @@ import {
   fetchSession,
   useSaveSession,
   useDeleteSession,
-  useCloneSession,
+  useCloneTemplateSession,
 } from "@/entities/session/api";
 import PersonaItem from "./settings/persona-item";
 import StorySettingItem from "./settings/story-setting-item";
@@ -139,14 +139,14 @@ const SessionSettingsSidebar = ({
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
   const saveSessionMutation = useSaveSession();
   const deleteSessionMutation = useDeleteSession();
-  const cloneSessionMutation = useCloneSession();
+  const cloneTemplateSessionMutation = useCloneTemplateSession();
   const skipScenarioDialog = useSessionUIStore.use.skipScenarioDialog();
   const [isBackgroundDialogOpen, setIsBackgroundDialogOpen] =
     useState<boolean>(false);
   const [isBackgroundPopoverOpen, setIsBackgroundPopoverOpen] =
     useState<boolean>(false);
   const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
-  const [editedTitle, setEditedTitle] = useState<string>(session.title ?? "");
+  const [editedName, setEditedName] = useState<string>(session.name ?? "");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [isAiCharacterDialogOpen, setIsAiCharacterDialogOpen] =
     useState<boolean>(false);
@@ -325,8 +325,8 @@ const SessionSettingsSidebar = ({
   );
 
   const handleSaveTitle = useCallback(async () => {
-    if (!editedTitle.trim()) {
-      toastError("Title cannot be empty");
+    if (!editedName.trim()) {
+      toastError("Name cannot be empty");
       return;
     }
 
@@ -334,8 +334,8 @@ const SessionSettingsSidebar = ({
       // Fetch latest session data
       const latestSession = await fetchSession(session.id);
 
-      // Update title
-      latestSession.update({ title: editedTitle.trim() });
+      // Update name
+      latestSession.update({ name: editedName.trim() });
 
       // Save to backend
       await saveSessionMutation.mutateAsync({ session: latestSession });
@@ -344,16 +344,16 @@ const SessionSettingsSidebar = ({
       setIsEditingTitle(false);
 
       // Show success message
-      toastSuccess("Title updated successfully");
+      toastSuccess("Session name updated");
     } catch (error) {
-      toastError("Failed to update title", {
+      toastError("Failed to update session name", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [editedTitle, session.id, saveSessionMutation]);
+  }, [editedName, session.id, saveSessionMutation]);
 
   const handleCancelEditTitle = useCallback(() => {
-    setEditedTitle("");
+    setEditedName("");
     setIsEditingTitle(false);
   }, []);
 
@@ -377,13 +377,13 @@ const SessionSettingsSidebar = ({
 
   const handleSaveAsPreset = useCallback(async () => {
     try {
-      const clonedSession = await cloneSessionMutation.mutateAsync({
+      // Clone as template session (isPlaySession: false, original title, no history)
+      const clonedSession = await cloneTemplateSessionMutation.mutateAsync({
         sessionId: session.id,
         includeHistory: false,
       });
 
-      // Update the cloned session to set is_play_session to false
-      clonedSession.update({ isPlaySession: false });
+      // Save the template session (title and isPlaySession already set by CloneTemplateSession)
       await saveSessionMutation.mutateAsync({ session: clonedSession });
 
       // Skip the first message dialog for the new session (user already saw it)
@@ -391,17 +391,14 @@ const SessionSettingsSidebar = ({
 
       toastSuccess("Saved as preset successfully");
 
-      // Navigate to the cloned session
-      navigate({
-        to: "/sessions/$sessionId",
-        params: { sessionId: clonedSession.id.toString() },
-      });
+      // Navigate to session grid to see the newly created preset
+      navigate({ to: "/sessions" });
     } catch (error) {
       toastError("Failed to save as asset", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [session.id, cloneSessionMutation, saveSessionMutation, skipScenarioDialog, navigate]);
+  }, [session.id, cloneTemplateSessionMutation, saveSessionMutation, skipScenarioDialog, navigate]);
 
   const coverImageInputId = useId();
 
@@ -494,8 +491,8 @@ const SessionSettingsSidebar = ({
           <div className="flex flex-1 items-center gap-2">
             <input
               type="text"
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleSaveTitle();
@@ -505,7 +502,7 @@ const SessionSettingsSidebar = ({
               }}
               className="flex-1 rounded-md border border-fg-disabled bg-surface-raised px-2 py-1 text-sm text-fg-default focus:border-brand-500 focus:outline-none"
               autoFocus
-              placeholder="Enter session title"
+              placeholder="Enter session name"
             />
             <button
               type="button"
@@ -526,14 +523,14 @@ const SessionSettingsSidebar = ({
           </div>
         ) : (
           <span className="flex flex-1 items-center gap-2 min-w-0 text-base font-semibold text-fg-default">
-            <span className="truncate">{session.title ?? "Untitled Session"}</span>
+            <span className="truncate">{session.name ?? "Untitled Session"}</span>
             <button
               type="button"
-              aria-label="Edit session title"
+              aria-label="Edit session name"
               className="cursor-pointer text-fg-subtle hover:text-fg-default flex-shrink-0"
               onClick={() => {
                 setIsEditingTitle(true);
-                setEditedTitle(session.title ?? "");
+                setEditedName(session.name ?? "");
               }}
             >
               <Pencil className="h-4 w-4" />

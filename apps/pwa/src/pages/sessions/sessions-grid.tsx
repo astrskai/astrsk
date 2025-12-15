@@ -82,28 +82,28 @@ function SessionGridItem({
     {
       icon: Upload,
       label: "Export",
-      onClick: onExportClick(sessionId, session.props.title, session.flowId, "file"),
+      onClick: onExportClick(sessionId, session.props.name, session.flowId, "file"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: IconHarpyLogo,
       label: "Harpy",
-      onClick: onExportClick(sessionId, session.props.title, session.flowId, "cloud"),
+      onClick: onExportClick(sessionId, session.props.name, session.flowId, "cloud"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
       label: "Copy",
-      onClick: onCopy(sessionId, session.props.title),
+      onClick: onCopy(sessionId, session.props.name),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
       label: "Delete",
-      onClick: onDeleteClick(sessionId, session.props.title),
+      onClick: onDeleteClick(sessionId, session.props.name),
       disabled: loading.deleting,
       loading: loading.deleting,
       className: "text-red-400 hover:text-red-300",
@@ -112,7 +112,7 @@ function SessionGridItem({
 
   return (
     <SessionCard
-      title={session.props.title || "Untitled Session"}
+      title={session.props.name || "Untitled Session"}
       imageUrl={coverImageUrl}
       messageCount={messageCount}
       isInvalid={isInvalid}

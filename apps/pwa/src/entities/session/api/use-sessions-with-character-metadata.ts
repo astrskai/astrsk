@@ -61,7 +61,7 @@ export interface SessionListFilters {
  *
  * sessions.map(({ session, characterAvatars }) => (
  *   <SessionCard
- *     title={session.title}
+ *     title={session.name}
  *     characterAvatars={characterAvatars}
  *   />
  * ))

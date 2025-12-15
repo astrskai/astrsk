@@ -18,6 +18,7 @@ export {
   useDeleteMessage,
   useDeleteSession,
   useCloneSession,
+  useCloneTemplateSession,
 } from "./mutations";
 
 // Custom query hooks

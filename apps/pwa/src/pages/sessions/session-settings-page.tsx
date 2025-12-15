@@ -51,7 +51,7 @@ export function SessionSettingsPage() {
       await saveSessionMutation.mutateAsync({ session: clonedSession });
 
       // Select and navigate to the cloned session
-      selectSession(clonedSession.id, clonedSession.props.title);
+      selectSession(clonedSession.id, clonedSession.props.name);
 
       // Open the left sidebar (session list) on desktop only
       // Mobile is determined by window width < 768px (Tailwind md breakpoint)

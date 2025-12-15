@@ -228,5 +228,14 @@
     "bps": true,
     "folderMillis": 1764861020716,
     "hash": "94253f6c596b4f83f21aa3ee273edfe19a4061683db24ac0278483a5f4fa18fb"
+  },
+  {
+    "sql": [
+      "-- Populate name from title for existing sessions\nUPDATE \"sessions\" SET \"name\" = \"title\" WHERE \"name\" IS NULL;",
+      "\nALTER TABLE \"sessions\" ALTER COLUMN \"name\" SET NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1765766835874,
+    "hash": "e29baf943a613afa608f38cc87ee95f7d742059d549d76abfa4b722f8c90da2e"
   }
 ]

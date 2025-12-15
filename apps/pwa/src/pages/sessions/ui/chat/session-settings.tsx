@@ -376,9 +376,9 @@ export const SessionSettings = ({
   // Background dialog state
   const [isBackgroundDialogOpen, setIsBackgroundDialogOpen] = useState(false);
 
-  // Session title edit state
+  // Session name edit state
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedTitle, setEditedTitle] = useState("");
+  const [editedName, setEditedName] = useState("");
   const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Cover image handlers
@@ -487,36 +487,36 @@ export const SessionSettings = ({
     [handleAddAICharacterToSession],
   );
 
-  // Session title edit handlers
+  // Session name edit handlers
   const handleStartEditTitle = useCallback(() => {
-    setEditedTitle(session?.title || "");
+    setEditedName(session?.name || "");
     setIsEditingTitle(true);
     // Focus input after state update
     setTimeout(() => titleInputRef.current?.focus(), 0);
-  }, [session?.title]);
+  }, [session?.name]);
 
   const handleSaveTitle = useCallback(async () => {
     if (!session) return;
 
-    const trimmedTitle = editedTitle.trim();
-    if (trimmedTitle && trimmedTitle !== session.title) {
+    const trimmedName = editedName.trim();
+    if (trimmedName && trimmedName !== session.name) {
       try {
         const latestSession = await fetchSession(session.id);
-        latestSession.update({ title: trimmedTitle });
+        latestSession.update({ name: trimmedName });
         await saveSessionMutation.mutateAsync({ session: latestSession });
-        toastSuccess("Session title updated");
+        toastSuccess("Session name updated");
       } catch (error) {
-        toastError("Failed to update session title", {
+        toastError("Failed to update session name", {
           description: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
     setIsEditingTitle(false);
-  }, [session, editedTitle, saveSessionMutation]);
+  }, [session, editedName, saveSessionMutation]);
 
   const handleCancelEditTitle = useCallback(() => {
     setIsEditingTitle(false);
-    setEditedTitle("");
+    setEditedName("");
   }, []);
 
   const handleTitleKeyDown = useCallback(
@@ -534,7 +534,7 @@ export const SessionSettings = ({
 
   return (
     <div className="mx-auto w-full max-w-[1400px] space-y-6 p-6 md:p-10">
-      {/* Header: Session Title + Start Button */}
+      {/* Header: Session Name + Start Button */}
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <button
@@ -547,17 +547,17 @@ export const SessionSettings = ({
           </button>
           <span className="text-fg-muted font-semibold">Session</span>
 
-          {/* Session Title - Inline Edit */}
+          {/* Session Name - Inline Edit */}
           {isEditingTitle ? (
             <div className="flex items-center gap-2">
               <input
                 ref={titleInputRef}
                 type="text"
-                value={editedTitle}
-                onChange={(e) => setEditedTitle(e.target.value)}
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
                 onKeyDown={handleTitleKeyDown}
                 className="text-fg-default bg-surface-overlay border-border-subtle focus:ring-accent-primary rounded border px-2 py-1 font-medium focus:ring-2 focus:outline-none"
-                placeholder="Session title"
+                placeholder="Session name"
               />
               <button
                 onClick={handleSaveTitle}
@@ -577,12 +577,12 @@ export const SessionSettings = ({
           ) : (
             <div className="group flex items-center gap-2">
               <span className="text-fg-default font-medium">
-                {session.title || "Untitled Session"}
+                {session.name || "Untitled Session"}
               </span>
               <button
                 onClick={handleStartEditTitle}
                 className="text-fg-muted hover:text-fg-default p-1 opacity-0 transition-all group-hover:opacity-100"
-                aria-label="Edit title"
+                aria-label="Edit name"
               >
                 <Pencil className="h-4 w-4" />
               </button>

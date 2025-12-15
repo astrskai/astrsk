@@ -221,7 +221,7 @@ const SessionSettings = ({
 
   // Title editing state
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedTitle, setEditedTitle] = useState("");
+  const [editedName, setEditedName] = useState("");
 
   // Update session with auto-save
   const updateSession = useCallback(
@@ -276,25 +276,25 @@ const SessionSettings = ({
 
   // Title editing handlers
   const handleSaveTitle = useCallback(async () => {
-    if (!session || editedTitle === session.title) {
+    if (!session || editedName === session.name) {
       setIsEditingTitle(false);
       return;
     }
 
     try {
       await updateSession({
-        title: editedTitle,
+        name: editedName,
       });
       setIsEditingTitle(false);
     } catch (error) {
-      console.error("Error saving session title:", error);
-      toastError("Failed to save session title");
+      console.error("Error saving session name:", error);
+      toastError("Failed to save session name");
     }
-  }, [session, editedTitle, updateSession]);
+  }, [session, editedName, updateSession]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditingTitle(false);
-    setEditedTitle("");
+    setEditedName("");
   }, []);
 
   // Validate session settings
@@ -391,8 +391,8 @@ const SessionSettings = ({
               )}>
                 <input
                   type="text"
-                  value={editedTitle}
-                  onChange={(e) => setEditedTitle(e.target.value)}
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleSaveTitle();
                     if (e.key === "Escape") handleCancelEdit();
@@ -439,11 +439,11 @@ const SessionSettings = ({
                   // Mobile: smaller text, full width
                   "max-md:flex-1 max-md:text-[14px] max-md:leading-[20px]",
                 )}>
-                  {session.title}
+                  {session.name}
                 </div>
                 <button
                   onClick={() => {
-                    setEditedTitle(session.title || "");
+                    setEditedName(session.name || "");
                     setIsEditingTitle(true);
                   }}
                   className="hover:bg-hover flex-shrink-0 rounded p-1 transition-colors"

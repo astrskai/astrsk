@@ -230,8 +230,8 @@ export const useEnhancedGenerationPrompt = ({
       prompt += "=== Session Context ===\n";
 
       // Session title/setting
-      if (session.props.title) {
-        prompt += `Title/Setting: ${session.props.title}\n`;
+      if (session.props.name) {
+        prompt += `Title/Setting: ${session.props.name}\n`;
       }
 
       prompt += "\n";
