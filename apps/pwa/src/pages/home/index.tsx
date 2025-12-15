@@ -2,12 +2,12 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Plus } from "lucide-react";
+import { CharacterCard } from "@astrsk/design-system";
 import { useSessionsWithCharacterMetadata } from "@/entities/session/api";
 import { characterQueries } from "@/entities/character/api";
 import { CharacterCard as CharacterCardDomain, GENRE_SUGGESTIONS } from "@/entities/card/domain";
 import { Session } from "@/entities/session/domain";
 import SessionCard from "@/features/session/ui/session-card";
-import CharacterCard from "@/features/character/ui/character-card";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useTypewriterPlaceholder } from "@/shared/hooks/use-typewriter-placeholder";
 import { Button } from "@/shared/ui/button";
@@ -148,9 +148,10 @@ export function HomePage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const itemLimit = isMobile ? 2 : 3;
-  const sessionsWithMeta = allSessionsWithMeta.slice(0, itemLimit);
-  const characters = allCharacters.slice(0, itemLimit);
+  const sessionLimit = isMobile ? 2 : 3;
+  const characterLimit = isMobile ? 2 : 4;
+  const sessionsWithMeta = allSessionsWithMeta.slice(0, sessionLimit);
+  const characters = allCharacters.slice(0, characterLimit);
 
   const handleAddTag = (label: string) => {
     setPrompt((prev) => {
@@ -270,7 +271,7 @@ export function HomePage() {
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {characters.map((character) => (
                 <CharacterCardWrapper key={character.id.toString()} character={character} />
               ))}
