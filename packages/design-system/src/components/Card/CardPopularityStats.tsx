@@ -1,9 +1,9 @@
 import { cn } from '../../lib/utils';
 
 export interface CardPopularityStatsProps {
-  /** 좋아요 카운트 */
+  /** Like count */
   likeCount?: number;
-  /** 다운로드 카운트 */
+  /** Download count */
   downloadCount?: number;
   /** Additional CSS classes */
   className?: string;
