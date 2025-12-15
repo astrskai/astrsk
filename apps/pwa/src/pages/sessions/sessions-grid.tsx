@@ -65,7 +65,6 @@ function SessionGridItem({
   onDeleteClick,
 }: SessionGridItemProps) {
   const sessionId = session.id.toString();
-  const messageCount = session.props.turnIds.length;
 
   // Get session background image
   const coverId = session.props.coverId;
@@ -117,7 +116,6 @@ function SessionGridItem({
           title={session.props.name || "Untitled Session"}
           imageUrl={coverImageUrl}
           placeholderImageUrl={SESSION_PLACEHOLDER_IMAGE}
-          messageCount={messageCount}
           isDisabled={true}
           actions={actions}
           className={cn("cursor-not-allowed", className)}
@@ -137,7 +135,6 @@ function SessionGridItem({
       title={session.props.name || "Untitled Session"}
       imageUrl={coverImageUrl}
       placeholderImageUrl={SESSION_PLACEHOLDER_IMAGE}
-      messageCount={messageCount}
       onClick={() => onSessionClick(sessionId)}
       actions={actions}
       className={className}
