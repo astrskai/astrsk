@@ -6,7 +6,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/shared/ui/forms/button";
 import { Input } from "@/shared/ui/forms";
 import { logger } from "@/shared/lib/logger";
-import { IconGoogle, IconDiscord, IconApple } from "@/shared/assets/icons";
+import { IconGoogle, IconDiscord } from "@/shared/assets/icons";
 import { AuthLayout, AuthBadge } from "./ui";
 import { PasswordInput } from "@/shared/ui/forms";
 import { useAuth } from "@/shared/hooks/use-auth";
@@ -63,7 +63,7 @@ export function SignInPage() {
       const { error, action } = await signInOrSignUp({ email, password });
 
       switch (action) {
-        case "signed_in":
+        case "signed_in": {
           toastSuccess("Welcome back!");
 
           // Check if there's a stored redirect path (e.g., from play session login)
@@ -75,6 +75,7 @@ export function SignInPage() {
             navigate({ to: "/" });
           }
           break;
+        }
 
         case "signed_up":
           toastSuccess("Account created!", {
