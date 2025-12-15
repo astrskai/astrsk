@@ -102,7 +102,8 @@ export async function initServices(
       CardService.cloneCard,
       AssetService.cloneAsset,
       BackgroundService.cloneBackground,
-      AssetService.assetRepo,
+      AssetService.assetRepo, // LoadAssetRepo
+      AssetService.assetRepo, // SaveAssetRepo
       BackgroundService.backgroundRepo,
       CardService.cardRepo,
       FlowService.flowRepo,

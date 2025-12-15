@@ -336,7 +336,7 @@ const CharacterDetailPage = () => {
         const savedSession = savedSessionOrError.getValue();
 
         // Update session store and invalidate queries
-        selectSession(savedSession.id, savedSession.title);
+        selectSession(savedSession.id, savedSession.name);
         queryClient.invalidateQueries({ queryKey: [TableName.Sessions] });
 
         toastSuccess("Session created!", {

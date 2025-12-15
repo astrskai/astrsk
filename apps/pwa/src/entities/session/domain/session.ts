@@ -34,8 +34,8 @@ export interface SessionConfig {
 
 export interface SessionProps {
   // Metadata
-  title: string;
-  name?: string;
+  title: string; // TODO: Deprecated - use 'name' instead
+  name: string;
   tags: string[];
   summary?: string;
 
@@ -109,6 +109,10 @@ export const SessionPropsKeys = [
 export class Session extends AggregateRoot<SessionProps> {
   get title(): string {
     return this.props.title;
+  }
+
+  get name(): string {
+    return this.props.name;
   }
 
   get allCards(): CardListItem[] {
@@ -194,7 +198,7 @@ export class Session extends AggregateRoot<SessionProps> {
   ): Result<Session> {
     const propsWithDefaults: SessionProps = {
       title: props.title || "New Session",
-      name: props.name,
+      name: props.name || props.title || "New Session",
       tags: props.tags || [],
       summary: props.summary,
       allCards: props.allCards || [],
@@ -225,10 +229,18 @@ export class Session extends AggregateRoot<SessionProps> {
 
   public update(props: Partial<SessionProps>): Result<void> {
     try {
-      Object.assign(this.props, {
+      // If name is being updated, sync title as well
+      const updatedProps = {
         ...props,
         updatedAt: new Date(),
-      });
+      };
+
+      // Keep title in sync with name
+      if (props.name !== undefined) {
+        updatedProps.title = props.name;
+      }
+
+      Object.assign(this.props, updatedProps);
       return Result.ok();
     } catch (error) {
       return Result.fail(`Failed to update session: ${error}`);
@@ -236,7 +248,8 @@ export class Session extends AggregateRoot<SessionProps> {
   }
 
   public setName(name: string): void {
-    this.props.title = name;
+    this.props.name = name;
+    this.props.title = name; // Keep in sync for now
   }
 
   public addCard(

@@ -52,10 +52,10 @@ export default function SharedSessionPage() {
           sessionId: uuid,
         });
 
-        toastSuccess(`Session "${session.title}" imported successfully`);
+        toastSuccess(`Session "${session.name}" imported successfully`);
 
         // Navigate to session settings page (template view)
-        selectSession(session.id, session.props.title);
+        selectSession(session.id, session.props.name);
         navigate({
           to: "/sessions/settings/$sessionId",
           params: { sessionId: session.id.toString() },
@@ -80,8 +80,8 @@ export default function SharedSessionPage() {
       { sessionId: uuid },
       {
         onSuccess: (session) => {
-          toastSuccess(`Session "${session.title}" imported successfully`);
-          selectSession(session.id, session.props.title);
+          toastSuccess(`Session "${session.name}" imported successfully`);
+          selectSession(session.id, session.props.name);
           navigate({
             to: "/sessions/settings/$sessionId",
             params: { sessionId: session.id.toString() },

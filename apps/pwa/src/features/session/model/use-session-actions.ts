@@ -102,15 +102,12 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
           const shareLink = shareResult.getValue();
 
-          // Copy URL to clipboard for safety
-          await navigator.clipboard.writeText(shareLink.shareUrl);
+          // Open the share URL in a new tab (HarpyChat)
+          window.open(shareLink.shareUrl, "_blank");
 
           toastSuccess("Successfully exported to cloud!", {
-            description: `Link copied to clipboard. Check popup blocker if page doesn't open. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
+            description: `Opening HarpyChat. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
           });
-
-          // Open the share URL in a new tab
-          window.open(shareLink.shareUrl, "_blank");
         } else {
           // Export session to file (JSON download)
           const fileOrError = await SessionService.exportSessionToFile.execute({

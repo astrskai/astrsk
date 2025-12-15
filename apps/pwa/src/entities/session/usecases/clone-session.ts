@@ -80,8 +80,8 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
     const clonedSession = SessionDrizzleMapper.toDomain({
       ...insertSession,
       id: newSessionId.toValue(),
-      title: `Copy of ${originalSession.props.title}`,
-      name: insertSession.name ?? null,
+      title: `Copy of ${originalSession.props.name}`,
+      name: `Copy of ${originalSession.props.name}`,
       tags: insertSession.tags || [],
       summary: insertSession.summary ?? null,
       all_cards: [], // Start with empty cards, will update after cloning

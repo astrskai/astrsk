@@ -71,7 +71,8 @@ export class AgentSupabaseMapper {
       modelId: modelOverride?.modelId ?? data.model_id,
       modelName: modelOverride?.modelName ?? data.model_name,
       modelTier: data.model_tier,
-      useDefaultModel: data.use_default_model ?? true,
+      // Note: use_default_model doesn't exist in cloud data - always default to true on import
+      useDefaultModel: true,
       promptMessages,
       textPrompt: data.text_prompt,
       enabledParameters: data.enabled_parameters,
@@ -122,7 +123,7 @@ export class AgentSupabaseMapper {
       model_id: props.modelId ?? null,
       model_name: props.modelName ?? null,
       model_tier: props.modelTier || "Light",
-      use_default_model: props.useDefaultModel,
+      // Note: use_default_model is NOT exported - it's a local-only field
       // Use standard JSON for cloud storage
       prompt_messages: JSON.stringify(props.promptMessages || []),
       text_prompt: props.textPrompt ?? "",

@@ -328,10 +328,12 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
 
       // 3. Create session FIRST (required for foreign key constraints on cards, flows, etc.)
       // We'll create a minimal session now and update it later with all references
+      // Handle backward compatibility: use 'name' if available, fallback to 'title'
+      const sessionName = sessionData.name || sessionData.title || "Imported Session";
       const initialSessionResult = Session.create(
         {
-          title: sessionData.title,
-          name: sessionData.name ?? undefined,
+          name: sessionName,
+          title: sessionName, // Keep in sync
           tags: sessionData.tags ?? [],
           summary: sessionData.summary ?? undefined,
           allCards: [], // Will be updated later
@@ -428,9 +430,25 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
       // 7. Import background
       let backgroundId: UniqueEntityID | undefined;
       if (sessionData.background_id) {
-        const bgAssetData = bundle.assets.find((a) => a.id === sessionData.background_id);
+        console.log(`[ImportSession] Importing background: ${sessionData.background_id}`);
+
+        // Try to find in bundle first
+        let bgAssetData = bundle.assets.find((a) => a.id === sessionData.background_id);
+
+        // If not in bundle, fetch directly from cloud
+        if (!bgAssetData) {
+          console.log(`[ImportSession] Background not in bundle, fetching from cloud...`);
+          const bgAssetResult = await fetchAssetFromCloud(sessionData.background_id);
+          if (bgAssetResult.isSuccess) {
+            bgAssetData = bgAssetResult.getValue();
+          } else {
+            console.warn(`[ImportSession] Failed to fetch background asset: ${bgAssetResult.getError()}`);
+          }
+        }
+
         if (bgAssetData) {
           const bgFullUrl = getStorageUrl(bgAssetData.file_path);
+          console.log(`[ImportSession] Downloading background from: ${bgFullUrl}`);
           const blobResult = await downloadAssetFromUrl(bgFullUrl);
           if (blobResult.isSuccess) {
             const file = new File([blobResult.getValue()], bgAssetData.name, {
@@ -442,8 +460,15 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
             });
             if (bgResult.isSuccess) {
               backgroundId = bgResult.getValue().id;
+              console.log(`[ImportSession] ✓ Background saved successfully: ${backgroundId.toString()}`);
+            } else {
+              console.warn(`[ImportSession] Failed to save background: ${bgResult.getError()}`);
             }
+          } else {
+            console.warn(`[ImportSession] Failed to download background: ${blobResult.getError()}`);
           }
+        } else {
+          console.warn(`[ImportSession] Background asset not found: ${sessionData.background_id}`);
         }
       }
 
@@ -459,8 +484,8 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
       // 10. Update session with all references (cards, flow, background, cover)
       const finalSessionResult = Session.create(
         {
-          title: sessionData.title,
-          name: sessionData.name ?? undefined,
+          name: sessionName, // Reuse the same name from initial session
+          title: sessionName, // Keep in sync
           tags: sessionData.tags ?? [],
           summary: sessionData.summary ?? undefined,
           allCards: (sessionData.all_cards as any[] ?? [])

@@ -62,9 +62,9 @@ export default function SessionDetailPage({
   // Sync store with URL params (for other components that depend on the store)
   useEffect(() => {
     if (sessionId) {
-      selectSession(new UniqueEntityID(sessionId), session?.title ?? "Session");
+      selectSession(new UniqueEntityID(sessionId), session?.name ?? "Session");
     }
-  }, [sessionId, selectSession, session?.title]);
+  }, [sessionId, selectSession, session?.name]);
 
   // Check session exists
   useEffect(() => {
@@ -139,7 +139,7 @@ export default function SessionDetailPage({
 
         {/* Center: Session title */}
         <h1 className="text-fg-default flex-1 truncate text-center text-base font-semibold">
-          {session?.title ?? "Session"}
+          {session?.name ?? "Session"}
         </h1>
 
         {/* Right: Settings/Close button */}

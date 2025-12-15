@@ -322,8 +322,11 @@ export class ImportSessionFromFile
       }
 
       // Create session FIRST (without flows/cards) so it exists in database
+      // Handle backward compatibility: use 'name' if available, fallback to 'title'
+      const sessionName = sessionProps.name || sessionProps.title || "Imported Session";
       const sessionOrError = Session.create({
-        title: sessionProps.title,
+        name: sessionName,
+        title: sessionName, // Keep in sync
         allCards: [], // Will be updated after importing cards
         userCharacterCardId: undefined, // Will be updated after importing cards
         turnIds: [],

@@ -46,7 +46,7 @@ function SessionCardWrapper({ session, characterAvatars, areCharactersLoading }:
 
   return (
     <SessionCard
-      title={session.props.title || "Untitled Session"}
+      title={session.props.name || "Untitled Session"}
       imageUrl={coverImageUrl}
       messageCount={messageCount}
       onClick={handleSessionClick}

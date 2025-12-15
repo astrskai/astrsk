@@ -24,7 +24,7 @@ import { flowQueries } from "@/entities/flow/api/flow-queries";
  */
 function updateSessionListItem(
   sessionId: string,
-  updates: Partial<Pick<SessionListItem, "title" | "messageCount" | "updatedAt">>,
+  updates: Partial<Pick<SessionListItem, "name" | "messageCount" | "updatedAt">>,
 ) {
   const listItemQueryKey = sessionQueries.listItem({ isPlaySession: true }).queryKey;
   queryClient.setQueryData<SessionListItem[]>(listItemQueryKey, (oldData) => {
@@ -32,7 +32,7 @@ function updateSessionListItem(
       // No existing data - create new array with this item
       return [{
         id: sessionId,
-        title: updates.title || "Untitled",
+        name: updates.name || "Untitled",
         messageCount: updates.messageCount || 0,
         updatedAt: updates.updatedAt || new Date(),
       }];
@@ -44,7 +44,7 @@ function updateSessionListItem(
       // Session doesn't exist - add as new item at the top
       const newItem: SessionListItem = {
         id: sessionId,
-        title: updates.title || "Untitled",
+        name: updates.name || "Untitled",
         messageCount: updates.messageCount || 0,
         updatedAt: updates.updatedAt || new Date(),
       };
@@ -100,11 +100,14 @@ export const useSaveSession = () => {
         SessionDrizzleMapper.toPersistence(variables.session),
       );
 
-      // Optimistic update - listItems (update title and move to top)
-      updateSessionListItem(variables.session.id.toString(), {
-        title: variables.session.props.title,
-        updatedAt: new Date(),
-      });
+      // Optimistic update - listItems (only for play sessions)
+      // Do NOT update listItems for non-play sessions (isPlaySession: false)
+      if (variables.session.props.isPlaySession) {
+        updateSessionListItem(variables.session.id.toString(), {
+          name: variables.session.props.name,
+          updatedAt: new Date(),
+        });
+      }
 
       return { previousSession, previousListItems };
     },
@@ -408,9 +411,16 @@ export const useCloneSession = () => {
         SessionDrizzleMapper.toPersistence(clonedSession),
       );
 
-      // Invalidate session list queries
+      // Cloned session always has is_play_session: false (Save as Asset)
+      // Only invalidate non-play session list queries (session grid)
+      // Do NOT invalidate play session queries (left sidebar)
       context.client.invalidateQueries({
-        queryKey: sessionQueries.lists(),
+        queryKey: sessionQueries.list({ isPlaySession: false }).queryKey,
+      });
+
+      // Also invalidate listItem queries for non-play sessions
+      context.client.invalidateQueries({
+        queryKey: sessionQueries.listItem({ isPlaySession: false }).queryKey,
       });
 
       // Invalidate card and flow lists (new resources were cloned)
@@ -424,6 +434,67 @@ export const useCloneSession = () => {
 
     onError: (error) => {
       logger.error("Failed to clone session", error);
+    },
+  });
+};
+
+/**
+ * Hook for cloning a play session as a template (Save as asset)
+ * Clones the session without history and sets is_play_session to false
+ * Keeps the "Copy of..." title
+ */
+export const useCloneTemplateSession = () => {
+  return useMutation({
+    mutationKey: ["session", "cloneTemplateSession"],
+    mutationFn: async ({
+      sessionId,
+      includeHistory = false,
+    }: {
+      sessionId: UniqueEntityID;
+      includeHistory?: boolean;
+    }) => {
+      const result = await SessionService.cloneTemplateSession.execute({
+        sessionId,
+        includeHistory,
+      });
+
+      if (result.isFailure) {
+        throw new Error(result.getError());
+      }
+
+      return result.getValue();
+    },
+
+    onSuccess: (clonedSession, _variables, _onMutateResult, context) => {
+      // Set the cloned session data in cache
+      context.client.setQueryData(
+        sessionQueries.detail(clonedSession.id).queryKey,
+        SessionDrizzleMapper.toPersistence(clonedSession),
+      );
+
+      // Cloned session has is_play_session: false (Save as Asset)
+      // Only invalidate non-play session list queries (session grid)
+      // Do NOT invalidate play session queries (left sidebar)
+      context.client.invalidateQueries({
+        queryKey: sessionQueries.list({ isPlaySession: false }).queryKey,
+      });
+
+      // Also invalidate listItem queries for non-play sessions
+      context.client.invalidateQueries({
+        queryKey: sessionQueries.listItem({ isPlaySession: false }).queryKey,
+      });
+
+      // Invalidate card and flow lists (new resources were cloned)
+      context.client.invalidateQueries({
+        queryKey: cardQueries.lists(),
+      });
+      context.client.invalidateQueries({
+        queryKey: flowQueries.lists(),
+      });
+    },
+
+    onError: (error) => {
+      logger.error("Failed to clone template session", error);
     },
   });
 };

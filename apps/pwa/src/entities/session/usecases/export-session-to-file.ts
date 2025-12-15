@@ -44,7 +44,8 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
 
     // Extract export session data
     const paths = [
-      "title",
+      "name",
+      "title", // Keep for backward compatibility with imports
       "all_cards",
       "user_character_card_id",
       "background_id",
@@ -269,7 +270,7 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
       }
 
       // Make zip file
-      const zipFile = await this.makeZipFile(zip, session.title);
+      const zipFile = await this.makeZipFile(zip, session.name);
 
       // Return zip file
       return Result.ok(zipFile);

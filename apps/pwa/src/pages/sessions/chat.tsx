@@ -222,7 +222,7 @@ export default function ChatPage() {
       )}
 
       <SessionHeader
-        title={session.title ?? "Session"}
+        title={session.name ?? "Session"}
         onSettingsClick={toggleSettingsPanel}
       />
 
