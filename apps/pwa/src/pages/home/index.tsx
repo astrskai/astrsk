@@ -5,7 +5,10 @@ import { ArrowRight, Plus } from "lucide-react";
 import { CharacterCard, SessionCard } from "@astrsk/design-system";
 import { useSessionsWithCharacterMetadata } from "@/entities/session/api";
 import { characterQueries } from "@/entities/character/api";
-import { CharacterCard as CharacterCardDomain, GENRE_SUGGESTIONS } from "@/entities/card/domain";
+import {
+  CharacterCard as CharacterCardDomain,
+  GENRE_SUGGESTIONS,
+} from "@/entities/card/domain";
 import { Session } from "@/entities/session/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { useCharacterAvatars } from "@/entities/character/hooks/use-character-avatars";
@@ -24,7 +27,11 @@ interface SessionCardWrapperProps {
   areCharactersLoading?: boolean;
 }
 
-function SessionCardWrapper({ session, characterAvatars, areCharactersLoading }: SessionCardWrapperProps) {
+function SessionCardWrapper({
+  session,
+  characterAvatars,
+  areCharactersLoading,
+}: SessionCardWrapperProps) {
   const navigate = useNavigate();
   const sessionId = session?.id?.toString() || "";
   const coverId = session?.props?.coverId;
@@ -53,6 +60,7 @@ function SessionCardWrapper({ session, characterAvatars, areCharactersLoading }:
       onClick={handleSessionClick}
       characterAvatars={resolvedAvatars}
       areCharactersLoading={areCharactersLoading}
+      tags={session.props.tags}
     />
   );
 }
@@ -125,16 +133,17 @@ export function HomePage() {
 
   // Fetch recent sessions with character metadata
   // Mobile: 2 items, Desktop: 3 items
-  const { sessions: allSessionsWithMeta, areCharactersLoading } = useSessionsWithCharacterMetadata({
-    keyword: "",
-    sort: "updatedAt",
-    isPlaySession: false,
-  });
+  const { sessions: allSessionsWithMeta, areCharactersLoading } =
+    useSessionsWithCharacterMetadata({
+      keyword: "",
+      sort: "updatedAt",
+      isPlaySession: false,
+    });
 
   // Fetch recent characters
   // Note: characterQueries.list already returns CharacterCard[] domain objects
   const { data: allCharacters = [] } = useQuery(
-    characterQueries.list({ keyword: "", sort: "updatedAt" })
+    characterQueries.list({ keyword: "", sort: "updatedAt" }),
   );
 
   // Responsive slicing: 2 items on mobile, 3 items on desktop
@@ -145,8 +154,8 @@ export function HomePage() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768); // md breakpoint
     };
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const sessionLimit = isMobile ? 2 : 3;
@@ -167,7 +176,7 @@ export function HomePage() {
     navigate({
       to: "/sessions/new",
       // @ts-expect-error - TanStack Router state typing
-      state: { initialPrompt: prompt.trim() }
+      state: { initialPrompt: prompt.trim() },
     });
   };
 
@@ -175,21 +184,20 @@ export function HomePage() {
     <div className="relative flex min-h-full flex-col items-center overflow-y-auto bg-black font-sans text-gray-100 selection:bg-blue-500/30">
       {/* Animated Background Blobs */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute left-[-10%] top-[-20%] h-[500px] w-[500px] animate-blob rounded-full bg-purple-600/30 mix-blend-screen blur-[100px] filter"></div>
-        <div className="animation-delay-2000 absolute right-[-20%] top-[-10%] h-[400px] w-[400px] animate-blob rounded-full bg-blue-600/30 mix-blend-screen blur-[100px] filter"></div>
-        <div className="animation-delay-4000 absolute bottom-[-20%] left-[20%] h-[600px] w-[600px] animate-blob rounded-full bg-pink-600/20 mix-blend-screen blur-[120px] filter"></div>
-        <div className="animation-delay-2000 absolute bottom-[10%] right-[10%] h-[300px] w-[300px] animate-blob rounded-full bg-cyan-600/20 mix-blend-screen blur-[80px] filter"></div>
+        <div className="animate-blob absolute top-[-20%] left-[-10%] h-[500px] w-[500px] rounded-full bg-purple-600/30 mix-blend-screen blur-[100px] filter"></div>
+        <div className="animation-delay-2000 animate-blob absolute top-[-10%] right-[-20%] h-[400px] w-[400px] rounded-full bg-blue-600/30 mix-blend-screen blur-[100px] filter"></div>
+        <div className="animation-delay-4000 animate-blob absolute bottom-[-20%] left-[20%] h-[600px] w-[600px] rounded-full bg-pink-600/20 mix-blend-screen blur-[120px] filter"></div>
+        <div className="animation-delay-2000 animate-blob absolute right-[10%] bottom-[10%] h-[300px] w-[300px] rounded-full bg-cyan-600/20 mix-blend-screen blur-[80px] filter"></div>
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
       </div>
-
 
       {/* Main Content Area */}
       <main className="relative z-10 flex w-full flex-1 flex-col">
         {/* Centered Hero Section */}
-        <div className="flex pt-20 min-h-[75vh] w-full flex-col items-center justify-center px-6 text-center">
+        <div className="flex min-h-[75vh] w-full flex-col items-center justify-center px-6 pt-20 text-center">
           <div className="flex flex-col items-center">
             {/* Headline */}
-            <h1 className="mb-16 text-5xl font-bold leading-[1.1] tracking-tight drop-shadow-2xl md:text-7xl">
+            <h1 className="mb-16 text-5xl leading-[1.1] font-bold tracking-tight drop-shadow-2xl md:text-7xl">
               Dream It. Play It.
               <br />
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
@@ -210,7 +218,11 @@ export function HomePage() {
                 <div className="mt-2 flex items-center justify-between px-4 pb-2">
                   <div className="flex gap-2">{/* Optional tool icons */}</div>
                   <div className="flex items-center gap-3">
-                    <Button onClick={handleCreateRoleplay} variant="accent" size="lg">
+                    <Button
+                      onClick={handleCreateRoleplay}
+                      variant="accent"
+                      size="lg"
+                    >
                       Create Roleplay
                       <ArrowRight size={16} />
                     </Button>
@@ -221,7 +233,7 @@ export function HomePage() {
 
             {/* Genre Tags */}
             <div className="flex w-full flex-col items-center gap-4">
-              <span className="flex items-center gap-2 rounded-full bg-black/20 px-3 py-1 text-xs font-medium uppercase tracking-widest text-gray-400 backdrop-blur-sm">
+              <span className="flex items-center gap-2 rounded-full bg-black/20 px-3 py-1 text-xs font-medium tracking-widest text-gray-400 uppercase backdrop-blur-sm">
                 <Plus size={10} /> Click to add genre
               </span>
 
@@ -232,7 +244,10 @@ export function HomePage() {
                     onClick={() => handleAddTag(genre)}
                     className="group flex items-center gap-1.5 rounded-full border border-white/5 bg-[#161616]/60 px-2 py-1.5 text-xs font-medium text-gray-400 shadow-sm backdrop-blur-md transition-all duration-200 hover:scale-105 hover:border-blue-500/30 hover:bg-[#202020]/80 hover:text-blue-300 active:scale-95"
                   >
-                    <Plus size={12} className="text-gray-600 transition-colors group-hover:text-blue-400" />
+                    <Plus
+                      size={12}
+                      className="text-gray-600 transition-colors group-hover:text-blue-400"
+                    />
                     <span>{genre}</span>
                   </button>
                 ))}
@@ -243,9 +258,9 @@ export function HomePage() {
 
         {/* Recent Sessions Section */}
         {sessionsWithMeta.length > 0 && (
-          <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-10 pt-10 text-left">
+          <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pt-10 pb-10 text-left">
             <div className="mb-6 flex items-center justify-between px-1">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
                 Or Play Sessions
               </h3>
             </div>
@@ -265,16 +280,19 @@ export function HomePage() {
 
         {/* Recent Characters Section */}
         {characters.length > 0 && (
-          <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pb-20 pt-10 text-left">
+          <div className="w-full max-w-6xl self-center border-t border-white/10 px-6 pt-10 pb-20 text-left">
             <div className="mb-6 flex items-center justify-between px-1">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
                 Or start session with a Character
               </h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {characters.map((character) => (
-                <CharacterCardWrapper key={character.id.toString()} character={character} />
+                <CharacterCardWrapper
+                  key={character.id.toString()}
+                  character={character}
+                />
               ))}
             </div>
           </div>

@@ -32,8 +32,10 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogTitle,
   DialogTrigger,
 } from "@/shared/ui";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { TableName } from "@/db/schema/table-name";
 import { Card as CardType } from "@/entities/card/domain";
 import { Session } from "@/entities/session/domain";
@@ -287,6 +289,9 @@ const SessionListMobile = ({
               className="bg-background-input border-border-container w-[248px] rounded-[14px] p-0"
               hideClose
             >
+              <VisuallyHidden.Root>
+                <DialogTitle>Session options</DialogTitle>
+              </VisuallyHidden.Root>
               <div className="flex flex-col py-2">
                 <DialogClose asChild>
                   <button
