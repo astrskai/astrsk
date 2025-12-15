@@ -206,6 +206,7 @@ export class SessionService {
       this.deleteSession,
       prepareSessionData,
       this.sessionRepo,
+      this.sessionRepo,
       loadAssetRepo,
       saveAssetRepo,
     );

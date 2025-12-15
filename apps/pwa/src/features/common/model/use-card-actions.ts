@@ -8,6 +8,7 @@ import {
   DEFAULT_SHARE_EXPIRATION_DAYS,
   ExportType,
 } from "@/shared/lib/cloud-upload-helpers";
+import { HARPY_HUB_URL } from "@/shared/lib/supabase-client";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
 import { characterKeys } from "@/entities/character/api";
@@ -92,34 +93,49 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
           [cardId]: { ...(prev[cardId] ?? {}), exporting: true },
         }));
 
-        const entityTypeText =
-          entityType === CardType.Plot ? "scenario" : entityType;
-
         try {
           if (exportType === "cloud") {
-            // Export to cloud (Supabase)
+            // Generate cloned card ID upfront so we can open window immediately
+            const clonedCardId = new UniqueEntityID();
+            const resourceType = entityType === CardType.Character ? "character" : "scenario";
+            const shareUrl = `${HARPY_HUB_URL}/shared/${resourceType}/${clonedCardId.toString()}`;
+
+            // Open HarpyChat immediately with the cloned card ID (avoid popup blocker)
+            const newWindow = window.open(shareUrl, "_blank");
+
+            // Check if pop-up was blocked
+            if (!newWindow || newWindow.closed) {
+              toastError("Pop-up blocked!", {
+                description: "Please allow pop-ups for this site to open HarpyChat.",
+              });
+            } else {
+              toastSuccess("Opening HarpyChat...", {
+                description: "Export is processing in the background.",
+              });
+            }
+
+            // Export to cloud in the background (don't await)
+            // Export will use the predefined clonedCardId
             const exportMethod =
               entityType === CardType.Character
                 ? CardService.exportCharacterToCloud
                 : CardService.exportScenarioToCloud;
 
-            const shareResult = await exportMethod.execute({
+            exportMethod.execute({
               cardId: new UniqueEntityID(cardId),
               expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
+              clonedCardId, // Pass predefined ID
+            }).then((shareResult) => {
+              if (shareResult.isFailure) {
+                toastError("Export failed", {
+                  description: shareResult.getError(),
+                });
+              }
+            }).catch((error) => {
+              toastError("Export failed", {
+                description: error instanceof Error ? error.message : "Unknown error",
+              });
             });
-
-            if (shareResult.isFailure) {
-              throw new Error(shareResult.getError());
-            }
-
-            const shareLink = shareResult.getValue();
-
-            toastSuccess("Successfully exported to cloud!", {
-              description: `Opening share page. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
-            });
-
-            // Open the share URL in a new tab
-            window.open(shareLink.shareUrl, "_blank");
           } else {
             // Export to file (PNG)
             const result = await CardService.exportCardToFile.execute({
