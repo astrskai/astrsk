@@ -129,9 +129,6 @@ export class ExportSessionToCloud
           const defaultBackground = getDefaultBackground(backgroundId);
 
           if (defaultBackground && defaultBackground.src) {
-            console.log(`[EXPORT] Found default background: ${defaultBackground.name}`);
-            console.log(`[EXPORT] Creating asset record with CDN URL (not downloading): ${defaultBackground.src}`);
-
             try {
               // For default backgrounds, create an asset record with the CDN URL as file_path
               // When importing, getStorageUrl() will detect it's a full URL and use it as-is
@@ -149,30 +146,28 @@ export class ExportSessionToCloud
               }
 
               backgroundAsset = Result.ok(assetResult.getValue());
-              console.log(`[EXPORT] Created asset record for default background with CDN URL`);
             } catch (error) {
               console.error(`[EXPORT] Failed to create asset record for default background:`, error);
               bundle.session.background_id = null;
             }
           } else {
             // Neither local asset nor default background - clear reference
-            console.log(`[EXPORT] Background not found, clearing reference: ${bundle.session.background_id}`);
             bundle.session.background_id = null;
           }
         }
 
-        // Upload the background asset metadata to Supabase (with sessionId context)
+        // Upload the background asset metadata to Supabase (NO session_id FK)
+        // Session doesn't exist in cloud yet - will be linked via session.background_id FK instead
         if (backgroundAsset.isSuccess) {
           const uploadResult = await uploadAssetToSupabase(
-            backgroundAsset.getValue(),
-            { sessionId: clonedSessionId.toString() } // Set session_id for RLS and claiming
+            backgroundAsset.getValue()
+            // No context - session doesn't exist in cloud yet, will be linked via session.background_id FK
           );
           if (uploadResult.isFailure) {
             return Result.fail<ShareLinkResult>(
               `Failed to upload background asset: ${uploadResult.getError()}`
             );
           }
-          console.log(`[EXPORT] Uploaded background asset metadata: ${bundle.session.background_id}`);
         }
       }
       if (bundle.session.cover_id) {

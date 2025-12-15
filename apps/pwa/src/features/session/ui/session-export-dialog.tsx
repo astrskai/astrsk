@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
   Loading,
   Button,
 } from "@/shared/ui";
@@ -82,31 +83,29 @@ export function SessionExportDialog({
             </p>
           </div>
         ) : shareUrl ? (
-          <div className="flex flex-col gap-4">
+          <>
             <DialogHeader>
               <DialogTitle>Upload Successful</DialogTitle>
               <DialogDescription>
                 Your resource has been uploaded to HarpyChat. Click the button below to claim it.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-2">
+            <DialogFooter>
               <Button
+                onClick={() => onOpenChange(false)}
+                variant="outline"
+              >
+                Close
+              </Button>
+              <Button
+                variant="accent"
                 onClick={handleGoToHarpy}
-                className="w-full"
-                size="lg"
               >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Go to Harpy
               </Button>
-              <Button
-                onClick={() => onOpenChange(false)}
-                variant="outline"
-                className="w-full"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
+            </DialogFooter>
+          </>
         ) : null}
       </DialogContent>
     </Dialog>
