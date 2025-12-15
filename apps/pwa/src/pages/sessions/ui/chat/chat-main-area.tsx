@@ -56,6 +56,14 @@ export default function ChatMainArea({
 }: ChatMainAreaProps) {
   const viewportHeight = useVisualViewport();
 
+  // Calculate message list max height for mobile keyboard handling
+  // header: 48px (pt-12), input: ~120px
+  const HEADER_HEIGHT = 48;
+  const INPUT_HEIGHT = 120;
+  const messageListMaxHeight = viewportHeight > 0
+    ? viewportHeight - HEADER_HEIGHT - INPUT_HEIGHT
+    : undefined;
+
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState<boolean>(false);
   // Track skipped scenario dialogs per session (non-persisted)
@@ -707,8 +715,7 @@ export default function ChatMainArea({
 
   return (
     <div
-      className="flex flex-1 flex-col justify-end pt-12 md:h-dvh md:justify-center"
-      style={{ height: viewportHeight > 0 ? `${viewportHeight}px` : "100dvh" }}
+      className="flex h-dvh flex-1 flex-col justify-end pt-12 md:justify-center"
     >
       <ChatMessageList
         data={data}
@@ -719,6 +726,7 @@ export default function ChatMainArea({
         onEditMessage={handleEditMessage}
         onDeleteMessage={handleDeleteMessage}
         onRegenerateMessage={handleRegenerateMessage}
+        maxHeight={messageListMaxHeight}
       />
 
       <ChatInput
