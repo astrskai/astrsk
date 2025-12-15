@@ -34,6 +34,22 @@ export class TriggerSystemExtension implements IExtension {
    */
   private readonly triggerTypes = ["scenario", "user"] as const;
 
+  /**
+   * Astrsk logo SVG embedded as data URI
+   * Using minimalist contrast: soft off-white (#e5e7eb) logo on dark grey (#1f2937) background
+   * Optimized for 36px (mobile) and 48px (desktop) avatar sizes
+   */
+  private readonly ASTRSK_LOGO_SVG = 'data:image/svg+xml;base64,' + btoa(
+    '<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="100" height="100" rx="12" fill="#1f2937"/>' +
+    '<g transform="translate(50, 50)">' +
+    '<g transform="translate(-24.25, -23.5) scale(0.5)">' +
+    '<path fill-rule="evenodd" clip-rule="evenodd" d="M37.4984 93.5L41.0688 54.2126L7.75947 76.6532L0.5 63.84L35.8935 46.7131L1.30861 30.1367L8.34011 17.3714L41.0742 39.53L37.5004 0.5L52.1273 0.5L49.142 39.6237L80.4707 17.4066L87.6912 30.151L53.136 46.7131L88.5 63.8257L81.0412 76.635L49.1468 54.4395L52.1273 93.5H37.4984Z" fill="#e5e7eb"/>' +
+    '</g>' +
+    '</g>' +
+    '</svg>'
+  );
+
   private client: IExtensionClient | null = null;
 
   async onLoad(client: IExtensionClient): Promise<void> {
@@ -116,10 +132,10 @@ export class TriggerSystemExtension implements IExtension {
         const plotCardId = plotCardListItem.id;
 
         // Render button with hexagon avatar and "Scenario" label
-        // Use GM image instead of the plot/scenario card's icon
+        // Use astrsk logo instead of the plot/scenario card's icon
         return React.createElement(UserInputCharacterButton, {
           characterCardId: plotCardId,
-          iconSrc: "/default/card/GM_ Dice of Fate.png", // GM image
+          iconSrc: this.ASTRSK_LOGO_SVG, // Embedded astrsk logo
           onClick: () => {
             // Don't trigger during inference
             if (context.disabled) return;

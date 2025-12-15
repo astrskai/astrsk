@@ -137,7 +137,7 @@ export const UserInputCharacterButton = ({
               <div
                 className={cn(
                   "pointer-events-none absolute top-0 left-0 size-[36px] md:hidden",
-                  "bg-white/20",
+                  "bg-white/10",
                   "opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100",
                 )}
                 style={{
@@ -149,7 +149,7 @@ export const UserInputCharacterButton = ({
               <div
                 className={cn(
                   "pointer-events-none absolute top-0 left-0 hidden size-[48px] md:block",
-                  "bg-white/20",
+                  "bg-white/10",
                   "opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100",
                 )}
                 style={{

@@ -134,10 +134,15 @@ const CharacterCardContent = ({
 
   const handleCardClick = useCallback(() => {
     if (cardId && !isEmpty) {
+      // Get current sessionId from URL to construct returnTo path
+      const sessionId = window.location.pathname.split('/').pop();
       navigate({
         to: "/assets/characters/{-$characterId}",
         params: { characterId: cardId.toString() },
-        search: { mode: "edit" as const },
+        search: {
+          mode: "edit" as const,
+          returnTo: `/sessions/settings/${sessionId}`,
+        },
       });
     }
   }, [cardId, isEmpty, navigate]);
@@ -698,9 +703,12 @@ export const SessionSettings = ({
           <button
             onClick={() => {
               if (plotCard?.id) {
+                // Get current sessionId from URL to construct returnTo path
+                const sessionId = window.location.pathname.split('/').pop();
                 navigate({
                   to: "/assets/scenarios/{-$scenarioId}",
                   params: { scenarioId: plotCard.id.toString() },
+                  search: { returnTo: `/sessions/settings/${sessionId}` },
                 });
               }
             }}

@@ -793,16 +793,15 @@ const CharacterEditorPage = () => {
         conceptualOrigin: normalizeField(data.conceptualOrigin),
       });
 
-      // Navigate to view mode (or characters list for new characters)
-      if (isCreateMode) {
-        // If returnTo parameter exists, navigate back to that page
-        if (returnTo) {
-          navigate({ to: returnTo as any });
-        } else {
-          navigate({ to: "/assets/characters" });
-        }
+      // Navigate after save
+      if (returnTo) {
+        // If returnTo parameter exists, navigate back to that page (from session settings)
+        navigate({ to: returnTo as any });
+      } else if (isCreateMode) {
+        // Create mode: go to characters list
+        navigate({ to: "/assets/characters" });
       } else {
-        // Go back to view mode
+        // Edit mode: go back to view mode
         navigate({
           to: "/assets/characters/{-$characterId}",
           params: { characterId: characterId! },
