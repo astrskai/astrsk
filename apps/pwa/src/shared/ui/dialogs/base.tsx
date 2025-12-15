@@ -17,6 +17,7 @@ interface DialogBaseProps {
   contentClassName?: string; // Custom className for inner content wrapper (default: scrollable)
   closeOnOverlayClick?: boolean; // If true, allows closing by clicking outside (default: true)
   hideTitle?: boolean; // If true, visually hides title (still accessible to screen readers)
+  onOpenAutoFocus?: (event: Event) => void; // Callback to control auto-focus behavior when dialog opens
 }
 
 export const DialogBase = ({
@@ -33,6 +34,7 @@ export const DialogBase = ({
   contentClassName,
   closeOnOverlayClick = true,
   hideTitle = false,
+  onOpenAutoFocus,
 }: DialogBaseProps) => {
   // Map size to max-width classes
   const sizeClasses = {
@@ -76,6 +78,7 @@ export const DialogBase = ({
               e.preventDefault();
             }
           }}
+          onOpenAutoFocus={onOpenAutoFocus}
         >
           {title && hideTitle ? (
             <VisuallyHidden.Root asChild>
