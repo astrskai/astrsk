@@ -29,7 +29,7 @@ export class SessionDrizzleMapper {
     const sessionOrError = Session.create(
       {
         title: row.title,
-        name: row.name ?? undefined,
+        name: row.name, // Now required (NOT NULL in DB)
         tags: row.tags || [],
         summary: row.summary ?? undefined,
         allCards: row.all_cards.map((cardJson) => ({
@@ -79,7 +79,7 @@ export class SessionDrizzleMapper {
     return {
       id: domain.id.toString(),
       title: domain.props.title,
-      name: domain.props.name ?? null,
+      name: domain.props.name, // Now required (NOT NULL in DB)
       tags: domain.props.tags,
       summary: domain.props.summary ?? null,
       all_cards: domain.props.allCards.map((card) => ({

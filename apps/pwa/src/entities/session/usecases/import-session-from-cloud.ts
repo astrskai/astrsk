@@ -328,10 +328,12 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
 
       // 3. Create session FIRST (required for foreign key constraints on cards, flows, etc.)
       // We'll create a minimal session now and update it later with all references
+      // Handle backward compatibility: use 'name' if available, fallback to 'title'
+      const sessionName = sessionData.name || sessionData.title || "Imported Session";
       const initialSessionResult = Session.create(
         {
-          title: sessionData.title,
-          name: sessionData.name ?? undefined,
+          name: sessionName,
+          title: sessionName, // Keep in sync
           tags: sessionData.tags ?? [],
           summary: sessionData.summary ?? undefined,
           allCards: [], // Will be updated later
@@ -482,8 +484,8 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
       // 10. Update session with all references (cards, flow, background, cover)
       const finalSessionResult = Session.create(
         {
-          title: sessionData.title,
-          name: sessionData.name ?? undefined,
+          name: sessionName, // Reuse the same name from initial session
+          title: sessionName, // Keep in sync
           tags: sessionData.tags ?? [],
           summary: sessionData.summary ?? undefined,
           allCards: (sessionData.all_cards as any[] ?? [])

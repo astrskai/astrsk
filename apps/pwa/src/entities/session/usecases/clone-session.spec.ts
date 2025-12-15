@@ -62,7 +62,7 @@ describe("CloneSession", () => {
     const clonedSession = await sessionRepo.getSessionById(
       clonedSessionOrError.getValue().id,
     );
-    expect(clonedSession.getValue().props.title).toBe(`Copy of ${name}`);
+    expect(clonedSession.getValue().props.name).toBe(`Copy of ${name}`);
     expect(clonedSession.getValue().id).not.toBe(session.id);
     // TODO: 세션의 다른 속성들도 동일한지 확인
   });
@@ -113,7 +113,7 @@ describe("CloneSession", () => {
     const branchedSession = result.getValue();
     expect(branchedSession).not.toBe(session);
     expect(branchedSession.id).not.toEqual(session.id);
-    expect(branchedSession.props.title).toBe(`Copy of ${sessionName}`);
+    expect(branchedSession.props.name).toBe(`Copy of ${sessionName}`);
     expect(branchedSession.props.turnIds.length).toBe(2);
     expect(branchedSession.props.turnIds).not.toEqual(session.props.turnIds);
   });

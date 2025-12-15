@@ -313,7 +313,7 @@ const PlaySessionsSection = ({
       {playSessions.map((session) => (
         <PlaySessionNavItem
           key={session.id}
-          label={session.title || "Untitled"}
+          label={session.name || "Untitled"}
           path={`/sessions/${session.id}`}
           active={isActivePath(`/sessions/${session.id}`)}
           isCollapsed={isCollapsed}

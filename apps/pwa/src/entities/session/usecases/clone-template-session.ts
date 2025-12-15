@@ -6,21 +6,19 @@ import { CloneSession } from "./clone-session";
 import { LoadSessionRepo } from "@/entities/session/repos";
 
 type Command = {
-  /** The template session to clone */
+  /** The play session to clone as template */
   sessionId: UniqueEntityID;
   /** Whether to include message history */
   includeHistory?: boolean;
 };
 
 /**
- * Clones a template session and marks it as a play session.
+ * Clones a play session and marks it as a template session (non-play).
  *
- * Play sessions are clones of template sessions with isPlaySession=true.
- * The user character must remain in allCards to maintain data integrity.
- *
- * Data Integrity Rule: userCharacterCardId MUST be in allCards.
+ * Template sessions are clones of play sessions with isPlaySession=false.
+ * Used for "Save as Asset" functionality to create reusable session templates.
  */
-export class ClonePlaySession implements UseCase<Command, Result<Session>> {
+export class CloneTemplateSession implements UseCase<Command, Result<Session>> {
   constructor(
     private cloneSession: CloneSession,
     private loadSessionRepo: LoadSessionRepo,
@@ -41,7 +39,7 @@ export class ClonePlaySession implements UseCase<Command, Result<Session>> {
     const originalSession = originalSessionResult.getValue();
     const originalName = originalSession.props.name;
 
-    // Clone the template session
+    // Clone the play session
     const clonedSessionResult = await this.cloneSession.execute({
       sessionId,
       includeHistory,
@@ -56,12 +54,12 @@ export class ClonePlaySession implements UseCase<Command, Result<Session>> {
 
     const clonedSession = clonedSessionResult.getValue();
 
-    // Mark as play session and restore original name (not "Copy of...")
-    // IMPORTANT: Keep all cards including user character (data integrity)
+    // Mark as template session (non-play) and restore original name
+    // History should NOT be included (includeHistory: false by default)
     const updateResult = clonedSession.update({
-      isPlaySession: true,
-      name: originalName,
-      title: originalName, // Keep in sync
+      isPlaySession: false,
+      name: originalName, // Keep original name, not "Copy of..."
+      title: originalName, // Keep title in sync
     });
 
     if (updateResult.isFailure) {

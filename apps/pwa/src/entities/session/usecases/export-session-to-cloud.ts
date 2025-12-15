@@ -14,6 +14,7 @@ import { DEFAULT_SHARE_EXPIRATION_DAYS } from '@/shared/lib/supabase-client';
 import { PrepareSessionCloudData } from './prepare-session-cloud-data';
 import { CloneSession } from './clone-session';
 import { DeleteSession } from './delete-session';
+import { LoadSessionRepo } from '@/entities/session/repos';
 import { LoadAssetRepo } from '@/entities/asset/repos/load-asset-repo';
 import { SaveAssetRepo } from '@/entities/asset/repos/save-asset-repo';
 import { Asset } from '@/entities/asset/domain/asset';
@@ -30,9 +31,11 @@ interface Command {
  * and create a shareable link
  *
  * Strategy:
- * 1. Clone the session locally (generates new UUIDs for session and all resources including backgrounds)
- * 2. Export the cloned session to cloud
- * 3. Delete the cloned session and all its resources
+ * 1. Load original session to preserve its name
+ * 2. Clone the session locally (generates new UUIDs for session and all resources including backgrounds)
+ * 3. Restore original name to cloned session (not "Copy of...")
+ * 4. Export the cloned session to cloud
+ * 5. Delete the cloned session and all its resources
  */
 export class ExportSessionToCloud
   implements UseCase<Command, Result<ShareLinkResult>> {
@@ -40,6 +43,7 @@ export class ExportSessionToCloud
     private cloneSession: CloneSession,
     private deleteSession: DeleteSession,
     private prepareSessionData: PrepareSessionCloudData,
+    private loadSessionRepo: LoadSessionRepo,
     private loadAssetRepo: LoadAssetRepo,
     private saveAssetRepo: SaveAssetRepo,
   ) { }
@@ -51,6 +55,16 @@ export class ExportSessionToCloud
     let clonedSessionId: UniqueEntityID | null = null;
 
     try {
+      // 0. Load the original session to get the original name
+      const originalSessionResult = await this.loadSessionRepo.getSessionById(sessionId);
+      if (originalSessionResult.isFailure) {
+        return Result.fail<ShareLinkResult>(
+          `Failed to load original session: ${originalSessionResult.getError()}`
+        );
+      }
+      const originalSession = originalSessionResult.getValue();
+      const originalName = originalSession.props.name;
+
       // 1. Clone the session to generate new IDs for all resources
       // Don't include chat history - we only want the structure
       const cloneResult = await this.cloneSession.execute({
@@ -64,6 +78,18 @@ export class ExportSessionToCloud
 
       const clonedSession = cloneResult.getValue();
       clonedSessionId = clonedSession.id;
+
+      // 1a. Restore original name (not "Copy of...")
+      const updateResult = clonedSession.update({
+        name: originalName,
+        title: originalName, // Keep title in sync
+      });
+
+      if (updateResult.isFailure) {
+        return Result.fail<ShareLinkResult>(
+          `Failed to restore original session name: ${updateResult.getError()}`
+        );
+      }
 
       // Small delay to ensure database writes are committed
       await new Promise((resolve) => setTimeout(resolve, 100));

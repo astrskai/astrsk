@@ -29,6 +29,6 @@ describe("SaveSession", () => {
 
     // Then
     const savedSession = await sessionRepo.getSessionById(session.id);
-    expect(savedSession?.getValue().props.title).toBe(name);
+    expect(savedSession?.getValue().props.name).toBe(name);
   });
 });

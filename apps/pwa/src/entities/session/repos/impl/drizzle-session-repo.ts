@@ -81,7 +81,7 @@ export class DrizzleSessionRepo
       // Search sessions
       const filters = [];
       if (keyword) {
-        filters.push(ilike(sessions.title, `%${keyword}%`));
+        filters.push(ilike(sessions.name, `%${keyword}%`));
       }
       // Filter by play session if specified
       if (isPlaySession !== undefined) {
@@ -101,11 +101,11 @@ export class DrizzleSessionRepo
         case SORT_VALUES.OLDEST:
           orderBy = sessions.created_at;
           break;
-        case SORT_VALUES.TITLE_A_TO_Z:
-          orderBy = sessions.title;
+        case SORT_VALUES.TITLE_A_TO_Z: // Keep constant name for backward compatibility
+          orderBy = sessions.name;
           break;
-        case SORT_VALUES.TITLE_Z_TO_A:
-          orderBy = desc(sessions.title);
+        case SORT_VALUES.TITLE_Z_TO_A: // Keep constant name for backward compatibility
+          orderBy = desc(sessions.name);
           break;
         default:
           // For play sessions, default to updated_at; otherwise created_at
@@ -305,7 +305,7 @@ export class DrizzleSessionRepo
       const rows = await db
         .select({
           id: sessions.id,
-          title: sessions.title,
+          name: sessions.name,
           messageCount: sql<number>`jsonb_array_length(${sessions.turn_ids})`,
           updatedAt: sessions.updated_at,
         })
@@ -317,7 +317,7 @@ export class DrizzleSessionRepo
       // Map to SessionListItem type
       const items: SessionListItem[] = rows.map((row) => ({
         id: row.id,
-        title: row.title,
+        name: row.name,
         messageCount: row.messageCount,
         updatedAt: new Date(row.updatedAt),
       }));

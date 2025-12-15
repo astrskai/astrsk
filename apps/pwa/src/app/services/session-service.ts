@@ -29,6 +29,7 @@ import {
   ListSession,
   SaveSession,
 } from "@/entities/session/usecases";
+import { CloneTemplateSession } from "@/entities/session/usecases/clone-template-session";
 import { ExportSessionToFile } from "@/entities/session/usecases/export-session-to-file";
 import { ExportSessionToCloud } from "@/entities/session/usecases/export-session-to-cloud";
 import { ImportSessionFromCloud } from "@/entities/session/usecases/import-session-from-cloud";
@@ -61,6 +62,7 @@ export class SessionService {
   public static addMessage: AddMessage;
   public static bulkDeleteMessage: BulkDeleteMessage;
   public static clonePlaySession: ClonePlaySession;
+  public static cloneTemplateSession: CloneTemplateSession;
   public static cloneSession: CloneSession;
   public static deleteMessage: DeleteMessage;
   public static deleteSession: DeleteSession;
@@ -135,6 +137,10 @@ export class SessionService {
       this.cloneSession,
       this.sessionRepo,
     );
+    this.cloneTemplateSession = new CloneTemplateSession(
+      this.cloneSession,
+      this.sessionRepo,
+    );
     this.deleteMessage = new DeleteMessage(
       turnRepo,
       this.sessionRepo,
@@ -199,6 +205,7 @@ export class SessionService {
       this.cloneSession,
       this.deleteSession,
       prepareSessionData,
+      this.sessionRepo,
       loadAssetRepo,
       saveAssetRepo,
     );

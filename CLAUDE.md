@@ -126,6 +126,7 @@ shared/    → Foundation (UI kit, hooks, utilities)
 ```
 
 **Key Rules:**
+
 - ✅ Upper layers import from lower layers only (one-way dependency)
 - ✅ Use relative imports for co-located files (`./component`)
 - ✅ Use absolute imports across layers (`@/entities/session/api`)
@@ -177,7 +178,7 @@ export const SessionPanelContainer = () => {
 
 // Presenter (UI only)
 export const SessionPanel = ({ session }) => {
-  return <div>{session.title}</div>;
+  return <div>{session.name}</div>;
 };
 ```
 
@@ -250,11 +251,13 @@ export function Component({ prop }: Props) {
 ```
 
 **useCallback Guidelines**:
+
 - ✅ **Use when**: Function is passed as prop to child components, or used in dependency arrays
 - ❌ **Don't use when**: Simple event handlers not passed as props (avoid premature optimization)
 - **Rationale**: Prevents unnecessary child re-renders by maintaining referential equality
 
 **useEffect Ordering**:
+
 - Group by logical purpose, not alphabetically
 - Order: initialization → validation → event listeners → data sync → cleanup
 
@@ -278,17 +281,17 @@ Each mutation must have comprehensive tests:
 **Example test structure**:
 
 ```typescript
-describe('useUpdateFlowTitle', () => {
-  it('should update title optimistically', () => {
+describe("useUpdateFlowTitle", () => {
+  it("should update title optimistically", () => {
     /* ... */
   });
-  it('should rollback on error', () => {
+  it("should rollback on error", () => {
     /* ... */
   });
-  it('should invalidate detail query on success', () => {
+  it("should invalidate detail query on success", () => {
     /* ... */
   });
-  it('should handle network errors gracefully', () => {
+  it("should handle network errors gracefully", () => {
     /* ... */
   });
 });
@@ -419,7 +422,7 @@ This cleanup project ENFORCES all 11 principles:
 ```typescript
 // apps/pwa/src/app/feature-flags/FeatureFlagContext.tsx
 export const FEATURE_FLAGS = {
-  EXPERIMENTAL_FEATURE_X: 'feature.experimental.x',
+  EXPERIMENTAL_FEATURE_X: "feature.experimental.x",
 } as const;
 
 // Usage
