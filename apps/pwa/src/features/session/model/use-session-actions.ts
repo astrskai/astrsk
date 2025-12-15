@@ -90,6 +90,16 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
       try {
         if (exportType === "cloud") {
+          // Open window immediately to avoid pop-up blocker (must be synchronous with user action)
+          const newWindow = window.open("about:blank", "_blank");
+
+          // Check if pop-up was blocked
+          if (!newWindow || newWindow.closed) {
+            toastError("Pop-up blocked!", {
+              description: "Please allow pop-ups for this site to open HarpyChat. Export will continue...",
+            });
+          }
+
           // Export session to cloud (Supabase)
           const shareResult = await SessionService.exportSessionToCloud.execute({
             sessionId: new UniqueEntityID(sessionId),
@@ -97,17 +107,29 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
           });
 
           if (shareResult.isFailure) {
+            // Close the blank window if export failed
+            newWindow?.close();
             throw new Error(shareResult.getError());
           }
 
           const shareLink = shareResult.getValue();
 
-          // Open the share URL in a new tab (HarpyChat)
-          window.open(shareLink.shareUrl, "_blank");
-
-          toastSuccess("Successfully exported to cloud!", {
-            description: `Opening HarpyChat. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
-          });
+          // Navigate the already-opened window to the share URL
+          if (newWindow && !newWindow.closed) {
+            newWindow.location.href = shareLink.shareUrl;
+            toastSuccess("Successfully exported to cloud!", {
+              description: `Opening HarpyChat. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
+            });
+          } else {
+            // Pop-up was blocked - provide clickable link
+            toastSuccess("Successfully exported to cloud!", {
+              description: `Pop-up blocked. Click here to open HarpyChat.`,
+              action: {
+                label: "Open Link",
+                onClick: () => window.open(shareLink.shareUrl, "_blank"),
+              },
+            });
+          }
         } else {
           // Export session to file (JSON download)
           const fileOrError = await SessionService.exportSessionToFile.execute({
