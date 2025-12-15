@@ -14,7 +14,7 @@ type Response = {
 /**
  * Migrates sessions with messages to play sessions.
  *
- * This is a one-time migration that:
+ * This is a limited-run migration that:
  * 1. Finds all sessions with messages that have isPlaySession = false
  * 2. Updates those sessions to isPlaySession = true
  * 3. Clones those sessions (without messages) as template sessions with isPlaySession = false
@@ -22,6 +22,9 @@ type Response = {
  * This ensures:
  * - Sessions with conversation history are marked as play sessions
  * - Template versions (without history) are available in the session list
+ *
+ * Note: This migration runs a maximum of 5 times (tracked in localStorage).
+ * After 5 runs, it will automatically skip to avoid unnecessary processing.
  */
 export class MigrateSessionsWithMessagesToPlaySessions implements UseCase<Command, Result<Response>> {
   constructor(
@@ -32,6 +35,18 @@ export class MigrateSessionsWithMessagesToPlaySessions implements UseCase<Comman
 
   async execute(_command: Command): Promise<Result<Response>> {
     try {
+      // Check if migration has already been completed (max 5 runs)
+      const MIGRATION_KEY = "session-play-migration-count";
+      const MAX_RUNS = 5;
+      const runCount = parseInt(localStorage.getItem(MIGRATION_KEY) || "0", 10);
+
+      if (runCount >= MAX_RUNS) {
+        console.log(`[MigrateSessionsWithMessagesToPlaySessions] Already ran ${runCount} times, skipping...`);
+        return Result.ok({ migratedCount: 0, clonedCount: 0 });
+      }
+
+      console.log(`[MigrateSessionsWithMessagesToPlaySessions] Starting migration (run ${runCount + 1}/${MAX_RUNS})...`);
+
       // Find all sessions with messages that are not play sessions
       const sessionsResult = await this.listSession.execute({});
       if (sessionsResult.isFailure) {
@@ -96,6 +111,9 @@ export class MigrateSessionsWithMessagesToPlaySessions implements UseCase<Comman
       }
 
       console.log(`Migration complete: ${migratedCount} migrated, ${clonedCount} cloned`);
+
+      // Increment run count
+      localStorage.setItem(MIGRATION_KEY, String(runCount + 1));
 
       return Result.ok({ migratedCount, clonedCount });
     } catch (error) {
