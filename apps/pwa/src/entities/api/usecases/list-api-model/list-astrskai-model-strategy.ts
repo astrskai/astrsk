@@ -8,35 +8,15 @@ import { ListApiModelStrategy } from "@/entities/api/usecases/list-api-model/lis
 const ASTRSK_CLOUD_MODELS = [
   {
     id: "openai-compatible:deepseek/deepseek-chat",
-    name: "DeepSeek Official (Default)",
-  },
-  {
-    id: "openai-compatible:google/gemini-3-pro",
-    name: "Gemini 3 Pro",
+    name: "DeepSeek v3.2",
   },
   {
     id: "openai-compatible:google/gemini-2.5-flash",
     name: "Gemini 2.5 Flash",
   },
   {
-    id: "openai-compatible:google/gemini-2.5-flash-lite",
-    name: "Gemini 2.5 Flash Lite",
-  },
-  {
     id: "openai-compatible:zai-org/GLM-4.6",
-    name: "GLM-4.6 (Friendli)",
-  },
-  {
-    id: "openai-compatible:glm-4.6",
-    name: "GLM-4.6 (Official API)",
-  },
-  {
-    id: "openai-compatible:byteplus/deepseek-v3-1",
-    name: "DeepSeek V3.1 (BytePlus)",
-  },
-  {
-    id: "openai-compatible:byteplus/oss-120b",
-    name: "OSS 120B (BytePlus)",
+    name: "GLM-4.6",
   },
 ];
 
