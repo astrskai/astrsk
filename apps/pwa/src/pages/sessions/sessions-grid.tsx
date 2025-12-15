@@ -1,6 +1,7 @@
-import { Upload, Copy, Trash2 } from "lucide-react";
+import { Upload, Copy, Trash2, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { SessionCard, type CardAction } from "@astrsk/design-system";
 
 import { Session } from "@/entities/session/domain/session";
 
@@ -12,13 +13,14 @@ import type {
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 
-import SessionCard from "@/features/session/ui/session-card";
-import type { CardAction } from "@/features/common/ui";
 import { useSessionActions } from "@/features/session/model/use-session-actions";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
 import { SessionExportDialog } from "@/features/session/ui/session-export-dialog";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { useCharacterAvatars } from "@/entities/character/hooks/use-character-avatars";
 import { cn } from "@/shared/lib";
+
+const SESSION_PLACEHOLDER_IMAGE = "/img/placeholder/scenario-placeholder.png";
 
 
 interface SessionsGridProps {
@@ -69,14 +71,11 @@ function SessionGridItem({
   const coverId = session.props.coverId;
   const [coverImageUrl] = useAsset(coverId);
 
+  // Resolve character avatar URLs
+  const resolvedAvatars = useCharacterAvatars(characterAvatars);
+
   // Check if session is generating workflow
   const isGenerating = session.config?.generationStatus === "generating";
-
-  // Simple validation: check if session has AI character cards
-  // Avoid expensive per-card queries (useSessionValidation with nested flow queries)
-  // TODO: Disabled validation - no validation needed atm
-  // const isInvalid = session.aiCharacterCardIds.length === 0;
-  const isInvalid = false;
 
   const actions: CardAction[] = [
     {
@@ -110,18 +109,40 @@ function SessionGridItem({
     },
   ];
 
+  // Generating overlay - wrap SessionCard with loading UI
+  if (isGenerating) {
+    return (
+      <div className="relative">
+        <SessionCard
+          title={session.props.name || "Untitled Session"}
+          imageUrl={coverImageUrl}
+          placeholderImageUrl={SESSION_PLACEHOLDER_IMAGE}
+          messageCount={messageCount}
+          isDisabled={true}
+          actions={actions}
+          className={cn("cursor-not-allowed", className)}
+          characterAvatars={resolvedAvatars}
+          areCharactersLoading={areCharactersLoading}
+        />
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-xl bg-zinc-900/95">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+          <p className="mt-3 text-sm font-medium text-zinc-300">Generating workflow...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <SessionCard
       title={session.props.name || "Untitled Session"}
       imageUrl={coverImageUrl}
+      placeholderImageUrl={SESSION_PLACEHOLDER_IMAGE}
       messageCount={messageCount}
-      isInvalid={isInvalid}
       onClick={() => onSessionClick(sessionId)}
       actions={actions}
       className={className}
-      characterAvatars={characterAvatars}
+      characterAvatars={resolvedAvatars}
       areCharactersLoading={areCharactersLoading}
-      isGenerating={isGenerating}
     />
   );
 }

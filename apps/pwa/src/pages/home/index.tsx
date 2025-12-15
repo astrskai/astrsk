@@ -2,15 +2,17 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Plus } from "lucide-react";
-import { CharacterCard } from "@astrsk/design-system";
+import { CharacterCard, SessionCard } from "@astrsk/design-system";
 import { useSessionsWithCharacterMetadata } from "@/entities/session/api";
 import { characterQueries } from "@/entities/character/api";
 import { CharacterCard as CharacterCardDomain, GENRE_SUGGESTIONS } from "@/entities/card/domain";
 import { Session } from "@/entities/session/domain";
-import SessionCard from "@/features/session/ui/session-card";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { useCharacterAvatars } from "@/entities/character/hooks/use-character-avatars";
 import { useTypewriterPlaceholder } from "@/shared/hooks/use-typewriter-placeholder";
 import { Button } from "@/shared/ui/button";
+
+const SESSION_PLACEHOLDER_IMAGE = "/img/placeholder/scenario-placeholder.png";
 
 /**
  * Session Card Wrapper
@@ -29,6 +31,7 @@ function SessionCardWrapper({ session, characterAvatars, areCharactersLoading }:
 
   // Call hooks unconditionally (before any early returns)
   const [coverImageUrl] = useAsset(coverId);
+  const resolvedAvatars = useCharacterAvatars(characterAvatars);
 
   // Safety check - ensure session and props exist
   if (!session || !session.props) {
@@ -48,9 +51,10 @@ function SessionCardWrapper({ session, characterAvatars, areCharactersLoading }:
     <SessionCard
       title={session.props.name || "Untitled Session"}
       imageUrl={coverImageUrl}
+      placeholderImageUrl={SESSION_PLACEHOLDER_IMAGE}
       messageCount={messageCount}
       onClick={handleSessionClick}
-      characterAvatars={characterAvatars}
+      characterAvatars={resolvedAvatars}
       areCharactersLoading={areCharactersLoading}
     />
   );
