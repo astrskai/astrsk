@@ -17,6 +17,8 @@ import { DeleteCard } from "./delete-card";
 interface Command {
   cardId: UniqueEntityID;
   expirationDays?: number;
+  /** Optional predefined cloned card ID (avoids popup blocker by allowing immediate URL construction) */
+  clonedCardId?: UniqueEntityID;
 }
 
 /**
@@ -44,19 +46,23 @@ export class ExportCharacterToCloud
   async execute({
     cardId,
     expirationDays = DEFAULT_SHARE_EXPIRATION_DAYS,
+    clonedCardId: providedClonedCardId,
   }: Command): Promise<Result<ShareLinkResult>> {
-    let clonedCardId: UniqueEntityID | null = null;
+    // Use provided cloned card ID (for immediate URL construction) or generate new one
+    const clonedCardId = providedClonedCardId ?? new UniqueEntityID();
 
     try {
-      // 1. Clone the card to generate new ID
-      const cloneResult = await this.cloneCard.execute({ cardId });
+      // 1. Clone the card with predefined ID to avoid popup blocker issues
+      const cloneResult = await this.cloneCard.execute({
+        cardId,
+        clonedCardId, // Use predefined ID
+      });
 
       if (cloneResult.isFailure) {
         return Result.fail<ShareLinkResult>(cloneResult.getError());
       }
 
       const clonedCard = cloneResult.getValue();
-      clonedCardId = clonedCard.id;
 
       // Small delay to ensure database writes are committed
       await new Promise((resolve) => setTimeout(resolve, 100));

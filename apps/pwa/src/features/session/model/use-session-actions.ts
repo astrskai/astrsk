@@ -8,6 +8,7 @@ import {
   DEFAULT_SHARE_EXPIRATION_DAYS,
   ExportType,
 } from "@/shared/lib/cloud-upload-helpers";
+import { HARPY_HUB_URL } from "@/shared/lib/supabase-client";
 import { SessionService } from "@/app/services/session-service";
 import { sessionQueries } from "@/entities/session/api";
 
@@ -90,46 +91,41 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
 
       try {
         if (exportType === "cloud") {
-          // Open window immediately to avoid pop-up blocker (must be synchronous with user action)
-          const newWindow = window.open("about:blank", "_blank");
+          // Generate cloned session ID upfront so we can open window immediately
+          const clonedSessionId = new UniqueEntityID();
+          const shareUrl = `${HARPY_HUB_URL}/shared/session/${clonedSessionId.toString()}`;
+
+          // Open HarpyChat immediately with the cloned session ID (avoid popup blocker)
+          const newWindow = window.open(shareUrl, "_blank");
 
           // Check if pop-up was blocked
           if (!newWindow || newWindow.closed) {
             toastError("Pop-up blocked!", {
-              description: "Please allow pop-ups for this site to open HarpyChat. Export will continue...",
-            });
-          }
-
-          // Export session to cloud (Supabase)
-          const shareResult = await SessionService.exportSessionToCloud.execute({
-            sessionId: new UniqueEntityID(sessionId),
-            expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
-          });
-
-          if (shareResult.isFailure) {
-            // Close the blank window if export failed
-            newWindow?.close();
-            throw new Error(shareResult.getError());
-          }
-
-          const shareLink = shareResult.getValue();
-
-          // Navigate the already-opened window to the share URL
-          if (newWindow && !newWindow.closed) {
-            newWindow.location.href = shareLink.shareUrl;
-            toastSuccess("Successfully exported to cloud!", {
-              description: `Opening HarpyChat. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
+              description: "Please allow pop-ups for this site to open HarpyChat.",
             });
           } else {
-            // Pop-up was blocked - provide clickable link
-            toastSuccess("Successfully exported to cloud!", {
-              description: `Pop-up blocked. Click here to open HarpyChat.`,
-              action: {
-                label: "Open Link",
-                onClick: () => window.open(shareLink.shareUrl, "_blank"),
-              },
+            toastSuccess("Opening HarpyChat...", {
+              description: "Export is processing in the background.",
             });
           }
+
+          // Export session to cloud in the background (don't await)
+          // Export will use the predefined clonedSessionId
+          SessionService.exportSessionToCloud.execute({
+            sessionId: new UniqueEntityID(sessionId),
+            expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
+            clonedSessionId, // Pass predefined ID
+          }).then((shareResult) => {
+            if (shareResult.isFailure) {
+              toastError("Export failed", {
+                description: shareResult.getError(),
+              });
+            }
+          }).catch((error) => {
+            toastError("Export failed", {
+              description: error instanceof Error ? error.message : "Unknown error",
+            });
+          });
         } else {
           // Export session to file (JSON download)
           const fileOrError = await SessionService.exportSessionToFile.execute({

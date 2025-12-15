@@ -18,6 +18,8 @@ import { getDefaultBackground } from "@/entities/background/api/query-factory";
 type Command = {
   sessionId: UniqueEntityID;
   includeHistory?: boolean;
+  /** Optional predefined ID for the cloned session (used for cloud export to avoid popup blockers) */
+  clonedSessionId?: UniqueEntityID;
 };
 
 export class CloneSession implements UseCase<Command, Result<Session>> {
@@ -35,6 +37,7 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
   async execute({
     sessionId,
     includeHistory = false,
+    clonedSessionId,
   }: Command): Promise<Result<Session>> {
     // Fetch the original session
     const originalSessionResult =
@@ -47,8 +50,8 @@ export class CloneSession implements UseCase<Command, Result<Session>> {
     }
     const originalSession = originalSessionResult.getValue();
 
-    // Generate new session ID first
-    const newSessionId = new UniqueEntityID();
+    // Use predefined ID if provided, otherwise generate new ID
+    const newSessionId = clonedSessionId ?? new UniqueEntityID();
 
     // Clone cover asset first (no foreign key to session)
     let clonedCoverId: string | null = null;
