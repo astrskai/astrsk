@@ -6,6 +6,8 @@ import { useQuery } from "convex/react";
 import { ChevronRight, Key, LogOut, User } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { ConvexReady } from "@/shared/ui/convex-ready";
+import { toastSuccess, toastError } from "@/shared/ui/toast";
+import { useState } from "react";
 
 function formatCreditNumber(num: number): string {
   return num.toLocaleString();
@@ -120,6 +122,7 @@ const SubscriptionSection = () => {
 export default function AccountPage() {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Check if user signed up with email/password (not OAuth)
   // Supabase stores provider info in app_metadata.provider
@@ -176,16 +179,27 @@ export default function AccountPage() {
 
             {/* Sign Out */}
             <button
-              className="group hover:bg-surface-overlay flex w-full items-center justify-between p-4 text-left transition-colors"
+              className="group hover:bg-surface-overlay flex w-full items-center justify-between p-4 text-left transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSigningOut}
               onClick={async () => {
-                await signOut();
-                navigate({ to: "/settings", replace: true });
+                setIsSigningOut(true);
+                try {
+                  await signOut();
+                  toastSuccess("Signed out successfully");
+                  navigate({ to: "/", replace: true });
+                } catch (error) {
+                  console.error("Sign out failed:", error);
+                  toastError("Failed to sign out", {
+                    description: "Please try again or refresh the page.",
+                  });
+                  setIsSigningOut(false);
+                }
               }}
             >
               <div className="flex items-center gap-3">
                 <LogOut size={18} className="text-status-error" />
                 <span className="text-status-error text-sm font-medium">
-                  Sign out
+                  {isSigningOut ? "Signing out..." : "Sign out"}
                 </span>
               </div>
             </button>

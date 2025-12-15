@@ -83,6 +83,12 @@ export function PlaySessionLoginPage() {
             });
             break;
 
+          case "email_not_confirmed":
+            toastSuccess("Confirmation email sent!", {
+              description: "Please check your email and click the confirmation link to activate your account.",
+            });
+            break;
+
           case "error":
             toastError("Authentication failed", {
               description: error || "Please try again.",
