@@ -3,10 +3,16 @@ import { z } from "zod";
 import ScenarioEditorPage from "@/pages/assets/scenarios/editor";
 import ErrorPage from "@/pages/error";
 
+// Search params schema
+const searchSchema = z.object({
+  returnTo: z.string().optional(), // URL to navigate back to after save
+});
+
 export const Route = createFileRoute("/_layout/assets/scenarios/{-$scenarioId}")({
   params: z.object({
     scenarioId: z.string().optional(),
   }),
+  validateSearch: searchSchema,
   component: ScenarioEditorPage,
   beforeLoad: async ({ params }) => {
     // "new" is a special value for create mode

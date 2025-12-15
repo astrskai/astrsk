@@ -444,7 +444,17 @@ export default function ChatMainArea({
           // Random character reply
           case AutoReply.Random: {
             if (data.aiCharacterCardIds.length === 0) {
-              toastError("No characters available");
+              // No AI characters - trigger scenario generation instead
+              if (data.plotCard) {
+                logger.info("[Auto-reply] No AI characters available, triggering scenario generation");
+                const plotCardId = data.plotCard.id;
+                const cardId = plotCardId instanceof UniqueEntityID
+                  ? plotCardId
+                  : new UniqueEntityID(plotCardId as string);
+                await generateCharacterMessage(cardId, undefined, "scenario");
+              } else {
+                toastError("No characters available");
+              }
               break;
             }
 
@@ -458,6 +468,21 @@ export default function ChatMainArea({
 
           // All characters reply by order
           case AutoReply.Rotate: {
+            if (data.aiCharacterCardIds.length === 0) {
+              // No AI characters - trigger scenario generation instead
+              if (data.plotCard) {
+                logger.info("[Auto-reply] No AI characters available, triggering scenario generation");
+                const plotCardId = data.plotCard.id;
+                const cardId = plotCardId instanceof UniqueEntityID
+                  ? plotCardId
+                  : new UniqueEntityID(plotCardId as string);
+                await generateCharacterMessage(cardId, undefined, "scenario");
+              } else {
+                toastError("No characters available");
+              }
+              break;
+            }
+
             for (const charId of data.aiCharacterCardIds) {
               await generateCharacterMessage(charId);
             }
