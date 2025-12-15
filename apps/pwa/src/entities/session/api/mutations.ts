@@ -504,9 +504,11 @@ export const useImportSessionFromCloud = () => {
     mutationKey: ["session", "importFromCloud"],
     mutationFn: async ({
       sessionId,
+      isPlaySession = false,
       agentModelOverrides,
     }: {
       sessionId: string;
+      isPlaySession?: boolean;
       agentModelOverrides?: Map<
         string,
         { apiSource: string; modelId: string; modelName: string }
@@ -514,6 +516,7 @@ export const useImportSessionFromCloud = () => {
     }) => {
       const result = await SessionService.importSessionFromCloud.execute({
         sessionId,
+        isPlaySession,
         agentModelOverrides,
       });
 

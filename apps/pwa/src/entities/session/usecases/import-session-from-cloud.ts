@@ -29,6 +29,7 @@ import { SaveSessionRepo } from "@/entities/session/repos";
 
 interface Command {
   sessionId: string;
+  isPlaySession?: boolean;
   agentModelOverrides?: Map<
     string,
     {
@@ -159,11 +160,13 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
     );
 
     if (flowResult.isFailure) {
+      console.error(`[importFlow] Failed to create flow from cloud data: ${flowResult.getError()}`);
       return { flowId: undefined, nodeIdMap };
     }
 
     const savedFlowResult = await this.saveFlowRepo.saveFlow(flowResult.getValue());
     if (savedFlowResult.isFailure) {
+      console.error(`[importFlow] Failed to save flow: ${savedFlowResult.getError()}`);
       return { flowId: undefined, nodeIdMap };
     }
 
@@ -262,6 +265,7 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
 
   async execute({
     sessionId,
+    isPlaySession = false,
     agentModelOverrides,
   }: Command): Promise<Result<Session>> {
     try {
@@ -292,6 +296,7 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
           chatStyles: sessionData.chat_styles ?? undefined,
           dataSchemaOrder: sessionData.data_schema_order ?? [],
           widgetLayout: sessionData.widget_layout ?? undefined,
+          isPlaySession, // Set play session flag
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -470,6 +475,7 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
           chatStyles: sessionData.chat_styles ?? undefined,
           dataSchemaOrder: sessionData.data_schema_order ?? [],
           widgetLayout: sessionData.widget_layout ?? undefined,
+          isPlaySession, // Set play session flag
           createdAt: new Date(),
           updatedAt: new Date(),
         },

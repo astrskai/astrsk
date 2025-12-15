@@ -25,12 +25,17 @@ import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { AutoReply } from "@/shared/stores/session-store";
 import { useSaveSession } from "@/entities/session/api/mutations";
 import { useSessionConfig } from "@/shared/hooks/use-session-config";
+import { usePlaySessionAuth } from "@/shared/hooks/use-play-session-auth";
+import { PlaySessionLoginPage } from "@/pages/auth/play-session-login";
 
 export default function ChatPage() {
   const saveSessionMutation = useSaveSession();
 
   const { sessionId } = Route.useParams();
   const sessionIdEntity = sessionId ? new UniqueEntityID(sessionId) : undefined;
+
+  // Check if user needs authentication for play session
+  const playSessionAuth = usePlaySessionAuth(sessionIdEntity);
 
   const { data: session, isLoading } = useQuery(
     sessionQueries.detail(sessionIdEntity),
@@ -183,9 +188,17 @@ export default function ChatPage() {
     [isDataPanelOpen, toggleDataPanel],
   );
 
-  return isLoading ? (
-    <Loading />
-  ) : session ? (
+  // Show loading while checking auth or loading session
+  if (isLoading || playSessionAuth.isLoading) {
+    return <Loading />;
+  }
+
+  // Show login page if user needs authentication
+  if (playSessionAuth.needsAuth) {
+    return <PlaySessionLoginPage />;
+  }
+
+  return session ? (
     <div className="relative z-0 flex h-dvh flex-col overflow-hidden">
       {shouldShowBackground ? (
         <div

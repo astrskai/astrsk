@@ -375,50 +375,80 @@ export class ImportSessionFromFile
       if (sessionProps.flow_id) {
         const newFlowId = idMap.get(sessionProps.flow_id);
         if (!newFlowId) {
-          throw new Error(
-            `Flow ID ${sessionProps.flow_id} not found in ID map`,
+          // Flow not found in imported files
+          // This can happen if the flow file is missing from the export
+          // Clear the flow ID and let the session import without a flow
+          console.warn(
+            `[ImportSession] Flow ID ${sessionProps.flow_id} not found in ID map. Clearing flow.`,
           );
+          sessionProps.flow_id = undefined;
+        } else {
+          sessionProps.flow_id = newFlowId;
         }
-        sessionProps.flow_id = newFlowId;
       }
       if (sessionProps.all_cards && sessionProps.all_cards.length > 0) {
-        sessionProps.all_cards = sessionProps.all_cards.map((item) => {
-          const newCardId = idMap.get(item.id);
-          if (!newCardId) {
-            throw new Error(`Card ID ${item.id} not found in ID map`);
-          }
-          return {
-            ...item,
-            id: newCardId,
-          };
-        });
+        sessionProps.all_cards = sessionProps.all_cards
+          .map((item) => {
+            const newCardId = idMap.get(item.id);
+            if (!newCardId) {
+              // Card not found in imported files
+              // Log warning and filter out this card
+              console.warn(
+                `[ImportSession] Card ID ${item.id} not found in ID map. Skipping card.`,
+              );
+              return null;
+            }
+            return {
+              ...item,
+              id: newCardId,
+            };
+          })
+          .filter((item) => item !== null);
       }
       if (sessionProps.user_character_card_id) {
         const newCardId = idMap.get(sessionProps.user_character_card_id);
         if (!newCardId) {
-          throw new Error(
-            `User character card ID ${sessionProps.user_character_card_id} not found in ID map`,
+          // User character card not found in imported files
+          // Clear the user character card ID
+          console.warn(
+            `[ImportSession] User character card ID ${sessionProps.user_character_card_id} not found in ID map. Clearing user character.`,
           );
+          sessionProps.user_character_card_id = undefined;
+        } else {
+          sessionProps.user_character_card_id = newCardId;
         }
-        sessionProps.user_character_card_id = newCardId;
       }
       if (sessionProps.background_id) {
         const newBackgroundId = idMap.get(sessionProps.background_id);
         if (!newBackgroundId) {
-          throw new Error(
-            `Background ID ${sessionProps.background_id} not found in ID map`,
+          // Background not found in imported files or default backgrounds
+          // This can happen if:
+          // 1. Session was exported with a default background from a different version
+          // 2. Background file is missing from the export
+          // In this case, preserve the original ID - it might still resolve at runtime
+          // or the app will gracefully handle missing backgrounds
+          console.warn(
+            `[ImportSession] Background ID ${sessionProps.background_id} not found in ID map. Preserving original ID.`,
           );
+          // Keep the original ID instead of throwing an error
+          // sessionProps.background_id remains unchanged
+        } else {
+          sessionProps.background_id = newBackgroundId;
         }
-        sessionProps.background_id = newBackgroundId;
       }
       if (sessionProps.cover_id) {
         const newCoverId = idMap.get(sessionProps.cover_id);
         if (!newCoverId) {
-          throw new Error(
-            `Cover ID ${sessionProps.cover_id} not found in ID map`,
+          // Cover asset not found in imported files
+          // This can happen if the cover file is missing from the export
+          // In this case, clear the cover ID rather than failing the import
+          console.warn(
+            `[ImportSession] Cover ID ${sessionProps.cover_id} not found in ID map. Clearing cover.`,
           );
+          sessionProps.cover_id = undefined;
+        } else {
+          sessionProps.cover_id = newCoverId;
         }
-        sessionProps.cover_id = newCoverId;
       }
 
       // Update session with imported resources
