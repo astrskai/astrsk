@@ -3,14 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, Info, Plus } from "lucide-react";
 import { useNavigate, useLocation } from "@tanstack/react-router";
 import { Button, SearchInput } from "@/shared/ui/forms";
-import CharacterCardUI from "@/features/character/ui/character-card";
+import { CharacterCard as CharacterCardUI, type CardAction } from "@astrsk/design-system";
 import Carousel from "@/shared/ui/carousel-v2";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
-import type { CardAction } from "@/features/common/ui";
 import { DialogBase } from "@/shared/ui/dialogs/base";
 
 interface CharacterSelectionDialogProps {

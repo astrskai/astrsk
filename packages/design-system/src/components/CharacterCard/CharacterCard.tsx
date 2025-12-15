@@ -279,7 +279,7 @@ export function CharacterCard({
                 <span
                   key={`${tag}-${index}`}
                   className={cn(
-                    'max-w-[28%] @[240px]:max-w-[21%] truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    'max-w-[35%] @[240px]:max-w-[26%] truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
                     classNames?.tag
                   )}
                 >
@@ -290,7 +290,7 @@ export function CharacterCard({
               {tags[2] && (
                 <span
                   className={cn(
-                    'hidden @[240px]:inline max-w-[21%] truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    'hidden @[240px]:inline! max-w-[26%] truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
                     classNames?.tag
                   )}
                 >
@@ -301,7 +301,7 @@ export function CharacterCard({
               {tags.length > 2 && (
                 <span
                   className={cn(
-                    '@[240px]:hidden shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    '@[240px]:hidden! shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
                     classNames?.tag
                   )}
                 >
@@ -311,7 +311,7 @@ export function CharacterCard({
               {tags.length > 3 && (
                 <span
                   className={cn(
-                    'hidden @[240px]:inline shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    'hidden @[240px]:inline! shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
                     classNames?.tag
                   )}
                 >

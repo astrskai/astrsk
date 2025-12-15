@@ -73,7 +73,11 @@ export interface SessionCardProps {
    * Use CardMetadataContainer and CardMetadataItem for consistent styling.
    */
   renderMetadata?: () => React.ReactNode;
-  /** Tags to display on the card */
+  /**
+   * Tags to display on the card.
+   * Container Query responsive: 2 tags on narrow cards (<240px), 3 on wider cards.
+   * Remaining tags shown as "+n" indicator.
+   */
   tags?: string[];
   /** Session summary/description */
   summary?: string;
@@ -361,24 +365,47 @@ export function SessionCard({
       {/* Session Details */}
       <div className='flex flex-grow flex-col justify-between p-5'>
         <div className='space-y-2 md:space-y-3'>
-          {/* Tags */}
+          {/* Tags - Container Query: 2 tags on narrow (<240px), 3 tags on wider cards */}
           {tags.length > 0 && (
             <div className={cn('flex flex-wrap gap-2', classNames?.tagsContainer)}>
-              {tags.slice(0, 3).map((tag, index) => (
+              {/* First 2 tags - always visible */}
+              {tags.slice(0, 2).map((tag, index) => (
                 <span
                   key={`${tag}-${index}`}
                   className={cn(
-                    'rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    'max-w-[35%] @[240px]:max-w-[26%] truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
                     classNames?.tag
                   )}
                 >
                   {tag}
                 </span>
               ))}
+              {/* 3rd tag - only visible when card is 240px+ */}
+              {tags[2] && (
+                <span
+                  className={cn(
+                    'hidden @[240px]:inline! max-w-[26%] truncate rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    classNames?.tag
+                  )}
+                >
+                  {tags[2]}
+                </span>
+              )}
+              {/* +n badge - shows different counts based on card width */}
+              {tags.length > 2 && (
+                <span
+                  className={cn(
+                    '@[240px]:hidden! shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    classNames?.tag
+                  )}
+                >
+                  +{tags.length - 2}
+                </span>
+              )}
               {tags.length > 3 && (
                 <span
                   className={cn(
-                    'rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
+                    'hidden @[240px]:inline! shrink-0 rounded border border-zinc-700/50 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] text-zinc-300',
                     classNames?.tag
                   )}
                 >

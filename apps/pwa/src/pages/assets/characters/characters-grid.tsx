@@ -1,10 +1,9 @@
 import { Upload, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { CharacterCard, type CardAction } from "@astrsk/design-system";
 
 import { CharacterCard as CharacterCardDomain } from "@/entities/card/domain/character-card";
 import { DialogConfirm } from "@/shared/ui/dialogs";
-import CharacterCard from "@/features/character/ui/character-card";
-import type { CardAction } from "@/features/common/ui";
 import { useCardActions } from "@/features/common/model/use-card-actions";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { IconHarpyLogo } from "@/shared/assets/icons";
