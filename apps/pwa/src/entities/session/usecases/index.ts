@@ -7,4 +7,5 @@ export * from "./delete-session";
 export * from "./get-session-list-items";
 export * from "./import-session-from-cloud";
 export * from "./list-session";
+export * from "./migrate-sessions-with-messages-to-play-sessions";
 export * from "./save-session";

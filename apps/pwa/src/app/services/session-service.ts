@@ -27,6 +27,7 @@ import {
   DeleteSession,
   GetSessionListItems,
   ListSession,
+  MigrateSessionsWithMessagesToPlaySessions,
   SaveSession,
 } from "@/entities/session/usecases";
 import { CloneTemplateSession } from "@/entities/session/usecases/clone-template-session";
@@ -79,6 +80,7 @@ export class SessionService {
   public static importSessionFromFile: ImportSessionFromFile;
   public static listSessionByCard: ListSessionByCard;
   public static listSessionByFlow: ListSessionByFlow;
+  public static migrateSessionsWithMessagesToPlaySessions: MigrateSessionsWithMessagesToPlaySessions;
 
   public static init(
     turnRepo: DrizzleTurnRepo, // TODO: replace to interface
@@ -233,5 +235,10 @@ export class SessionService {
 
     this.listSessionByCard = new ListSessionByCard(this.sessionRepo);
     this.listSessionByFlow = new ListSessionByFlow(this.sessionRepo);
+    this.migrateSessionsWithMessagesToPlaySessions = new MigrateSessionsWithMessagesToPlaySessions(
+      this.listSession,
+      this.sessionRepo,
+      this.cloneTemplateSession,
+    );
   }
 }

@@ -136,7 +136,20 @@ export async function getAstrskAiModel(modelId: string): Promise<DefaultModelSel
   const { ApiService } = await import("@/app/services");
   const { ApiSource } = await import("@/entities/api/domain");
 
-  // Get astrsk.ai provider
+  // Hardcode model names for known AstrskAi models instead of querying the API
+  const MODEL_NAMES: Record<string, string> = {
+    "openai-compatible:google/gemini-2.5-flash": "Gemini 2.5 Flash",
+    "openai-compatible:google/gemini-3-pro": "Gemini 3 Pro",
+    "openai-compatible:deepseek/deepseek-chat": "DeepSeek v3.2",
+    "openai-compatible:zai-org/GLM-4.6": "GLM-4.6",
+  };
+
+  const modelName = MODEL_NAMES[modelId];
+  if (!modelName) {
+    return null;
+  }
+
+  // Get astrsk.ai provider connection (need real connection ID for API calls)
   const connectionsResult = await ApiService.listApiConnection.execute({});
   if (connectionsResult.isFailure) {
     return null;
@@ -151,26 +164,10 @@ export async function getAstrskAiModel(modelId: string): Promise<DefaultModelSel
     return null;
   }
 
-  // Get models from provider to find the model name
-  const modelsResult = await ApiService.listApiModel.execute({
-    apiConnectionId: astrskaiProvider.id,
-  });
-
-  if (modelsResult.isFailure) {
-    return null;
-  }
-
-  const models = modelsResult.getValue();
-  const model = models.find((m) => m.id === modelId);
-
-  if (!model) {
-    return null;
-  }
-
   return {
     apiConnectionId: astrskaiProvider.id.toString(),
     apiSource: ApiSource.AstrskAi,
-    modelId: model.id,
-    modelName: model.name,
+    modelId: modelId,
+    modelName: modelName,
   };
 }
