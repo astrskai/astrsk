@@ -1,64 +1,22 @@
-// TODO: remove this file
-
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { useReactFlow } from "@xyflow/react";
-
 import { useQuery } from "@tanstack/react-query";
-import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
-import type { ApiConnectionWithModels } from "@/shared/hooks/use-api-connections-with-models";
-import { Combobox, ComboboxOption } from "@/shared/ui";
-import { MobileOverrideProvider } from "@/shared/hooks/use-mobile-override";
 
-import { Agent } from "@/entities/agent/domain/agent";
+import { Agent, ModelTier } from "@/entities/agent/domain/agent";
+import { apiConnectionQueries } from "@/entities/api/api-connection-queries";
 import { ApiSource, apiSourceLabel } from "@/entities/api/domain";
 import { ApiModel } from "@/entities/api/domain/api-model";
 import { TaskType } from "@/entities/flow/domain/flow";
+import type { ApiConnectionWithModels } from "@/shared/hooks/use-api-connections-with-models";
+import { MobileOverrideProvider } from "@/shared/hooks/use-mobile-override";
+import { useModelStore } from "@/shared/stores/model-store";
+import { Combobox, ComboboxOption } from "@/shared/ui";
 
-const PromptAndModelSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("api-model"),
-
-    // Prompt
-    promptId: z.string(),
-
-    // API Model
-    apiConnectionId: z.string(),
-    apiSource: z.string(),
-    modelId: z.string(),
-    modelName: z.string(),
-    tokenizerType: z.string().nullable(),
-    openrouterProvider: z.string().nullable(),
-
-    // Pinned Model
-    pinnedModelId: z.null(),
-  }),
-  z.object({
-    type: z.literal("pinned-model"),
-
-    // Prompt
-    promptId: z.string(),
-
-    // API Model
-    apiConnectionId: z.null(),
-    apiSource: z.null(),
-    modelId: z.null(),
-    modelName: z.null(),
-    tokenizerType: z.null(),
-    openrouterProvider: z.null(),
-
-    // Pinned Model
-    pinnedModelId: z.string(),
-  }),
-]);
-
-const StepPromptsSchema = z.object({
-  aiResponse: PromptAndModelSchema,
-  userResponse: PromptAndModelSchema,
-});
-
-type StepPromptsSchemaType = z.infer<typeof StepPromptsSchema>;
+// Special values for tier-based model selection
+const MODEL_TIER_VALUES = {
+  LIGHT: "model-tier|light",
+  HEAVY: "model-tier|heavy",
+} as const;
 
 const getApiModelValue = (
   apiSource: string,
@@ -72,13 +30,45 @@ const getApiModelValue = (
   return `api-model|${apiConnectionId}|${apiSource}|${modelId}|${modelName}`;
 };
 
+// Get display name for tier-based model (shows configured default or "Not configured")
+const getTierModelDisplayName = (tier: ModelTier): string => {
+  const modelStore = useModelStore.getState();
+  const defaultModel = tier === ModelTier.Heavy
+    ? modelStore.defaultStrongModel
+    : modelStore.defaultLiteModel;
+
+  if (defaultModel) {
+    return defaultModel.modelName;
+  }
+  return "Not configured";
+};
+
 // Model options
 const modelOptions = (
   apiConnectionsWithModels: ApiConnectionWithModels[],
 ): ComboboxOption[] => {
   const options: ComboboxOption[] = [];
 
-  // Add all models
+  // Add tier-based options at the top (Light Model, Heavy Model)
+  const lightDisplayName = getTierModelDisplayName(ModelTier.Light);
+  const heavyDisplayName = getTierModelDisplayName(ModelTier.Heavy);
+
+  options.push({
+    label: "Default Models",
+    value: "default-models-group",
+    sub: [
+      {
+        label: `Light Model (${lightDisplayName})`,
+        value: MODEL_TIER_VALUES.LIGHT,
+      },
+      {
+        label: `Strong Model (${heavyDisplayName})`,
+        value: MODEL_TIER_VALUES.HEAVY,
+      },
+    ],
+  });
+
+  // Add all provider models
   if (apiConnectionsWithModels) {
     for (const apiConnectionWithModels of apiConnectionsWithModels) {
       const { apiConnection, models } = apiConnectionWithModels;
@@ -113,59 +103,76 @@ const modelOptions = (
   return options;
 };
 
+/**
+ * Flattens nested combobox options into a flat array of values
+ */
 const flattenOptions = (opts: ComboboxOption[]): string[] =>
   opts.flatMap((opt) => (opt.sub ? flattenOptions(opt.sub) : [opt.value]));
 
-const getIntendedModelValue = (
-  apiConnectionId: string | undefined,
+/**
+ * Extracts the actual model ID from a potentially encoded modelId
+ * For OpenAI Compatible, modelId is stored as "{title}|{actualModelId}"
+ */
+const extractActualModelId = (modelId: string | undefined, apiSource: string): string | undefined => {
+  if (!modelId) return undefined;
+  if (apiSource === ApiSource.OpenAICompatible && modelId.includes("|")) {
+    return modelId.split("|").pop();
+  }
+  return modelId;
+};
+
+/**
+ * Checks if an option value matches the stored model data
+ * Option value format: "api-model|connectionId|source|modelId|modelName"
+ */
+const isMatchingOption = (
+  optionValue: string,
   apiSource: string,
-  modelId: string,
+  modelId: string | undefined,
+  modelName: string,
+): boolean => {
+  const parts = optionValue.split("|");
+  if (parts.length < 5) return false;
+
+  const [, , valueApiSource, valueModelId, valueModelName] = parts;
+
+  if (valueApiSource !== apiSource) return false;
+  if (valueModelName !== modelName) return false;
+
+  // For Astrsk AI, only compare by model name (modelId format varies)
+  if (apiSource === ApiSource.AstrskAi) return true;
+
+  // For other sources, compare modelId
+  const actualModelId = extractActualModelId(modelId, apiSource);
+  return valueModelId === actualModelId;
+};
+
+/**
+ * Finds the matching option value for the current model selection
+ * Priority: specific model > model tier
+ */
+const getIntendedModelValue = (
+  apiSource: string,
+  modelId: string | undefined,
   modelName: string,
   allValues: string[] | undefined,
-) => {
-  if (apiConnectionId) {
-    const result = getApiModelValue(
-      apiSource ?? "",
-      modelId ?? "",
-      modelName ?? "",
-      apiConnectionId ?? "",
+  modelTier?: ModelTier,
+): string | undefined => {
+  // Priority 1: Find specific model by apiSource/modelId/modelName
+  if (allValues && apiSource && modelName) {
+    const matchingValue = allValues.find((value) =>
+      isMatchingOption(value, apiSource, modelId, modelName)
     );
-    return result;
-  } else {
-    if (!allValues || !apiSource || !modelId || !modelName) {
-      return undefined;
-    }
-
-    // When we don't have apiConnectionId, we need to find the matching value
-    // by checking if the value contains our apiSource, modelId, and modelName
-
-    for (const value of allValues) {
-      // Split the value to check its components
-      const parts = value.split("|");
-      if (parts.length >= 5) {
-        // Format: api-model|connectionId|source|modelId|modelName
-        const valueApiSource = parts[2];
-        const valueModelId = parts[3];
-        const valueModelName = parts[4];
-
-        // For Astrsk AI, compare by model name since modelId format varies
-        if (apiSource === ApiSource.AstrskAi) {
-          if (valueApiSource === apiSource && valueModelName === modelName) {
-            return value;
-          }
-        } else {
-          // For all other sources, compare full modelId and modelName
-          if (
-            valueApiSource === apiSource &&
-            valueModelId === modelId &&
-            valueModelName === modelName
-          ) {
-            return value;
-          }
-        }
-      }
-    }
+    if (matchingValue) return matchingValue;
   }
+
+  // Priority 2: Fall back to model tier if no specific model found
+  if (modelTier) {
+    return modelTier === ModelTier.Heavy
+      ? MODEL_TIER_VALUES.HEAVY
+      : MODEL_TIER_VALUES.LIGHT;
+  }
+
   return undefined;
 };
 
@@ -215,7 +222,7 @@ const PromptItem = ({
   modelChanged: (
     modelName?: string,
     isDirtyFromModel?: boolean,
-    modelInfo?: { apiSource?: string; modelId?: string },
+    modelInfo?: { apiSource?: string; modelId?: string; modelTier?: ModelTier },
   ) => void;
   agent: Agent | undefined;
 }) => {
@@ -223,94 +230,17 @@ const PromptItem = ({
   const reactFlow = useReactFlow();
   const zoomScale = reactFlow.getViewport().zoom;
 
-  // Helper to extract actual modelId from encoded format: "{title}|{actualModelId}"
-  const extractActualModelId = (encodedModelId: string | undefined, apiSource: string | undefined): string | undefined => {
-    if (!encodedModelId) return encodedModelId;
-    if (apiSource === ApiSource.OpenAICompatible && encodedModelId.includes("|")) {
-      const parts = encodedModelId.split("|");
-      if (parts.length === 2) {
-        return parts[1]; // Return actual model ID
-      }
-    }
-    return encodedModelId; // Return as-is for non-encoded format
-  };
-
-  const actualModelId = extractActualModelId(agent?.props.modelId, agent?.props.apiSource);
-
-  const methods = useForm<StepPromptsSchemaType>({
-    defaultValues: {
-      aiResponse: {
-        type: "api-model",
-        apiSource:
-          agent?.props.apiSource == null ? undefined : agent?.props.apiSource,
-        modelId: actualModelId,
-        modelName:
-          agent?.props.modelName == null ? undefined : agent?.props.modelName,
-      },
-    },
-  });
-  const { watch, setValue, trigger, reset } = methods;
-  const field =
-    taskType === TaskType.AiResponse ? "aiResponse" : "userResponse";
-  // const type = watch(`${field}.type`);
-  const apiConnectionId = watch(`${field}.apiConnectionId`);
-  const apiSource = watch(`${field}.apiSource`);
-  const modelId = watch(`${field}.modelId`);
-  const modelName = watch(`${field}.modelName`);
-
-  // API models - using React Query directly for better control
-
   const { data: apiConnectionsWithModels, refetch } = useQuery(
     apiConnectionQueries.listWithModels(),
   );
 
+  // Refetch on mount to ensure fresh data
   useEffect(() => {
     refetch();
-  }, []);
+  }, [refetch]);
 
-  // Reset form when agent props change
-  useEffect(() => {
-    if (agent?.props.modelName) {
-      const extractedModelId = extractActualModelId(agent.props.modelId, agent.props.apiSource);
-      reset({
-        aiResponse: {
-          type: "api-model",
-          apiSource: agent.props.apiSource == null ? undefined : agent.props.apiSource,
-          modelId: extractedModelId,
-          modelName: agent.props.modelName == null ? undefined : agent.props.modelName,
-        },
-      });
-    }
-  }, [agent?.props.modelName, agent?.props.apiSource, agent?.props.modelId, reset]);
-
-
-  // NOTE: We're not automatically validating/clearing Astrsk API models
-  // because it's difficult to determine when models are actually loaded vs still loading.
-  // The dropdown will show available models and user can manually change if needed.
-
-  // Helper to flatten option values
-
-  // useEffect(() => {
-  //   // Compute intended value from agent
-  //   const intendedValue = getApiModelValue(
-  //     agent.props.apiSource ?? "",
-  //     agent.props.modelId ?? "",
-  //     agent.props.modelName ?? "",
-  //   );
-  //   const allValues = flattenOptions(modelOptions());
-  //   // Only set if it exists and is not already set
-  //   for (const value of allValues) {
-  //     if (intendedValue && value.includes(intendedValue)) {
-  //       setIntendedModelValue(value);
-  //       break;
-  //     }
-  //   }
-  // }, [
-  //   JSON.stringify(modelOptions()),
-  //   agent,
-  //   intendedModelValue,
-  //   setIntendedModelValue,
-  // ]);
+  const options = modelOptions(apiConnectionsWithModels ?? []);
+  const allValues = flattenOptions(options);
 
   const handleModelChange = (
     apiConnectionId: string,
@@ -333,6 +263,12 @@ const PromptItem = ({
 
     // Pass the full model information to the parent
     if (modelName) {
+      console.log(`[ModelSelection UI] Specific model selected:`, {
+        apiSource,
+        modelId: finalModelId,
+        modelName,
+        modelTier: undefined, // Not passed for specific model selection
+      });
       modelChanged(modelName, true, {
         apiSource: apiSource,
         modelId: finalModelId,
@@ -350,33 +286,38 @@ const PromptItem = ({
           searchEmpty="No model found."
           zoomScale={zoomScale}
           isZoom={true}
-          options={(() => {
-            const opts = modelOptions(apiConnectionsWithModels ?? []);
-            return opts;
-          })()}
-          value={(() => {
-            const val = getIntendedModelValue(
-              apiConnectionId ?? "",
-              apiSource ?? "",
-              modelId ?? "",
-              modelName ?? "",
-              flattenOptions(modelOptions(apiConnectionsWithModels ?? [])),
-            );
-            return val;
-          })()}
+          options={options}
+          value={getIntendedModelValue(
+            agent?.props.apiSource ?? "",
+            agent?.props.modelId,
+            agent?.props.modelName ?? "",
+            allValues,
+            agent?.props.modelTier,
+          )}
           onValueChange={(selectedValue) => {
+            // Handle tier-based selection (Light/Heavy Model)
+            if (selectedValue.startsWith("model-tier|")) {
+              const tier = selectedValue.split("|")[1] as "light" | "heavy";
+              const tierEnum = tier === "heavy" ? ModelTier.Heavy : ModelTier.Light;
+              const displayName = tier === "heavy" ? "Strong Model" : "Light Model";
+
+              // Notify parent with tier info (mutation handles optimistic update)
+              modelChanged(displayName, true, {
+                apiSource: undefined,
+                modelId: undefined,
+                modelTier: tierEnum,
+              });
+              return;
+            }
+
+            // Handle specific model selection
             const splittedValue = selectedValue.split("|");
-            setValue(`${field}.apiConnectionId`, splittedValue[1]);
-            setValue(`${field}.apiSource`, splittedValue[2]);
-            setValue(`${field}.modelId`, splittedValue[3]);
-            setValue(`${field}.modelName`, splittedValue[4]);
             handleModelChange(
               splittedValue[1],
               splittedValue[2],
               splittedValue[3],
               splittedValue[4],
             );
-            trigger();
           }}
           // disabled={!promptId}
         />
@@ -396,24 +337,20 @@ const ModelItem = ({
   ) => void;
   forceMobile?: boolean;
 }) => {
-  const [apiConnectionId, setApiConnectionId] = useState<string>("");
   const [apiSource, setApiSource] = useState<string>("");
   const [modelId, setModelId] = useState<string>("");
   const [modelName, setModelName] = useState<string>("");
 
-  // API models - using React Query directly
   const { data: apiConnectionsWithModels } = useQuery(
     apiConnectionQueries.listWithModels(),
   );
 
-  // Handle model change
   const handleModelChange = (
-    apiConnectionId: string,
+    _apiConnectionId: string,
     apiSource: string,
     modelId: string,
     modelName: string,
   ) => {
-    setApiConnectionId(apiConnectionId);
     setApiSource(apiSource);
     setModelId(modelId);
     setModelName(modelName);
@@ -431,9 +368,8 @@ const ModelItem = ({
             searchEmpty="No model found."
             options={modelOptions(apiConnectionsWithModels ?? [])}
             value={getIntendedModelValue(
-              apiConnectionId ?? "",
               apiSource ?? "",
-              modelId ?? "",
+              modelId,
               modelName ?? "",
               flattenOptions(modelOptions(apiConnectionsWithModels ?? [])),
             )}
@@ -461,7 +397,7 @@ const AgentModels = ({
   modelChanged: (
     modelName?: string,
     isDirtyFromModel?: boolean,
-    modelInfo?: { apiSource?: string; modelId?: string },
+    modelInfo?: { apiSource?: string; modelId?: string; modelTier?: ModelTier },
   ) => void;
 }) => {
   return (

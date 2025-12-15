@@ -4,6 +4,10 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { downloadFile, logger } from "@/shared/lib";
+import {
+  DEFAULT_SHARE_EXPIRATION_DAYS,
+  ExportType,
+} from "@/shared/lib/cloud-upload-helpers";
 import { FlowService } from "@/app/services/flow-service";
 import { SessionService } from "@/app/services/session-service";
 import { AgentService } from "@/app/services/agent-service";
@@ -11,7 +15,7 @@ import { Session } from "@/entities/session/domain/session";
 import { ModelTier, AgentModelTierInfo } from "@/entities/agent/domain";
 import {
   useDeleteFlowWithNodes,
-  useCloneFlowWithNodes,
+  useCloneFlow,
 } from "@/entities/flow/api/mutations/flow-mutations";
 
 interface DeleteDialogState {
@@ -26,6 +30,7 @@ interface ExportDialogState {
   flowId: string | null;
   title: string;
   agents: AgentModelTierInfo[];
+  exportType: ExportType;
 }
 
 interface LoadingStates {
@@ -71,7 +76,7 @@ export function useFlowActions(
   const queryClient = useQueryClient();
 
   const deleteFlowMutation = useDeleteFlowWithNodes();
-  const cloneFlowMutation = useCloneFlowWithNodes();
+  const cloneFlowMutation = useCloneFlow();
 
   const [deleteDialogState, setDeleteDialogState] = useState<DeleteDialogState>(
     {
@@ -88,6 +93,7 @@ export function useFlowActions(
       flowId: null,
       title: "",
       agents: [],
+      exportType: "file",
     },
   );
 
@@ -95,9 +101,10 @@ export function useFlowActions(
 
   /**
    * Open export dialog and fetch agent info
+   * @param exportType - "file" for JSON download, "cloud" for Harpy cloud upload
    */
   const handleExportClick = useCallback(
-    (flowId: string, title: string) =>
+    (flowId: string, title: string, exportType: ExportType = "file") =>
       async (e: MouseEvent) => {
         e.stopPropagation();
 
@@ -127,8 +134,11 @@ export function useFlowActions(
           // Get agents for this flow
           const agents: AgentModelTierInfo[] = [];
 
+          // Handle both domain format (props.nodes) and persistence format (nodes)
+          const nodes = flowQuery.props?.nodes || (flowQuery as any).nodes || [];
+
           // Get agent data from flow nodes
-          for (const node of flowQuery.props.nodes) {
+          for (const node of nodes) {
             if (node.type === "agent") {
               // Agent nodes store agentId in node.data.agentId, fallback to node.id
               const agentId = (node.data as any)?.agentId || node.id;
@@ -150,18 +160,26 @@ export function useFlowActions(
               });
 
               if (agentQuery) {
+                // Handle both domain format (props.X) and persistence format (direct X)
+                const agentProps = agentQuery.props || agentQuery;
                 agents.push({
                   agentId: agentId,
-                  agentName: agentQuery.props.name,
-                  modelName: agentQuery.props.modelName || "",
+                  agentName: agentProps.name || (agentQuery as any).name || "",
+                  modelName: agentProps.modelName || (agentQuery as any).model_name || "",
                   recommendedTier: ModelTier.Light,
-                  selectedTier: agentQuery.props.modelTier || ModelTier.Light,
+                  selectedTier: agentProps.modelTier || (agentQuery as any).model_tier || ModelTier.Light,
                 });
               }
             }
           }
 
-          setExportDialogState({ isOpen: true, flowId, title, agents });
+          setExportDialogState({
+            isOpen: true,
+            flowId,
+            title,
+            agents,
+            exportType,
+          });
         } catch (error) {
           logger.error("Failed to prepare export:", error);
           toastError("Failed to prepare export", {
@@ -179,7 +197,7 @@ export function useFlowActions(
   );
 
   /**
-   * Export flow with tier selections
+   * Export flow (either to file or cloud) with tier selections
    */
   const handleExportConfirm = useCallback(
     async (
@@ -187,43 +205,66 @@ export function useFlowActions(
       title: string,
       modelTierSelections: Map<string, ModelTier>,
     ) => {
+      const { exportType } = exportDialogState;
+
       try {
-        // Export flow to file with model tier selections
-        const fileOrError = await FlowService.exportFlowWithNodes.execute({
-          flowId: new UniqueEntityID(flowId),
-          modelTierSelections,
-        });
+        if (exportType === "cloud") {
+          // Export flow to cloud (Supabase)
+          const shareResult = await FlowService.exportFlowToCloud.execute({
+            flowId: new UniqueEntityID(flowId),
+            expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS, // 1 hour expiration
+          });
 
-        if (fileOrError.isFailure) {
-          throw new Error(fileOrError.getError());
+          if (shareResult.isFailure) {
+            throw new Error(shareResult.getError());
+          }
+
+          const shareLink = shareResult.getValue();
+
+          toastSuccess("Successfully exported to cloud!", {
+            description: `Opening share page. Expires: ${shareLink.expiresAt.toLocaleDateString()}`,
+          });
+
+          // Open the share URL in a new tab
+          window.open(shareLink.shareUrl, "_blank");
+        } else {
+          // Export flow to file (JSON download) with all nodes (agents, dataStore, if nodes)
+          const result = await FlowService.exportFlowWithNodes.execute({
+            flowId: new UniqueEntityID(flowId),
+            modelTierSelections,
+          });
+
+          if (result.isFailure) {
+            throw new Error(result.getError());
+          }
+
+          const file = result.getValue();
+          downloadFile(file);
+
+          toastSuccess("Flow exported to file", {
+            description: `"${title}" downloaded as ${file.name}`,
+          });
         }
-
-        const file = fileOrError.getValue();
-        if (!file) {
-          throw new Error("Export returned empty file");
-        }
-
-        // Export flow file
-        downloadFile(file);
-
-        toastSuccess("Successfully exported!", {
-          description: `"${title}" exported`,
-        });
 
         setExportDialogState({
           isOpen: false,
           flowId: null,
           title: "",
           agents: [],
+          exportType: "file",
         });
       } catch (error) {
         logger.error(error);
-        toastError("Failed to export", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
+        toastError(
+          `Failed to export ${exportType === "cloud" ? "to cloud" : "to file"}`,
+          {
+            description:
+              error instanceof Error ? error.message : "Unknown error",
+          },
+        );
       }
     },
-    [],
+    [exportDialogState],
   );
 
   /**
@@ -354,6 +395,7 @@ export function useFlowActions(
       flowId: null,
       title: "",
       agents: [],
+      exportType: "file",
     });
   }, []);
 

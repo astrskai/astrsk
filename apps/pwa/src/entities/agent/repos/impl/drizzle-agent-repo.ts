@@ -20,10 +20,9 @@ import {
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class DrizzleAgentRepo
-  implements SaveAgentRepo, LoadAgentRepo, DeleteAgentRepo
-{
+  implements SaveAgentRepo, LoadAgentRepo, DeleteAgentRepo {
   // constructor(private updateLocalSyncMetadata: UpdateLocalSyncMetadata) {}
-  constructor() {}
+  constructor() { }
 
   async saveAgent(agent: Agent, tx?: Transaction): Promise<Result<Agent>> {
     const db = tx ?? (await Drizzle.getInstance());
@@ -53,8 +52,7 @@ export class DrizzleAgentRepo
       return Result.ok(AgentDrizzleMapper.toDomain(savedRow));
     } catch (error) {
       return Result.fail<Agent>(
-        `Failed to save agent: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to save agent: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -77,8 +75,7 @@ export class DrizzleAgentRepo
       return Result.ok(AgentDrizzleMapper.toDomain(row));
     } catch (error) {
       return Result.fail<Agent>(
-        `Failed to get agent: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to get agent: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -126,8 +123,7 @@ export class DrizzleAgentRepo
       return Result.ok(entities);
     } catch (error) {
       return Result.fail<Agent[]>(
-        `Failed to search agent: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to search agent: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -150,8 +146,32 @@ export class DrizzleAgentRepo
       return Result.ok(row.length === 0);
     } catch (error) {
       return Result.fail<boolean>(
-        `Failed to check agent name: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to check agent name: ${error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  async getAgentsByFlowId(
+    flowId: UniqueEntityID,
+    tx?: Transaction,
+  ): Promise<Result<Agent[]>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Select agents by flow_id
+      const rows = await db
+        .select()
+        .from(agents)
+        .where(eq(agents.flow_id, flowId.toString()));
+
+      // Convert rows to entities
+      const entities = rows.map((row) => AgentDrizzleMapper.toDomain(row));
+
+      // Return agents
+      return Result.ok(entities);
+    } catch (error) {
+      return Result.fail<Agent[]>(
+        `Failed to get agents by flow ID: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -176,14 +196,13 @@ export class DrizzleAgentRepo
       // Convert objects to Maps
       const enabledParameters = new Map(Object.entries(row.enabled_parameters || {}));
       const parameterValues = new Map(Object.entries(row.parameter_values || {}));
-      
+
       const result = { enabledParameters, parameterValues };
 
       return Result.ok(result);
     } catch (error) {
       return Result.fail(
-        `Failed to get agent parameters: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to get agent parameters: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -213,8 +232,7 @@ export class DrizzleAgentRepo
       return Result.ok();
     } catch (error) {
       return Result.fail(
-        `Failed to update agent parameters: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to update agent parameters: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -292,7 +310,7 @@ export class DrizzleAgentRepo
     try {
       // Build update object with only provided fields
       const updateObj: any = {};
-      
+
       if (outputData.enabledStructuredOutput !== undefined) {
         updateObj.enabled_structured_output = outputData.enabledStructuredOutput;
       }
@@ -321,8 +339,7 @@ export class DrizzleAgentRepo
       return Result.ok();
     } catch (error) {
       return Result.fail(
-        `Failed to update agent output: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to update agent output: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -379,8 +396,7 @@ export class DrizzleAgentRepo
       };
     } catch (error) {
       throw new Error(
-        `Failed to fetch agent prompt fields: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to fetch agent prompt fields: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -427,8 +443,7 @@ export class DrizzleAgentRepo
       return Result.ok();
     } catch (error) {
       return Result.fail(
-        `Failed to update agent prompt: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to update agent prompt: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -488,8 +503,7 @@ export class DrizzleAgentRepo
       return Result.ok();
     } catch (error) {
       return Result.fail(
-        `Failed to update agent name: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to update agent name: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -573,8 +587,7 @@ export class DrizzleAgentRepo
       return Result.ok();
     } catch (error) {
       return Result.fail(
-        `Failed to update agent model: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to update agent model: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }
@@ -600,8 +613,7 @@ export class DrizzleAgentRepo
       return Result.ok();
     } catch (error) {
       return Result.fail<void>(
-        `Failed to delete agent: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to delete agent: ${error instanceof Error ? error.message : String(error)
         }`,
       );
     }

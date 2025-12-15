@@ -9,7 +9,10 @@ import { LoadCardRepo, SaveCardRepo } from "@/entities/card/repos";
 
 interface Command {
   cardId: UniqueEntityID;
+  sessionId?: UniqueEntityID; // Optional - if provided, creates session-local copy
   tx?: Transaction;
+  /** Optional predefined ID for the cloned card (used for cloud export to avoid popup blockers) */
+  clonedCardId?: UniqueEntityID;
 }
 
 export class CloneCard implements UseCase<Command, Result<Card>> {
@@ -19,7 +22,7 @@ export class CloneCard implements UseCase<Command, Result<Card>> {
     private cloneAsset: CloneAsset,
   ) {}
 
-  async execute({ cardId, tx }: Command): Promise<Result<Card>> {
+  async execute({ cardId, sessionId, tx, clonedCardId }: Command): Promise<Result<Card>> {
     try {
       // Fetch the original card
       const originalCardOrError = await this.loadCardRepo.getCardById(
@@ -45,10 +48,14 @@ export class CloneCard implements UseCase<Command, Result<Card>> {
         iconAssetId = clonedAsset.id;
       }
 
-      // Clone card
+      // Use predefined ID if provided, otherwise generate new ID
+      const newCardId = clonedCardId ?? new UniqueEntityID();
+
+      // Clone card (optionally with sessionId for session-local copy)
       const clonedCard = originalCard
-        .clone(new UniqueEntityID(), {
+        .clone(newCardId, {
           iconAssetId: iconAssetId,
+          sessionId: sessionId, // If provided, creates session-local copy
         })
         .throwOnFailure()
         .getValue();

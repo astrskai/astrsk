@@ -1,50 +1,96 @@
-# React + TypeScript + Vite
+# Astrsk PWA
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Main Progressive Web Application for Astrsk - an AI roleplay platform.
 
-Currently, two official plugins are available:
+## Architecture
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This project follows [Feature-Sliced Design (FSD)](https://feature-sliced.design/):
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```
+src/
+├── app/           # App initialization, providers, services
+├── pages/         # Route pages (1 route = 1 page)
+│   ├── assets/    # Character, Scenario, Workflow pages
+│   ├── home/      # Home page
+│   ├── sessions/  # Session list & chat pages
+│   └── settings/  # Settings pages
+├── widgets/       # Reusable UI blocks across pages
+├── features/      # User interactions & business logic
+│   ├── character/
+│   ├── flow/
+│   ├── scenario/
+│   ├── session/
+│   └── vibe/
+├── entities/      # Business domain models
+│   ├── agent/
+│   ├── card/
+│   ├── flow/
+│   ├── session/
+│   └── ...
+├── shared/        # Foundation (UI kit, hooks, utilities)
+│   ├── ui/        # UI components (shadcn/ui)
+│   ├── hooks/     # Custom hooks
+│   ├── stores/    # Zustand stores
+│   └── lib/       # Utilities
+├── db/            # Database schemas and migrations (Drizzle)
+└── routes/        # TanStack Router route definitions
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Development
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+```bash
+# From monorepo root
+pnpm dev:pwa
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+# Or from this directory
+pnpm dev
 ```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development server (port 5173) |
+| `pnpm build` | Build for production |
+| `pnpm preview` | Preview production build |
+| `pnpm test` | Run tests with Vitest |
+| `pnpm lint` | Run ESLint |
+| `pnpm db:export` | Export database to JSON |
+
+## Key Technologies
+
+- **React 18** + **TypeScript 5**
+- **Vite 6** with PWA plugin
+- **TanStack Router** for file-based routing
+- **TanStack Query v5** for server state
+- **Zustand** for client state
+- **Drizzle ORM** + **PGlite** for local database
+- **Tailwind CSS v4** for styling
+- **@astrsk/design-system** for shared components
+
+## Database
+
+Local-first architecture using PGlite (PostgreSQL compiled to WASM):
+
+- Data stored in browser's OPFS (Origin Private File System)
+- Full SQL support with Drizzle ORM
+- Automatic migrations on app startup
+
+## Testing
+
+```bash
+# Run all tests
+pnpm test
+
+# Run with coverage
+pnpm test -- --coverage
+
+# Run entity-specific tests
+pnpm test:entities
+```
+
+## Related Documentation
+
+- [FSD Guide](../../FSD_GUIDE.md) - Architecture guidelines
+- [TanStack Query Guide](../../TANSTACK_QUERY.md) - Query patterns
+- [Initialization System](./INITIALIZATION_SYSTEM.md) - App startup flow

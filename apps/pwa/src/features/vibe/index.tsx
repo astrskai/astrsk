@@ -41,6 +41,7 @@ import {
   applyOperationsToResource,
 } from "./utils/edit-mappers";
 import { DataStoreFieldPipeline } from "./lib/data-store-field-pipeline";
+import { notifyFlowNodesEdgesUpdate } from "@/shared/lib/flow-local-state-sync";
 
 // Types
 import { VibePanelProps, ReviewData, SimpleMessage } from "./types";
@@ -833,9 +834,6 @@ Operations are being generated and will be ready for review shortly.`;
                         });
 
                         // Notify flow panel of nodes/edges update to ensure UI reflects reverted state
-                        const { notifyFlowNodesEdgesUpdate } = await import(
-                          "@/shared/lib/flow-local-state-sync"
-                        );
                         const flowNodes = flow.props.nodes || [];
                         const flowEdges = (flow.props.edges || []).map(
                           (edge: any) => ({
@@ -948,7 +946,7 @@ Operations are being generated and will be ready for review shortly.`;
     return (
       <div
         className={cn(
-          "bg-background h-[calc(100vh-var(--topbar-height))] w-12 border-l",
+          "bg-canvas h-[calc(100vh-var(--topbar-height))] w-12 border-l",
           className,
         )}
       >
@@ -965,8 +963,8 @@ Operations are being generated and will be ready for review shortly.`;
     <div
       className={cn(
         isLocalPanel
-          ? "bg-background-surface-2 flex h-full w-full flex-col"
-          : "bg-background-surface-1 flex h-[calc(100vh-var(--topbar-height))] w-full min-w-80 flex-col rounded-lg",
+          ? "bg-surface-raised flex h-full w-full flex-col"
+          : "bg-surface flex h-[calc(100vh-var(--topbar-height))] w-full min-w-80 flex-col rounded-lg",
         className,
       )}
     >

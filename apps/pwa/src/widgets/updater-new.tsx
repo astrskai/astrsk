@@ -11,7 +11,11 @@ import { logger } from "@/shared/lib/logger";
 import { Import } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const UpdaterNew = () => {
+interface UpdaterNewProps {
+  variant?: "default" | "indicator";
+}
+
+const UpdaterNew = ({ variant = "default" }: UpdaterNewProps) => {
   // Electron updater
   const [isUpdateReadyElectron, setIsUpdateReadyElectron] = useState(false);
   const isDownloading = useRef<boolean>(false);
@@ -62,8 +66,13 @@ const UpdaterNew = () => {
   const isUpdateReadyPWA = useAppStore.use.isUpdateReadyPWA;
   const isUpdateReady = isUpdateReadyElectron && isUpdateReadyPWA;
 
-  return (
-    (isDownloading.current || isUpdateReady) && (
+  const hasUpdate = isDownloading.current || isUpdateReady;
+
+  if (!hasUpdate) return null;
+
+  // Indicator variant: small pulsing dot for collapsed sidebar
+  if (variant === "indicator") {
+    return (
       <TooltipProvider delayDuration={0}>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -73,41 +82,79 @@ const UpdaterNew = () => {
                   restartApp();
                 }
               }}
-              className="relative flex flex-col items-center justify-center gap-1 data-[state=closed]:[&>.dot]:opacity-100"
+              className="relative flex items-center justify-center"
             >
-              <Import size={24} />
-              <span className="text-[10px] font-medium">Update</span>
-              {isUpdateReady && (
-                <div
-                  className={cn(
-                    "bg-status-required absolute -top-[3px] -right-[4px] size-[5px] rounded-full",
-                    "dot opacity-0 transition-opacity",
-                  )}
-                />
-              )}
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
+              </span>
             </button>
           </TooltipTrigger>
           <TooltipContent
-            side="top"
+            side="right"
             variant="button"
-            sideOffset={14}
+            sideOffset={8}
             className="z-[100]"
           >
-            <div className="flex flex-col px-2 py-2">
-              {isUpdateReady ? (
-                <TypoTiny className="p-0 leading-tight">
-                  Restart to update!
-                </TypoTiny>
-              ) : (
-                <TypoTiny className="p-0 leading-tight">
-                  Downloading update... {downloadProgressPercent}%
-                </TypoTiny>
-              )}
-            </div>
+            <TypoTiny className="p-0 leading-tight">
+              {isUpdateReady
+                ? "Restart to update!"
+                : `Downloading... ${downloadProgressPercent}%`}
+            </TypoTiny>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-    )
+    );
+  }
+
+  // Default variant: icon with animation
+  return (
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => {
+              if (isUpdateReady) {
+                restartApp();
+              }
+            }}
+            className="relative flex items-center justify-center text-zinc-400 transition-colors hover:text-white"
+          >
+            <Import
+              size={20}
+              className={cn(
+                isUpdateReady && "animate-bounce text-blue-400",
+                !isUpdateReady && "animate-pulse",
+              )}
+            />
+            {isUpdateReady && (
+              <span className="absolute -top-0.5 -right-0.5 flex size-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
+              </span>
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          variant="button"
+          sideOffset={14}
+          className="z-[100]"
+        >
+          <div className="flex flex-col px-2 py-2">
+            {isUpdateReady ? (
+              <TypoTiny className="p-0 leading-tight">
+                Restart to update!
+              </TypoTiny>
+            ) : (
+              <TypoTiny className="p-0 leading-tight">
+                Downloading update... {downloadProgressPercent}%
+              </TypoTiny>
+            )}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 

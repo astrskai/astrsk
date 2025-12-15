@@ -64,7 +64,7 @@ export const VibePanelHeader: React.FC<VibePanelHeaderProps> = ({
             onClick={onReset}
             className="bg-tailwind-colors-base-transparent/0 h-7 rounded-full px-3 py-2"
           >
-            <span className="text-text-subtle text-xs leading-none font-normal">
+            <span className="text-fg-subtle text-xs leading-none font-normal">
               Clear All Chat
             </span>
           </Button>
@@ -76,7 +76,7 @@ export const VibePanelHeader: React.FC<VibePanelHeaderProps> = ({
             onClick={onToggleCollapse}
             className="bg-tailwind-colors-base-transparent/0 h-7 rounded-full px-3 py-2"
           >
-            <span className="text-text-subtle text-xs leading-none font-normal">
+            <span className="text-fg-subtle text-xs leading-none font-normal">
               Close
             </span>
           </Button>

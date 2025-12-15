@@ -51,6 +51,7 @@ export class PlotCard extends AggregateRoot<CardProps & PlotCardProps> {
           description: props.description,
           scenarios: props.scenarios,
           lorebook: props.lorebook,
+          sessionId: props.sessionId,
           updatedAt: props.updatedAt || new Date(),
         },
         id ?? new UniqueEntityID(),

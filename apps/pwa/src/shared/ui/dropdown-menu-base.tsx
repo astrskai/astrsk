@@ -48,7 +48,7 @@ const DropdownMenuBase = ({
           align={align}
           sideOffset={sideOffset}
           className={cn(
-            "z-50 min-w-[8rem] overflow-hidden rounded-md border border-gray-700 bg-gray-800/95 p-1 shadow-lg backdrop-blur-lg",
+            "z-50 min-w-[8rem] overflow-hidden rounded-md border border-border-subtle bg-surface p-1 shadow-lg backdrop-blur-lg",
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
             "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2",
@@ -63,9 +63,9 @@ const DropdownMenuBase = ({
               onClick={item.onClick}
               disabled={item.disabled}
               className={cn(
-                "relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm text-gray-200 transition-colors outline-none select-none",
-                "hover:bg-gray-700 hover:text-gray-50",
-                "focus:bg-gray-700 focus:text-gray-50",
+                "relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm text-fg-default transition-colors outline-none select-none",
+                "hover:bg-surface-raised hover:text-fg-default",
+                "focus:bg-surface-raised focus:text-fg-default",
                 "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
                 item.className,
               )}

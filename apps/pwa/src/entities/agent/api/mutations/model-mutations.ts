@@ -7,7 +7,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AgentService } from "@/app/services/agent-service";
 import { FlowService } from "@/app/services/flow-service";
-import { Agent, ApiType } from "@/entities/agent/domain/agent";
+import { ModelTier } from "@/entities/agent/domain/agent";
 import { ApiSource } from "@/entities/api/domain";
 import { UniqueEntityID } from "@/shared/domain";
 import { agentKeys } from "../query-factory";
@@ -22,32 +22,64 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ 
-      apiSource, 
-      modelId, 
-      modelName 
-    }: { 
-      apiSource?: ApiSource; 
-      modelId?: string; 
+    mutationFn: async ({
+      apiSource,
+      modelId,
+      modelName,
+      modelTier,
+    }: {
+      apiSource?: ApiSource;
+      modelId?: string;
       modelName?: string;
+      modelTier?: ModelTier;
     }) => {
+      // Determine if using default model based on whether modelTier is provided
+      const useDefaultModel = modelTier !== undefined;
+
+      console.log(`[ModelMutation] Updating agent model:`, {
+        agentId,
+        apiSource,
+        modelId,
+        modelName,
+        modelTier,
+        useDefaultModel,
+      });
+
       // Get agent
       const agentResult = await AgentService.getAgent.execute(new UniqueEntityID(agentId));
       if (agentResult.isFailure) throw new Error("Agent not found");
       const agent = agentResult.getValue();
-      
-      // Update agent
-      const updatedAgent = agent.update({ 
+
+      // Update agent - when useDefaultModel is true, use tier-based defaults
+      const updatePayload = useDefaultModel ? {
+        // Tier-based selection: clear specific model, set tier
+        apiSource: undefined,
+        modelId: undefined,
+        modelName,
+        modelTier,
+        useDefaultModel: true,
+      } : {
+        // Specific model selection: set model fields
         ...(apiSource !== undefined && { apiSource }),
         ...(modelId !== undefined && { modelId }),
-        ...(modelName !== undefined && { modelName })
-      });
+        ...(modelName !== undefined && { modelName }),
+        useDefaultModel: false,
+      };
+
+      console.log(`[ModelMutation] Update payload:`, updatePayload);
+      console.log(`[ModelMutation] Agent BEFORE update - useDefaultModel:`, agent.props.useDefaultModel);
+
+      const updatedAgent = agent.update(updatePayload);
       if (updatedAgent.isFailure) {
         throw new Error(updatedAgent.getError());
       }
-      
+
+      console.log(`[ModelMutation] Agent AFTER update - useDefaultModel:`, updatedAgent.getValue().props.useDefaultModel);
+
       // Save agent
       const saveResult = await AgentService.saveAgent.execute(updatedAgent.getValue());
+
+      console.log(`[ModelMutation] Agent saved successfully`);
       if (saveResult.isFailure) {
         throw new Error(saveResult.getError());
       }
@@ -81,15 +113,29 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
       );
       
       // Optimistically update the model query (not the full agent)
+      const useDefaultModel = updates.modelTier !== undefined;
       queryClient.setQueryData(
         agentKeys.model(agentId),
         (old: any) => {
           if (!old) return old;
+          // When using default model (tier-based), clear specific model fields
+          if (useDefaultModel) {
+            return {
+              ...old,
+              apiSource: undefined,
+              modelId: undefined,
+              modelName: updates.modelName,
+              modelTier: updates.modelTier,
+              useDefaultModel: true,
+            };
+          }
+          // When specific model is selected
           return {
             ...old,
             ...(updates.apiSource !== undefined && { apiSource: updates.apiSource }),
             ...(updates.modelId !== undefined && { modelId: updates.modelId }),
-            ...(updates.modelName !== undefined && { modelName: updates.modelName })
+            ...(updates.modelName !== undefined && { modelName: updates.modelName }),
+            useDefaultModel: false,
           };
         }
       );
@@ -129,17 +175,23 @@ export const useUpdateAgentModel = (flowId: string, agentId: string) => {
     },
     
     onSettled: async () => {
+      // Remove cached data to force refetch (invalidate only marks as stale)
+      queryClient.removeQueries({
+        queryKey: agentKeys.detail(agentId),
+        exact: true,
+      });
+
       await Promise.all([
         // Invalidate the specific model query that was optimistically updated
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: agentKeys.model(agentId)
         }),
-        // Invalidate the full agent detail to refresh all agent data
-        queryClient.invalidateQueries({ 
+        // Refetch the full agent detail to get fresh data
+        queryClient.refetchQueries({
           queryKey: agentKeys.detail(agentId)
         }),
         // Invalidate flow validation since model changes affect flow validation
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey: flowKeys.validation(flowId)
         })
       ]);

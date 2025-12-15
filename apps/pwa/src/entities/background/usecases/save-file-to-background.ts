@@ -7,13 +7,18 @@ import { SaveFileToAsset } from "@/entities/asset/usecases/save-file-to-asset";
 import { Background } from "@/entities/background/domain/background";
 import { SaveBackground } from "@/entities/background/usecases/save-background";
 
-export class SaveFileToBackground implements UseCase<File, Result<Background>> {
+interface Command {
+  file: File;
+  sessionId: UniqueEntityID;
+}
+
+export class SaveFileToBackground implements UseCase<Command, Result<Background>> {
   constructor(
     private saveFileToAsset: SaveFileToAsset,
     private saveBackground: SaveBackground,
   ) {}
 
-  async execute(file: File): Promise<Result<Background>> {
+  async execute({ file, sessionId }: Command): Promise<Result<Background>> {
     try {
       // Save file to asset
       const backgroundId = new UniqueEntityID();
@@ -30,6 +35,7 @@ export class SaveFileToBackground implements UseCase<File, Result<Background>> {
         {
           name: file.name,
           assetId: asset.id,
+          sessionId,
         },
         backgroundId,
       );

@@ -100,13 +100,13 @@ export function FileUploadButton({
               },
           // Variant styles (only applied when not icon-only)
           !iconOnly && {
-            "bg-button-background-primary hover:bg-primary-strong text-button-foreground-primary":
+            "bg-button-background-primary hover:bg-brand-500 text-button-foreground-primary":
               variant === "default",
-            "bg-background-surface-4 text-text-primary hover:bg-background-surface-3":
+            "bg-hover text-text-primary hover:bg-surface-overlay":
               variant === "secondary",
-            "text-button-background-primary hover:bg-background-surface-2 hover:text-primary-strong bg-transparent":
+            "text-button-background-primary hover:bg-surface-raised hover:text-brand-500 bg-transparent":
               variant === "ghost",
-            "bg-status-destructive text-text-primary hover:bg-status-destructive/90":
+            "bg-status-error text-text-primary hover:bg-status-error/90":
               variant === "destructive",
             "border-button-background-primary text-button-background-primary hover:bg-button-background-primary hover:text-button-foreground-primary border-1 bg-transparent":
               variant === "outline",

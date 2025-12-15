@@ -86,7 +86,7 @@ export function NavigationTabs({
         const isActive = activeTab === tab.value;
         const linkClassName = cn(
           "inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
-          "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+          "focus-visible:ring-border-focus focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
           isActive
             ? "bg-blue-900 text-gray-50 shadow hover:bg-blue-900/80"
             : "bg-black-alternate text-text-secondary hover:bg-black-alternate/80",

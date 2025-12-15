@@ -8,10 +8,11 @@ import { UniqueEntityID } from "@/shared/domain";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { BackgroundService } from "@/app/services/background-service";
 import {
-  fetchBackgrounds,
-  useBackgroundStore,
-} from "@/shared/stores/background-store";
+  backgroundQueries,
+  defaultBackgrounds,
+} from "@/entities/background/api";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/shared/lib";
 
 import {
@@ -59,9 +60,9 @@ const BackgroundListItem = ({
   return (
     <div
       className={cn(
-        "bg-background-surface-1 relative cursor-pointer overflow-hidden rounded-lg",
+        "bg-surface relative cursor-pointer overflow-hidden rounded-lg",
         isMobile ? "w-full" : "w-[338px]",
-        isActive && "ring-primary-normal ring-2",
+        isActive && "ring-brand-400 ring-2",
       )}
       onClick={(e) => {
         e.stopPropagation();
@@ -137,8 +138,15 @@ const StepBackground = () => {
     useFormContext<StepBackgroundSchemaType>();
   const backgroundId = watch("backgroundId");
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
 
-  const { defaultBackgrounds, backgrounds } = useBackgroundStore();
+  // Generate a stable temporary session ID for background uploads during session creation
+  const [tempSessionId] = useState(() => new UniqueEntityID());
+
+  // Query user backgrounds for this temporary session
+  const { data: userBackgrounds = [] } = useQuery(
+    backgroundQueries.listBySession(tempSessionId),
+  );
 
   // Set default background (first one) on initial mount only
   useEffect(() => {
@@ -146,7 +154,7 @@ const StepBackground = () => {
       setValue("backgroundId", defaultBackgrounds[0].id.toString());
       trigger();
     }
-  }, [defaultBackgrounds]); // Only run when defaultBackgrounds changes, not backgroundId
+  }, []); // Only run on mount
 
   // Handle background click
   const handleBackgroundClick = (newBackgroundId: UniqueEntityID) => {
@@ -161,20 +169,28 @@ const StepBackground = () => {
   // Handle add new background
   const refBackgroundFileInput = useRef<HTMLInputElement>(null);
   const [isOpenImportDialog, setIsOpenImportDialog] = useState(false);
-  const handleAddNewBackground = useCallback(async (file: File) => {
-    // Save file to background
-    const backgroundOrError =
-      await BackgroundService.saveFileToBackground.execute(file);
-    if (backgroundOrError.isFailure) {
-      return;
-    }
+  const handleAddNewBackground = useCallback(
+    async (file: File) => {
+      // Save file to background with temporary session ID
+      const backgroundOrError =
+        await BackgroundService.saveFileToBackground.execute({
+          file,
+          sessionId: tempSessionId,
+        });
+      if (backgroundOrError.isFailure) {
+        return;
+      }
 
-    // Refresh backgrounds
-    fetchBackgrounds();
+      // Invalidate query to refresh backgrounds
+      queryClient.invalidateQueries({
+        queryKey: backgroundQueries.listBySession(tempSessionId).queryKey,
+      });
 
-    // Close dialog
-    setIsOpenImportDialog(false);
-  }, []);
+      // Close dialog
+      setIsOpenImportDialog(false);
+    },
+    [tempSessionId, queryClient],
+  );
 
   // Handle delete background
   const handleDeleteBackground = useCallback(
@@ -185,17 +201,19 @@ const StepBackground = () => {
         return;
       }
 
-      // Refresh backgrounds
-      fetchBackgrounds();
+      // Invalidate query to refresh backgrounds
+      queryClient.invalidateQueries({
+        queryKey: backgroundQueries.listBySession(tempSessionId).queryKey,
+      });
     },
-    [],
+    [tempSessionId, queryClient],
   );
 
   if (isMobile) {
     return (
       <div className="flex h-full flex-col overflow-hidden">
         <div className="mx-auto flex h-full w-full max-w-[600px] flex-col px-4">
-          <p className="text-text-body mb-[40px] flex-shrink-0 text-sm leading-tight font-medium">
+          <p className="text-neutral-300 mb-[40px] flex-shrink-0 text-sm leading-tight font-medium">
             Choose a background for your session: import image or select from
             the ones provided.
           </p>
@@ -253,7 +271,7 @@ const StepBackground = () => {
                     <AddImageBackgroundItem
                       onClick={() => refBackgroundFileInput.current?.click()}
                     />
-                    {backgrounds.map((background) => (
+                    {userBackgrounds.map((background) => (
                       <BackgroundListItem
                         key={background.id.toString()}
                         assetId={background.assetId}
@@ -328,9 +346,9 @@ const StepBackground = () => {
                   handleAddNewBackground(file);
                 }}
               >
-                <Import size={72} className="text-muted-foreground" />
+                <Import size={72} className="text-fg-subtle" />
                 <div>
-                  <TypoBase className="text-muted-foreground">
+                  <TypoBase className="text-fg-subtle">
                     Choose a file or drag it here
                   </TypoBase>
                 </div>
@@ -353,13 +371,13 @@ const StepBackground = () => {
           </Dialog>
         </div>
       </div>
-      {backgrounds.length > 0 && (
+      {userBackgrounds.length > 0 && (
         <div className="flex flex-col gap-[16px]">
           <div className="text-text-primary text-[16px] leading-[19px] font-[600]">
             User added backgrounds
           </div>
           <div className="flex flex-wrap justify-start gap-[24px]">
-            {backgrounds.map((background) => (
+            {userBackgrounds.map((background) => (
               <BackgroundListItem
                 key={background.id.toString()}
                 assetId={background.assetId}

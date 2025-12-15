@@ -51,10 +51,10 @@ const FloatingLabelInput = React.forwardRef<
       <div className="relative">
         <div
           className={cn(
-            "bg-background-surface-4 ring-offset-background relative flex w-full rounded-md px-3 py-2 text-sm",
+            "bg-hover ring-offset-canvas relative flex w-full rounded-md px-3 py-2 text-sm",
             "h-[57px]",
             error
-              ? "border-status-destructive-primary border"
+              ? "border-status-error border"
               : "focus-within:border-primary",
             props.readOnly ? "cursor-pointer" : "",
             className,
@@ -122,8 +122,8 @@ const FloatingLabelInput = React.forwardRef<
             className={cn(
               "mt-1 mr-4 ml-4 text-xs",
               error
-                ? "text-status-destructive-primary"
-                : "text-text-input-subtitle",
+                ? "text-status-error"
+                : "text-fg-subtle",
               variant === "guide" ? "text-right" : "",
             )}
           >
@@ -135,7 +135,7 @@ const FloatingLabelInput = React.forwardRef<
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="text-text-input-subtitle hover:text-text-input-hover active:text-text-input-clicked absolute top-1/2 right-2 grid size-[24px] -translate-y-1/2 cursor-pointer place-content-center">
+                <div className="text-fg-subtle hover:text-text-input-hover active:text-text-input-clicked absolute top-1/2 right-2 grid size-[24px] -translate-y-1/2 cursor-pointer place-content-center">
                   <CircleHelp size={14} className="cursor-pointer" />
                 </div>
               </TooltipTrigger>

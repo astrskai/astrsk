@@ -1,19 +1,22 @@
-import { useMemo, useCallback, useRef, useState } from "react";
+import { useMemo, useCallback, useRef } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { cn } from "@/shared/lib";
 import {
-  useBackgroundStore,
+  backgroundQueries,
+  defaultBackgrounds,
   isDefaultBackground,
+  getBackgroundAssetId,
   DefaultBackground,
-  fetchBackgrounds,
-} from "@/shared/stores/background-store";
+} from "@/entities/background/api";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { UniqueEntityID } from "@/shared/domain";
 import { Background } from "@/entities/background/domain/background";
 import { BackgroundService } from "@/app/services/background-service";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface BackgroundGridProps {
+  sessionId: UniqueEntityID;
   currentBackgroundId?: UniqueEntityID;
   onSelect: (backgroundId: UniqueEntityID | undefined) => void;
   isEditable?: boolean; // false = no delete button, no name overlay (mobile)
@@ -22,7 +25,8 @@ interface BackgroundGridProps {
 interface BackgroundItemProps {
   background: Background | DefaultBackground;
   isSelected: boolean;
-  showNameOverlay?: boolean; // Show name overlay at bottom
+  isEditable?: boolean;
+  isLoading?: boolean;
   onSelect: (backgroundId: UniqueEntityID) => void;
   onDelete?: (backgroundId: UniqueEntityID) => void;
 }
@@ -30,13 +34,11 @@ interface BackgroundItemProps {
 const BackgroundItem = ({
   background,
   isSelected,
-  showNameOverlay = false,
+  isLoading = false,
   onSelect,
   onDelete,
 }: BackgroundItemProps) => {
-  const [assetUrl] = useAsset(
-    isDefaultBackground(background) ? undefined : background.assetId,
-  );
+  const [assetUrl] = useAsset(getBackgroundAssetId(background));
 
   const imageSrc = useMemo(() => {
     if (isDefaultBackground(background)) {
@@ -57,7 +59,8 @@ const BackgroundItem = ({
       <button
         type="button"
         onClick={() => onSelect(background.id)}
-        className="absolute inset-0 h-full w-full"
+        disabled={isLoading}
+        className="absolute inset-0 h-full w-full disabled:cursor-wait"
         aria-label={`Select ${background.name}`}
       >
         {imageSrc ? (
@@ -72,10 +75,10 @@ const BackgroundItem = ({
           </div>
         )}
 
-        {/* Name overlay */}
-        {showNameOverlay && (
-          <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-            <p className="truncate text-xs text-white">{background.name}</p>
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-400 border-t-blue-500" />
           </div>
         )}
       </button>
@@ -96,23 +99,29 @@ const BackgroundItem = ({
 };
 
 export default function BackgroundGrid({
+  sessionId,
   currentBackgroundId,
   onSelect,
   isEditable = false,
 }: BackgroundGridProps) {
-  const { defaultBackgrounds, backgrounds } = useBackgroundStore();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeTab, setActiveTab] = useState<"astrsk" | "user">("astrsk");
 
-  const hasUserBackgrounds = backgrounds.length > 0;
+  // Query user backgrounds for this session
+  const { data: userBackgrounds = [] } = useQuery(
+    backgroundQueries.listBySession(sessionId),
+  );
 
   // Handle add new background
   const handleAddBackground = useCallback(
     async (file: File) => {
       try {
-        // Save file to background
+        // Save file to background with sessionId
         const backgroundOrError =
-          await BackgroundService.saveFileToBackground.execute(file);
+          await BackgroundService.saveFileToBackground.execute({
+            file,
+            sessionId,
+          });
 
         if (backgroundOrError.isFailure) {
           toastError("Failed to upload background", {
@@ -121,11 +130,10 @@ export default function BackgroundGrid({
           return;
         }
 
-        // Refresh backgrounds
-        await fetchBackgrounds();
-
-        // Switch to user added tab
-        setActiveTab("user");
+        // Invalidate query to refresh backgrounds
+        queryClient.invalidateQueries({
+          queryKey: backgroundQueries.listBySession(sessionId).queryKey,
+        });
 
         toastSuccess("Background uploaded successfully");
       } catch (error) {
@@ -134,13 +142,17 @@ export default function BackgroundGrid({
         });
       }
     },
-    [setActiveTab],
+    [sessionId, queryClient],
   );
 
   // Handle delete background
   const handleDeleteBackground = useCallback(
     async (backgroundId: UniqueEntityID) => {
       try {
+        // Check if the background being deleted is currently selected
+        const isDeletingCurrentBackground =
+          currentBackgroundId?.equals(backgroundId) ?? false;
+
         const backgroundOrError =
           await BackgroundService.deleteBackground.execute(backgroundId);
 
@@ -151,8 +163,15 @@ export default function BackgroundGrid({
           return;
         }
 
-        // Refresh backgrounds
-        await fetchBackgrounds();
+        // If we deleted the currently selected background, clear the selection
+        if (isDeletingCurrentBackground) {
+          onSelect(undefined);
+        }
+
+        // Invalidate query to refresh backgrounds
+        queryClient.invalidateQueries({
+          queryKey: backgroundQueries.listBySession(sessionId).queryKey,
+        });
 
         toastSuccess("Background deleted successfully");
       } catch (error) {
@@ -161,7 +180,7 @@ export default function BackgroundGrid({
         });
       }
     },
-    [],
+    [sessionId, currentBackgroundId, onSelect, queryClient],
   );
 
   return (
@@ -196,79 +215,54 @@ export default function BackgroundGrid({
         }}
       />
 
-      {/* Tab Navigation */}
-      <div className="flex border-b border-border-muted">
-        <button
-          type="button"
-          onClick={() => setActiveTab("astrsk")}
-          className={cn(
-            "flex-1 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
-            activeTab === "astrsk"
-              ? "border-brand-300 text-brand-300"
-              : "border-surface-raised text-fg-subtle hover:text-fg-muted",
-          )}
-        >
-          astrsk provided
-        </button>
-        {hasUserBackgrounds && (
+      {/* Combined grid: No Background → User added (deletable) → Default backgrounds */}
+      <div className="custom-scrollbar max-h-96 overflow-y-auto">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+          {/* No background option - shows the default galaxy gradient */}
           <button
             type="button"
-            onClick={() => setActiveTab("user")}
+            onClick={() => onSelect(undefined)}
             className={cn(
-              "flex-1 border-b-2 px-4 py-2 text-sm font-medium transition-colors",
-              activeTab === "user"
-                ? "border-brand-300 text-brand-300"
-                : "border-surface-raised text-fg-subtle hover:text-fg-muted",
+              "relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
+              "hover:border-brand-500 hover:brightness-110",
+              !currentBackgroundId ? "border-brand-500" : "border-border-muted",
             )}
           >
-            User added
-          </button>
-        )}
-      </div>
-
-      {/* Tab Content */}
-      <div className="custom-scrollbar max-h-96 overflow-y-auto">
-        {activeTab === "astrsk" ? (
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {/* No background option */}
-            <button
-              type="button"
-              onClick={() => onSelect(undefined)}
-              className={cn(
-                "relative aspect-video overflow-hidden rounded-lg border-2 transition-all",
-                "hover:border-brand-500 hover:brightness-110",
-                !currentBackgroundId ? "border-brand-500" : "border-border-muted",
-              )}
+            <div
+              className="flex h-full w-full items-center justify-center"
+              style={{
+                background:
+                  "radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 50%), " +
+                  "radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), " +
+                  "radial-gradient(ellipse at 50% 50%, rgba(79, 70, 229, 0.06) 0%, transparent 70%), " +
+                  "linear-gradient(to bottom, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%)",
+              }}
             >
-              <div className="flex h-full w-full items-center justify-center bg-surface">
-                <p className="text-xs text-fg-subtle">No background</p>
-              </div>
-            </button>
+              <p className="text-xs text-fg-subtle">Default</p>
+            </div>
+          </button>
 
-            {defaultBackgrounds.map((background) => (
-              <BackgroundItem
-                key={background.id.toString()}
-                background={background}
-                isSelected={currentBackgroundId?.equals(background.id) ?? false}
-                showNameOverlay={isEditable}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {backgrounds.map((background) => (
-              <BackgroundItem
-                key={background.id.toString()}
-                background={background}
-                isSelected={currentBackgroundId?.equals(background.id) ?? false}
-                showNameOverlay={false}
-                onSelect={onSelect}
-                onDelete={isEditable ? handleDeleteBackground : undefined}
-              />
-            ))}
-          </div>
-        )}
+          {/* User added backgrounds (deletable) */}
+          {userBackgrounds.map((background) => (
+            <BackgroundItem
+              key={background.id.toString()}
+              background={background}
+              isSelected={currentBackgroundId?.equals(background.id) ?? false}
+              onSelect={onSelect}
+              onDelete={isEditable ? handleDeleteBackground : undefined}
+            />
+          ))}
+
+          {/* Default astrsk backgrounds (not deletable) */}
+          {defaultBackgrounds.map((background) => (
+            <BackgroundItem
+              key={background.id.toString()}
+              background={background}
+              isSelected={currentBackgroundId?.equals(background.id) ?? false}
+              onSelect={(id) => onSelect(id)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -154,7 +154,7 @@ export function OperatorDropdown({
                           selectedType === dataType.type ||
                             value.dataType === dataType.type
                             ? "text-fg-default"
-                            : "text-background-surface-5",
+                            : "text-fg-subtle",
                         )}
                       />
                     </div>

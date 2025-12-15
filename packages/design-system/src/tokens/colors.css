@@ -1,0 +1,158 @@
+/* ==============================================
+   ASTRSK DESIGN SYSTEM - Color Tokens
+   Based on apps/pwa/src/app/styles/theme.css
+   ============================================== */
+
+/* -----------------------------------------------
+   1. PRIMITIVE COLOR TOKENS
+   Define in :root for CSS var() access
+   Also register in @theme for Tailwind utilities
+   ----------------------------------------------- */
+:root {
+  /* Neutral Scale (aligned with Tailwind zinc for consistency) */
+  --color-neutral-950: #09090b;
+  --color-neutral-900: #18181b;
+  --color-neutral-800: #27272a;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-600: #52525b;
+  --color-neutral-500: #71717a;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-50: #fafafa;
+  --color-white: #ffffff;
+
+  /* Brand - Muted Blue */
+  --color-brand-700: #3a5a8a;
+  --color-brand-600: #4a6fa5;
+  --color-brand-500: #5b82ba;
+  --color-brand-400: #7a9cc9;
+  --color-brand-300: #a3bdd9;
+
+  /* Accent - Asset Types */
+  --color-accent-indigo: #818cf8;
+  --color-accent-orange: #fb923c;
+  --color-accent-purple: #c084fc;
+  --color-accent-cyan: #22d3ee;
+
+  /* Status */
+  --color-status-success: #34d399;
+  --color-status-warning: #fbbf24;
+  --color-status-error: #f87171;
+  --color-status-info: #60a5fa;
+}
+
+/* -----------------------------------------------
+   2. SEMANTIC TOKENS - Dark theme (default)
+   Naming convention follows Material Design & GitHub Primer
+   ----------------------------------------------- */
+:root {
+  /* === Backgrounds === */
+  --bg-canvas: #000000;
+  --bg-surface: var(--color-neutral-950);
+  --bg-surface-raised: var(--color-neutral-900);
+  --bg-surface-overlay: var(--color-neutral-800);
+  --bg-hover: var(--color-neutral-700);
+  --bg-active: var(--color-neutral-600);
+  --bg-emphasis: var(--color-brand-300);
+  --bg-overlay: rgba(0, 0, 0, 0.8);
+  --bg-scrim: rgba(0, 0, 0, 0.6);
+
+  /* === Foreground (Text) === */
+  --fg-default: var(--color-white);
+  --fg-muted: var(--color-neutral-200);
+  --fg-subtle: var(--color-neutral-400);
+  --fg-disabled: var(--color-neutral-600);
+  --fg-on-emphasis: var(--color-neutral-900);
+
+  /* === Borders === */
+  --border-default: var(--color-neutral-800);
+  --border-muted: var(--color-neutral-700);
+  --border-subtle: var(--color-neutral-600);
+  --border-focus: var(--color-brand-500);
+  --border-emphasis: var(--color-neutral-50);
+
+  /* === Accent (Brand highlights) === */
+  --accent-primary: var(--color-brand-400);
+  --accent-secondary: var(--color-accent-purple);
+
+  /* === Interactive (Buttons, Links) === */
+  --btn-primary-bg: var(--color-brand-600);
+  --btn-primary-bg-hover: var(--color-brand-500);
+  --btn-primary-bg-active: var(--color-brand-700);
+  --btn-primary-fg: var(--color-white);
+  --btn-secondary-bg: var(--color-neutral-800);
+  --btn-secondary-bg-hover: var(--color-neutral-700);
+  --btn-secondary-fg: var(--color-neutral-200);
+  --btn-outline-border: var(--color-neutral-600);
+  --btn-outline-fg: var(--color-neutral-200);
+  --btn-outline-bg-hover: var(--color-neutral-800);
+  --btn-ghost-fg: var(--color-neutral-300);
+  --btn-ghost-bg-hover: var(--color-neutral-800);
+
+  /* === Component Specific === */
+  --card-bg: var(--color-neutral-900);
+  --card-border: var(--color-neutral-800);
+  --input-bg: var(--color-neutral-800);
+  --input-border: var(--color-neutral-700);
+  --sidebar-bg: var(--color-neutral-950);
+  --header-bg: var(--color-neutral-950);
+}
+
+/* -----------------------------------------------
+   3. LIGHT THEME
+   ----------------------------------------------- */
+:root.light,
+.light {
+  /* === Backgrounds === */
+  --bg-canvas: var(--color-white);
+  --bg-surface: var(--color-neutral-50);
+  --bg-surface-raised: var(--color-white);
+  --bg-surface-overlay: var(--color-neutral-100);
+  --bg-hover: var(--color-neutral-200);
+  --bg-active: var(--color-neutral-300);
+  --bg-emphasis: var(--color-brand-600);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --bg-scrim: rgba(0, 0, 0, 0.3);
+
+  /* === Foreground (Text) === */
+  --fg-default: var(--color-neutral-900);
+  --fg-muted: var(--color-neutral-700);
+  --fg-subtle: var(--color-neutral-500);
+  --fg-disabled: var(--color-neutral-300);
+  --fg-on-emphasis: var(--color-white);
+
+  /* === Borders === */
+  --border-default: var(--color-neutral-200);
+  --border-muted: var(--color-neutral-100);
+  --border-subtle: var(--color-neutral-300);
+  --border-focus: var(--color-brand-500);
+  --border-emphasis: var(--color-neutral-900);
+
+  /* === Accent === */
+  --accent-primary: var(--color-brand-600);
+  --accent-secondary: var(--color-accent-purple);
+
+  /* === Interactive === */
+  --btn-primary-bg: var(--color-brand-600);
+  --btn-primary-bg-hover: var(--color-brand-700);
+  --btn-primary-bg-active: var(--color-brand-700);
+  --btn-primary-fg: var(--color-white);
+  --btn-secondary-bg: var(--color-neutral-100);
+  --btn-secondary-bg-hover: var(--color-neutral-200);
+  --btn-secondary-fg: var(--color-neutral-700);
+  --btn-outline-border: var(--color-neutral-300);
+  --btn-outline-fg: var(--color-neutral-700);
+  --btn-outline-bg-hover: var(--color-neutral-100);
+  --btn-ghost-fg: var(--color-neutral-600);
+  --btn-ghost-bg-hover: var(--color-neutral-100);
+
+  /* === Component Specific === */
+  --card-bg: var(--color-white);
+  --card-border: var(--color-neutral-200);
+  --input-bg: var(--color-white);
+  --input-border: var(--color-neutral-300);
+  --sidebar-bg: var(--color-neutral-50);
+  --header-bg: var(--color-white);
+}

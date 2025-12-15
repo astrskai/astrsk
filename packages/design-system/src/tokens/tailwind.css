@@ -1,0 +1,77 @@
+/* ==============================================
+   ASTRSK DESIGN SYSTEM - Tailwind Theme Registration
+   Register tokens for Tailwind utility classes
+   ============================================== */
+
+/* -----------------------------------------------
+   1. PRIMITIVE COLORS FOR TAILWIND
+   Usage: bg-neutral-900, text-brand-500, etc.
+   ----------------------------------------------- */
+@theme {
+  /* Neutral Scale (aligned with Tailwind zinc for consistency) */
+  --color-neutral-950: #09090b;
+  --color-neutral-900: #18181b;
+  --color-neutral-800: #27272a;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-600: #52525b;
+  --color-neutral-500: #71717a;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-50: #fafafa;
+
+  /* Brand - Muted Blue */
+  --color-brand-700: #3a5a8a;
+  --color-brand-600: #4a6fa5;
+  --color-brand-500: #5b82ba;
+  --color-brand-400: #7a9cc9;
+  --color-brand-300: #a3bdd9;
+
+  /* Accent - Asset Types */
+  --color-accent-indigo: #818cf8;
+  --color-accent-orange: #fb923c;
+  --color-accent-purple: #c084fc;
+  --color-accent-cyan: #22d3ee;
+
+  /* Status */
+  --color-status-success: #34d399;
+  --color-status-warning: #fbbf24;
+  --color-status-error: #f87171;
+  --color-status-info: #60a5fa;
+}
+
+/* -----------------------------------------------
+   2. SEMANTIC TOKENS FOR TAILWIND
+   Usage: bg-canvas, bg-surface, text-fg-default, etc.
+   ----------------------------------------------- */
+@theme inline {
+  /* Background utilities */
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-surface-raised: var(--bg-surface-raised);
+  --color-surface-overlay: var(--bg-surface-overlay);
+  --color-hover: var(--bg-hover);
+  --color-active: var(--bg-active);
+  --color-emphasis: var(--bg-emphasis);
+  --color-overlay: var(--bg-overlay);
+  --color-scrim: var(--bg-scrim);
+
+  /* Foreground utilities */
+  --color-fg-default: var(--fg-default);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-disabled: var(--fg-disabled);
+  --color-fg-on-emphasis: var(--fg-on-emphasis);
+
+  /* Border utilities */
+  --color-border-default: var(--border-default);
+  --color-border-muted: var(--border-muted);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-focus: var(--border-focus);
+  --color-border-emphasis: var(--border-emphasis);
+
+  /* Accent utilities */
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+}

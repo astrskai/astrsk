@@ -95,6 +95,7 @@ export const useCreateAgentNode = (flowId: string) => {
           promptMessages: [],
           targetApiType: ApiType.Chat,
           color: nodeColor,
+          flowId: new UniqueEntityID(flowId),
         },
         new UniqueEntityID(nodeId),
       );

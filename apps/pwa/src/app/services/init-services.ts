@@ -9,6 +9,8 @@ import { TurnService } from "@/app/services/turn-service";
 import { DataStoreNodeService } from "@/app/services/data-store-node-service";
 import { IfNodeService } from "@/app/services/if-node-service";
 import { VibeSessionService } from "@/app/services/vibe-session-service";
+import { initializeExtensions } from "@/features/extensions/bootstrap";
+import { cleanupStaleGeneratingSessions } from "@/entities/session/api/cleanup-stale-sessions";
 
 export async function initServices(
   onProgress?: (service: string, status: "start" | "success" | "error", error?: string) => void,
@@ -94,8 +96,42 @@ export async function initServices(
       FlowService.importFlowWithNodes,
       CardService.importCardFromFile,
       BackgroundService.saveFileToBackground,
+      AssetService.saveFileToAsset,
       FlowService.getModelsFromFlowFile,
+      FlowService.cloneFlow,
+      CardService.cloneCard,
+      AssetService.cloneAsset,
+      BackgroundService.cloneBackground,
+      AssetService.assetRepo, // LoadAssetRepo
+      AssetService.assetRepo, // SaveAssetRepo
+      BackgroundService.backgroundRepo,
+      CardService.cardRepo,
+      FlowService.flowRepo,
+      AgentService.agentRepo,
+      DataStoreNodeService.dataStoreNodeRepo,
+      IfNodeService.ifNodeRepo,
+      // Save repos for cloud import
+      CardService.cardRepo,
+      FlowService.flowRepo,
+      AgentService.agentRepo,
+      DataStoreNodeService.dataStoreNodeRepo,
+      IfNodeService.ifNodeRepo,
     );
+    onProgress?.(currentService, "success");
+
+    // Cleanup stale generating sessions (sessions interrupted by page refresh)
+    currentService = "session-cleanup";
+    onProgress?.(currentService, "start");
+    const cleanedCount = await cleanupStaleGeneratingSessions();
+    if (cleanedCount > 0) {
+      console.log(`[init-services] Cleaned up ${cleanedCount} interrupted session(s)`);
+    }
+    onProgress?.(currentService, "success");
+
+    // Extensions - Initialize last, after all services are ready
+    currentService = "extensions";
+    onProgress?.(currentService, "start");
+    await initializeExtensions();
     onProgress?.(currentService, "success");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

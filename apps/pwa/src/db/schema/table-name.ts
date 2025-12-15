@@ -11,10 +11,14 @@ export const TableName = {
   DataStoreNodes: "data_store_nodes",
   IfNodes: "if_nodes",
 
-  // Card
+  // Card (Old - to be removed after migration)
   Cards: "cards",
   CharacterCards: "character_cards",
   PlotCards: "plot_cards",
+
+  // Card (New)
+  Characters: "characters",
+  Scenarios: "scenarios",
 
   // Session
   Sessions: "sessions",

@@ -55,6 +55,17 @@ export class AddMessage implements UseCase<Command, Result<SessionAndMessage>> {
       const session = sessionOrError.getValue();
       const savedMessage = savedMessageOrError.getValue();
       session.addMessage(savedMessage.id);
+
+      // Track last non-user character for user fallback
+      if (
+        savedMessage.characterCardId &&
+        !savedMessage.characterCardId.equals(session.userCharacterCardId)
+      ) {
+        session.setConfig({
+          lastNonUserCharacterId: savedMessage.characterCardId.toString(),
+        });
+      }
+
       const savedSesssionOrError = await this.saveSessionRepo.saveSession(
         session,
         tx,

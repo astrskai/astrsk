@@ -17,9 +17,13 @@ interface ChatMessageActionsProps {
   isUser: boolean;
   isEditing: boolean;
   isShowDataStore: boolean;
+  isLastMessage?: boolean;
   sortedDataStoreFields?: DataStoreSavedField[];
   selectedOptionIndex: number;
   totalOptions: number;
+  isExpanded?: boolean;
+  bubbleColor?: string;
+  textColor?: string;
   onEdit: () => void;
   onEditDone: () => void;
   onEditCancel: () => void;
@@ -37,9 +41,13 @@ const ChatMessageActions = ({
   isUser,
   isEditing,
   isShowDataStore,
+  isLastMessage = true,
   sortedDataStoreFields,
   selectedOptionIndex,
   totalOptions,
+  isExpanded = false,
+  bubbleColor,
+  textColor,
   onEdit,
   onEditDone,
   onEditCancel,
@@ -48,22 +56,34 @@ const ChatMessageActions = ({
   onSelectOption,
   onRegenerate,
 }: ChatMessageActionsProps) => {
-  // Show edit mode buttons always, other buttons on hover
-  const shouldAlwaysShow = isEditing;
-
   const buttonVariants = isUser
     ? "hover:bg-fg-muted/80"
     : "hover:bg-border-subtle/80";
 
+  // Use inline styles if bubbleColor/textColor provided, otherwise use class-based styling
+  const containerStyle = bubbleColor
+    ? { backgroundColor: bubbleColor, color: textColor }
+    : undefined;
+
+  // Visibility logic:
+  // - Always show when editing
+  // - On mobile (< md): show when expanded (tap to toggle)
+  // - On desktop (>= md): show on hover only
   return (
     <div
       className={cn(
         "flex items-center gap-1 rounded-lg p-1",
-        isUser
-          ? "bg-fg-muted/80 text-surface"
-          : "bg-surface-raised/80 text-fg-muted",
-        shouldAlwaysShow ? "flex" : "hidden group-hover/message:flex",
+        !bubbleColor &&
+          (isUser
+            ? "bg-fg-muted/80 text-surface"
+            : "bg-surface-raised/80 text-fg-muted"),
+        isEditing
+          ? "flex"
+          : isExpanded
+            ? "flex md:hidden md:group-hover/message:flex"
+            : "hidden group-hover/message:flex",
       )}
+      style={containerStyle}
     >
       {isEditing ? (
         // Edit mode: Save and Cancel buttons
@@ -95,31 +115,35 @@ const ChatMessageActions = ({
           </button>
         </>
       ) : (
-        // Normal mode: All action buttons
+        // Normal mode: All action buttons for last message, only datastore for others
         <>
-          <button
-            type="button"
-            className={cn(
-              "flex items-center justify-center rounded p-1.5 transition-colors",
-              buttonVariants,
-            )}
-            aria-label="Edit"
-            onClick={onEdit}
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
+          {isLastMessage && (
+            <button
+              type="button"
+              className={cn(
+                "flex items-center justify-center rounded p-1.5 transition-colors",
+                buttonVariants,
+              )}
+              aria-label="Edit"
+              onClick={onEdit}
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          )}
 
-          <button
-            type="button"
-            className={cn(
-              "flex items-center justify-center rounded p-1.5 transition-colors",
-              buttonVariants,
-            )}
-            aria-label="Delete"
-            onClick={() => onDelete(messageId)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {isLastMessage && (
+            <button
+              type="button"
+              className={cn(
+                "flex items-center justify-center rounded p-1.5 transition-colors",
+                buttonVariants,
+              )}
+              aria-label="Delete"
+              onClick={() => onDelete(messageId)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
 
           {sortedDataStoreFields && sortedDataStoreFields.length > 0 && (
             <button
@@ -127,58 +151,63 @@ const ChatMessageActions = ({
               className={cn(
                 "flex items-center justify-center rounded p-1.5 transition-colors",
                 buttonVariants,
+                isShowDataStore && "bg-black/20",
               )}
               aria-label="History"
               onClick={onShowDataStore}
             >
-              <History
-                className={cn("h-4 w-4", isShowDataStore && "text-accent-cyan")}
-              />
+              <History className="h-4 w-4" />
             </button>
           )}
 
-          <div
-            className={cn(
-              "flex items-center gap-1 rounded p-1",
-              isUser ? "bg-fg-muted/80" : "bg-border-muted/80",
-            )}
-          >
-            <button
+          {isLastMessage && (
+            <div
               className={cn(
-                "flex items-center justify-center rounded p-0.5 transition-colors",
-                buttonVariants,
+                "flex items-center gap-1 rounded p-1",
+                !bubbleColor &&
+                  (isUser ? "bg-fg-muted/80" : "bg-border-muted/80"),
               )}
-              onClick={() => onSelectOption(messageId, "prev")}
-              aria-label="Previous option"
+              style={bubbleColor ? { backgroundColor: `${bubbleColor}cc` } : undefined}
             >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <div className="min-w-[32px] text-center text-xs font-semibold select-none">
-              {`${selectedOptionIndex + 1}/${totalOptions}`}
+              <button
+                className={cn(
+                  "flex items-center justify-center rounded p-0.5 transition-colors",
+                  buttonVariants,
+                )}
+                onClick={() => onSelectOption(messageId, "prev")}
+                aria-label="Previous option"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="min-w-[32px] text-center text-xs font-semibold select-none">
+                {`${selectedOptionIndex + 1}/${totalOptions}`}
+              </div>
+              <button
+                className={cn(
+                  "flex items-center justify-center rounded p-0.5 transition-colors",
+                  buttonVariants,
+                )}
+                onClick={() => onSelectOption(messageId, "next")}
+                aria-label="Next option"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
+          )}
+
+          {isLastMessage && (
             <button
+              type="button"
               className={cn(
-                "flex items-center justify-center rounded p-0.5 transition-colors",
+                "flex items-center justify-center rounded p-1.5 transition-colors",
                 buttonVariants,
               )}
-              onClick={() => onSelectOption(messageId, "next")}
-              aria-label="Next option"
+              aria-label="Regenerate"
+              onClick={() => onRegenerate(messageId)}
             >
-              <ChevronRight className="h-4 w-4" />
+              <RefreshCcw className="h-4 w-4" />
             </button>
-          </div>
-
-          <button
-            type="button"
-            className={cn(
-              "flex items-center justify-center rounded p-1.5 transition-colors",
-              buttonVariants,
-            )}
-            aria-label="Regenerate"
-            onClick={() => onRegenerate(messageId)}
-          >
-            <RefreshCcw className="h-4 w-4" />
-          </button>
+          )}
         </>
       )}
     </div>

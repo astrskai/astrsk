@@ -1,3 +1,4 @@
+// @refresh reset - Force full reload on HMR to prevent Dockview DOM sync issues
 import React, { useState, useEffect } from "react";
 import { IDockviewPanelHeaderProps } from "dockview";
 import { useQuery } from "@tanstack/react-query";

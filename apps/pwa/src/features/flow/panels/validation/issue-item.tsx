@@ -14,7 +14,7 @@ export function IssueItem({ variant, title, description, suggestion }: IssueItem
   const getBackgroundClass = () => {
     switch (variant) {
       case 'error':
-        return 'bg-status-destructive/30';
+        return 'bg-status-error/30';
       case 'warning':
         return 'bg-status-warning/30';
       case 'success':
@@ -31,7 +31,7 @@ export function IssueItem({ variant, title, description, suggestion }: IssueItem
       case 'warning':
         return <AlertTriangle className="max-w-4 max-h-4 text-status-warning-light" />;
       case 'success':
-        return <Check className="max-w-4 max-h-4 text-status-succeed" />;
+        return <Check className="max-w-4 max-h-4 text-status-success" />;
       case 'draft':
         return null;
     }

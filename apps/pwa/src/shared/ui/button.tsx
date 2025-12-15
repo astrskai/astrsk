@@ -6,12 +6,12 @@ import * as React from "react";
 import { cn } from "@/shared/lib";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-border-focus disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-button-background-primary text-button-foreground-primary shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] hover:bg-primary-strong hover:text-button-foreground-primary hover:shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] hover:shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] disabled:bg-button-foreground-disabled disabled:text-button-background-disabled disabled:opacity-50",
+          "bg-button-background-primary text-button-foreground-primary shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] hover:bg-brand-500 hover:text-button-foreground-primary hover:shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] hover:shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] disabled:bg-button-foreground-disabled disabled:text-button-background-disabled disabled:opacity-50",
         destructive:
           "bg-status-error text-fg-default shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] hover:bg-status-error/90 disabled:opacity-50",
         outline:
@@ -19,10 +19,12 @@ const buttonVariants = cva(
         secondary:
           "bg-hover text-fg-default font-semibold shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-offset-[-1px] outline-border-subtle hover:bg-black/20 hover:text-fg-default hover:outline-0 disabled:bg-surface disabled:opacity-50 disabled:outline-0",
         ghost:
-          "bg-transparent text-button-background-primary hover:bg-surface-raised hover:text-primary-strong disabled:opacity-50",
+          "bg-transparent text-button-background-primary hover:bg-surface-raised hover:text-brand-500 disabled:opacity-50",
         ghost_white:
           "text-fg-default hover:text-fg-subtle disabled:opacity-50",
         link: "text-primary underline-offset-4 hover:underline",
+        accent:
+          "bg-brand-500 text-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.06)] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.10)] hover:bg-brand-400 disabled:opacity-50",
       },
       size: {
         default: "h-8 rounded-full px-4 py-2 text-sm leading-tight",

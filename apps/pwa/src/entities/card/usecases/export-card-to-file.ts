@@ -1,17 +1,14 @@
 import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
 import { PNGMetadata } from "@/shared/lib/png-metadata";
+import { renderCharacterCardImage } from "@/shared/lib/render-character-card-image";
+import { renderScenarioCardImage } from "@/shared/lib/render-scenario-card-image";
 
 import { Asset } from "@/entities/asset/domain/asset";
 import { LoadAssetRepo } from "@/entities/asset/repos/load-asset-repo";
-import { Card, CharacterCard, PlotCard } from "@/entities/card/domain";
+import { Card, CharacterCard, PlotCard, ScenarioCard } from "@/entities/card/domain";
 import { LoadCardRepo } from "@/entities/card/repos";
 import { LoadGeneratedImageRepo } from "@/entities/generated-image/repos/load-generated-image-repo";
-//TODO: replace them with electron path
-import {
-  character_card_placeholder,
-  plot_card_placeholder,
-} from "@/shared/assets/placeholders";
 
 export interface ExportOptions {
   format: "json" | "png";
@@ -45,8 +42,8 @@ export class ExportCardToFile
 
     if (card instanceof CharacterCard) {
       fileContent = this.exportCharacterCard(card);
-    } else if (card instanceof PlotCard) {
-      fileContent = this.exportPlotCard(card);
+    } else if (card instanceof PlotCard || card instanceof ScenarioCard) {
+      fileContent = this.exportScenarioCard(card);
     } else {
       return Result.fail<File>("Unsupported card type");
     }
@@ -206,6 +203,11 @@ export class ExportCardToFile
   }
 
   private exportCharacterCard(card: CharacterCard): any {
+    // For 1:1 sessions, first_mes is the first message from first_messages array
+    const firstMessage = card.props.firstMessages?.[0]?.description ?? "";
+    // alternate_greetings are the remaining first_messages
+    const alternateGreetings = card.props.firstMessages?.slice(1).map(m => m.description) ?? [];
+
     return {
       spec: "chara_card_v2",
       spec_version: "2.0",
@@ -213,13 +215,13 @@ export class ExportCardToFile
         name: card.props.name,
         description: card.props.description,
         personality: "",
-        scenario: "",
-        first_mes: "",
+        scenario: card.props.scenario ?? "",
+        first_mes: firstMessage,
         mes_example: card.props.exampleDialogue,
         creator_notes: card.props.cardSummary,
         system_prompt: "",
         post_history_instructions: "",
-        alternate_greetings: [],
+        alternate_greetings: alternateGreetings,
         character_book: this.exportLorebook(card.props.lorebook),
         tags: card.props.tags,
         creator: card.props.creator,
@@ -232,14 +234,21 @@ export class ExportCardToFile
     };
   }
 
-  private exportPlotCard(card: PlotCard): any {
+  private exportScenarioCard(card: PlotCard | ScenarioCard): any {
+    // Get first messages based on card type
+    // PlotCard uses 'scenarios', ScenarioCard uses 'firstMessages'
+    const firstMessages =
+      card instanceof PlotCard
+        ? card.props.scenarios
+        : card.props.firstMessages;
+
     return {
-      spec: "plot_card_v1",
-      version: "1.0",
+      spec: "scenario_card_v2",
+      spec_version: "2.0",
       data: {
         title: card.props.title,
         description: card.props.description,
-        scenarios: card.props.scenarios,
+        first_messages: firstMessages,
         entries: this.exportLorebook(card.props.lorebook)?.entries,
         extensions: {
           ...this.getCommonExtensions(card),
@@ -257,6 +266,8 @@ export class ExportCardToFile
       conceptualOrigin: card.props.conceptualOrigin,
       createdAt: card.props.createdAt.toISOString(),
       updatedAt: card.props.updatedAt?.toISOString(),
+      // Marker indicating if the embedded image is a generated placeholder
+      isPlaceholderImage: !card.props.iconAssetId,
     };
   }
 
@@ -279,19 +290,38 @@ export class ExportCardToFile
   }
 
   private async getPlaceholderAsset(card: Card): Promise<Asset> {
-    let svgContent;
+    let placeholderBlob: Blob;
+
     if (card instanceof CharacterCard) {
-      svgContent = character_card_placeholder;
-    } else if (card instanceof PlotCard) {
-      svgContent = plot_card_placeholder;
+      // Render dynamic character card image with card data
+      placeholderBlob = await renderCharacterCardImage({
+        name: card.props.name || card.props.title || "Character",
+        summary: card.props.cardSummary,
+        tags: card.props.tags,
+        tokenCount: card.props.tokenCount,
+      });
+    } else if (card instanceof PlotCard || card instanceof ScenarioCard) {
+      // Get first messages count based on card type
+      const firstMessages =
+        card instanceof PlotCard
+          ? card.props.scenarios?.length ?? 0
+          : card.props.firstMessages?.length ?? 0;
+
+      // Render dynamic scenario card image with card data
+      placeholderBlob = await renderScenarioCardImage({
+        title: card.props.title || "Scenario",
+        summary: card.props.cardSummary,
+        tags: card.props.tags,
+        tokenCount: card.props.tokenCount,
+        firstMessages,
+      });
+    } else {
+      throw new Error("Unsupported card type for placeholder");
     }
-    const placeholderBlob = new Blob([svgContent!], {
-      type: "image/svg+xml",
-    });
 
     // Create file with correct MIME type
-    const placeholderFile = new File([placeholderBlob], "placeholder.svg", {
-      type: "image/svg+xml",
+    const placeholderFile = new File([placeholderBlob], "placeholder.png", {
+      type: "image/png",
     });
 
     // Set icon asset

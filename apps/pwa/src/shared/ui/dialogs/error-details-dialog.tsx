@@ -60,11 +60,11 @@ export function ErrorDetailsDialog() {
       description="Something went wrong. Here are the details:"
       size="lg"
       isShowCloseButton={false}
-      className="border-status-error/30 bg-status-error/10 border"
+      className="border-status-error/30 bg-status-error/30 border"
       content={
         <div className="flex flex-col gap-4">
           {/* Error content */}
-          <div className="border-status-error/20 bg-status-error/5 rounded-lg border p-4">
+          <div className="border-status-error/20 bg-status-error/15 rounded-lg border p-4">
             <ScrollArea className="h-full max-h-[50vh]">
               <pre className="text-fg-muted font-mono text-xs break-words whitespace-pre-wrap">
                 {details}

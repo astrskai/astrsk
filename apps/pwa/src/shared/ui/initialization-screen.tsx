@@ -133,7 +133,7 @@ export const InitializationScreen = () => {
         {/* Progress Bar */}
         {!hasError && !isInitialized && (
           <div className="w-full">
-            <div className="bg-background-surface-0 h-2 w-full overflow-hidden rounded-full">
+            <div className="bg-canvas h-2 w-full overflow-hidden rounded-full">
               <div
                 className="bg-primary h-full transition-all duration-300 ease-out"
                 style={{ width: `${progressPercentage}%` }}

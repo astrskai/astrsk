@@ -9,7 +9,7 @@ import { traverseFlowCached } from "@/features/flow/utils/flow-traversal";
 import { useFlowValidation } from "@/shared/hooks/use-flow-validation";
 
 import { useAgentStore } from "@/shared/stores/agent-store";
-import { ApiType } from "@/entities/agent/domain/agent";
+import { ApiType, ModelTier } from "@/entities/agent/domain/agent";
 import { AgentModels } from "@/features/flow/ui/model-selection";
 
 import { toastError, toastSuccess } from "@/shared/ui/toast";
@@ -22,7 +22,6 @@ import {
   TooltipContent,
   TooltipTrigger,
   Button,
-  Input,
   SvgIcon,
   Dialog,
   DialogClose,
@@ -32,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { agentQueries } from "@/entities/agent/api/query-factory";
 import { agentKeys } from "@/entities/agent/api/query-factory";
@@ -510,7 +510,7 @@ function AgentNodeComponent({
     async (
       modelName?: string,
       _isDirtyFromModel?: boolean,
-      modelInfo?: { apiSource?: string; modelId?: string },
+      modelInfo?: { apiSource?: string; modelId?: string; modelTier?: ModelTier },
     ) => {
       if (!modelName) return;
 
@@ -518,6 +518,7 @@ function AgentNodeComponent({
         modelName,
         apiSource: modelInfo?.apiSource as any, // Cast to any since it's already a valid ApiSource string
         modelId: modelInfo?.modelId,
+        modelTier: modelInfo?.modelTier,
       });
 
       // Notify that agent was updated for preview panel refresh
@@ -636,6 +637,7 @@ function AgentNodeComponent({
                     modelName: modelData?.modelName || undefined,
                     apiSource: modelData?.apiSource || undefined,
                     modelId: modelData?.modelId || undefined,
+                    modelTier: modelData?.modelTier || undefined,
                   },
                 } as any
               }

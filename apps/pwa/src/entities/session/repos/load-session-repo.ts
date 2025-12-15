@@ -5,6 +5,17 @@ import { Transaction } from "@/db/transaction";
 import { Session } from "@/entities/session/domain/session";
 import { SortOptionValue } from "@/shared/config/sort-options";
 
+/**
+ * Lightweight session data for sidebar list
+ * Only contains fields needed for display, not full session data
+ */
+export type SessionListItem = {
+  id: string;
+  name: string;
+  messageCount: number;
+  updatedAt: Date;
+};
+
 export type SearchSessionsQuery = {
   // Pagination
   cursor?: UniqueEntityID;
@@ -15,6 +26,9 @@ export type SearchSessionsQuery = {
 
   // Sort
   sort?: SortOptionValue;
+
+  // Filter by play session
+  isPlaySession?: boolean;
 };
 
 export type GetSessionsQuery = {
@@ -47,4 +61,21 @@ export interface LoadSessionRepo {
     flowId: UniqueEntityID,
     tx?: Transaction,
   ): Promise<Result<Session[]>>;
+
+  /**
+   * Get lightweight session list items for sidebar
+   * Only fetches id, name, message count, and updatedAt
+   */
+  getSessionListItems(
+    query: { isPlaySession?: boolean; pageSize?: number },
+    tx?: Transaction,
+  ): Promise<Result<SessionListItem[]>>;
+
+  /**
+   * Get session configs only (optimized for cleanup operations)
+   * Only fetches id and config fields
+   */
+  getSessionConfigs(
+    tx?: Transaction,
+  ): Promise<Result<Array<{ id: string; config: Record<string, unknown> }>>>;
 }

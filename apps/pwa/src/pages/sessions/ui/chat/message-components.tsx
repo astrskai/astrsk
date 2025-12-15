@@ -4,13 +4,12 @@ import TextareaAutosize from "@mui/material/TextareaAutosize";
 import {
   CaseUpper,
   Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   GripVertical,
   Hash,
   History,
+  Maximize2,
   Pencil,
   RefreshCcw,
   ToggleRight,
@@ -43,6 +42,12 @@ import { cn } from "@/shared/lib";
 import { MediaPlaceholderMessage } from "./media-placeholder-message";
 
 import { SvgIcon } from "@/shared/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog";
 import { CharacterCard } from "@/entities/card/domain";
 import { TranslationConfig } from "@/entities/session/domain/translation-config";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
@@ -886,6 +891,9 @@ const SortableDataSchemaFieldItem = ({
     setEditedValue(value);
   }, [value]);
 
+  // Modal for full text view
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Sortable functionality
   const {
     attributes,
@@ -903,7 +911,6 @@ const SortableDataSchemaFieldItem = ({
 
   // Collapse long value
   const valueRef = useRef<HTMLDivElement>(null);
-  const [isOpenValue, setIsOpenValue] = useState(false);
   const [isClamped, setIsClamped] = useState(false);
   useEffect(() => {
     const element = valueRef.current;
@@ -913,94 +920,130 @@ const SortableDataSchemaFieldItem = ({
   }, [value]);
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="my-[24px] flex flex-row gap-[8px] pr-[24px] pl-[8px]"
-    >
-      <div className="shrink-0">
+    <>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className="px-4 py-2"
+      >
+        {/* Tile container with box styling */}
         <div
-          className="grid size-[24px] cursor-grab place-items-center active:cursor-grabbing"
-          {...attributes}
-          {...listeners}
+          className={cn(
+            "group relative w-full rounded-lg p-3",
+            "bg-surface-raised/50 border border-border-subtle/50",
+            "hover:border-border-subtle hover:bg-surface-raised",
+            "transition-all duration-200",
+            "flex flex-col gap-2",
+            isDragging && "cursor-grabbing",
+          )}
         >
-          <GripVertical size={16} className="text-status-info" />
+          {/* Header row with drag handle and label */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 overflow-hidden flex-1">
+              {/* Drag Handle */}
+              <div
+                className="cursor-grab active:cursor-grabbing flex-shrink-0 text-fg-muted/50 group-hover:text-fg-muted"
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical size={14} />
+              </div>
+              {/* Label */}
+              <span className="text-[10px] font-bold text-fg-muted uppercase tracking-widest truncate">
+                {name}
+              </span>
+            </div>
+            {/* Action icons */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {onEdit &&
+                (isEditing ? (
+                  <>
+                    <button
+                      onClick={onEditDone}
+                      className="text-fg-muted hover:text-fg-default transition-colors"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={onEditCancel}
+                      className="text-fg-muted hover:text-fg-default transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-fg-muted/50 hover:text-fg-default transition-all md:opacity-0 md:group-hover:opacity-100"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                ))}
+              {/* Expand button - always show on mobile, hover on desktop */}
+              {(type === "string" || isClamped) && !isEditing && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="text-fg-muted/50 hover:text-fg-default transition-all md:opacity-0 md:group-hover:opacity-100"
+                  title="View full text"
+                >
+                  <Maximize2 size={12} />
+                </button>
+              )}
+              {/* Type icon */}
+              <div className="text-fg-muted/50 group-hover:text-fg-muted transition-colors">
+                {getSchemaTypeIcon(type)}
+              </div>
+            </div>
+          </div>
+
+          {/* Value content */}
+          <div className="flex-1">
+            {isEditing ? (
+              <TextareaAutosize
+                className={cn(
+                  "no-resizer w-full rounded-md border border-border-subtle bg-surface p-2 outline-0",
+                  "ring-0 focus-visible:ring-1 focus-visible:ring-border-focus",
+                  "text-sm text-fg-default",
+                )}
+                autoFocus
+                value={editedValue}
+                onChange={(e) => setEditedValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    onEditDone();
+                  }
+                }}
+              />
+            ) : (
+              <div
+                ref={valueRef}
+                className="text-sm text-fg-default leading-relaxed line-clamp-3"
+              >
+                {value}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      <div className="flex grow flex-col gap-[8px]">
-        <div className="group/field-name flex flex-row items-center justify-between">
-          <div className="text-fg-subtle group-hover/field-name:text-fg-default flex flex-row items-center gap-[8px]">
-            {getSchemaTypeIcon(type)}
-            <div className="text-[14px] leading-[20px] font-[500]">{name}</div>
-            {onEdit &&
-              (isEditing ? (
-                <>
-                  <Check
-                    size={20}
-                    className="!text-fg-muted"
-                    onClick={() => {
-                      onEditDone();
-                    }}
-                  />
-                  <X
-                    size={20}
-                    className="!text-fg-muted"
-                    onClick={() => {
-                      onEditCancel();
-                    }}
-                  />
-                </>
-              ) : (
-                <Pencil
-                  size={20}
-                  className="!text-fg-muted hidden group-hover/field-name:inline-block"
-                  onClick={() => {
-                    setIsEditing(true);
-                  }}
-                />
-              ))}
-          </div>
-          {isClamped && (
-            <div
-              className="text-background-surface-5"
-              onClick={() => {
-                setIsOpenValue((open) => !open);
-              }}
-            >
-              {isOpenValue ? (
-                <ChevronUp size={20} />
-              ) : (
-                <ChevronDown size={20} />
-              )}
-            </div>
-          )}
-        </div>
-        {isEditing ? (
-          <TextareaAutosize
-            className={cn(
-              "no-resizer w-full rounded-none border-0 bg-transparent p-0 outline-0",
-              "ring-0 focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0",
-            )}
-            autoFocus
-            value={editedValue}
-            onChange={(e) => setEditedValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                onEditDone();
-              }
-            }}
-          />
-        ) : (
-          <div
-            ref={valueRef}
-            className={cn("text-fg-default", !isOpenValue && "line-clamp-3")}
-          >
+
+      {/* Detail Modal for full text view */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-fg-muted flex-shrink-0">
+                {getSchemaTypeIcon(type)}
+              </span>
+              <span className="truncate">{name}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-fg-default text-sm leading-relaxed whitespace-pre-wrap max-h-[60vh] overflow-y-auto">
             {value}
           </div>
-        )}
-      </div>
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

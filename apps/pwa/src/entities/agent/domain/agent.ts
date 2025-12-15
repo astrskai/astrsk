@@ -68,6 +68,7 @@ export interface AgentProps {
   modelId?: string;
   modelName?: string;
   modelTier?: ModelTier; // Model tier for export/import (Light or Heavy)
+  useDefaultModel: boolean; // true = use tier-based default model, false = use specific model
 
   // Prompts - separated by completion type
   promptMessages: PromptMessage[]; // For chat completion
@@ -90,6 +91,10 @@ export interface AgentProps {
   // Visual properties
   color: string;
 
+  // Flow association
+  // All agents must belong to a flow (for CASCADE DELETE)
+  flowId: UniqueEntityID;
+
   // Set by System
   createdAt: Date;
   updatedAt: Date;
@@ -110,6 +115,7 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
     const nullGuard = Guard.againstNullOrUndefinedBulk([
       { argument: props.name, argumentName: "name" },
       { argument: props.targetApiType, argumentName: "targetApiType" },
+      { argument: props.flowId, argumentName: "flowId" },
     ]);
     if (nullGuard.isFailure) {
       return Result.fail<Agent>(nullGuard.getError());
@@ -129,6 +135,7 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
         apiSource: undefined,
         modelId: undefined,
         modelName: undefined,
+        useDefaultModel: true, // Default to using tier-based default model
         promptMessages: [],
         textPrompt: "",
         enabledParameters: new Map<string, boolean>(),
@@ -145,8 +152,11 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
         createdAt: new Date(),
         updatedAt: new Date(),
 
-        // Spread input props
+        // Spread input props (excluding flowId which we set explicitly below)
         ...props,
+
+        // flowId is required and validated by Guard above
+        flowId: props.flowId!,
       },
       id,
     );
@@ -391,18 +401,29 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
               break;
             case SchemaFieldType.Integer:
             case SchemaFieldType.Number:
-              value = {
-                type: field.type,
-                minimum: field.exclusiveMinimum ? undefined : field.minimum,
-                exclusiveMinimum: field.exclusiveMinimum
-                  ? field.minimum
-                  : undefined,
-                maximum: field.exclusiveMaximum ? undefined : field.maximum,
-                exclusiveMaximum: field.exclusiveMaximum
-                  ? field.maximum
-                  : undefined,
-                multipleOf: field.multipleOf,
-              };
+              // Note: min/max constraints are not supported by all providers (e.g., Anthropic)
+              // Instead, we add them to the description for the AI to interpret
+              {
+                const constraints: string[] = [];
+                if (field.minimum !== undefined) {
+                  constraints.push(field.exclusiveMinimum ? `> ${field.minimum}` : `>= ${field.minimum}`);
+                }
+                if (field.maximum !== undefined) {
+                  constraints.push(field.exclusiveMaximum ? `< ${field.maximum}` : `<= ${field.maximum}`);
+                }
+                if (field.multipleOf !== undefined) {
+                  constraints.push(`multiple of ${field.multipleOf}`);
+                }
+                const constraintDesc = constraints.length > 0
+                  ? `[${constraints.join(", ")}]`
+                  : undefined;
+
+                value = {
+                  type: field.type,
+                  // Add constraints to description since schema constraints aren't universally supported
+                  ...(constraintDesc && { description: constraintDesc }),
+                };
+              }
               break;
             case SchemaFieldType.Boolean:
               return [field.name, { type: "boolean" }];
@@ -422,9 +443,13 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
               throw new Error(`Unsupported schema field type: ${field.type}`);
           }
           if (field.description) {
+            // Merge field description with any existing description (e.g., constraints)
+            const existingDesc = (value as { description?: string }).description;
             value = {
               ...value,
-              description: field.description,
+              description: existingDesc
+                ? `${field.description} ${existingDesc}`
+                : field.description,
             };
           }
           return [
@@ -454,6 +479,7 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
       ),
       enabledParameters: Object.fromEntries(this.props.enabledParameters),
       parameterValues: Object.fromEntries(this.props.parameterValues),
+      flowId: this.props.flowId.toString(),
     };
   }
 
@@ -473,6 +499,7 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
             Object.values(ModelTier).includes(json.modelTier)
               ? (json.modelTier as ModelTier)
               : undefined,
+          useDefaultModel: json.useDefaultModel ?? true, // Default to using tier-based model
 
           promptMessages:
             json.promptMessages?.map((message: any) =>
@@ -505,6 +532,8 @@ export class Agent extends AggregateRoot<AgentProps> implements Renderable {
 
           tokenCount: json.tokenCount ?? 0,
           color: json.color ?? "#A5B4FC", // indigo-300
+
+          flowId: new UniqueEntityID(json.flowId),
 
           createdAt: json.createdAt ? new Date(json.createdAt) : new Date(),
           updatedAt: json.updatedAt ? new Date(json.updatedAt) : new Date(),

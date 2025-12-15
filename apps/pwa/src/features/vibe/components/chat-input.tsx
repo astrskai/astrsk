@@ -91,31 +91,31 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       <div className="flex flex-col gap-2">
         <label className="text-text-primary text-xs font-medium">Model</label>
         <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger className="bg-background-surface-0 border-border-normal h-9">
+          <SelectTrigger className="bg-canvas border-border-normal h-9">
             <SelectValue placeholder="Select a model" />
           </SelectTrigger>
           <SelectContent side="top">
             <SelectItem value={LANGUAGE_MODELS.GEMINI_2_5_FLASH}>
               Gemini 2.5 Flash
             </SelectItem>
-            <SelectItem value={LANGUAGE_MODELS.GEMINI_2_5_PRO}>
-              Gemini 2.5 Pro
+            <SelectItem value={LANGUAGE_MODELS.GEMINI_3_PRO}>
+              Gemini 3 Pro
             </SelectItem>
             <SelectItem value={LANGUAGE_MODELS.GEMINI_2_5_FLASH_LITE}>
               Gemini 2.5 Flash Lite
             </SelectItem>
-            <SelectItem value={LANGUAGE_MODELS.DEEPSEEK_V3}>
-              DeepSeek Chat v3.1
+            <SelectItem value={LANGUAGE_MODELS.DEEPSEEK_OFFICIAL}>
+              DeepSeek Chat
             </SelectItem>
-            <SelectItem value={LANGUAGE_MODELS.DEEPSEEK_V3_0324}>
-              DeepSeek Chat v3 (0324)
+            <SelectItem value={LANGUAGE_MODELS.DEEPSEEK_V3_1_BYTEPLUS}>
+              DeepSeek V3.1 (BytePlus)
             </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Input Box */}
-      <div className="bg-background-surface-3 flex min-h-14 items-end gap-4 self-stretch rounded-[28px] p-2 outline outline-1 outline-offset-[-1px] outline-zinc-100/30">
+      <div className="bg-surface-overlay flex min-h-14 items-end gap-4 self-stretch rounded-[28px] p-2 outline outline-1 outline-offset-[-1px] outline-zinc-100/30">
         <div className="flex-1 pr-2 pl-4">
           <TextareaAutosize
             maxRows={3}
@@ -136,7 +136,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <button
           onClick={handleSend}
           disabled={!prompt.trim() || isProcessing || !hasResource}
-          className="bg-background-surface-4 flex h-10 cursor-pointer items-center justify-center rounded-[20px] px-4 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+          className="bg-hover flex h-10 cursor-pointer items-center justify-center rounded-[20px] px-4 py-1 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isProcessing ? (
             <Loader2 className="text-text-primary min-h-4 min-w-4 animate-spin" />

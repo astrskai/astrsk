@@ -5,185 +5,108 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
+  Loading,
   Button,
-  Checkbox,
-  Label,
-  RadioGroup,
-  RadioGroupItem,
-  ScrollArea,
 } from "@/shared/ui";
-import { AgentModelCard } from "@/features/flow/ui/agent-model-card";
-import { ModelTier } from "@/entities/agent/domain/agent";
-
-export interface AgentModelTierInfo {
-  agentId: string;
-  agentName: string;
-  modelName: string;
-  recommendedTier: ModelTier;
-  selectedTier: ModelTier;
-}
+import { ExportType } from "@/shared/lib/cloud-upload-helpers";
+import { ExternalLink } from "lucide-react";
 
 export interface SessionExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onExport: (
-    modelTierSelections: Map<string, ModelTier>,
-    includeHistory: boolean,
-  ) => Promise<void>;
-  agents: AgentModelTierInfo[];
-  title?: string;
-  description?: string;
+  onExport: () => Promise<string | void>;
+  /** Export type - "file" for local download, "cloud" for Harpy upload */
+  exportType?: ExportType;
 }
 
 export function SessionExportDialog({
   open,
   onOpenChange,
   onExport,
-  agents,
-  title = "Export session",
-  description,
+  exportType = "file",
 }: SessionExportDialogProps) {
-  const [modelTierSelections, setModelTierSelections] = useState<
-    Map<string, ModelTier>
-  >(new Map());
-  const [includeHistory, setIncludeHistory] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
-  // Initialize selections with recommended tiers or Light by default
+  const isCloudExport = exportType === "cloud";
+
+  // Auto-export when dialog opens
   useEffect(() => {
-    if (open && agents.length > 0) {
-      const initialSelections = new Map<string, ModelTier>();
-      agents.forEach((agent) => {
-        initialSelections.set(
-          agent.agentId,
-          agent.selectedTier || agent.recommendedTier || ModelTier.Light,
-        );
-      });
-      setModelTierSelections(initialSelections);
+    if (open && !isExporting && !shareUrl) {
+      const doExport = async () => {
+        setIsExporting(true);
+        try {
+          const url = await onExport();
+          if (url && isCloudExport) {
+            // Cloud export - show success with URL
+            setShareUrl(url);
+          } else {
+            // File export - close immediately
+            onOpenChange(false);
+          }
+        } catch {
+          // Error handled by onExport, just close
+          onOpenChange(false);
+        } finally {
+          setIsExporting(false);
+        }
+      };
+      doExport();
     }
-  }, [open, agents]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleTierChange = (agentId: string, tier: ModelTier) => {
-    const newSelections = new Map(modelTierSelections);
-    newSelections.set(agentId, tier);
-    setModelTierSelections(newSelections);
-  };
-
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      await onExport(modelTierSelections, includeHistory);
-      onOpenChange(false);
-    } finally {
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setShareUrl(null);
       setIsExporting(false);
+    }
+  }, [open]);
+
+  const handleGoToHarpy = () => {
+    if (shareUrl) {
+      window.open(shareUrl, "_blank", "noopener,noreferrer");
+      onOpenChange(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">{title}</DialogTitle>
-          {description && (
-            <p className="text-fg-subtle mt-2 text-base">{description}</p>
-          )}
-        </DialogHeader>
-
-        {agents.length > 0 && (
-          <ScrollArea className="max-h-96 w-full overflow-y-auto">
-            <div className="flex flex-col gap-4">
-              {agents.map((agent) => (
-                <AgentModelCard
-                  key={agent.agentId}
-                  agentName={agent.agentName}
-                  originalModel={agent.modelName}
-                  isExportMode={true}
-                >
-                  <RadioGroup
-                    value={
-                      modelTierSelections.get(agent.agentId) || ModelTier.Light
-                    }
-                    onValueChange={(value) =>
-                      handleTierChange(agent.agentId, value as ModelTier)
-                    }
-                    className="flex flex-col gap-1.5 self-stretch"
-                  >
-                    <div className="inline-flex items-start justify-start gap-3.5 self-stretch">
-                      <RadioGroupItem
-                        value={ModelTier.Light}
-                        id={`${agent.agentId}-light`}
-                        className="mt-0.5 h-5 w-5"
-                      />
-                      <div className="inline-flex flex-col items-start justify-center gap-1.5">
-                        <Label
-                          htmlFor={`${agent.agentId}-light`}
-                          className="text-fg-default cursor-pointer justify-start text-base leading-relaxed font-medium"
-                        >
-                          Light
-                        </Label>
-                        <div className="text-status-info justify-start text-base leading-relaxed font-medium">
-                          Faster, efficient models for basic tasks
-                        </div>
-                      </div>
-                    </div>
-                    <div className="inline-flex items-start justify-start gap-3.5 self-stretch">
-                      <RadioGroupItem
-                        value={ModelTier.Heavy}
-                        id={`${agent.agentId}-heavy`}
-                        className="mt-0.5 h-5 w-5"
-                      />
-                      <div className="inline-flex flex-col items-start justify-center gap-1.5">
-                        <Label
-                          htmlFor={`${agent.agentId}-heavy`}
-                          className="text-fg-default cursor-pointer justify-start text-base leading-relaxed font-medium"
-                        >
-                          Heavy
-                        </Label>
-                        <div className="text-status-info justify-start text-base leading-relaxed font-medium">
-                          Advanced models with higher capabilities
-                        </div>
-                      </div>
-                    </div>
-                  </RadioGroup>
-                </AgentModelCard>
-              ))}
-            </div>
-          </ScrollArea>
-        )}
-
-        {/* Include History Checkbox */}
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="include-history"
-            checked={includeHistory}
-            onCheckedChange={(checked) => {
-              if (typeof checked === "boolean") {
-                setIncludeHistory(checked);
-              }
-            }}
-          />
-          <Label
-            htmlFor="include-history"
-            className="text-fg-default cursor-pointer text-base leading-relaxed font-normal"
-          >
-            Include chat messages
-          </Label>
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={() => onOpenChange(false)}
-            disabled={isExporting}
-          >
-            Cancel
-          </Button>
-          <Button size="lg" onClick={handleExport} disabled={isExporting}>
-            {isExporting ? "Exporting..." : "Export"}
-          </Button>
-        </DialogFooter>
+    <Dialog open={open} onOpenChange={isExporting ? undefined : onOpenChange}>
+      <DialogContent className="max-w-sm">
+        {isExporting ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-8">
+            <Loading />
+            <p className="text-fg-muted text-base">
+              {isCloudExport ? "Uploading to HarpyChat..." : "Exporting..."}
+            </p>
+          </div>
+        ) : shareUrl ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Upload Successful</DialogTitle>
+              <DialogDescription>
+                Your resource has been uploaded to HarpyChat. Click the button below to claim it.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                onClick={() => onOpenChange(false)}
+                variant="outline"
+              >
+                Close
+              </Button>
+              <Button
+                variant="accent"
+                onClick={handleGoToHarpy}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Go to Harpy
+              </Button>
+            </DialogFooter>
+          </>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

@@ -32,8 +32,10 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogTitle,
   DialogTrigger,
 } from "@/shared/ui";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { TableName } from "@/db/schema/table-name";
 import { Card as CardType } from "@/entities/card/domain";
 import { Session } from "@/entities/session/domain";
@@ -220,9 +222,9 @@ const SessionListMobile = ({
   };
 
   return (
-    <div className="bg-background-surface-2 flex h-full flex-col">
+    <div className="bg-surface-raised flex h-full flex-col">
       {/* Mobile Header */}
-      <div className="bg-background-surface-2 relative flex h-[60px] items-center px-4">
+      <div className="bg-surface-raised relative flex h-[60px] items-center px-4">
         {isSelectionMode ? (
           <Button variant="ghost" size="sm" onClick={exitSelectionMode}>
             Done
@@ -287,6 +289,9 @@ const SessionListMobile = ({
               className="bg-background-input border-border-container w-[248px] rounded-[14px] p-0"
               hideClose
             >
+              <VisuallyHidden.Root>
+                <DialogTitle>Session options</DialogTitle>
+              </VisuallyHidden.Root>
               <div className="flex flex-col py-2">
                 <DialogClose asChild>
                   <button
@@ -347,8 +352,8 @@ const SessionListMobile = ({
       />
 
       {/* Search and Create */}
-      <div className="bg-background-surface-2 space-y-4 px-4 py-2">
-        <div className="bg-background-surface-4 inline-flex flex-col items-start justify-start gap-2 self-stretch overflow-hidden rounded-lg px-4 py-2">
+      <div className="bg-surface-raised space-y-4 px-4 py-2">
+        <div className="bg-hover inline-flex flex-col items-start justify-start gap-2 self-stretch overflow-hidden rounded-lg px-4 py-2">
           <div className="inline-flex items-center justify-start gap-4 self-stretch">
             <div className="relative h-6 w-6 overflow-hidden">
               <Search
@@ -392,11 +397,11 @@ const SessionListMobile = ({
       </div>
 
       {/* Session List */}
-      <ScrollArea className="bg-background-surface-2 flex-1">
+      <ScrollArea className="bg-surface-raised flex-1">
         <div className="px-4">
           {sessions.length === 0 ? (
             <div className="flex items-center justify-center">
-              <div className="text-text-input-subtitle text-center">
+              <div className="text-fg-subtle text-center">
                 {keyword.length > 0
                   ? `No results for '${keyword}'`
                   : "No sessions"}
@@ -432,17 +437,17 @@ const MobileCharacterAvatar = ({ cardId }: { cardId: UniqueEntityID }) => {
 
   if (!card) {
     return (
-      <div className="border-background-surface-2 bg-background-card h-8 w-8 rounded-full border-2" />
+      <div className="border-surface-raised bg-background-card h-8 w-8 rounded-full border-2" />
     );
   }
 
   return (
-    <div className="border-background-surface-2 bg-background-card relative h-8 w-8 overflow-hidden rounded-full border-2">
+    <div className="border-surface-raised bg-background-card relative h-8 w-8 overflow-hidden rounded-full border-2">
       {icon ? (
         <img src={icon} alt="" className="h-full w-full object-cover" />
       ) : (
         <div className="bg-background-card flex h-full w-full items-center justify-center">
-          <span className="text-text-input-subtitle text-xs">
+          <span className="text-fg-subtle text-xs">
             {(card as any).props.name?.charAt(0) || card.props.title.charAt(0)}
           </span>
         </div>
@@ -485,7 +490,7 @@ const SessionListItemMobile = ({
     if (isSelectionMode) {
       onToggleSelection?.();
     } else {
-      selectSession(sessionId, session.title);
+      selectSession(sessionId, session.name);
     }
   };
 
@@ -494,18 +499,18 @@ const SessionListItemMobile = ({
       className={cn(
         "flex flex-col items-center justify-start self-stretch outline-1",
         hasError &&
-          "bg-background-surface-2 border-status-destrctive-light border-l-[3px]",
+        "bg-surface-raised border-status-destrctive-light border-l-[3px]",
       )}
     >
       <button
         onClick={handleClick}
         className={cn(
-          "bg-background-surface-2 border-border-dark inline-flex w-full items-start justify-start self-stretch border-b",
+          "bg-surface-raised border-border-dark inline-flex w-full items-start justify-start self-stretch border-b",
           "hover:bg-background-card-hover active:bg-background-card-hover",
           isActive && !isSelectionMode && "bg-background-card-hover",
           isSelected && "bg-background-card",
         )}
-        // disabled={!!streamingMessageId && !selectedSessionId?.equals(sessionId)}
+      // disabled={!!streamingMessageId && !selectedSessionId?.equals(sessionId)}
       >
         {/* Checkbox for selection mode */}
         {isSelectionMode && (
@@ -527,9 +532,9 @@ const SessionListItemMobile = ({
               </div>
             )}
             <div className="text-text-primary justify-start text-base leading-relaxed font-semibold">
-              {session.props.title}
+              {session.props.name}
             </div>
-            <div className="text-text-body justify-start text-xs font-medium">
+            <div className="text-neutral-300 justify-start text-xs font-medium">
               {lastMessage
                 ? formatLastMessage(lastMessage.createdAt)
                 : "9:34 AM"}
@@ -544,7 +549,7 @@ const SessionListItemMobile = ({
                   <div className="text-text-primary justify-start text-base leading-relaxed font-normal">
                     {messageCount.toLocaleString()}
                   </div>
-                  <div className="text-text-body justify-start text-xs font-normal">
+                  <div className="text-neutral-300 justify-start text-xs font-normal">
                     Messages
                   </div>
                 </div>
@@ -559,13 +564,13 @@ const SessionListItemMobile = ({
                     cardId={card.id}
                   />
                 ))} */}
-              {session.characterCards.length > 3 && (
+              {session.characterCards.filter((c) => c.enabled).length > 3 && (
                 <div
-                  className="bg-background-surface-3 outline-background-surface-2 inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"
+                  className="bg-surface-overlay outline-surface-raised inline-flex h-8 w-8 flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-2 outline-2 outline-offset-[-2.17px]"
                   style={{ zIndex: 0 }}
                 >
                   <div className="text-text-placeholder justify-start text-[10px] leading-none font-medium">
-                    +{session.characterCards.length - 3}
+                    +{session.characterCards.filter((c) => c.enabled).length - 3}
                   </div>
                 </div>
               )}

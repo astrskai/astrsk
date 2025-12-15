@@ -1,14 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { QueryClient } from "@tanstack/react-query";
 import { cardKeys, cardQueries } from "./query-factory";
-import { CardService } from "../../services/card-service";
+import { CardService } from "../../../app/services/card-service";
 import { UniqueEntityID } from "../../../shared/domain";
-import { CharacterCard, PlotCard } from "../../../modules/card/domain";
-import { SearchCardsSort } from "../../../modules/card/repos";
+import { CharacterCard, PlotCard } from "../domain";
+import { SearchCardsSort } from "../repos";
 import { Result } from "../../../shared/core";
 
 // Mock CardService
-vi.mock("../../services/card-service", () => ({
+vi.mock("../../../app/services/card-service", () => ({
   CardService: {
     searchCard: {
       execute: vi.fn(),
@@ -110,25 +110,25 @@ describe("Card Query Factory", () => {
         ]);
       });
 
-      it("should generate correct key for scenarios", () => {
+      it("should generate correct key for first messages", () => {
         const cardId = "test-card-id";
-        expect(cardKeys.scenarios(cardId)).toEqual([
+        expect(cardKeys.firstMessages(cardId)).toEqual([
           "cards",
           "detail",
           cardId,
-          "scenarios",
+          "firstMessages",
         ]);
       });
 
-      it("should generate correct key for specific scenario", () => {
+      it("should generate correct key for specific first message", () => {
         const cardId = "test-card-id";
-        const scenarioId = "scenario-1";
-        expect(cardKeys.scenario(cardId, scenarioId)).toEqual([
+        const firstMessageId = "first-message-1";
+        expect(cardKeys.firstMessage(cardId, firstMessageId)).toEqual([
           "cards",
           "detail",
           cardId,
-          "scenarios",
-          scenarioId,
+          "firstMessages",
+          firstMessageId,
         ]);
       });
     });
@@ -143,7 +143,7 @@ describe("Card Query Factory", () => {
         expect(cardKeys.detail(cardId)[0]).toBe("cards");
         expect(cardKeys.lorebook(cardId)[0]).toBe("cards");
         expect(cardKeys.imagePrompt(cardId)[0]).toBe("cards");
-        expect(cardKeys.scenarios(cardId)[0]).toBe("cards");
+        expect(cardKeys.firstMessages(cardId)[0]).toBe("cards");
 
         // Detail-related keys should include "detail" and cardId
         expect(cardKeys.detail(cardId)).toContain("detail");
@@ -152,8 +152,8 @@ describe("Card Query Factory", () => {
         expect(cardKeys.lorebook(cardId)).toContain(cardId);
         expect(cardKeys.imagePrompt(cardId)).toContain("detail");
         expect(cardKeys.imagePrompt(cardId)).toContain(cardId);
-        expect(cardKeys.scenarios(cardId)).toContain("detail");
-        expect(cardKeys.scenarios(cardId)).toContain(cardId);
+        expect(cardKeys.firstMessages(cardId)).toContain("detail");
+        expect(cardKeys.firstMessages(cardId)).toContain(cardId);
       });
     });
   });
@@ -341,21 +341,21 @@ describe("Card Query Factory", () => {
       });
     });
 
-    describe("cardQueries.scenarios", () => {
-      it("should create query options for scenarios", () => {
+    describe("cardQueries.firstMessages", () => {
+      it("should create query options for first messages", () => {
         const cardId = "test-card-id";
-        const options = cardQueries.scenarios(cardId);
+        const options = cardQueries.firstMessages(cardId);
 
         expect(options.queryKey).toEqual([
           "cards",
           "detail",
           cardId,
-          "scenarios",
+          "firstMessages",
         ]);
         expect(options.staleTime).toBe(1000 * 30);
       });
 
-      it("should return scenarios for plot card", async () => {
+      it("should return first messages for plot card", async () => {
         const mockScenarios = [
           { name: "Scenario 1", description: "First scenario" },
           { name: "Scenario 2", description: "Second scenario" },
@@ -370,7 +370,7 @@ describe("Card Query Factory", () => {
           Result.ok(mockCard),
         );
 
-        const options = cardQueries.scenarios("test-id");
+        const options = cardQueries.firstMessages("test-id");
         const result = await options.queryFn?.({
           signal: new AbortController().signal,
         } as any);
@@ -387,7 +387,7 @@ describe("Card Query Factory", () => {
           Result.ok(mockCard),
         );
 
-        const options = cardQueries.scenarios("test-id");
+        const options = cardQueries.firstMessages("test-id");
         const result = await options.queryFn?.({
           signal: new AbortController().signal,
         } as any);
@@ -400,7 +400,7 @@ describe("Card Query Factory", () => {
           Result.fail("Not found"),
         );
 
-        const options = cardQueries.scenarios("test-id");
+        const options = cardQueries.firstMessages("test-id");
         const result = await options.queryFn?.({
           signal: new AbortController().signal,
         } as any);
@@ -409,23 +409,23 @@ describe("Card Query Factory", () => {
       });
     });
 
-    describe("cardQueries.scenario", () => {
-      it("should create query options for specific scenario", () => {
+    describe("cardQueries.firstMessage", () => {
+      it("should create query options for specific first message", () => {
         const cardId = "test-card-id";
-        const scenarioId = "scenario-1";
-        const options = cardQueries.scenario(cardId, scenarioId);
+        const firstMessageId = "first-message-1";
+        const options = cardQueries.firstMessage(cardId, firstMessageId);
 
         expect(options.queryKey).toEqual([
           "cards",
           "detail",
           cardId,
-          "scenarios",
-          scenarioId,
+          "firstMessages",
+          firstMessageId,
         ]);
         expect(options.staleTime).toBe(1000 * 30);
       });
 
-      it("should return specific scenario", async () => {
+      it("should return specific first message", async () => {
         const mockScenarios = [
           { id: "scenario-1", name: "Scenario 1", description: "First" },
           { id: "scenario-2", name: "Scenario 2", description: "Second" },
@@ -440,7 +440,7 @@ describe("Card Query Factory", () => {
           Result.ok(mockCard),
         );
 
-        const options = cardQueries.scenario("test-id", "Scenario 1");
+        const options = cardQueries.firstMessage("test-id", "Scenario 1");
         const result = await options.queryFn?.({
           signal: new AbortController().signal,
         } as any);
@@ -448,7 +448,7 @@ describe("Card Query Factory", () => {
         expect(result).toEqual(mockScenarios[0]);
       });
 
-      it("should return null if scenario not found", async () => {
+      it("should return null if first message not found", async () => {
         const mockCard = PlotCard.create({
           title: "Test Plot",
           scenarios: [],
@@ -458,7 +458,7 @@ describe("Card Query Factory", () => {
           Result.ok(mockCard),
         );
 
-        const options = cardQueries.scenario("test-id", "non-existent");
+        const options = cardQueries.firstMessage("test-id", "non-existent");
         const result = await options.queryFn?.({
           signal: new AbortController().signal,
         } as any);
@@ -479,7 +479,7 @@ describe("Card Query Factory", () => {
       // Medium updates (30 seconds)
       expect(cardQueries.detail("id").staleTime).toBe(1000 * 30);
       expect(cardQueries.lorebook("id").staleTime).toBe(1000 * 30);
-      expect(cardQueries.scenarios("id").staleTime).toBe(1000 * 30);
+      expect(cardQueries.firstMessages("id").staleTime).toBe(1000 * 30);
     });
 
     it("should set appropriate garbage collection times", () => {

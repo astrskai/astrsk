@@ -844,7 +844,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                     ? "No structured output variables found matching your search"
                     : "No structured output variables found"}
                 </div>
-                <div className="text-background-surface-5 w-52 justify-start text-center text-xs font-normal">
+                <div className="text-fg-subtle w-52 justify-start text-center text-xs font-normal">
                   {searchQuery
                     ? "Try a different search term"
                     : "Enable structured output on agents to see variables here"}
@@ -1068,7 +1068,7 @@ export function VariablePanel({ flowId }: VariablePanelProps) {
                 <div className="text-fg-muted justify-start text-center text-base leading-relaxed font-semibold">
                   No data fields defined
                 </div>
-                <div className="text-background-surface-5 w-52 justify-start text-center text-xs font-normal">
+                <div className="text-fg-subtle w-52 justify-start text-center text-xs font-normal">
                   Define fields in the Data Schema to see them here
                 </div>
               </div>

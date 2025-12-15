@@ -2,7 +2,7 @@ import { Result } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { Transaction } from "@/db/transaction";
-import { Card, CardType, CharacterCard, PlotCard } from "@/entities/card/domain";
+import { Card, CardType, CharacterCard, ScenarioCard } from "@/entities/card/domain";
 import { SortOptionValue } from "@/shared/config/sort-options";
 
 export const SearchCardsSort = {
@@ -54,5 +54,5 @@ export interface LoadCardRepo {
   searchScenarios(
     query: SearchScenariosQuery,
     tx?: Transaction,
-  ): Promise<Result<PlotCard[]>>;
+  ): Promise<Result<ScenarioCard[]>>;
 }

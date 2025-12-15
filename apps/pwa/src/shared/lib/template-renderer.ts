@@ -36,6 +36,20 @@ export class TemplateRenderer {
         this.env.addFilter("roll", (notation: string) => {
           return roll.roll(notation).result;
         });
+        // Safe 'last' filter that returns undefined for empty arrays instead of throwing
+        this.env.addFilter("last", (arr: any[] | undefined | null) => {
+          if (!arr || !Array.isArray(arr) || arr.length === 0) {
+            return undefined;
+          }
+          return arr[arr.length - 1];
+        });
+        // Safe 'first' filter that returns undefined for empty arrays instead of throwing
+        this.env.addFilter("first", (arr: any[] | undefined | null) => {
+          if (!arr || !Array.isArray(arr) || arr.length === 0) {
+            return undefined;
+          }
+          return arr[0];
+        });
       })
       .catch((error) => {
         logger.error("Failed to initialize TemplateRenderer", error);
@@ -52,11 +66,12 @@ export class TemplateRenderer {
     return str.replace(/\n{2,}/g, "\n").trim();
   }
 
-  // Replace `{{char}}` and `{{user}}` variables in text
+  // Replace `{{char}}`, `{{user}}`, and `{{scenario}}` variables in text (case-insensitive)
   private static replaceCharAndUserVariables(text: string): string {
     return text
-      .replace(/{{\s*char\s*}}/g, "{{char.name}}")
-      .replace(/{{\s*user\s*}}/g, "{{user.name}}");
+      .replace(/{{\s*char\s*}}/gi, "{{char.name}}")
+      .replace(/{{\s*user\s*}}/gi, "{{user.name}}")
+      .replace(/{{\s*scenario\s*}}/gi, "{{scenario.name}}");
   }
 
   public static render(

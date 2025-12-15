@@ -8,6 +8,8 @@ import {
   CloneCard,
   DeleteCard,
   ExportCardToFile,
+  ExportCharacterToCloud,
+  ExportScenarioToCloud,
   GetCard,
   ImportCardFromFile,
   SaveCard,
@@ -30,6 +32,9 @@ import {
   UpdatePlotDescription,
   RestoreCardFromSnapshot,
 } from "@/entities/card/usecases";
+import { ParseCharacterFromFile } from "@/entities/card/usecases/parse-character-from-file";
+import { ImportCharacterFromCloud } from "@/entities/card/usecases/import-character-from-cloud";
+import { ImportScenarioFromCloud } from "@/entities/card/usecases/import-scenario-from-cloud";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 
 export class CardService {
@@ -38,6 +43,8 @@ export class CardService {
   public static cloneCard: CloneCard;
   public static deleteCard: DeleteCard;
   public static exportCardToFile: ExportCardToFile;
+  public static exportCharacterToCloud: ExportCharacterToCloud;
+  public static exportScenarioToCloud: ExportScenarioToCloud;
   public static getCard: GetCard;
   public static importCardFromFile: ImportCardFromFile;
   public static saveCard: SaveCard;
@@ -59,6 +66,9 @@ export class CardService {
   public static updateCardScenarios: UpdateCardScenarios;
   public static updatePlotDescription: UpdatePlotDescription;
   public static restoreCardFromSnapshot: RestoreCardFromSnapshot;
+  public static importCharacterFromCloud: ImportCharacterFromCloud;
+  public static importScenarioFromCloud: ImportScenarioFromCloud;
+  public static parseCharacterFromFile: ParseCharacterFromFile;
 
   private constructor() {}
 
@@ -78,6 +88,18 @@ export class CardService {
       this.cardRepo,
       loadAssetRepo,
       generatedImageRepo,
+    );
+    this.exportCharacterToCloud = new ExportCharacterToCloud(
+      this.cardRepo,
+      loadAssetRepo,
+      this.cloneCard,
+      this.deleteCard,
+    );
+    this.exportScenarioToCloud = new ExportScenarioToCloud(
+      this.cardRepo,
+      loadAssetRepo,
+      this.cloneCard,
+      this.deleteCard,
     );
     this.getCard = new GetCard(this.cardRepo);
     this.importCardFromFile = new ImportCardFromFile(
@@ -136,5 +158,18 @@ export class CardService {
       this.cardRepo,
     );
     this.restoreCardFromSnapshot = new RestoreCardFromSnapshot(this.cardRepo);
+
+    // Cloud import
+    this.importCharacterFromCloud = new ImportCharacterFromCloud(
+      saveFileToAsset,
+      this.cardRepo,
+    );
+    this.importScenarioFromCloud = new ImportScenarioFromCloud(
+      saveFileToAsset,
+      this.cardRepo,
+    );
+
+    // Parse only (no DB save) - for lazy character creation
+    this.parseCharacterFromFile = new ParseCharacterFromFile();
   }
 }

@@ -5,8 +5,13 @@ import { z } from "zod";
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useAsset } from "@/shared/hooks/use-asset";
-import { useBackgroundStore } from "@/shared/stores/background-store";
+import {
+  backgroundQueries,
+  getDefaultBackground,
+  getBackgroundAssetId,
+} from "@/entities/background/api";
 import { cn } from "@/shared/lib";
+import { useQuery } from "@tanstack/react-query";
 import { StepBackgroundSchemaType } from "@/features/session/create-session/step-background";
 import {
   InlineChatStyles,
@@ -101,7 +106,7 @@ const StylingSetting = ({
         "flex flex-col rounded-[16px] p-[16px]",
         isMobile
           ? "gap-[16px]"
-          : "border-background-surface-3 gap-[24px] border",
+          : "border-surface-overlay gap-[24px] border",
         className,
       )}
     >
@@ -277,20 +282,26 @@ const StylingPreview = ({
 }) => {
   const isMobile = useIsMobile();
 
-  // Background
-  const { backgroundMap } = useBackgroundStore();
-  const background = backgroundMap.get(backgroundId?.toString() ?? "");
-  const [backgroundAsset] = useAsset(background?.assetId);
-  const backgroundSrc =
-    backgroundAsset ??
-    (background && "src" in background ? background.src : "");
+  // Background - check if default first, then query for user background
+  const defaultBg = backgroundId ? getDefaultBackground(backgroundId) : undefined;
+
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(backgroundId),
+    enabled: !!backgroundId && !defaultBg,
+  });
+
+  const [backgroundAsset] = useAsset(getBackgroundAssetId(background));
+
+  const backgroundSrc = defaultBg
+    ? defaultBg.src
+    : backgroundAsset ?? "";
 
   return (
     <div
       className={cn(
         "bg-background-screen rounded-xl",
         backgroundSrc && "bg-[#000000]/50 bg-cover bg-center bg-blend-overlay",
-        isMobile ? "bg-background-surface-3" : "",
+        isMobile ? "bg-surface-overlay" : "",
         className,
       )}
       style={{
@@ -343,7 +354,7 @@ const StepChatStyling = ({
           <h2 className="text-2xl font-semibold text-text-primary mb-2">
             Message styling
           </h2>
-          <p className="text-text-input-subtitle">
+          <p className="text-fg-subtle">
             Customize the appearance of messages in your session.
           </p>
         </div> */}
@@ -390,7 +401,7 @@ const StepChatStyling = ({
       <div
         className={cn(
           "flex max-w-[646px] min-w-[400px] flex-col gap-[32px] rounded-[16px] px-[20px] py-[24px] xl:w-[45%]",
-          "bg-background-surface-3",
+          "bg-surface-overlay",
         )}
       >
         <div className="flex flex-col gap-[8px]">
@@ -405,7 +416,7 @@ const StepChatStyling = ({
         </div>
         <StylingSettings />
       </div>
-      <div className="bg-background-surface-3 h-full max-w-[760px] min-w-[400px] overflow-hidden rounded-[16px] xl:w-[55%]">
+      <div className="bg-surface-overlay h-full max-w-[760px] min-w-[400px] overflow-hidden rounded-[16px] xl:w-[55%]">
         <div className="px-[16px] py-[24px]">
           <div className="flex flex-col gap-[8px]">
             <div className="text-text-primary text-[20px] leading-[32px] font-[500]">

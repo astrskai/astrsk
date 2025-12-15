@@ -12,9 +12,15 @@ import { TableName } from "@/db/schema/table-name";
 import { timestamps } from "@/db/types/timestamps";
 import { SchemaField, ModelTier } from "@/entities/agent/domain";
 import { ApiSource } from "@/entities/api/domain";
+import { flows } from "@/db/schema/flows";
 
 export const agents = pgTable(TableName.Agents, {
   id: uuid().primaryKey(),
+  flow_id: uuid()
+    .notNull()
+    .references(() => flows.id, {
+      onDelete: "cascade", // Auto-delete when flow is deleted
+    }),
   name: varchar().notNull(),
   description: text().notNull(),
   target_api_type: varchar().notNull(),
@@ -22,6 +28,7 @@ export const agents = pgTable(TableName.Agents, {
   model_id: varchar(),
   model_name: varchar(),
   model_tier: varchar().$type<ModelTier>().default(ModelTier.Light),
+  use_default_model: boolean().notNull().default(true), // true = use tier-based default, false = use specific model
   prompt_messages: text().notNull(),
   text_prompt: text().notNull().default(""),
   enabled_parameters: jsonb()

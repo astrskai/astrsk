@@ -1,35 +1,40 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createCohere } from "@ai-sdk/cohere";
-import { createDeepSeek } from "@ai-sdk/deepseek";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createMistral } from "@ai-sdk/mistral";
-import { createOpenAI } from "@ai-sdk/openai";
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { createXai } from "@ai-sdk/xai";
-import {
-  createOpenRouter,
-  OpenRouterProviderSettings,
-} from "@openrouter/ai-sdk-provider";
 import {
   generateObject,
   generateText,
   jsonSchema,
   JSONValue,
-  LanguageModelV1,
+  LanguageModel,
   smoothStream,
   streamObject,
   streamText,
 } from "ai";
 import { JSONSchema7 } from "json-schema";
 import { cloneDeep, merge } from "lodash-es";
-import { createOllama } from "ollama-ai-provider";
+
+import {
+  createProvider,
+  getStructuredOutputMode,
+  jsonSchemaToZod,
+  shouldUseToolFallback,
+  shouldUseNonStreamingForTools,
+  streamWithToolFallback,
+  generateWithToolFallback,
+  isJsonSchemaNotSupportedError,
+  isRecoverableWithToolMode,
+  cacheModelForToolFallback,
+  providerSupportsToolCalling,
+} from "@/app/services/ai-model-factory";
 
 import { fetchAgent } from "@/entities/agent/api/query-factory";
-import { fetchApiConnections } from "@/entities/api/api-connection-queries";
+import {
+  fetchApiConnections,
+  isDefaultModelAvailable,
+  isModelAvailableInProvider,
+} from "@/entities/api/api-connection-queries";
 import {
   fetchCharacterCard,
   fetchCharacterCardOptional,
-  fetchPlotCardOptional,
+  fetchScenarioCardOptional,
 } from "@/entities/card/api/query-factory";
 import { fetchDataStoreNode } from "@/entities/data-store-node/api/query-factory";
 import { fetchFlow } from "@/entities/flow/api/query-factory";
@@ -39,16 +44,14 @@ import { fetchTurn, fetchTurnOptional } from "@/entities/turn/api/turn-queries";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/shared/stores/app-store";
+import { useModelStore, DefaultModelSelection } from "@/shared/stores/model-store";
 import { useWllamaStore } from "@/shared/stores/wllama-store";
 import { Condition, isUnaryOperator } from "@/features/flow/types/condition-types";
 import { traverseFlowCached } from "@/features/flow/utils/flow-traversal";
 import { ModelTier } from "@/entities/agent/domain";
 import { ApiSource } from "@/entities/api/domain";
-import {
-  ApiConnection,
-  OpenrouterProviderSort,
-} from "@/entities/api/domain/api-connection";
-import { PlotCard } from "@/entities/card/domain";
+import { ApiConnection } from "@/entities/api/domain/api-connection";
+import { ScenarioCard } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { DataStoreFieldType } from "@/entities/flow/domain/flow";
 import { IfNode } from "@/entities/if-node/domain";
@@ -65,13 +68,12 @@ import {
   RenderContext,
 } from "@/shared/prompt/domain/renderable";
 import { parameterList } from "@/shared/task/domain/parameter";
-import { parseAiSdkErrorMessage, parsePartialJson, sanitizeFileName } from "@/shared/lib";
+import { parseAiSdkErrorMessage, parsePartialJson, parseStructuredOutputError, sanitizeFileName } from "@/shared/lib";
 import { Datetime } from "@/shared/lib/datetime";
 import { logger } from "@/shared/lib/logger";
 import { TemplateRenderer } from "@/shared/lib/template-renderer";
 import { getTokenizer } from "@/shared/lib/tokenizer/tokenizer";
 import { translate } from "@/shared/lib/translate-utils";
-import { getAISDKFetch } from "@/shared/infra/fetch-helper";
 
 // Model mapping configuration for automatic fallback
 // When using AstrskAi, format must be "openai-compatible:modelId"
@@ -99,13 +101,123 @@ const isUserSubscribed = (): boolean => {
   return isUserLoggedIn();
 };
 
-// Helper function to get fallback model based on tier
+// Helper function to get global default model from user settings
+// Falls back from Heavy → Light if Heavy model's provider is disconnected
+// Returns null if modelTier is undefined (agent has specific model configured)
+const getGlobalDefaultModel = (
+  modelTier?: ModelTier,
+): DefaultModelSelection | null => {
+  // If no modelTier specified, agent has a specific model configured
+  // Return null so PRIORITY 2 (agent's saved model) is used instead
+  if (modelTier === undefined) {
+    return null;
+  }
+
+  const modelStore = useModelStore.getState();
+
+  if (modelTier === ModelTier.Heavy) {
+    const heavyModel = modelStore.defaultStrongModel;
+
+    // Check if heavy model is available
+    if (isDefaultModelAvailable(heavyModel)) {
+      return heavyModel;
+    }
+
+    // Fallback to lite model if heavy model's provider is disconnected
+    logger.info(
+      `[ModelFallback] Heavy model "${heavyModel?.modelName}" not available. ` +
+      `Falling back to Lite model.`,
+    );
+
+    const liteModel = modelStore.defaultLiteModel;
+    if (isDefaultModelAvailable(liteModel)) {
+      return liteModel;
+    }
+
+    // Neither available
+    return null;
+  }
+
+  // For Light tier, return lite model if available
+  if (modelTier === ModelTier.Light) {
+    const liteModel = modelStore.defaultLiteModel;
+    if (isDefaultModelAvailable(liteModel)) {
+      return liteModel;
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Remove character name prefix from LLM response if present.
+ * Matches patterns like "Character Name:" or "Character Name :" at the start of the text.
+ * Only removes prefixes that look like character names (2-30 characters before colon).
+ *
+ * Examples:
+ * - "Jane Doe: Hello there" → "Hello there"
+ * - "Jane Doe : Hello" → "Hello"
+ * - "Jane: Hi" → "Hi"
+ * - "Hello there" → "Hello there" (no change)
+ * - "A: Quick note" → "A: Quick note" (too short, likely not a name)
+ *
+ * @param content - The text content to clean
+ * @returns The content with character name prefix removed if present
+ */
+const removeCharacterNamePrefix = (content: string): string => {
+  // Match character name at start followed by colon
+  // Pattern: Start of string → Any non-colon, non-newline characters → Optional space → Colon → Optional space
+  // Min 2 chars: Avoids matching single letters like "A:" (likely not a character name)
+  // Max 30 chars: Typical character name length limit
+  // Matches common name patterns including quotes, symbols, etc. (e.g., john "Doe" nam:, @username:)
+  const characterNamePattern = /^[^:\n]{2,30}?\s*:\s*/;
+
+  const match = content.match(characterNamePattern);
+  if (match) {
+    const prefix = match[0];
+    // Remove the matched prefix and trim any leading whitespace
+    return content.slice(prefix.length).trimStart();
+  }
+
+  return content;
+};
+
+// Helper function to get fallback model based on tier (for AstrskAi backend)
 const getFallbackModel = (modelTier?: ModelTier): string | null => {
   if (!modelTier) {
     // Default to light tier if not specified
     return MODEL_TIER_MAPPING[ModelTier.Light];
   }
   return MODEL_TIER_MAPPING[modelTier] || null;
+};
+
+// Helper to get lite model fallback connection and model ID
+const getLiteModelFallback = async (): Promise<{
+  apiConnection: ApiConnection;
+  modelId: string;
+  modelName: string;
+} | null> => {
+  const modelStore = useModelStore.getState();
+  const liteModel = modelStore.defaultLiteModel;
+
+  if (!liteModel) {
+    return null;
+  }
+
+  const apiConnections = await fetchApiConnections();
+  const connection = apiConnections.find(
+    (c) => c.id.toString() === liteModel.apiConnectionId
+  );
+
+  if (!connection) {
+    return null;
+  }
+
+  return {
+    apiConnection: connection,
+    modelId: liteModel.modelId,
+    modelName: liteModel.modelName,
+  };
 };
 
 const makeContext = async ({
@@ -136,12 +248,15 @@ const makeContext = async ({
       duration: sessionDuration,
     },
     history: [],
+    // Set {{history_count}} - total number of turns in the session
+    // This is efficient as it uses turnIds.length directly without loading all turns
+    history_count: session.turnIds.length,
   };
 
-  // Get plot card
-  let plotCard: PlotCard | null = null;
+  // Get scenario card (previously called plot card)
+  let plotCard: ScenarioCard | null = null;
   if (session.plotCard && session.plotCard.enabled) {
-    plotCard = await fetchPlotCardOptional(session.plotCard.id);
+    plotCard = await fetchScenarioCardOptional(session.plotCard.id);
   }
 
   // Set `{{session.scenario}}`
@@ -150,15 +265,37 @@ const makeContext = async ({
   }
 
   // Set `{{history}}` and prepare dataStore for regeneration
+  // Only load the last MAX_HISTORY_FOR_RENDERING turns for efficiency
+  const MAX_HISTORY_FOR_RENDERING = 20;
   if (includeHistory) {
     const history: HistoryItem[] = [];
-    const lastMessageId = session.turnIds[session.turnIds.length - 1];
     let dataStoreForRegeneration: DataStoreSavedField[] = [];
 
-    for (const messageId of session.turnIds) {
-      if (regenerateMessageId && messageId.equals(regenerateMessageId)) {
-        break;
+    // Determine which turns to load
+    let turnIdsToLoad = session.turnIds;
+
+    // If regenerating, only load turns up to (but not including) the regenerate message
+    if (regenerateMessageId) {
+      const regenerateIndex = session.turnIds.findIndex((id) =>
+        id.equals(regenerateMessageId)
+      );
+      if (regenerateIndex > 0) {
+        // Take turns before regenerateMessageId, limited to last MAX_HISTORY_FOR_RENDERING
+        const turnsBeforeRegenerate = session.turnIds.slice(0, regenerateIndex);
+        turnIdsToLoad = turnsBeforeRegenerate.slice(-MAX_HISTORY_FOR_RENDERING);
+      } else {
+        turnIdsToLoad = [];
       }
+    } else {
+      // Normal case: only load the last MAX_HISTORY_FOR_RENDERING turns
+      turnIdsToLoad = session.turnIds.slice(-MAX_HISTORY_FOR_RENDERING);
+    }
+
+    const lastMessageId = turnIdsToLoad.length > 0
+      ? turnIdsToLoad[turnIdsToLoad.length - 1]
+      : null;
+
+    for (const messageId of turnIdsToLoad) {
       let message;
       try {
         message = await fetchTurn(messageId);
@@ -180,7 +317,7 @@ const makeContext = async ({
           : message.content;
 
       // Set `{{session.idle_duration}}`
-      if (lastMessageId.equals(messageId)) {
+      if (lastMessageId && lastMessageId.equals(messageId)) {
         const idleDuration = Datetime.duration(now.diff(message.createdAt));
         context.session.idle_duration = idleDuration;
       }
@@ -266,6 +403,34 @@ const makeContext = async ({
     }
   }
 
+  // Ensure context.user always exists with "Unknown User" fallback
+  if (!context.user) {
+    context.user = {
+      id: "",
+      name: "Unknown User",
+      description: "",
+      example_dialog: "",
+      entries: [],
+    };
+  }
+
+  // If char and user are the same (user character is speaking),
+  // reassign context.user to the last non-user character
+  // if (
+  //   context.char &&
+  //   context.user &&
+  //   context.char.id === context.user.id &&
+  //   session.config.lastNonUserCharacterId
+  // ) {
+  //   const lastNonUserChar = allCharacters.find(
+  //     (char) => char.id === session.config.lastNonUserCharacterId,
+  //   );
+  //   if (lastNonUserChar) {
+  //     context.user = lastNonUserChar;
+  //   }
+  //   // else: character was deleted, keep original context.user
+  // }
+
   // Set `{{cast.all}}`
   context.cast.all = allCharacters;
 
@@ -304,7 +469,8 @@ const makeContext = async ({
     }
   }
 
-  // Set `{{session.plot_entries}}`
+  // Set `{{session.plot_entries}}` and `{{scenario}}`
+  // Note: scenario.name is always "Narrator" for consistency in history/prompts
   if (plotCard && plotCard.props.lorebook) {
     // Scan lorebook
     try {
@@ -315,9 +481,25 @@ const makeContext = async ({
         .map((entry) => TemplateRenderer.render(entry.content || "", context));
       entries.push(...activatedEntries);
       context.session.plot_entries = activatedEntries;
+
+      // Set scenario variables for template rendering
+      context.scenario = {
+        id: plotCard.id.toString(),
+        name: "Narrator",
+        description: plotCard.props.description || "",
+        entries: activatedEntries,
+      };
     } catch (error) {
       // Ignore lorebook scan errors
     }
+  } else if (plotCard) {
+    // Set scenario variables even without lorebook
+    context.scenario = {
+      id: plotCard.id.toString(),
+      name: "Narrator",
+      description: plotCard.props.description || "",
+      entries: [],
+    };
   }
 
   // Set `{{session.entries}}`, `{{session.char_entries}}`
@@ -390,12 +572,8 @@ const makeSettings = ({ parameters }: { parameters: Map<string, any> }) => {
 
   if (parameters.has("temperature")) {
     settings["temperature"] = Number(parameters.get("temperature"));
-  } else {
-    // Prevent AI SDK set temperature to 0
-    // TODO: delete this code after upgrade to AI SDK v5
-    // https://ai-sdk.dev/docs/ai-sdk-core/settings#temperature
-    settings["temperature"] = 1;
   }
+  // Note: AI SDK v5 no longer defaults temperature to 0, so no fallback needed
 
   if (parameters.has("top_p")) {
     settings["topP"] = Number(parameters.get("top_p"));
@@ -430,9 +608,11 @@ const makeSettings = ({ parameters }: { parameters: Map<string, any> }) => {
 const makeProviderOptions = ({
   parameters,
   apiSource,
+  modelId,
 }: {
   parameters: Map<string, any>;
   apiSource: ApiSource;
+  modelId?: string;
 }): Record<string, JSONValue> => {
   const options: Record<string, JSONValue> = {};
   for (const tuple of parameters) {
@@ -464,6 +644,27 @@ const makeProviderOptions = ({
       options[nameByApiSource] = paramValue;
     }
   }
+
+  // GLM models require thinking to be disabled for tool calling
+  if (modelId && modelId.toLowerCase().includes("glm")) {
+    options.thinking = { type: "disabled" } as unknown as JSONValue;
+  }
+
+  // Gemini models: Configure thinking via google.thinkingConfig
+  // Gemini 3: Always "low" (cannot be disabled), Gemini 2.5: Use thinking_budget parameter (0 = disabled)
+  if (apiSource === ApiSource.AstrskAi && modelId?.startsWith("google/gemini-")) {
+    const isGemini3 = modelId.toLowerCase().includes("gemini-3");
+    const thinkingBudget = parameters.get("thinking_budget");
+    const existingGoogleOptions = (options.google as Record<string, unknown>) || {};
+
+    options.google = {
+      ...existingGoogleOptions,
+      thinkingConfig: isGemini3
+        ? { thinkingLevel: "low" }
+        : { thinkingBudget: typeof thinkingBudget === "number" ? thinkingBudget : 0 },
+    } as unknown as JSONValue;
+  }
+
   return options;
 };
 
@@ -582,159 +783,8 @@ const validateMessages = (messages: Message[], apiSource: ApiSource) => {
   }
 };
 
-const makeProvider = ({
-  source,
-  apiKey,
-  baseUrl,
-  isStructuredOutput,
-  openrouterProviderSort,
-}: {
-  source: ApiSource;
-  apiKey?: string;
-  baseUrl?: string;
-  isStructuredOutput?: boolean;
-  openrouterProviderSort?: OpenrouterProviderSort;
-}) => {
-  let provider;
-  switch (source) {
-    case ApiSource.OpenAI:
-      provider = createOpenAI({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.OpenAICompatible: {
-      // Use base URL as-is (no automatic /v1 addition)
-      provider = createOpenAICompatible({
-        name: "openai-compatible",
-        apiKey: apiKey,
-        baseURL: baseUrl ?? "",
-        fetch: getAISDKFetch(), // Use Electron-aware fetch for CORS-free localhost access
-      });
-      break;
-    }
-
-    case ApiSource.Anthropic:
-      provider = createAnthropic({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-        headers: {
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-      });
-      break;
-
-    case ApiSource.OpenRouter: {
-      const options: OpenRouterProviderSettings = {
-        apiKey: apiKey,
-        baseURL: baseUrl,
-        headers: {
-          "HTTP-Referer": "https://app.astrsk.ai",
-          "X-Title": "astrsk",
-        },
-      };
-      const extraBody = {};
-      if (isStructuredOutput) {
-        merge(extraBody, {
-          provider: {
-            require_parameters: true,
-          },
-        });
-      }
-      if (
-        openrouterProviderSort &&
-        openrouterProviderSort !== OpenrouterProviderSort.Default
-      ) {
-        merge(extraBody, {
-          provider: {
-            sort: openrouterProviderSort,
-          },
-        });
-      }
-      options.extraBody = extraBody;
-      provider = createOpenRouter(options);
-      break;
-    }
-
-    case ApiSource.GoogleGenerativeAI:
-      provider = createGoogleGenerativeAI({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.Ollama: {
-      // Use OpenAI-compatible provider instead of ollama-ai-provider
-      // This avoids strict schema validation issues (e.g., eval_duration requirement)
-      // Ollama supports OpenAI-compatible API: https://github.com/ollama/ollama/blob/main/docs/openai.md
-      let ollamaBaseUrl = baseUrl ?? "http://localhost:11434";
-      // Remove /api suffix if present (Ollama native endpoint)
-      ollamaBaseUrl = ollamaBaseUrl.replace(/\/api$/, "");
-      // No hardcoded /v1 - let endpoint auto-retry with /v1 if needed
-      provider = createOpenAICompatible({
-        name: "ollama",
-        baseURL: ollamaBaseUrl,
-        fetch: getAISDKFetch(), // Use Electron-aware fetch for CORS-free localhost access
-      });
-      break;
-    }
-
-    case ApiSource.LMStudio: {
-      let lmStudioBaseUrl = baseUrl ?? "http://localhost:1234";
-      // No hardcoded /v1 - let fetch auto-retry with /v1 if needed
-      provider = createOpenAICompatible({
-        name: "lmstudio",
-        apiKey: apiKey || "",  // LM Studio doesn't require API key
-        baseURL: lmStudioBaseUrl,
-        fetch: getAISDKFetch(), // Use Electron-aware fetch for CORS-free localhost access
-      });
-      break;
-    }
-
-    case ApiSource.DeepSeek:
-      provider = createDeepSeek({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.xAI:
-      provider = createXai({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.Mistral:
-      provider = createMistral({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.Cohere:
-      provider = createCohere({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-      });
-      break;
-
-    case ApiSource.KoboldCPP: {
-      // No hardcoded /v1 - let endpoint auto-retry with /v1 if needed
-      provider = createOpenAICompatible({
-        name: ApiSource.KoboldCPP,
-        baseURL: baseUrl ?? "",
-        fetch: getAISDKFetch(),
-      });
-      break;
-    }
-
-    default:
-      throw new Error("Invalid API connection source");
-  }
-  return provider;
-};
+// Use the shared createProvider from ai-model-factory
+const makeProvider = createProvider;
 
 const generateNonAiSdkMessage = async ({
   apiConnection,
@@ -1301,7 +1351,7 @@ async function renderMessages({
   const tokenBudget = contextTokenSize - responseTokenSize - 200; // padding 200 tokens
 
   // Check system prompt is too long
-  const tokenizer = await getTokenizer();
+  const tokenizer = getTokenizer();
   const systemPromptTokenSize = tokenizer.encode(
     systemPrompt.map((message) => message.content).join("\n"),
   ).length;
@@ -1388,17 +1438,7 @@ async function generateTextOutput({
       // Model ID format: "provider:modelId" (e.g., "openai-compatible:deepseek-ai/DeepSeek-V3.1")
       const modelIdSplitted = modelId.split(":");
       parsedModelId = modelIdSplitted.at(1) ?? modelId;
-
-      const astrskBaseUrl = import.meta.env.VITE_CLOUD_LLM_URL;
-      if (!astrskBaseUrl) {
-        throw new Error("VITE_CLOUD_LLM_URL is not configured");
-      }
-      provider = createOpenAICompatible({
-        name: "astrsk-cloud",
-        baseURL: astrskBaseUrl,
-        fetch: getAISDKFetch(),
-      });
-      break;
+      // Fall through to use makeProvider
     }
 
     // Request by AI SDK
@@ -1419,6 +1459,7 @@ async function generateTextOutput({
         apiKey: apiConnection.apiKey,
         baseUrl: apiConnection.baseUrl,
         openrouterProviderSort: apiConnection.openrouterProviderSort,
+        modelId,
       });
       break;
 
@@ -1455,7 +1496,7 @@ async function generateTextOutput({
       : (provider.languageModel(
         parsedModelId,
         modelSettings,
-      ) as LanguageModelV1);
+      ) as LanguageModel);
 
   // Make settings
   const settings = makeSettings({
@@ -1466,15 +1507,25 @@ async function generateTextOutput({
   const providerOptions = makeProviderOptions({
     parameters: parameters,
     apiSource: apiConnection.source,
+    modelId: parsedModelId,
   });
-  const modelProvider = model.provider.split(".").at(0);
+  // Get the provider name for providerOptions (handle different model types)
+  const modelProvider = typeof model === "object" && "provider" in model && typeof model.provider === "string"
+    ? model.provider.split(".").at(0)
+    : undefined;
 
   // Extra headers and body for Astrsk Cloud LLM
   const jwt = useAppStore.getState().jwt;
-  const astrskHeaders = {
+  const devKey = import.meta.env.VITE_DEV_KEY;
+  const cloudLlmUrl = import.meta.env.VITE_CLOUD_LLM_URL;
+  const astrskHeaders: Record<string, string> = {
     Authorization: `Bearer ${jwt}`,
     "x-astrsk-credit-log": JSON.stringify(creditLog),
   };
+  // Add x-dev-key header only for localhost (development environment)
+  if (devKey && cloudLlmUrl && cloudLlmUrl.includes("localhost")) {
+    astrskHeaders["x-dev-key"] = devKey;
+  }
 
   // Check if thinking should be enabled (if thinking_budget or reasoning_effort is set)
   const thinkingBudget = parameters.get("thinking_budget");
@@ -1485,7 +1536,7 @@ async function generateTextOutput({
   // Request to LLM endpoint
   if (streaming) {
     return streamText({
-      model,
+      model: model as LanguageModel,
       messages: transformedMessages,
       abortSignal: combinedAbortSignal,
       ...settings,
@@ -1510,7 +1561,7 @@ async function generateTextOutput({
     });
   } else {
     const { text } = await generateText({
-      model,
+      model: model as LanguageModel,
       messages: transformedMessages,
       abortSignal: combinedAbortSignal,
       ...settings,
@@ -1582,17 +1633,7 @@ async function generateStructuredOutput({
       // Model ID format: "provider:modelId" (e.g., "openai-compatible:deepseek-ai/DeepSeek-V3.1")
       const modelIdSplitted = modelId.split(":");
       parsedModelId = modelIdSplitted.at(1) ?? modelId;
-
-      const astrskBaseUrl = import.meta.env.VITE_CLOUD_LLM_URL;
-      if (!astrskBaseUrl) {
-        throw new Error("VITE_CLOUD_LLM_URL is not configured");
-      }
-      provider = createOpenAICompatible({
-        name: "astrsk-cloud",
-        baseURL: astrskBaseUrl,
-        fetch: getAISDKFetch(),
-      });
-      break;
+      // Fall through to use makeProvider
     }
 
     // Request by AI SDK
@@ -1613,6 +1654,7 @@ async function generateStructuredOutput({
         baseUrl: apiConnection.baseUrl,
         openrouterProviderSort: apiConnection.openrouterProviderSort,
         isStructuredOutput: true,
+        modelId,
       });
       break;
 
@@ -1653,7 +1695,7 @@ async function generateStructuredOutput({
       : (provider.languageModel(
         parsedModelId,
         modelSettings,
-      ) as LanguageModelV1);
+      ) as LanguageModel);
 
   // Make settings
   const settings = makeSettings({
@@ -1664,46 +1706,109 @@ async function generateStructuredOutput({
   const providerOptions = makeProviderOptions({
     parameters: parameters,
     apiSource: apiConnection.source,
+    modelId: parsedModelId,
   });
-  const modelProvider = model.provider.split(".").at(0);
+  // Get the provider name for providerOptions (handle different model types)
+  const modelProvider = typeof model === "object" && "provider" in model && typeof model.provider === "string"
+    ? model.provider.split(".").at(0)
+    : undefined;
 
-  let mode = model.defaultObjectGenerationMode;
-  if (apiConnection.source === ApiSource.OpenRouter ||
-    apiConnection.source === ApiSource.Ollama ||
-    apiConnection.source === ApiSource.KoboldCPP ||
-    apiConnection.source === ApiSource.OpenAICompatible
-  ) {
-    mode = "json";
-  }
-  // For AstrskAi: Friendli models need json mode, others support tool calling
-  // - Friendli models (deepseek-ai/*, zai-org/*): no tool calling, use json mode
-  // - BytePlus models (byteplus/*): supports tool calling, use tool mode
-  // - GLM Official (glm-4.6): supports tool calling, use tool mode
-  if (apiConnection.source === ApiSource.AstrskAi) {
-    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
-    mode = isFriendliModel ? "json" : "tool";
-  }
+  // Determine structured output mode based on API connection and model name
+  const mode = getStructuredOutputMode(apiConnection.source, parsedModelId);
+  logger.info(`[StructuredOutput] Determined mode for ${apiConnection.source} / ${parsedModelId}: ${mode}`);
+
+  // Check if we should use generateText with tool fallback (for models like GLM or cached models)
+  // GLM models don't support json_schema response_format, but support tool calling
+  const useToolFallback = shouldUseToolFallback(apiConnection.source, parsedModelId);
 
   // Extra headers and body for Astrsk Cloud LLM
   const jwt = useAppStore.getState().jwt;
-  const astrskHeaders = {
+  const devKey = import.meta.env.VITE_DEV_KEY;
+  const cloudLlmUrl = import.meta.env.VITE_CLOUD_LLM_URL;
+  const astrskHeaders: Record<string, string> = {
     Authorization: `Bearer ${jwt}`,
     "x-astrsk-credit-log": JSON.stringify(creditLog),
   };
+  // Add x-dev-key header only for localhost (development environment)
+  if (devKey && cloudLlmUrl && cloudLlmUrl.includes("localhost")) {
+    astrskHeaders["x-dev-key"] = devKey;
+  }
 
+  // Helper: Execute tool fallback approach (generateText/streamText with tool calling)
+  const executeToolFallback = () => {
+    // Convert CoreMessage to simple message format for the fallback
+    const simpleMessages = transformedMessages.map((msg) => ({
+      role: msg.role as "system" | "user" | "assistant",
+      content: typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content),
+    }));
+
+    // Gemini uses non-streaming generateWithToolFallback (Vertex AI streaming incompatible with streamObject)
+    const isGoogleProvider = apiConnection.source === ApiSource.AstrskAi &&
+      parsedModelId.startsWith("google/gemini-");
+    if (isGoogleProvider) {
+
+      const partialObjectStream = (async function* () {
+        const result = await generateWithToolFallback({
+          model: model as LanguageModel,
+          messages: simpleMessages,
+          schema: schema.typeDef as JSONSchema7,
+          schemaName: schema.name,
+          schemaDescription: schema.description,
+          abortSignal: combinedAbortSignal,
+          isGoogleProvider: true,
+          modelId: parsedModelId,
+          providerOptions,
+          settings,
+        });
+        yield result;
+      })();
+
+      return { partialObjectStream };
+    }
+
+    // Other models use streaming version
+    logger.info(`[StructuredOutput] Using streamWithToolFallback`);
+
+    const partialObjectStream = streamWithToolFallback({
+      model: model as LanguageModel,
+      messages: simpleMessages,
+      schema: schema.typeDef as JSONSchema7,
+      schemaName: schema.name,
+      schemaDescription: schema.description,
+      abortSignal: combinedAbortSignal,
+      isGoogleProvider: false,
+      providerOptions,
+      settings,
+    });
+
+    return { partialObjectStream };
+  };
+
+  // For models that don't support json_schema response_format (like GLM or cached models),
+  // use generateText with tool calling instead of streamObject/generateObject
+  if (useToolFallback) {
+    return executeToolFallback();
+  }
   // Check if thinking should be enabled (if thinking_budget or reasoning_effort is set)
   const thinkingBudget = parameters.get("thinking_budget");
   const reasoningEffort = parameters.get("reasoning_effort");
   const enableThinking = (thinkingBudget !== undefined && thinkingBudget !== null && thinkingBudget > 0) ||
     (reasoningEffort !== undefined && reasoningEffort !== null && reasoningEffort !== "");
 
-  // Request to LLM endpoint
-  if (streaming) {
+  // Check if provider supports tool calling (for fallback)
+  const canUseFallback = providerSupportsToolCalling(apiConnection.source);
+
+  // Helper: Execute streamObject with a specific mode
+  const executeStreamObject = (targetMode: "auto" | "json" | "tool") => {
+    const schemaForMode = targetMode === "tool"
+      ? jsonSchemaToZod(schema.typeDef as JSONSchema7)
+      : jsonSchema(schema.typeDef);
+
     return streamObject({
-      model,
+      model: model as LanguageModel,
       messages: transformedMessages,
       abortSignal: combinedAbortSignal,
-      schema: jsonSchema(schema.typeDef),
+      schema: schemaForMode,
       schemaName: schema.name,
       schemaDescription: schema.description,
       ...settings,
@@ -1714,8 +1819,9 @@ async function generateStructuredOutput({
           },
         }
         : {}),
-      mode,
+      mode: targetMode,
       onError: (error) => {
+        logger.error(`[StructuredOutput] streamObject error (mode: ${targetMode}):`, error);
         throw error.error;
       },
       ...(isAstrskAi && {
@@ -1723,15 +1829,22 @@ async function generateStructuredOutput({
         experimental_extraBody: { thinking: enableThinking },
       }),
     });
-  } else {
+  };
+
+  // Helper: Execute generateObject with a specific mode
+  const executeGenerateObject = async (targetMode: "auto" | "json" | "tool") => {
+    const schemaForMode = targetMode === "tool"
+      ? jsonSchemaToZod(schema.typeDef as JSONSchema7)
+      : jsonSchema(schema.typeDef);
+
     const { object } = await generateObject({
-      model,
+      model: model as LanguageModel,
       messages: transformedMessages,
       abortSignal: combinedAbortSignal,
-      schema: jsonSchema(schema.typeDef),
+      schema: schemaForMode,
       schemaName: schema.name,
       schemaDescription: schema.description,
-      mode,
+      mode: targetMode,
       ...settings,
       ...(Object.keys(providerOptions).length > 0 && modelProvider
         ? {
@@ -1747,11 +1860,94 @@ async function generateStructuredOutput({
     });
 
     // Create a generator to return the final object
-    async function* createObjectStream(finalObject: any) {
+    async function* createObjectStream(finalObject: unknown) {
       yield finalObject;
     }
 
     return { partialObjectStream: createObjectStream(object) };
+  };
+
+  // Cascading fallback approach for providers using "json" mode:
+  // 1. Try with current mode (json/auto/tool)
+  // 2. If json mode fails → try with tool mode
+  // 3. If tool mode fails → try generateText with tool calling (and cache if json_schema not supported)
+  if (streaming) {
+    // Step 1: Try with the determined mode
+    try {
+      return executeStreamObject(mode);
+    } catch (error) {
+      logger.warn(`[StructuredOutput] streamObject failed with mode: ${mode}`, error);
+
+      // Step 2: If using json mode and it failed (parsing error or not supported), try tool mode
+      if (mode === "json" && canUseFallback && isRecoverableWithToolMode(error)) {
+        try {
+          logger.info(`[StructuredOutput] Retrying with mode: tool (json failed with recoverable error)`);
+          return executeStreamObject("tool");
+        } catch (toolError) {
+          logger.warn(`[StructuredOutput] streamObject failed with mode: tool`, toolError);
+
+          // Step 3: Try generateText with tool calling as last resort
+          // Cache only if json_schema not supported (not for parsing errors)
+          if (isJsonSchemaNotSupportedError(toolError)) {
+            logger.warn(`[StructuredOutput] Model ${apiConnection.source}:${parsedModelId} doesn't support structured output, caching for tool fallback`);
+            cacheModelForToolFallback(apiConnection.source, parsedModelId);
+          }
+          // Try generateWithToolFallback for any recoverable error
+          if (isRecoverableWithToolMode(toolError)) {
+            return executeToolFallback();
+          }
+          throw toolError;
+        }
+      }
+
+      // For non-json modes, check if we can use tool fallback
+      if (isJsonSchemaNotSupportedError(error) && canUseFallback) {
+        logger.warn(`[StructuredOutput] Model ${apiConnection.source}:${parsedModelId} doesn't support structured output, caching for tool fallback`);
+        cacheModelForToolFallback(apiConnection.source, parsedModelId);
+        return executeToolFallback();
+      }
+
+      throw error;
+    }
+  }
+
+  // Non-streaming path with cascading fallback
+  // Step 1: Try with the determined mode
+  try {
+    return await executeGenerateObject(mode);
+  } catch (error) {
+    logger.warn(`[StructuredOutput] generateObject failed with mode: ${mode}`, error);
+
+    // Step 2: If using json mode and it failed (parsing error or not supported), try tool mode
+    if (mode === "json" && canUseFallback && isRecoverableWithToolMode(error)) {
+      try {
+        logger.info(`[StructuredOutput] Retrying with mode: tool (json failed with recoverable error)`);
+        return await executeGenerateObject("tool");
+      } catch (toolError) {
+        logger.warn(`[StructuredOutput] generateObject failed with mode: tool`, toolError);
+
+        // Step 3: Try generateText with tool calling as last resort
+        // Cache only if json_schema not supported (not for parsing errors)
+        if (isJsonSchemaNotSupportedError(toolError)) {
+          logger.warn(`[StructuredOutput] Model ${apiConnection.source}:${parsedModelId} doesn't support structured output, caching for tool fallback`);
+          cacheModelForToolFallback(apiConnection.source, parsedModelId);
+        }
+        // Try generateWithToolFallback for any recoverable error
+        if (isRecoverableWithToolMode(toolError)) {
+          return executeToolFallback();
+        }
+        throw toolError;
+      }
+    }
+
+    // For non-json modes, check if we can use tool fallback
+    if (isJsonSchemaNotSupportedError(error) && canUseFallback) {
+      logger.warn(`[StructuredOutput] Model ${apiConnection.source}:${parsedModelId} doesn't support structured output, caching for tool fallback`);
+      cacheModelForToolFallback(apiConnection.source, parsedModelId);
+      return executeToolFallback();
+    }
+
+    throw error;
   }
 }
 
@@ -1777,47 +1973,109 @@ async function* executeAgentNode({
     // Get agent
     const agent = await fetchAgent(agentId);
 
-    // Get API connection
+    // Get API connections
+    const apiConnections = await fetchApiConnections();
+    let apiConnection: ApiConnection | undefined;
+
+    // Initialize with agent's saved model (used as fallback if global default not available)
     let apiSource = agent.props.apiSource;
     let apiModelId = agent.props.modelId;
     let actualModelName = agent.props.modelName; // Track the actual model name being used
 
-    if (!apiSource || !apiModelId) {
-      throw new Error("Agent does not have API source or model ID");
-    }
+    // Log agent's model configuration for debugging
+    console.log(`[ModelSelection] Agent "${agent.props.name}" model config:`, {
+      useDefaultModel: agent.props.useDefaultModel,
+      modelTier: agent.props.modelTier,
+      apiSource: agent.props.apiSource,
+      modelId: agent.props.modelId,
+      modelName: agent.props.modelName,
+    });
 
-    // Parse modelId for OpenAI compatible: "{title}|{actualModelId}"
-    let connectionTitle: string | undefined;
+    // PRIORITY 1: Use global default model only if agent is configured to use defaults
+    // (useDefaultModel === true means use tier-based defaults from settings)
+    const globalDefault = agent.props.useDefaultModel
+      ? getGlobalDefaultModel(agent.props.modelTier)
+      : null;
 
-    if (apiSource === ApiSource.OpenAICompatible && apiModelId.includes("|")) {
-      const parts = apiModelId.split("|");
-      if (parts.length === 2) {
-        connectionTitle = parts[0];
-        apiModelId = parts[1]; // Extract actual model ID
+    console.log(`[ModelSelection] useDefaultModel=${agent.props.useDefaultModel}, globalDefault:`, globalDefault);
+
+    if (globalDefault) {
+      // Find the API connection for the global default model
+      const defaultConnection = apiConnections.find(
+        (connection) => connection.id.toString() === globalDefault.apiConnectionId,
+      );
+
+      if (defaultConnection) {
+        logger.info(
+          `[RuntimeModelSelection] Using current default model: ${globalDefault.modelName} ` +
+          `(tier: ${agent.props.modelTier || "lite"}, saved in flow: ${agent.props.modelName || "none"})`,
+        );
+
+        // Use the global default model
+        apiConnection = defaultConnection;
+        apiSource = globalDefault.apiSource as ApiSource;
+        apiModelId = globalDefault.modelId;
+        actualModelName = globalDefault.modelName;
       }
     }
 
-    const apiConnections = await fetchApiConnections();
+    // PRIORITY 2: Fall back to agent's saved model configuration if global default not available
+    if (!apiConnection && agent.props.apiSource && agent.props.modelId) {
+      console.log(`[ModelSelection] PRIORITY 2: Using agent's saved model config`);
+      apiSource = agent.props.apiSource;
+      apiModelId = agent.props.modelId;
+      actualModelName = agent.props.modelName;
 
-    let apiConnection: ApiConnection | undefined;
+      // Parse modelId for OpenAI compatible: "{title}|{actualModelId}"
+      let connectionTitle: string | undefined;
 
-    // For OpenAI compatible with title, find by source + title
-    if (apiSource === ApiSource.OpenAICompatible && connectionTitle) {
-      apiConnection = apiConnections.find(
-        (connection) =>
-          connection.source === apiSource &&
-          connection.title === connectionTitle
-      );
+      if (apiSource === ApiSource.OpenAICompatible && apiModelId.includes("|")) {
+        const parts = apiModelId.split("|");
+        if (parts.length === 2) {
+          connectionTitle = parts[0];
+          apiModelId = parts[1]; // Extract actual model ID
+        }
+      }
+
+      // For OpenAI compatible with title, find by source + title
+      if (apiSource === ApiSource.OpenAICompatible && connectionTitle) {
+        apiConnection = apiConnections.find(
+          (connection) =>
+            connection.source === apiSource &&
+            connection.title === connectionTitle
+        );
+      }
+
+      // Fallback: find by source only (for non-OpenAI compatible or if title lookup failed)
+      if (!apiConnection) {
+        apiConnection = apiConnections.find(
+          (connection) => connection.source === apiSource,
+        );
+      }
+
+      // Check if the configured model is actually available in the provider
+      if (apiConnection) {
+        const modelAvailable = isModelAvailableInProvider(
+          apiConnection.id.toString(),
+          apiModelId,
+        );
+
+        if (!modelAvailable) {
+          logger.info(
+            `[ModelUnavailable] Saved model "${apiModelId}" not found in provider ${apiSource}.`,
+          );
+          // Clear the connection so fallback logic kicks in
+          apiConnection = undefined;
+        } else {
+          logger.info(
+            `[FallbackToSavedModel] Using model saved in flow: ${actualModelName} ` +
+            `(global default not available)`,
+          );
+        }
+      }
     }
 
-    // Fallback: find by source only (for non-OpenAI compatible or if title lookup failed)
-    if (!apiConnection) {
-      apiConnection = apiConnections.find(
-        (connection) => connection.source === apiSource,
-      );
-    }
-
-    // Automatic model mapping for logged-in users
+    // Fallback: Automatic model mapping for logged-in users (AstrskAi backend)
     if (!apiConnection && isUserLoggedIn()) {
       // Check if we should use automatic mapping (user is subscribed)
       // TODO: Replace with actual subscription check when available
@@ -1851,9 +2109,12 @@ async function* executeAgentNode({
       }
     }
 
-    // If still no connection, throw error
+    // If still no connection or no model ID, throw error
     if (!apiConnection) {
       throw new Error(`API connection not found for source: ${apiSource}`);
+    }
+    if (!apiModelId) {
+      throw new Error("No model ID available. Please configure a model for this agent or set a default model in Settings.");
     }
 
     // Render messages
@@ -1866,6 +2127,8 @@ async function* executeAgentNode({
     validateMessages(transformedMessages, apiConnection.source);
 
     // Generate agent output
+    // Use sanitized agent name as the key for variables
+    // (DataStore logic references agents by their sanitized name, e.g., {{agent_name.field}})
     const agentKey = sanitizeFileName(agent.props.name);
     const result = {
       agentKey: agentKey,
@@ -1875,24 +2138,68 @@ async function* executeAgentNode({
     };
     yield result;
     const isStructuredOutput = agent.props.enabledStructuredOutput;
+
     if (isStructuredOutput) {
-      // Generate structured output
-      const streamResult = await generateStructuredOutput({
-        apiConnection: apiConnection,
-        modelId: apiModelId,
-        messages: transformedMessages,
-        parameters: agent.parameters,
-        schema: {
-          typeDef: agent.getSchemaTypeDef({
-            apiSource: apiConnection.source,
-          }),
-          name: agent.props.schemaName,
-          description: agent.props.schemaDescription,
-        },
-        streaming: agent.props.outputStreaming,
-        stopSignalByUser: stopSignalByUser,
-        creditLog: creditLog,
-      });
+      // Generate structured output with fallback to lite model on failure
+      let streamResult;
+      let usedModelName = actualModelName;
+      try {
+        streamResult = await generateStructuredOutput({
+          apiConnection: apiConnection,
+          modelId: apiModelId,
+          messages: transformedMessages,
+          parameters: agent.parameters,
+          schema: {
+            typeDef: agent.getSchemaTypeDef({
+              apiSource: apiConnection.source,
+            }),
+            name: agent.props.schemaName,
+            description: agent.props.schemaDescription,
+          },
+          streaming: agent.props.outputStreaming,
+          stopSignalByUser: stopSignalByUser,
+          creditLog: creditLog,
+        });
+      } catch (primaryError) {
+        // Don't retry if aborted
+        if ((primaryError as Error).name === "AbortError") {
+          throw primaryError;
+        }
+
+        logger.warn("[InferenceFallback] Primary model failed, trying lite model fallback", {
+          error: primaryError instanceof Error ? primaryError.message : "Unknown error",
+          primaryModel: actualModelName,
+        });
+
+        // Try fallback to lite model
+        const fallback = await getLiteModelFallback();
+        if (fallback && fallback.modelId !== apiModelId) {
+          logger.info("[InferenceFallback] Retrying with lite model", {
+            fallbackModel: fallback.modelName,
+          });
+
+          streamResult = await generateStructuredOutput({
+            apiConnection: fallback.apiConnection,
+            modelId: fallback.modelId,
+            messages: transformedMessages,
+            parameters: agent.parameters,
+            schema: {
+              typeDef: agent.getSchemaTypeDef({
+                apiSource: fallback.apiConnection.source,
+              }),
+              name: agent.props.schemaName,
+              description: agent.props.schemaDescription,
+            },
+            streaming: agent.props.outputStreaming,
+            stopSignalByUser: stopSignalByUser,
+            creditLog: creditLog,
+          });
+          usedModelName = fallback.modelName;
+          result.modelName = usedModelName;
+        } else {
+          throw primaryError;
+        }
+      }
 
       // Stream structured output
       for await (const partialObject of streamResult.partialObjectStream) {
@@ -1900,66 +2207,139 @@ async function* executeAgentNode({
         yield result;
       }
 
+      // Post-process: Remove character name prefix from structured output fields
+      if (result.output && typeof result.output === 'object') {
+        const typedOutput = result.output as any;
+        // Check for common response field names and remove character name prefix
+        const responseField = ['char_response', 'response', 'text', 'content'].find(field => field in typedOutput);
+        if (responseField && typeof typedOutput[responseField] === 'string') {
+          typedOutput[responseField] = removeCharacterNamePrefix(typedOutput[responseField]);
+          merge(result, { output: typedOutput });
+          yield result;
+        }
+      }
+
+      // Extract metadata from stream result promises
       try {
         const metadata: any = {};
-
-        // Automatically extract all promise properties from streamResult
         const streamResultAny = streamResult as any;
 
-        // Get all property names that end with "Promise"
-        const promiseProps = Object.keys(streamResultAny).filter(key => key.endsWith('Promise'));
-
-        // Await all promises and extract their values
-        for (const prop of promiseProps) {
-          const propName = prop.replace('Promise', ''); // Remove "Promise" suffix for cleaner naming
-
+        // Check _object for final structured output (AI SDK v5 internal property)
+        // This can recover output when partialObjectStream yields empty objects
+        if (streamResultAny._object) {
           try {
-            // Add timeout for all promises (some may not resolve for certain providers)
+            const delayedPromise = streamResultAny._object;
+            if (delayedPromise.status?.type === 'resolved') {
+              const resolvedValue = delayedPromise.status.value;
+              if (resolvedValue && typeof resolvedValue === 'object' && Object.keys(resolvedValue).length > 0) {
+                // Post-process: Remove character name prefix from resolved structured output
+                const responseField = ['char_response', 'response', 'text', 'content'].find(field => field in resolvedValue);
+                if (responseField && typeof resolvedValue[responseField] === 'string') {
+                  resolvedValue[responseField] = removeCharacterNamePrefix(resolvedValue[responseField]);
+                }
+                merge(result, { output: resolvedValue });
+                yield result;
+              }
+            } else if (delayedPromise.status?.type === 'rejected') {
+              // Capture parse error for display after flow execution
+              const error = delayedPromise.status.error;
+              const errorMessage = parseStructuredOutputError(error, usedModelName);
+
+              logger.error(`[StructuredOutput] ${errorMessage}`, {
+                agent: agent.props.name,
+                model: usedModelName,
+              });
+
+              // Add error to metadata so it can be displayed
+              metadata.structuredOutputError = errorMessage;
+            }
+          } catch {
+            // Silently continue without _object
+          }
+        }
+
+        // Extract metadata from promise properties (usage, finishReason, etc.)
+        const promiseProps = Object.keys(streamResultAny).filter(key => key.endsWith('Promise'));
+        for (const prop of promiseProps) {
+          try {
             const promiseResult = await Promise.race([
               streamResultAny[prop],
               new Promise((resolve) => setTimeout(() => resolve(null), 2000))
             ]);
 
-            // Extract value from DelayedPromise - the actual value is in status.value
             let value = promiseResult;
             if (promiseResult && typeof promiseResult === 'object' && 'status' in promiseResult) {
-              // It's a DelayedPromise with status.value
               const status = (promiseResult as any).status;
-              if (status && status.type === 'resolved' && 'value' in status) {
+              if (status?.type === 'resolved' && 'value' in status) {
                 value = status.value;
               }
             }
 
-            // Check if value is meaningful (not null, not undefined, not empty object)
             const isEmptyObject = value && typeof value === 'object' && Object.keys(value).length === 0;
-
             if (value !== null && value !== undefined && !isEmptyObject) {
-              metadata[propName] = value;
+              metadata[prop.replace('Promise', '')] = value;
             }
-          } catch (err) {
+          } catch {
             // Silently skip unavailable promises
           }
         }
 
         if (Object.keys(metadata).length > 0) {
           merge(result, { metadata });
-          // Yield the result with metadata
           yield result;
         }
-      } catch (error) {
+      } catch {
         // Don't throw, just continue without metadata
       }
     } else {
-      // Generate text output
-      const streamResult = await generateTextOutput({
-        apiConnection: apiConnection,
-        modelId: apiModelId,
-        messages: transformedMessages,
-        parameters: agent.parameters,
-        streaming: agent.props.outputStreaming,
-        stopSignalByUser: stopSignalByUser,
-        creditLog: creditLog,
-      });
+      // Generate text output with fallback to lite model on failure
+      let streamResult;
+      try {
+        // Check if we need to force non-streaming for this model
+        const forceNonStreaming = shouldUseNonStreamingForTools(apiConnection.source, apiModelId);
+        const effectiveStreaming = forceNonStreaming ? false : agent.props.outputStreaming;
+
+        if (forceNonStreaming && agent.props.outputStreaming) {
+          logger.info("[SessionPlay] Forcing non-streaming for model", {
+            modelId: apiModelId,
+            source: apiConnection.source,
+            originalStreaming: agent.props.outputStreaming,
+          });
+        }
+
+        streamResult = await generateTextOutput({
+          apiConnection: apiConnection,
+          modelId: apiModelId,
+          messages: transformedMessages,
+          parameters: agent.parameters,
+          streaming: effectiveStreaming,
+          stopSignalByUser: stopSignalByUser,
+          creditLog: creditLog,
+        });
+      } catch (primaryError) {
+        // Don't retry if aborted
+        if ((primaryError as Error).name === "AbortError") {
+          throw primaryError;
+        }
+
+        // Try fallback to lite model
+        const fallback = await getLiteModelFallback();
+        if (fallback && fallback.modelId !== apiModelId) {
+
+          streamResult = await generateTextOutput({
+            apiConnection: fallback.apiConnection,
+            modelId: fallback.modelId,
+            messages: transformedMessages,
+            parameters: agent.parameters,
+            streaming: agent.props.outputStreaming,
+            stopSignalByUser: stopSignalByUser,
+            creditLog: creditLog,
+          });
+          result.modelName = fallback.modelName;
+        } else {
+          throw primaryError;
+        }
+      }
 
       // Stream text output
       let response = "";
@@ -1968,6 +2348,12 @@ async function* executeAgentNode({
         merge(result, { output: { response } });
         yield result;
       }
+
+      // Post-process: Remove character name prefix if present (e.g., "Jane Doe: Hello" → "Hello")
+      // This handles cases where LLMs incorrectly prefix responses with character names
+      response = removeCharacterNamePrefix(response);
+      merge(result, { output: { response } });
+      yield result;
 
       try {
         const metadata: any = {};
@@ -2050,12 +2436,14 @@ async function* executeFlow({
   characterCardId,
   regenerateMessageId,
   stopSignalByUser,
+  triggerType,
 }: {
   flowId: UniqueEntityID;
   sessionId: UniqueEntityID;
   characterCardId: UniqueEntityID;
   regenerateMessageId?: UniqueEntityID;
   stopSignalByUser?: AbortSignal;
+  triggerType?: string;
 }): AsyncGenerator<FlowResult, FlowResult, void> {
   // Flow result
   let content = "";
@@ -2067,10 +2455,35 @@ async function* executeFlow({
     // Get flow
     const flow = await fetchFlow(flowId);
 
-    // Find start node
-    const startNode = flow.props.nodes.find((node) => node.type === "start");
+    // Find default character start node (no nodeVariant)
+    const defaultStartNode = flow.props.nodes.find(
+      (node) =>
+        node.type === "start" && !(node.data as any)?.nodeVariant
+    );
+
+    // Helper to check if a node has outgoing edges (is connected)
+    const hasOutgoingEdges = (nodeId: string) =>
+      flow.props.edges.some((edge) => edge.source === nodeId);
+
+    // Find start node based on trigger type
+    let startNode = triggerType
+      ? // If triggerType provided, find start node with matching nodeVariant
+        flow.props.nodes.find(
+          (node) =>
+            node.type === "start" &&
+            (node.data as any)?.nodeVariant === triggerType
+        )
+      : // Otherwise, use default start node
+        defaultStartNode;
+
+    // Fallback: If trigger start node doesn't exist or has no connections, use default
+    if (triggerType && (!startNode || !hasOutgoingEdges(startNode.id))) {
+      startNode = defaultStartNode;
+    }
+
     if (!startNode) {
-      throw new Error("No start node found in flow");
+      const nodeType = triggerType ? `${triggerType} start` : "start";
+      throw new Error(`No ${nodeType} node found in flow`);
     }
 
     // Validate flow structure using traverseFlow
@@ -2145,12 +2558,24 @@ async function* executeFlow({
               createFullContext(context, {}, dataStore),
             );
 
-            // Execute rendered value as JavaScript code
+            // Determine if the rendered value needs JavaScript execution
+            // Heuristic: If the rendered value contains JS operators, execute as JS
+            // Otherwise, use the rendered value directly
             const fullContext = createFullContext(context, {}, dataStore);
-            const executedValue = executeJavaScriptCode(
-              renderedValue,
-              fullContext,
-            );
+            const jsOperatorPattern = /[+\-*/%<>=?:&|!]/;
+            const needsJsExecution = jsOperatorPattern.test(renderedValue);
+
+            let executedValue: unknown;
+            if (needsJsExecution) {
+              // Has operators - execute as JavaScript for math/logic expressions
+              executedValue = executeJavaScriptCode(
+                renderedValue,
+                fullContext,
+              );
+            } else {
+              // Simple value - use rendered template value directly
+              executedValue = renderedValue;
+            }
 
             // Convert to appropriate type and create DataStoreSavedField
             const convertedValue = convertToDataStoreType(
@@ -2257,17 +2682,45 @@ async function* executeFlow({
               );
 
               if (schemaField) {
-                // Execute rendered value as JavaScript code
-                const executedValue = executeJavaScriptCode(
-                  renderedValue,
-                  fullContext,
-                );
+                // Determine if the rendered value needs JavaScript execution
+                // JavaScript execution is needed for:
+                // - Math expressions: "100 + -5", "50 * 2"
+                // - Comparisons: "a > b ? a : b"
+                // - String concatenation with +: '"Hello" + " World"'
+                //
+                // JavaScript execution is NOT needed for:
+                // - Simple values that are just template substitutions
+                //
+                // Heuristic: If the rendered value contains JS operators, execute as JS
+                // Otherwise, use the rendered value directly (avoids "CRITICAL is not defined" errors)
+                const jsOperatorPattern = /[+\-*/%<>=?:&|!]/;
+                const needsJsExecution = jsOperatorPattern.test(renderedValue);
 
-                // Convert value
+                let executedValue: unknown;
+                if (needsJsExecution) {
+                  // Has operators - execute as JavaScript for math/logic expressions
+                  executedValue = executeJavaScriptCode(
+                    renderedValue,
+                    fullContext,
+                  );
+                } else {
+                  // Simple value - use rendered template value directly
+                  executedValue = renderedValue;
+                }
+
+                // Convert value - returns null if invalid (NaN, undefined, etc.)
                 const convertedValue = convertToDataStoreType(
                   String(executedValue),
                   schemaField.type,
                 );
+
+                // Skip update if conversion failed (preserves existing value)
+                if (convertedValue === null) {
+                  logger.debug(
+                    `Skipping dataStore update for "${schemaField.name}": invalid value "${executedValue}"`,
+                  );
+                  continue;
+                }
 
                 // Find and update existing field or add new one
                 const existingFieldIndex = dataStore.findIndex(
@@ -2789,7 +3242,19 @@ function executeJavaScriptCode(
       /\bglobal\b/,
       /\bwindow\b/,
       /\bdocument\b/,
+      /\bconstructor\b/,
+      /\b__proto__\b/,
+      /\bprototype\b/,
+      /\bthis\b/,
+      /\bProxy\b/,
+      /\bReflect\b/,
     ];
+
+    // Check for Unicode escapes and bracket notation (bypass attempts)
+    if (/\\u[0-9a-fA-F]{4}/.test(code) || /\[['"`]/.test(code)) {
+      logger.warn(`JavaScript code contains suspicious patterns: ${code}`);
+      return code;
+    }
 
     if (dangerousPatterns.some((pattern) => pattern.test(code))) {
       logger.warn(
@@ -2819,18 +3284,24 @@ function executeJavaScriptCode(
  * Convert a string value to the specified DataStore field type
  * @param value - The string value to convert
  * @param type - The target DataStore field type
- * @returns The converted value
+ * @returns The converted value, or null if the value is invalid (NaN, undefined, etc.)
  */
 function convertToDataStoreType(
   value: string,
   type: DataStoreFieldType,
-): string | number | boolean {
+): string | number | boolean | null {
+  // Check for undefined/null values first
+  if (value === "undefined" || value === "null" || value === "") {
+    return null;
+  }
+
   switch (type) {
     case "string":
       return String(value);
     case "number": {
       const num = Number(value);
-      return isNaN(num) ? 0 : num;
+      // Return null for NaN - caller should skip update
+      return isNaN(num) ? null : num;
     }
     case "boolean": {
       const lowerValue = value.toLowerCase().trim();
@@ -2840,7 +3311,8 @@ function convertToDataStoreType(
     }
     case "integer": {
       const int = parseInt(value, 10);
-      return isNaN(int) ? 0 : int;
+      // Return null for NaN - caller should skip update
+      return isNaN(int) ? null : int;
     }
     default:
       return value;
@@ -2853,6 +3325,7 @@ export {
   evaluateConditionOperator,
   executeFlow,
   makeContext,
+  removeCharacterNamePrefix,
   renderMessages,
   transformMessagesForModel
 };

@@ -1,7 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
-import { CircleAlert } from "lucide-react";
+// TEMPORARILY DISABLED: Validation icon import
+// import { CircleAlert } from "lucide-react";
 import { Session } from "@/entities/session/domain/session";
-import { useSessionValidation } from "@/shared/hooks/use-session-validation";
+// TEMPORARILY DISABLED: Validation hook import
+// import { useSessionValidation } from "@/shared/hooks/use-session-validation";
 import { cn } from "@/shared/lib";
 
 interface SessionListItemProps {
@@ -12,11 +14,14 @@ interface SessionListItemProps {
 /**
  * Simple session list item for sidebar
  * Shows session name, message count, and validation status
+ *
+ * TEMPORARILY DISABLED: Validation status display
  */
 export function SessionListItem({ session, isActive }: SessionListItemProps) {
   const navigate = useNavigate();
-  const { isValid, isFetched } = useSessionValidation(session.id);
-  const isInvalid = isFetched && !isValid;
+  // TEMPORARILY DISABLED: Always show as valid
+  // const { isValid, isFetched } = useSessionValidation(session.id);
+  // const isInvalid = isFetched && !isValid;
 
   const messageCount = session.props.turnIds.length || 0;
 
@@ -38,11 +43,13 @@ export function SessionListItem({ session, isActive }: SessionListItemProps) {
       {/* Session Name */}
       <div className="flex items-start justify-between gap-2">
         <h4 className="truncate text-sm font-semibold">
-          {session.props.title || "Untitled Session"}
+          {session.props.name || "Untitled Session"}
         </h4>
+        {/* TEMPORARILY DISABLED: Validation error icon
         {isInvalid && (
           <CircleAlert className="text-status-error h-4 w-4 shrink-0" />
         )}
+        */}
       </div>
 
       {/* Message Count */}

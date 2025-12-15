@@ -419,7 +419,7 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
             <div className="text-fg-muted text-center text-base leading-relaxed font-semibold">
               No schema fields available
             </div>
-            <div className="text-background-surface-5 text-center text-xs font-normal">
+            <div className="text-fg-subtle text-center text-xs font-normal">
               Create a data schema to define the fields used in this node.
             </div>
           </div>

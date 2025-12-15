@@ -6,7 +6,7 @@ import { Result, UseCase } from "@/shared/core";
 import { UniqueEntityID } from "@/shared/domain";
 import { formatFail, sanitizeFileName } from "@/shared/lib";
 
-import { defaultBackgrounds } from "@/shared/stores/background-store";
+import { defaultBackgrounds } from "@/entities/background/api";
 import { GetAsset } from "@/entities/asset/usecases/get-asset";
 import { GetBackground } from "@/entities/background/usecases/get-background";
 import { ExportCardToFile } from "@/entities/card/usecases";
@@ -44,10 +44,12 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
 
     // Extract export session data
     const paths = [
-      "title",
+      "name",
+      "title", // Keep for backward compatibility with imports
       "all_cards",
       "user_character_card_id",
       "background_id",
+      "cover_id",
       "translation",
       "chat_styles",
       "flow_id",
@@ -92,7 +94,9 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
       },
     });
     if (cardOrError.isFailure) {
-      throw new Error(cardOrError.getError());
+      // Skip missing card gracefully
+      console.warn(`[EXPORT] Skipping missing card: ${cardId.toString()}`);
+      return;
     }
     const cardFile = cardOrError.getValue();
 
@@ -107,34 +111,71 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
     // Check if background is default background
     if (defaultBackgrounds.some((bg) => bg.id.equals(backgroundId))) {
       // Default backgrounds are not exported
+      console.log(`[EXPORT] Skipping default background: ${backgroundId.toString()}`);
       return;
     }
+
+    console.log(`[EXPORT] Exporting background: ${backgroundId.toString()}`);
 
     // Get background
     const backgroundOrError = await this.getBackground.execute(backgroundId);
     if (backgroundOrError.isFailure) {
-      throw new Error(backgroundOrError.getError());
+      // Skip missing background gracefully
+      console.warn(`[EXPORT] Skipping missing background: ${backgroundId.toString()}`);
+      return;
     }
     const background = backgroundOrError.getValue();
 
     // Get background asset
     const assetOrError = await this.getAsset.execute(background.assetId);
     if (assetOrError.isFailure) {
-      throw new Error(assetOrError.getError());
+      // Skip missing asset gracefully
+      console.warn(`[EXPORT] Skipping missing background asset: ${background.assetId.toString()}`);
+      return;
     }
     const asset = assetOrError.getValue();
 
     // Get asset file
     const assetFile = await file(asset.filePath).getOriginFile();
     if (!assetFile) {
-      throw new Error("Background image file not found");
+      // Skip missing file gracefully
+      console.warn(`[EXPORT] Skipping missing background file: ${asset.filePath}`);
+      return;
     }
 
     // Add background to zip
-    zip.file(
-      `backgrounds/${backgroundId.toString()}.astrsk.background`,
-      assetFile,
-    );
+    const filename = `backgrounds/${backgroundId.toString()}.astrsk.background`;
+    console.log(`[EXPORT] Adding background to zip: ${filename}`);
+    zip.file(filename, assetFile);
+  }
+
+  private async exportCoverToZip(
+    zip: JSZip,
+    coverId: UniqueEntityID,
+  ): Promise<void> {
+    console.log(`[EXPORT] Exporting cover image: ${coverId.toString()}`);
+
+    // Get cover asset directly (coverId is already an asset ID)
+    const assetOrError = await this.getAsset.execute(coverId);
+    if (assetOrError.isFailure) {
+      // Skip missing cover asset gracefully
+      console.warn(`[EXPORT] Skipping missing cover asset: ${coverId.toString()}`);
+      return;
+    }
+    const asset = assetOrError.getValue();
+
+    // Get asset file
+    const assetFile = await file(asset.filePath).getOriginFile();
+    if (!assetFile) {
+      // Skip missing file gracefully
+      console.warn(`[EXPORT] Skipping missing cover file: ${asset.filePath}`);
+      return;
+    }
+
+    // Add cover to zip
+    const filename = `covers/${coverId.toString()}.astrsk.cover`;
+    console.log(`[EXPORT] Adding cover to zip: ${filename}`);
+    zip.file(filename, assetFile);
   }
 
   private async exportTurnToZip(
@@ -216,6 +257,11 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
         await this.exportBackgroundToZip(zip, session.backgroundId);
       }
 
+      // Export cover to zip
+      if (session.coverId) {
+        await this.exportCoverToZip(zip, session.coverId);
+      }
+
       // Export history to zip
       if (includeHistory && session.turnIds && session.turnIds.length > 0) {
         for (const turnId of session.turnIds) {
@@ -224,7 +270,7 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
       }
 
       // Make zip file
-      const zipFile = await this.makeZipFile(zip, session.title);
+      const zipFile = await this.makeZipFile(zip, session.name);
 
       // Return zip file
       return Result.ok(zipFile);

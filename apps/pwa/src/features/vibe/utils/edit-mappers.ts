@@ -30,6 +30,7 @@ import {
 } from "./data-store-node-operations";
 
 import { processIfNodeOperations } from "./if-node-operations";
+import { invalidateSingleFlowQueries } from "@/features/flow/utils/invalidate-flow-queries";
 
 // Re-export the mapping functions for backward compatibility
 export {
@@ -200,9 +201,6 @@ export async function applyOperationsToResource(
     // *** Standard query invalidation for all operations ***
     if (errors.length === 0 && resourceId && resourceType === "flow") {
       try {
-        const { invalidateSingleFlowQueries } = await import(
-          "@/features/flow/utils/invalidate-flow-queries"
-        );
         await invalidateSingleFlowQueries(resourceId);
       } catch (invalidationError) {
         console.warn(

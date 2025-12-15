@@ -21,7 +21,8 @@ import {
 } from "@/entities/turn/api/turn-queries";
 import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
 import { TurnDrizzleMapper } from "@/entities/turn/mappers/turn-drizzle-mapper";
-import { fetchCharacterCard } from "@/entities/card/api/query-factory";
+import { fetchCard } from "@/entities/card/api/query-factory";
+import { CharacterCard } from "@/entities/card/domain/character-card";
 import {
   sessionQueries,
   useAddMessage,
@@ -29,14 +30,13 @@ import {
 } from "@/entities/session/api";
 
 import { UniqueEntityID } from "@/shared/domain";
-import { AutoReply } from "@/shared/stores/session-store";
+import { AutoReply, useSessionUIStore } from "@/shared/stores/session-store";
 import { queryClient } from "@/shared/api/query-client";
 import { parseAiSdkErrorMessage } from "@/shared/lib/error-utils";
 import { logger } from "@/shared/lib/logger";
 import { TurnService } from "@/app/services/turn-service";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { ScenarioCard } from "@/entities/card/domain";
 import { useCard } from "@/shared/hooks/use-card";
-import { cn } from "@/shared/lib";
 import SelectScenarioDialog from "./select-scenario-dialog";
 import { TemplateRenderer } from "@/shared/lib/template-renderer";
 
@@ -55,11 +55,17 @@ export default function ChatMainArea({
 }: ChatMainAreaProps) {
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState<boolean>(false);
-  // Add plot card modal
-  const [plotCard] = useCard<PlotCard>(data?.plotCard?.id);
+  // Track skipped scenario dialogs per session (non-persisted)
+  const skipScenarioDialog = useSessionUIStore.use.skipScenarioDialog();
+  const hasSkippedScenarioDialog = useSessionUIStore.use.hasSkippedScenarioDialog();
+  // Add scenario card modal
+  const [scenarioCard] = useCard<ScenarioCard>(data?.plotCard?.id);
   const messageCount = data?.turnIds.length ?? 0;
-  const plotCardId = data?.plotCard?.id.toString() ?? "";
-  const plotCardScenarioCount = plotCard?.props.scenarios?.length ?? 0;
+  const scenarioCardId = data?.plotCard?.id.toString() ?? "";
+  const scenarioCardFirstMessageCount =
+    (scenarioCard instanceof ScenarioCard
+      ? scenarioCard.props.firstMessages?.length
+      : 0) ?? 0;
   // Render scenario
   const [renderedScenarios, setRenderedScenarios] = useState<
     {
@@ -89,6 +95,7 @@ export default function ChatMainArea({
     async (
       characterId: UniqueEntityID,
       regenerateMessageId?: UniqueEntityID,
+      triggerType?: string,
     ) => {
       let streamingMessage: Turn | null = null;
       let streamingContent = "";
@@ -142,14 +149,20 @@ export default function ChatMainArea({
           // Get message from database
           streamingMessage = await fetchTurn(regenerateMessageId);
         } else {
-          // Get character name
-          const character = await fetchCharacterCard(characterId);
+          // Get card (can be CharacterCard or PlotCard/ScenarioCard)
+          const card = await fetchCard(characterId);
+
+          // Get name from card - CharacterCard has 'name', other cards use 'title'
+          const cardName =
+            card instanceof CharacterCard
+              ? card.props.name
+              : card.props.title;
 
           // Create new empty message
           const messageOrError = Turn.create({
             sessionId: data.id,
             characterCardId: characterId,
-            characterName: character.props.name,
+            characterName: cardName,
             options: [],
           });
 
@@ -192,6 +205,11 @@ export default function ChatMainArea({
         setStreamingMessageId(streamingMessage.id);
         //  scrollToBottom({ behavior: "smooth" }); // TODO: check if this is needed
 
+        // Check if flow exists
+        if (!data.props.flowId) {
+          throw new Error("Session has no flow assigned");
+        }
+
         // Execute flow
         refStopGenerate.current = new AbortController();
         const flowResult = executeFlow({
@@ -200,6 +218,7 @@ export default function ChatMainArea({
           characterCardId: characterId,
           regenerateMessageId: regenerateMessageId,
           stopSignalByUser: refStopGenerate.current.signal,
+          triggerType: triggerType,
         });
 
         // Stream response
@@ -408,7 +427,17 @@ export default function ChatMainArea({
           // Random character reply
           case AutoReply.Random: {
             if (data.aiCharacterCardIds.length === 0) {
-              toastError("No characters available");
+              // No AI characters - trigger scenario generation instead
+              if (data.plotCard) {
+                logger.info("[Auto-reply] No AI characters available, triggering scenario generation");
+                const plotCardId = data.plotCard.id;
+                const cardId = plotCardId instanceof UniqueEntityID
+                  ? plotCardId
+                  : new UniqueEntityID(plotCardId as string);
+                await generateCharacterMessage(cardId, undefined, "scenario");
+              } else {
+                toastError("No characters available");
+              }
               break;
             }
 
@@ -422,6 +451,21 @@ export default function ChatMainArea({
 
           // All characters reply by order
           case AutoReply.Rotate: {
+            if (data.aiCharacterCardIds.length === 0) {
+              // No AI characters - trigger scenario generation instead
+              if (data.plotCard) {
+                logger.info("[Auto-reply] No AI characters available, triggering scenario generation");
+                const plotCardId = data.plotCard.id;
+                const cardId = plotCardId instanceof UniqueEntityID
+                  ? plotCardId
+                  : new UniqueEntityID(plotCardId as string);
+                await generateCharacterMessage(cardId, undefined, "scenario");
+              } else {
+                toastError("No characters available");
+              }
+              break;
+            }
+
             for (const charId of data.aiCharacterCardIds) {
               await generateCharacterMessage(charId);
             }
@@ -580,13 +624,19 @@ export default function ChatMainArea({
   const renderScenarios = useCallback(async () => {
     logger.debug("[Hook] useEffect: Render scenario");
 
-    // Check session and plot card
-    if (!data || !plotCard) {
+    // Check session and scenario card
+    if (!data || !scenarioCard) {
       return;
     }
 
-    // If no scenarios, set empty array
-    if (!plotCard.props.scenarios || plotCard.props.scenarios.length === 0) {
+    // Get first messages
+    const firstMessages =
+      scenarioCard instanceof ScenarioCard
+        ? scenarioCard.props.firstMessages
+        : undefined;
+
+    // If no first messages, set empty array
+    if (!firstMessages || firstMessages.length === 0) {
       setRenderedScenarios([]);
       return;
     }
@@ -623,27 +673,30 @@ export default function ChatMainArea({
       };
     }
 
-    // Render scenarios
+    // Render first messages
     const renderedScenarios = await Promise.all(
-      plotCard.props.scenarios.map(
-        async (scenario: { name: string; description: string }) => {
-          const renderedScenario = await TemplateRenderer.render(
-            scenario.description,
+      firstMessages.map(
+        async (message: { name: string; description: string }) => {
+          const renderedMessage = await TemplateRenderer.render(
+            message.description,
             context,
           );
           return {
-            name: scenario.name,
-            description: renderedScenario,
+            name: message.name,
+            description: renderedMessage,
           };
         },
       ),
     );
     setRenderedScenarios(renderedScenarios);
-  }, [data, plotCard]);
+  }, [data, scenarioCard]);
 
   useEffect(() => {
+    const sessionId = data?.id.toString() ?? "";
+    const DIALOG_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
     // Check scenario count
-    if (plotCardScenarioCount === 0) {
+    if (scenarioCardFirstMessageCount === 0) {
       setIsOpenSelectScenarioModal(false);
       return;
     }
@@ -654,12 +707,28 @@ export default function ChatMainArea({
       return;
     }
 
+    // Check if user already skipped for this session (localStorage - 24h TTL)
+    if (hasSkippedScenarioDialog(sessionId)) {
+      setIsOpenSelectScenarioModal(false);
+      return;
+    }
+
+    // Check if user has seen scenario dialog recently (session.config - 24h TTL)
+    const lastSeenTimestamp = data?.props.config?.hasSeenScenarioDialog as number | undefined;
+    const hasSeenRecently = lastSeenTimestamp &&
+      (Date.now() - lastSeenTimestamp < DIALOG_TTL_MS);
+
+    if (hasSeenRecently) {
+      setIsOpenSelectScenarioModal(false);
+      return;
+    }
+
     // Show select scenario modal
     setIsOpenSelectScenarioModal(true);
-  }, [plotCardScenarioCount, messageCount]);
+  }, [scenarioCardFirstMessageCount, messageCount, data?.id, data?.props.config?.hasSeenScenarioDialog, hasSkippedScenarioDialog]);
 
   return (
-    <div className="mx-auto flex h-dvh max-w-5xl flex-1 flex-col items-center justify-end pt-12 md:justify-center">
+    <div className="flex h-dvh flex-1 flex-col justify-end pt-10 md:justify-center">
       <ChatMessageList
         data={data}
         streamingMessageId={streamingMessageId}
@@ -672,7 +741,8 @@ export default function ChatMainArea({
       />
 
       <ChatInput
-        className="shrink-0 md:mb-4"
+        className="mx-auto w-full max-w-5xl shrink-0 md:mb-4"
+        sessionId={data.id}
         aiCharacterIds={data.aiCharacterCardIds}
         userCharacterId={data.userCharacterCardId}
         autoReply={data.autoReply}
@@ -685,31 +755,29 @@ export default function ChatMainArea({
         onAutoReply={onAutoReply}
       />
 
-      {/* Select Scenario Modal - absolute on mobile (inside scroll area), fixed on desktop (full viewport) */}
-      {isOpenSelectScenarioModal && (
-        <div
-          className={cn(
-            "z-[100] overflow-y-auto bg-black/50 px-[16px] py-[16px]",
-            // Mobile: absolute positioning inside scroll area (respects header)
-            "absolute inset-0",
-            // Desktop: fixed positioning (full viewport overlay)
-            "md:fixed md:inset-0",
-          )}
-        >
-          <div className="flex min-h-full items-center justify-center">
-            <SelectScenarioDialog
-              onSkip={() => {
-                setIsOpenSelectScenarioModal(false);
-              }}
-              onAdd={handleAddScenario}
-              renderedScenarios={renderedScenarios}
-              onRenderScenarios={renderScenarios}
-              sessionId={data.id.toString()}
-              plotCardId={plotCardId}
-            />
-          </div>
-        </div>
-      )}
+      {/* Select Scenario Dialog */}
+      <SelectScenarioDialog
+        open={isOpenSelectScenarioModal}
+        onSkip={() => {
+          // Mark in localStorage (24h TTL)
+          skipScenarioDialog(data.id.toString());
+
+          // Mark in session.config (24h TTL - persisted to DB)
+          data.update({
+            config: {
+              ...data.props.config,
+              hasSeenScenarioDialog: Date.now(),
+            },
+          });
+
+          setIsOpenSelectScenarioModal(false);
+        }}
+        onAdd={handleAddScenario}
+        renderedScenarios={renderedScenarios}
+        onRenderScenarios={renderScenarios}
+        sessionId={data.id.toString()}
+        scenarioCardId={scenarioCardId}
+      />
     </div>
   );
 }

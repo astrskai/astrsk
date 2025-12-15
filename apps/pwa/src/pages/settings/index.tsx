@@ -9,11 +9,13 @@ import {
   Scale,
   Sliders,
   ShieldCheck,
+  LogOut,
 } from "lucide-react";
-import { ConvexReady } from "@/shared/ui/convex-ready";
-import { Authenticated } from "convex/react";
-import { useClerk } from "@clerk/clerk-react";
+import { Link } from "@tanstack/react-router";
 import { SvgIcon } from "@/shared/ui";
+import { IconDiscord } from "@/shared/assets/icons";
+import { toastError } from "@/shared/ui/toast";
+import { useAuth } from "@/shared/hooks/use-auth";
 
 // --- Helper ---
 function openInNewTab(url: string) {
@@ -71,35 +73,76 @@ const SettingsItem = ({
   );
 };
 
+const SignInPromptCard = () => {
+  return (
+    <div className="border-border-default bg-surface-raised mb-8 flex items-center justify-between rounded-2xl border p-5">
+      <div className="flex items-center gap-4">
+        <div className="border-border-muted bg-surface-overlay flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2">
+          <User size={24} className="text-fg-muted" />
+        </div>
+        <div>
+          <h2 className="text-fg-default text-lg font-bold">Welcome</h2>
+          <p className="text-fg-muted text-xs">
+            Sign in to sync your data across devices
+          </p>
+        </div>
+      </div>
+      <Link
+        to="/sign-in"
+        className="bg-brand-600 hover:bg-brand-500 active:bg-brand-700 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
+      >
+        Sign in
+      </Link>
+    </div>
+  );
+};
+
 const UserProfileCard = () => {
-  const { user } = useClerk();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
-    <div className="border-border-default bg-surface-raised mb-8 flex items-center gap-4 rounded-2xl border p-5">
-      <div className="relative">
-        <div className="border-border-muted bg-surface-overlay h-14 w-14 overflow-hidden rounded-full border-2">
-          {user?.hasImage ? (
-            <img
-              src={user.imageUrl}
-              alt="User"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <User size={24} className="text-fg-muted" />
-            </div>
-          )}
+    <div className="border-border-default bg-surface-raised mb-8 flex items-center justify-between rounded-2xl border p-5">
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <div className="border-border-muted bg-surface-overlay h-14 w-14 overflow-hidden rounded-full border-2">
+            {user?.user_metadata?.avatar_url ? (
+              <img
+                src={user.user_metadata.avatar_url}
+                alt="User"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <User size={24} className="text-fg-muted" />
+              </div>
+            )}
+          </div>
+          <div className="border-surface-raised bg-brand-500 absolute right-0 bottom-0 h-4 w-4 rounded-full border-2" />
         </div>
-        <div className="border-surface-raised bg-brand-500 absolute right-0 bottom-0 h-4 w-4 rounded-full border-2" />
+        <div>
+          <h2 className="text-fg-default text-lg font-bold">
+            {user?.user_metadata?.full_name || user?.user_metadata?.name || "User"}
+          </h2>
+          <p className="text-fg-muted text-xs">
+            {user?.email}
+          </p>
+        </div>
       </div>
-      <div>
-        <h2 className="text-fg-default text-lg font-bold">
-          {user?.fullName || "User"}
-        </h2>
-        <p className="text-fg-muted text-xs">
-          {user?.primaryEmailAddress?.emailAddress}
-        </p>
-      </div>
+      <button
+        onClick={async () => {
+          try {
+            await signOut();
+            navigate({ to: "/settings", replace: true });
+          } catch (error) {
+            toastError("Sign out failed. Please try again.");
+          }
+        }}
+        className="text-status-error hover:bg-status-error/10 rounded-lg p-2 transition-colors"
+        aria-label="Sign out"
+      >
+        <LogOut size={20} />
+      </button>
     </div>
   );
 };
@@ -108,6 +151,7 @@ const UserProfileCard = () => {
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="space-y-8 py-8">
@@ -119,27 +163,21 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {/* User Profile Card - Authenticated only */}
-      <ConvexReady>
-        <Authenticated>
-          <UserProfileCard />
-        </Authenticated>
-      </ConvexReady>
+      {/* User Profile Card - Authenticated / Sign In Prompt - Unauthenticated */}
+      {isAuthenticated ? <UserProfileCard /> : <SignInPromptCard />}
 
       {/* 1. APP PREFERENCES */}
       <section>
         <SectionTitle title="App Preferences" />
         <div className="border-border-default bg-surface-raised rounded-2xl border">
-          <ConvexReady>
-            <Authenticated>
-              <SettingsItem
-                icon={<User size={18} />}
-                label="Account & Subscription"
-                description="Manage profile, billing, and plan details"
-                onClick={() => navigate({ to: "/settings/account" })}
-              />
-            </Authenticated>
-          </ConvexReady>
+          {isAuthenticated && (
+            <SettingsItem
+              icon={<User size={18} />}
+              label="Account & Subscription"
+              description="Manage profile, billing, and plan details"
+              onClick={() => navigate({ to: "/settings/account" })}
+            />
+          )}
           <SettingsItem
             icon={<Cpu size={18} />}
             label="Providers"
@@ -160,7 +198,7 @@ export default function SettingsPage() {
         <SectionTitle title="Community" />
         <div className="border-border-default bg-surface-raised rounded-2xl border">
           <SettingsItem
-            icon={<SvgIcon name="discord" className="h-5 w-5 text-[#5865F2]" />}
+            icon={<IconDiscord className="h-5 w-5 text-[#5865F2]" />}
             label="Join our Discord"
             description="Connect with other creators"
             type="external"

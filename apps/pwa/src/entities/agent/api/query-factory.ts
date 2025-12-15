@@ -298,6 +298,8 @@ export const agentQueries = {
           modelName: agent.props.modelName,
           modelId: agent.props.modelId,
           apiSource: agent.props.apiSource,
+          modelTier: agent.props.modelTier,
+          useDefaultModel: agent.props.useDefaultModel,
         };
       },
       staleTime: 1000 * 60, // 1 minute
@@ -363,9 +365,11 @@ export const agentQueries = {
  */
 
 export async function fetchAgent(id: UniqueEntityID): Promise<Agent> {
-  const data = await queryClient.fetchQuery(
-    agentQueries.detail(id.toString()),
-  );
+  // Always fetch fresh data from DB (staleTime: 0 forces refetch)
+  const data = await queryClient.fetchQuery({
+    ...agentQueries.detail(id.toString()),
+    staleTime: 0, // Force fresh fetch, don't use cached data
+  });
   if (!data) {
     throw new Error(`Agent not found: ${id.toString()}`);
   }

@@ -101,7 +101,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           className="self-stretch flex flex-col justify-start items-end gap-10"
         >
           <div className="inline-flex justify-end items-start max-w-[600px]">
-            <div className="px-4 py-2.5 bg-background-surface-4 rounded-lg flex justify-center items-center gap-2.5">
+            <div className="px-4 py-2.5 bg-hover rounded-lg flex justify-center items-center gap-2.5">
               <div className="justify-start text-text-primary text-sm font-medium leading-tight">
                 {message.content}
               </div>

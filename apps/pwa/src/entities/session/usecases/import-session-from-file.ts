@@ -5,8 +5,9 @@ import { UseCase } from "@/shared/core/use-case";
 import { UniqueEntityID } from "@/shared/domain";
 import { formatFail } from "@/shared/lib";
 
-import { defaultBackgrounds } from "@/shared/stores/background-store";
+import { defaultBackgrounds } from "@/entities/background/api";
 import { InsertSession } from "@/db/schema/sessions";
+import { SaveFileToAsset } from "@/entities/asset/usecases/save-file-to-asset";
 import { SaveFileToBackground } from "@/entities/background/usecases/save-file-to-background";
 import { CardType } from "@/entities/card/domain/card";
 import { ImportCardFromFile } from "@/entities/card/usecases/import-card-from-file";
@@ -31,15 +32,15 @@ interface Command {
 }
 
 export class ImportSessionFromFile
-  implements UseCase<Command, Result<Session>>
-{
+  implements UseCase<Command, Result<Session>> {
   constructor(
     private saveSessionRepo: SaveSessionRepo,
     private importFlowWithNodes: ImportFlowWithNodes,
     private importCardFromFile: ImportCardFromFile,
     private saveFileToBackground: SaveFileToBackground,
+    private saveFileToAsset: SaveFileToAsset,
     private addMessage: AddMessage,
-  ) {}
+  ) { }
 
   private async importSessionFromZip(
     zip: JSZip,
@@ -57,6 +58,7 @@ export class ImportSessionFromFile
 
   private async importFlowFromZip(
     zip: JSZip,
+    sessionId: UniqueEntityID,
     agentModelOverrides?: Command["agentModelOverrides"],
   ): Promise<Map<string, string>> {
     // Make ID map
@@ -75,9 +77,10 @@ export class ImportSessionFromFile
       const fileBlob = await fileEntry.async("blob");
       const file = new File([fileBlob], fileEntry.name);
 
-      // Import flow from file with nodes
+      // Import flow from file with nodes (as session-local)
       const flowOrError = await this.importFlowWithNodes.execute({
         file,
+        sessionId, // Import directly as session-local
         agentModelOverrides,
       });
       if (flowOrError.isFailure) {
@@ -94,7 +97,10 @@ export class ImportSessionFromFile
     return idMap;
   }
 
-  private async importCardFromZip(zip: JSZip): Promise<Map<string, string>> {
+  private async importCardFromZip(
+    zip: JSZip,
+    sessionId: UniqueEntityID,
+  ): Promise<Map<string, string>> {
     // Make ID map
     const idMap = new Map<string, string>();
 
@@ -112,17 +118,26 @@ export class ImportSessionFromFile
       const file = new File([fileBlob], fileEntry.name, {
         type: "image/png",
       });
-
-      // Import card from file
-      const cardOrError = await this.importCardFromFile.execute(file);
+      // Import card from file (as session-local)
+      const cardOrError = await this.importCardFromFile.execute({
+        file,
+        sessionId, // Import directly as session-local
+      });
       if (cardOrError.isFailure) {
         throw new Error(cardOrError.getError());
       }
 
-      // Set new ID
-      const card = cardOrError.getValue()[0];
+      // Handle ALL cards returned (PNG can contain character + scenario)
+      const cards = cardOrError.getValue();
       const oldId = fileEntry.name.split(".")[0].split("/")[1];
-      idMap.set(oldId, card.id.toString());
+
+      // Map the first card (main card from filename)
+      if (cards.length > 0) {
+        idMap.set(oldId, cards[0].id.toString());
+      }
+
+      // TODO: Handle embedded scenario cards (second card)
+      // Need to determine how to map scenario IDs when they're embedded in character cards
     }
 
     // Return ID map
@@ -131,6 +146,7 @@ export class ImportSessionFromFile
 
   private async importBackgroundFromZip(
     zip: JSZip,
+    sessionId: UniqueEntityID,
   ): Promise<Map<string, string>> {
     // Make ID map
     const idMap = new Map<string, string>(
@@ -150,16 +166,60 @@ export class ImportSessionFromFile
       const fileBlob = await fileEntry.async("blob");
       const file = new File([fileBlob], fileEntry.name);
 
-      // Import background from file
-      const backgroundOrError = await this.saveFileToBackground.execute(file);
+      // Import background from file (as session-local)
+      const backgroundOrError = await this.saveFileToBackground.execute({
+        file,
+        sessionId, // Pass sessionId for session-local background
+      });
       if (backgroundOrError.isFailure) {
         throw new Error(backgroundOrError.getError());
       }
 
       // Set new ID
       const background = backgroundOrError.getValue();
-      const oldId = fileEntry.name.split(".")[0].split("/")[1];
+      // Extract old ID from filename: "backgrounds/UUID.astrsk.background" or "UUID.astrsk.background"
+      const nameParts = fileEntry.name.split(".")[0].split("/");
+      const oldId = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
       idMap.set(oldId, background.id.toString());
+    }
+
+    // Return ID map
+    return idMap;
+  }
+
+  private async importCoverFromZip(
+    zip: JSZip,
+  ): Promise<Map<string, string>> {
+    // Make ID map
+    const idMap = new Map<string, string>();
+
+    // Get covers folder
+    const folder = zip.folder("covers");
+    if (!folder) {
+      return idMap;
+    }
+
+    // Get all files in the folder
+    const fileEntries = folder.filter(() => true);
+    for (const fileEntry of fileEntries) {
+      // Read file
+      const fileBlob = await fileEntry.async("blob");
+      const file = new File([fileBlob], fileEntry.name);
+
+      // Import cover as asset
+      const assetOrError = await this.saveFileToAsset.execute({
+        file,
+      });
+      if (assetOrError.isFailure) {
+        throw new Error(assetOrError.getError());
+      }
+
+      // Set new ID
+      const asset = assetOrError.getValue();
+      // Extract old ID from filename: "covers/UUID.astrsk.cover" or "UUID.astrsk.cover"
+      const nameParts = fileEntry.name.split(".")[0].split("/");
+      const oldId = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0];
+      idMap.set(oldId, asset.id.toString());
     }
 
     // Return ID map
@@ -249,97 +309,40 @@ export class ImportSessionFromFile
       // Import session from zip
       const sessionProps = await this.importSessionFromZip(zip);
 
-      // Import flow from zip
-      const flowIdMap = await this.importFlowFromZip(zip, agentModelOverrides);
+      // Create new session ID for session-local imports
+      const newSessionId = new UniqueEntityID();
 
-      // Import cards from zip
-      const cardIdMap = await this.importCardFromZip(zip);
-
-      // Import background from zip
-      const backgroundIdMap = await this.importBackgroundFromZip(zip);
-
-      // Merge ID maps
-      const idMap = new Map<string, string>([
-        ...flowIdMap,
-        ...cardIdMap,
-        ...backgroundIdMap,
-      ]);
-
-      // Replace IDs in session
-      if (sessionProps.flow_id) {
-        const newFlowId = idMap.get(sessionProps.flow_id);
-        if (!newFlowId) {
-          throw new Error(
-            `Flow ID ${sessionProps.flow_id} not found in ID map`,
-          );
+      // Parse translation if it exists
+      let translationConfig;
+      if (sessionProps.translation) {
+        const translationResult = TranslationConfig.fromJSON(sessionProps.translation);
+        if (translationResult.isSuccess) {
+          translationConfig = translationResult.getValue();
         }
-        sessionProps.flow_id = newFlowId;
-      }
-      if (sessionProps.all_cards && sessionProps.all_cards.length > 0) {
-        sessionProps.all_cards = sessionProps.all_cards.map((item) => {
-          const newCardId = idMap.get(item.id);
-          if (!newCardId) {
-            throw new Error(`Card ID ${item.id} not found in ID map`);
-          }
-          return {
-            ...item,
-            id: newCardId,
-          };
-        });
-      }
-      if (sessionProps.user_character_card_id) {
-        const newCardId = idMap.get(sessionProps.user_character_card_id);
-        if (!newCardId) {
-          throw new Error(
-            `User character card ID ${sessionProps.user_character_card_id} not found in ID map`,
-          );
-        }
-        sessionProps.user_character_card_id = newCardId;
-      }
-      if (sessionProps.background_id) {
-        const newBackgroundId = idMap.get(sessionProps.background_id);
-        if (!newBackgroundId) {
-          throw new Error(
-            `Background ID ${sessionProps.background_id} not found in ID map`,
-          );
-        }
-        sessionProps.background_id = newBackgroundId;
       }
 
-      // Build allCards array (simple ID mapping, no metadata)
-      const allCards = (sessionProps.all_cards ?? []).map((cardJson) => ({
-        id: new UniqueEntityID(cardJson.id),
-        type: cardJson.type as CardType,
-        enabled: cardJson.enabled,
-      }));
-
-      // Create session
+      // Create session FIRST (without flows/cards) so it exists in database
+      // Handle backward compatibility: use 'name' if available, fallback to 'title'
+      const sessionName = sessionProps.name || sessionProps.title || "Imported Session";
       const sessionOrError = Session.create({
-        title: sessionProps.title,
-        allCards,
-        userCharacterCardId: sessionProps.user_character_card_id
-          ? new UniqueEntityID(sessionProps.user_character_card_id)
-          : undefined,
+        name: sessionName,
+        title: sessionName, // Keep in sync
+        allCards: [], // Will be updated after importing cards
+        userCharacterCardId: undefined, // Will be updated after importing cards
         turnIds: [],
-        backgroundId: sessionProps.background_id
-          ? new UniqueEntityID(sessionProps.background_id)
-          : undefined,
-        translation: sessionProps.translation
-          ? TranslationConfig.fromJSON(sessionProps.translation).getValue()
-          : undefined,
+        backgroundId: undefined, // Will be updated after importing background
+        translation: translationConfig,
         chatStyles: sessionProps.chat_styles
           ? sessionProps.chat_styles
           : undefined,
-        flowId: sessionProps.flow_id
-          ? new UniqueEntityID(sessionProps.flow_id)
-          : undefined,
-      });
+        flowId: undefined, // Will be updated after importing flow
+      }, newSessionId);
       if (sessionOrError.isFailure) {
         throw new Error(sessionOrError.getError());
       }
       const session = sessionOrError.getValue();
 
-      // Save session
+      // Save session to database FIRST (so foreign keys will work)
       const savedSessionOrError =
         await this.saveSessionRepo.saveSession(session);
       if (savedSessionOrError.isFailure) {
@@ -347,7 +350,142 @@ export class ImportSessionFromFile
       }
       let savedSession = savedSessionOrError.getValue();
 
+      // NOW import flows and cards with the saved session ID
+      // Import flow from zip (as session-local)
+      const flowIdMap = await this.importFlowFromZip(zip, savedSession.id, agentModelOverrides);
+
+      // Import cards from zip (as session-local)
+      const cardIdMap = await this.importCardFromZip(zip, savedSession.id);
+
+      // Import background from zip (as session-local)
+      const backgroundIdMap = await this.importBackgroundFromZip(zip, savedSession.id);
+
+      // Import cover from zip (as asset)
+      const coverIdMap = await this.importCoverFromZip(zip);
+
+      // Merge ID maps
+      const idMap = new Map<string, string>([
+        ...flowIdMap,
+        ...cardIdMap,
+        ...backgroundIdMap,
+        ...coverIdMap,
+      ]);
+
+      // Replace IDs in session props
+      if (sessionProps.flow_id) {
+        const newFlowId = idMap.get(sessionProps.flow_id);
+        if (!newFlowId) {
+          // Flow not found in imported files
+          // This can happen if the flow file is missing from the export
+          // Clear the flow ID and let the session import without a flow
+          console.warn(
+            `[ImportSession] Flow ID ${sessionProps.flow_id} not found in ID map. Clearing flow.`,
+          );
+          sessionProps.flow_id = undefined;
+        } else {
+          sessionProps.flow_id = newFlowId;
+        }
+      }
+      if (sessionProps.all_cards && sessionProps.all_cards.length > 0) {
+        sessionProps.all_cards = sessionProps.all_cards
+          .map((item) => {
+            const newCardId = idMap.get(item.id);
+            if (!newCardId) {
+              // Card not found in imported files
+              // Log warning and filter out this card
+              console.warn(
+                `[ImportSession] Card ID ${item.id} not found in ID map. Skipping card.`,
+              );
+              return null;
+            }
+            return {
+              ...item,
+              id: newCardId,
+            };
+          })
+          .filter((item) => item !== null);
+      }
+      if (sessionProps.user_character_card_id) {
+        const newCardId = idMap.get(sessionProps.user_character_card_id);
+        if (!newCardId) {
+          // User character card not found in imported files
+          // Clear the user character card ID
+          console.warn(
+            `[ImportSession] User character card ID ${sessionProps.user_character_card_id} not found in ID map. Clearing user character.`,
+          );
+          sessionProps.user_character_card_id = undefined;
+        } else {
+          sessionProps.user_character_card_id = newCardId;
+        }
+      }
+      if (sessionProps.background_id) {
+        const newBackgroundId = idMap.get(sessionProps.background_id);
+        if (!newBackgroundId) {
+          // Background not found in imported files or default backgrounds
+          // This can happen if:
+          // 1. Session was exported with a default background from a different version
+          // 2. Background file is missing from the export
+          // In this case, preserve the original ID - it might still resolve at runtime
+          // or the app will gracefully handle missing backgrounds
+          console.warn(
+            `[ImportSession] Background ID ${sessionProps.background_id} not found in ID map. Preserving original ID.`,
+          );
+          // Keep the original ID instead of throwing an error
+          // sessionProps.background_id remains unchanged
+        } else {
+          sessionProps.background_id = newBackgroundId;
+        }
+      }
+      if (sessionProps.cover_id) {
+        const newCoverId = idMap.get(sessionProps.cover_id);
+        if (!newCoverId) {
+          // Cover asset not found in imported files
+          // This can happen if the cover file is missing from the export
+          // In this case, clear the cover ID rather than failing the import
+          console.warn(
+            `[ImportSession] Cover ID ${sessionProps.cover_id} not found in ID map. Clearing cover.`,
+          );
+          sessionProps.cover_id = undefined;
+        } else {
+          sessionProps.cover_id = newCoverId;
+        }
+      }
+
+      // Update session with imported resources
+      const updateResult = savedSession.update({
+        allCards:
+          sessionProps.all_cards?.map((cardJson) => ({
+            id: new UniqueEntityID(cardJson.id),
+            type: cardJson.type as CardType,
+            enabled: cardJson.enabled,
+          })) ?? [],
+        userCharacterCardId: sessionProps.user_character_card_id
+          ? new UniqueEntityID(sessionProps.user_character_card_id)
+          : undefined,
+        backgroundId: sessionProps.background_id
+          ? new UniqueEntityID(sessionProps.background_id)
+          : undefined,
+        coverId: sessionProps.cover_id
+          ? new UniqueEntityID(sessionProps.cover_id)
+          : undefined,
+        flowId: sessionProps.flow_id
+          ? new UniqueEntityID(sessionProps.flow_id)
+          : undefined,
+      });
+      if (updateResult.isFailure) {
+        throw new Error(updateResult.getError());
+      }
+
+      // Save updated session with all resources
+      const updatedSavedSessionOrError =
+        await this.saveSessionRepo.saveSession(savedSession);
+      if (updatedSavedSessionOrError.isFailure) {
+        throw new Error(updatedSavedSessionOrError.getError());
+      }
+      savedSession = updatedSavedSessionOrError.getValue();
+
       // If session has history, Add messages
+      // cardIdMap already contains session-local IDs since we imported directly
       if (
         includeHistory &&
         sessionProps.turn_ids &&
@@ -357,7 +495,7 @@ export class ImportSessionFromFile
           zip,
           savedSession.id,
           sessionProps.turn_ids,
-          cardIdMap,
+          cardIdMap, // Use cardIdMap directly (already has session-local IDs)
         );
       }
 

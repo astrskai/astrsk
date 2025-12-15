@@ -12,9 +12,32 @@ export interface CardListItem {
   enabled: boolean;
 }
 
+/**
+ * Session generation status
+ */
+export type SessionGenerationStatus = "generating" | "completed" | "failed";
+
+/**
+ * Session configuration stored in JSONB.
+ * Used for persistent UI state and preferences.
+ */
+export interface SessionConfig {
+  // Panel visibility
+  isDataPanelOpen?: boolean;
+  isSettingsPanelOpen?: boolean;
+  // Character fallback tracking
+  lastNonUserCharacterId?: string;
+  // Generation status tracking
+  generationStatus?: SessionGenerationStatus;
+  generationError?: string;
+}
+
 export interface SessionProps {
   // Metadata
-  title: string;
+  title: string; // TODO: Deprecated - use 'name' instead
+  name: string;
+  tags: string[];
+  summary?: string;
 
   // Cards
   allCards: CardListItem[];
@@ -34,7 +57,7 @@ export interface SessionProps {
   chatStyles?: ChatStyles;
 
   // Flow
-  flowId: UniqueEntityID;
+  flowId?: UniqueEntityID;
 
   autoReply: AutoReply;
 
@@ -50,6 +73,12 @@ export interface SessionProps {
     h: number; // height in rows
   }>;
 
+  // Play session flag
+  isPlaySession: boolean;
+
+  // Permanent config storage (JSONB)
+  config: Record<string, unknown>;
+
   // Set by system
   createdAt: Date;
   updatedAt: Date;
@@ -57,6 +86,9 @@ export interface SessionProps {
 
 export const SessionPropsKeys = [
   "title",
+  "name",
+  "tags",
+  "summary",
   "allCards",
   "userCharacterCardId",
   "turnIds",
@@ -68,6 +100,8 @@ export const SessionPropsKeys = [
   "autoReply",
   "dataSchemaOrder",
   "widgetLayout",
+  "isPlaySession",
+  "config",
   "createdAt",
   "updatedAt",
 ];
@@ -75,6 +109,10 @@ export const SessionPropsKeys = [
 export class Session extends AggregateRoot<SessionProps> {
   get title(): string {
     return this.props.title;
+  }
+
+  get name(): string {
+    return this.props.name;
   }
 
   get allCards(): CardListItem[] {
@@ -88,7 +126,7 @@ export class Session extends AggregateRoot<SessionProps> {
   }
 
   get plotCard(): CardListItem | undefined {
-    return this.props.allCards.find((card) => card.type === CardType.Plot);
+    return this.props.allCards.find((card) => (card.type === CardType.Plot || card.type === CardType.Scenario) && card.enabled);
   }
 
   get userCharacterCardId(): UniqueEntityID | undefined {
@@ -97,7 +135,7 @@ export class Session extends AggregateRoot<SessionProps> {
 
   get aiCharacterCardIds(): UniqueEntityID[] {
     return this.props.allCards
-      .filter((card) => card.type === CardType.Character)
+      .filter((card) => card.type === CardType.Character && card.enabled)
       .map((card) => card.id)
       .filter((id) => !id.equals(this.userCharacterCardId));
   }
@@ -138,6 +176,14 @@ export class Session extends AggregateRoot<SessionProps> {
     return this.props.widgetLayout;
   }
 
+  get isPlaySession(): boolean {
+    return this.props.isPlaySession;
+  }
+
+  get config(): SessionConfig {
+    return this.props.config as SessionConfig;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -152,6 +198,9 @@ export class Session extends AggregateRoot<SessionProps> {
   ): Result<Session> {
     const propsWithDefaults: SessionProps = {
       title: props.title || "New Session",
+      name: props.name || props.title || "New Session",
+      tags: props.tags || [],
+      summary: props.summary,
       allCards: props.allCards || [],
       userCharacterCardId: props.userCharacterCardId,
       turnIds: props.turnIds || [],
@@ -164,10 +213,12 @@ export class Session extends AggregateRoot<SessionProps> {
           promptLanguage: "none",
         }).getValue(),
       chatStyles: props.chatStyles,
-      flowId: props.flowId!,
+      flowId: props.flowId,
       autoReply: props.autoReply ?? AutoReply.Random,
       dataSchemaOrder: props.dataSchemaOrder || [],
       widgetLayout: props.widgetLayout,
+      isPlaySession: props.isPlaySession ?? false,
+      config: props.config ?? {},
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date(),
     };
@@ -178,10 +229,18 @@ export class Session extends AggregateRoot<SessionProps> {
 
   public update(props: Partial<SessionProps>): Result<void> {
     try {
-      Object.assign(this.props, {
+      // If name is being updated, sync title as well
+      const updatedProps = {
         ...props,
         updatedAt: new Date(),
-      });
+      };
+
+      // Keep title in sync with name
+      if (props.name !== undefined) {
+        updatedProps.title = props.name;
+      }
+
+      Object.assign(this.props, updatedProps);
       return Result.ok();
     } catch (error) {
       return Result.fail(`Failed to update session: ${error}`);
@@ -189,15 +248,16 @@ export class Session extends AggregateRoot<SessionProps> {
   }
 
   public setName(name: string): void {
-    this.props.title = name;
+    this.props.name = name;
+    this.props.title = name; // Keep in sync for now
   }
 
   public addCard(
     cardId: UniqueEntityID,
     cardType: CardType,
   ): Result<void> {
-    if (cardType === CardType.Plot && this.plotCard) {
-      return Result.fail("Plot card already exists");
+    if ((cardType === CardType.Plot || cardType === CardType.Scenario) && this.plotCard) {
+      return Result.fail("Scenario card already exists");
     }
     this.props.allCards.push({
       id: cardId,
@@ -211,6 +271,11 @@ export class Session extends AggregateRoot<SessionProps> {
     this.props.allCards = this.allCards.filter(
       (card) => !card.id.equals(cardId),
     );
+
+    // Clear userCharacterCardId if the deleted card was the user character
+    if (this.props.userCharacterCardId?.equals(cardId)) {
+      this.props.userCharacterCardId = undefined;
+    }
   }
 
   public setCardEnabled(cardId: UniqueEntityID, enabled: boolean): void {
@@ -277,5 +342,9 @@ export class Session extends AggregateRoot<SessionProps> {
 
   public setWidgetLayout(layout: Array<{ i: string; x: number; y: number; w: number; h: number }> | undefined): void {
     this.props.widgetLayout = layout;
+  }
+
+  public setConfig(config: Partial<SessionConfig>): void {
+    this.props.config = { ...this.props.config, ...config };
   }
 }

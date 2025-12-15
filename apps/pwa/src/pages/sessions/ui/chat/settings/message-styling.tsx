@@ -41,15 +41,15 @@ const ColorGrid = ({
     label: string;
     field: "base" | "bold" | "italic" | "background";
   }> = [
-    { label: "Base text", field: "base" },
-    { label: "Bold text", field: "bold" },
-    { label: "Italic text", field: "italic" },
-    { label: "Background", field: "background" },
+    { label: "Base", field: "base" },
+    { label: "Bold", field: "bold" },
+    { label: "Italic", field: "italic" },
+    { label: "BG", field: "background" },
   ];
 
   return (
     <div>
-      <h4 className="text-fg-subtle mb-2 text-sm font-medium">{title}</h4>
+      <h4 className="text-fg-subtle mb-4 text-sm font-medium flex justify-center">{title}</h4>
       <div className="grid grid-cols-2 gap-2">
         {fields.map((item) => {
           const fieldName = getFieldName(userType, item.field);
@@ -64,7 +64,7 @@ const ColorGrid = ({
           return (
             <div
               key={item.field}
-              className="border-border-muted bg-surface-raised/50 flex items-center gap-2 rounded-lg border p-2"
+              className="flex flex-col items-center gap-1.5 py-1"
             >
               <Controller
                 name={fieldName}
@@ -74,15 +74,13 @@ const ColorGrid = ({
                     onChange={(newValue) => {
                       onChange(newValue);
                     }}
-                    className="[&>div:first-child]:border [&>div:first-child]:border-border-muted"
+                    className="[&>div:first-child]:border [&>div:first-child]:border-border-muted [&>div:first-child]:h-8 [&>div:first-child]:w-12 [&>div:first-child]:rounded-full"
                     orientation="horizontal"
                     isShowValue={false}
                   />
                 )}
               />
-              <div className="min-w-0 flex-1">
-                <p className="text-fg-subtle truncate text-xs">{item.label}</p>
-              </div>
+              <p className="text-fg-subtle text-xs">{item.label}</p>
             </div>
           );
         })}
@@ -174,11 +172,11 @@ export default function MessageStyling({
 
   return (
     <FormProvider {...methods}>
-      <div className="space-y-4">
-        <ColorGrid userType="ai" title="AI Message" chatStyles={chatStyles} />
+      <div className="grid grid-cols-2 gap-4">
+        <ColorGrid userType="ai" title="AI message" chatStyles={chatStyles} />
         <ColorGrid
           userType="user"
-          title="User Message"
+          title="User message"
           chatStyles={chatStyles}
         />
       </div>

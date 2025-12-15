@@ -12,48 +12,14 @@
   --font-pragati-narrow: "Pragati Narrow";
   --font-fira-code: "Fira Code";
 
-  /* Special alpha colors - literal values */
-  --color-alpha-80: rgba(128, 128, 128, 0.8);
-
-  /* Astrsk renewed colors start */
-
-  /* Foundation colors */
-  /* Blue colors */
-  --color-blue-100: #b9e4fb;
-  --color-blue-200: #98d7f9;
-  --color-blue-300: #68c5f6;
-  --color-blue-900: #0d4766;
-
-  /* Purple colors */
-  --color-purple-200: #b59eff;
-
-  /* Gray colors */
-  --color-gray-50: #f1f1f1;
-  --color-gray-100: #d4d4d4;
-  --color-gray-200: #bfbfbf;
-  --color-gray-300: #a1a1a1;
-  --color-gray-400: #8f8f8f;
-  --color-gray-500: #737373;
-  --color-gray-700: #525252;
-  --color-gray-800: #3f3f3f;
-  --color-gray-900: #303030;
-
   /* Basic colors */
-  --color-black-alternate: #111111;
   --color-dark-surface: #262626;
 
   /* Semantic colors */
-  --color-normal-primary: var(--color-blue-200);
-  --color-normal-secondary: var(--color-purple-200);
   --color-background-primary: var(--color-dark-surface);
 
-  --color-text-primary: var(--color-gray-50);
-  --color-text-secondary: var(--color-gray-200);
-
-  --color-status-destructive: #7f1d1d;
-  --color-status-destructive-light: #dc2626;
-
-  /* Astrsk renewed colors end */
+  --color-text-primary: #f1f1f1;
+  --color-text-secondary: #bfbfbf;
 }
 
 @theme inline {
@@ -67,26 +33,11 @@
   /* Inset/Position utilities */
   --inset-topbar: var(--topbar-height);
 
-  /* Core colors - shadcn/ui compatible */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
+  /* Core colors - shadcn/ui compatible (kept for remaining usages) */
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
 
   /* Sidebar colors */
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -96,25 +47,14 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   /* Background colors */
-  --color-background-surface-0: var(--background-surface-0);
-  --color-background-surface-1: var(--background-surface-1);
-  --color-background-surface-2: var(--background-surface-2);
-  --color-background-surface-3: var(--background-surface-3);
-  --color-background-surface-4: var(--background-surface-4);
-  --color-background-surface-5: var(--background-surface-5);
-  --color-background-surface-light: var(--background-surface-light);
   --color-background-card: var(--background-card);
   --color-background-container: var(--background-container);
-  --color-background-dialog: var(--background-dialog);
   --color-background-input: var(--background-input);
   --color-background-screen: var(--background-screen);
 
   /* Border colors */
-  --color-border-light: var(--border-light);
   --color-border-dark: var(--border-dark);
   --color-border-normal: var(--border-normal);
-  --color-border-selected-primary: var(--border-selected-primary);
-  --color-border-selected-secondary: var(--border-selected-secondary);
   --color-border-selected-inverse: var(--border-selected-inverse);
   --color-border-divider: var(--border-divider);
   --color-border-container: var(--border-container);
@@ -122,68 +62,20 @@
   /* Button colors */
   --color-button-background-primary: var(--button-background-primary);
   --color-button-foreground-primary: var(--button-foreground-primary);
-  --color-button-background-disabled: var(--button-background-disabled);
   --color-button-foreground-disabled: var(--button-foreground-disabled);
   --color-button-background-secondary: var(--button-background-secondary);
   --color-button-foreground-secondary: var(--button-foreground-secondary);
   --color-button-background-floating: var(--button-background-floating);
   --color-button-chips: var(--button-chips);
 
-  /* Text colors */
-  --color-text-body: var(--text-body);
-  --color-text-subtle: var(--text-subtle);
-  --color-text-placeholder: var(--text-placeholder);
-  --color-text-info: var(--text-info);
-  --color-text-contrast-text: var(--text-contrast-text);
-  --color-text-muted-title: var(--text-muted-title);
-  --color-text-input-subtitle: var(--text-input-subtitle);
-
-  /* Primary colors */
-  --color-primary-normal: var(--primary-normal);
-  --color-primary-strong: var(--primary-strong);
-  --color-primary-heavy: var(--primary-heavy);
-  --color-primary-semi-dark: var(--primary-semi-dark);
-  --color-primary-dark: var(--primary-dark);
-
   /* Secondary colors */
   --color-secondary-normal: var(--secondary-normal);
-  --color-secondary-heavy: var(--secondary-heavy);
 
   /* Status colors */
   --color-status-optional: var(--status-optional);
   --color-status-required: var(--status-required);
   --color-status-ready: var(--status-ready);
-  --color-status-ready-dark: var(--status-ready-dark);
-  --color-status-succeed: var(--status-succeed);
   --color-status-warning-light: var(--status-warning-light);
-  --color-status-warning: var(--status-warning);
-
-  /* Color palette - Blue */
-  --color-blue-50: var(--color-blue-50);
-  --color-blue-500: var(--color-blue-500);
-  --color-blue-700: var(--color-blue-700);
-  --color-blue-800: var(--color-blue-800);
-
-  /* Color palette - Yellow */
-  --color-yellow-800: var(--color-yellow-800);
-
-  /* Agent colors - 300 shades (used in color assignment) */
-  --color-indigo-300: var(--indigo-300);
-  --color-orange-300: var(--orange-300);
-  --color-lime-300: var(--lime-300);
-  --color-red-300: var(--red-300);
-  --color-amber-300: var(--amber-300);
-  --color-cyan-300: var(--cyan-300);
-  --color-fuchsia-300: var(--fuchsia-300);
-  --color-yellow-300: var(--yellow-300);
-  --color-violet-300: var(--violet-300);
-  --color-green-300: var(--green-300);
-  --color-rose-300: var(--rose-300);
-  --color-sky-300: var(--sky-300);
-  --color-pink-300: var(--pink-300);
-  --color-emerald-300: var(--emerald-300);
-  --color-purple-300: var(--purple-300);
-  --color-teal-300: var(--teal-300);
 }
 
 :root {
@@ -209,11 +101,6 @@
   --border: hsl(0 0% 14.9%);
   --input: hsl(0 0% 14.9%);
   --ring: hsl(0 0% 83.1%);
-  --chart-1: hsl(220 70% 50%);
-  --chart-2: hsl(160 60% 45%);
-  --chart-3: hsl(30 80% 55%);
-  --chart-4: hsl(280 65% 60%);
-  --chart-5: hsl(340 75% 55%);
   --sidebar-background: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);
   --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -223,56 +110,25 @@
   --sidebar-border: hsl(240 3.7% 15.9%);
   --sidebar-ring: hsl(217.2 91.2% 59.8%);
 
-  /* astrsk 2.0 colors */
-  --color-basic-darksurface: #1b1b1b;
-
-  --color-blue-50: #e9f6fe;
-  --color-blue-500: #1ea9f2;
-  --color-blue-700: #1578ac;
-  --color-blue-800: #115d85;
-
-  --color-destructive-light: #dc2626;
-  --color-destructive-dark: #7f1d1d;
-
-  --color-yellow-800: #854d0e;
-
   /* Existing background colors */
   --background-card: #37404c;
   --background-container: #2a313a;
-  --background-dialog: #64748b;
   --background-input: #475263;
   --background-screen: #111111;
-  --background-screen2: #1b1b1b;
-  --background-tooltip: #0d4766;
-  --background-user-message: #e9f6fe;
-
-  /* New background colors */
-  --background-surface-0: #111111;
-  --background-surface-1: #1b1b1b;
-  --background-surface-2: #272727;
-  --background-surface-3: #313131;
-  --background-surface-4: #414141;
-  --background-surface-5: #757575;
-  --background-surface-10: #1b1b1b;
-  --background-surface-light: #e9f6fe;
 
   /* Existing border colors */
   --border-container: #64748b;
   --border-divider: #37404c;
 
   /* New border colors */
-  --border-light: #757575;
   --border-dark: #313131;
   --border-normal: #525252;
   --border-black: #1b1b1b;
-  --border-selected-primary: #98d7f9;
-  --border-selected-secondary: #1ea9f2;
   --border-selected-inverse: #f1f1f1;
 
   /* Existing button colors */
   --button-background-primary: #98d7f9;
   --button-foreground-primary: #0d4766;
-  --button-background-disabled: #414141;
   --button-foreground-disabled: #757575;
   --button-background-secondary: #b59eff;
   --button-foreground-secondary: #27136b;
@@ -281,43 +137,18 @@
   --button-background-floating: #313131;
   --button-chips: #414141;
 
-  /* Existing text colors */
-  --text-info: #696969;
-  --text-input-subtitle: #97a2b1;
+  /* Existing text colors (kept for CSS variable references in base styles) */
   --text-muted-title: #d4d4d4;
-  --text-placeholder: #a1a1a1;
   --text-user-message: #3f3f3f;
 
-  /* New text colors */
-  --text-body: #bfbfbf;
-  --text-subtle: #9d9d9d;
-  --text-contrast-text: #3f3f3f;
-
-  /* Existing primary colors */
-  --primary-heavy: #1ea9f2;
-  --primary-normal: #98d7f9;
-  --primary-strong: #68c5f6;
-  --primary-dark: #115d85;
-  --primary-semi-dark: #1578ac;
-
   /* Existing secondary colors */
-  --secondary-heavy: #27136b;
   --secondary-normal: #b59eff;
 
-  /* Existing status colors */
-  --status-destructive: #7f1d1d;
-  --status-destructive-primary: #dc2626;
-  --status-warning: #a16207;
+  /* Status colors */
   --status-optional: #a1ece7;
   --status-required: #b59eff;
-
-  /* New status colors */
   --status-warning-light: #a16207;
-  --status-warning-dark: #854d0e;
-  --status-syncing: #1ea9f2;
-  --status-succeed: #2ec2b9;
   --status-ready: #0d9488;
-  --status-ready-dark: #1578ac;
 
   /* iOS Safe Area Variables */
   --safe-area-inset-top: env(safe-area-inset-top, 0px);
@@ -325,43 +156,6 @@
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
-
-/* Block landscape mode with message */
-/* @media screen and (orientation: landscape) and (max-width: 990px) {
-  #root {
-    display: none;
-  }
-
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--background-screen);
-    z-index: 9999;
-  }
-
-  body::after {
-    content: "Landscape mode is not supported";
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--text-primary);
-    font-size: 18px;
-    font-family: var(--font-inter);
-    text-align: center;
-    z-index: 10000;
-    padding: 28px;
-    background-color: var(--background-container);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    max-width: 80%;
-    line-height: 1.5;
-  }
-} */
 
 .dark {
   --background: hsl(0 0% 3.9%);
@@ -383,11 +177,6 @@
   --border: hsl(0 0% 14.9%);
   --input: hsl(0 0% 14.9%);
   --ring: hsl(0 0% 83.1%);
-  --chart-1: hsl(220 70% 50%);
-  --chart-2: hsl(160 60% 45%);
-  --chart-3: hsl(30 80% 55%);
-  --chart-4: hsl(280 65% 60%);
-  --chart-5: hsl(340 75% 55%);
   --sidebar-background: hsl(240 5.9% 10%);
   --sidebar-foreground: hsl(240 4.8% 95.9%);
   --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -400,40 +189,22 @@
   /* Existing background colors */
   --background-card: #37404c;
   --background-container: #2a313a;
-  --background-dialog: #64748b;
   --background-input: #475263;
   --background-screen: #111111;
-  --background-screen2: #1b1b1b;
-  --background-tooltip: #0d4766;
-  --background-user-message: #e9f6fe;
-
-  /* New background colors */
-  --background-surface-0: #111111;
-  --background-surface-1: #1b1b1b;
-  --background-surface-2: #272727;
-  --background-surface-3: #313131;
-  --background-surface-4: #414141;
-  --background-surface-5: #757575;
-  --background-surface-10: #1b1b1b;
-  --background-surface-light: #e9f6fe;
 
   /* Existing border colors */
   --border-container: #64748b;
   --border-divider: #37404c;
 
   /* New border colors */
-  --border-light: #757575;
   --border-dark: #313131;
   --border-normal: #525252;
   --border-black: #1b1b1b;
-  --border-selected-primary: #98d7f9;
-  --border-selected-secondary: #1ea9f2;
   --border-selected-inverse: #f1f1f1;
 
   /* Existing button colors */
   --button-background-primary: #98d7f9;
   --button-foreground-primary: #0d4766;
-  --button-background-disabled: #414141;
   --button-foreground-disabled: #757575;
   --button-background-secondary: #b59eff;
   --button-foreground-secondary: #27136b;
@@ -442,60 +213,18 @@
   --button-background-floating: #313131;
   --button-chips: #414141;
 
-  /* Existing text colors */
-  --text-info: #696969;
-  --text-input-subtitle: #97a2b1;
+  /* Existing text colors (kept for CSS variable references in base styles) */
   --text-muted-title: #d4d4d4;
-  --text-placeholder: #a1a1a1;
   --text-user-message: #3f3f3f;
 
-  /* New text colors */
-  --text-body: #bfbfbf;
-  --text-subtle: #9d9d9d;
-  --text-contrast-text: #3f3f3f;
-
-  /* Existing primary colors */
-  --primary-heavy: #1ea9f2;
-  --primary-normal: #98d7f9;
-  --primary-strong: #68c5f6;
-  --primary-dark: #115d85;
-  --primary-semi-dark: #1578ac;
-
   /* Existing secondary colors */
-  --secondary-heavy: #27136b;
   --secondary-normal: #b59eff;
 
-  /* Existing status colors */
-  --status-destructive: #7f1d1d;
-  --status-destructive-light: #dc2626;
-  --status-destructive-primary: #dc2626;
-  --status-warning: #a16207;
+  /* Status colors */
   --status-optional: #a1ece7;
   --status-required: #b59eff;
-
-  /* New status colors */
   --status-warning-light: #a16207;
-  --status-warning-dark: #854d0e;
-  --status-syncing: #1ea9f2;
-  --status-succeed: #2ec2b9;
-
-  /* Agent colors - 300 shades only (800 shades unused) */
-  --indigo-300: #a5b4fc;
-  --orange-300: #fdba74;
-  --lime-300: #bef264;
-  --red-300: #fca5a5;
-  --amber-300: #fcd34d;
-  --cyan-300: #67e8f9;
-  --fuchsia-300: #f0abfc;
-  --yellow-300: #fde047;
-  --violet-300: #c4b5fd;
-  --green-300: #86efac;
-  --rose-300: #fda4af;
-  --sky-300: #7dd3fc;
-  --pink-300: #f9a8d4;
-  --emerald-300: #6ee7b7;
-  --purple-300: #d8b4fe;
-  --teal-300: #5eead4;
+  --status-ready: #0d9488;
 }
 
 /* Custom Variants */
@@ -538,17 +267,6 @@
   }
 }
 
-@keyframes bounce-typing {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-  }
-  30% {
-    transform: translateY(-8px);
-  }
-}
-
 @keyframes accordion-down {
   from {
     height: 0;
@@ -567,17 +285,31 @@
   }
 }
 
+@keyframes typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.2);
+  }
+}
+
+@keyframes pulse-highlight {
+  0% {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
 /* Custom Utilities - must be at top level, cannot be nested in @layer */
 @utility h-screen-minus-topbar {
   height: calc(100vh - var(--topbar-height));
-}
-
-@utility h-screen-minus-topbar-dv {
-  height: calc(100dvh - var(--topbar-height));
-}
-
-@utility h-screen-minus-topbar-sv {
-  height: calc(100svh - var(--topbar-height));
 }
 
 @utility animate-spin {
@@ -596,10 +328,6 @@
   animation: fade-in-up 0.3s ease-out 0.35s both;
 }
 
-@utility animate-bounce-typing {
-  animation: bounce-typing 1.4s ease-in-out infinite;
-}
-
 @utility animate-accordion-down {
   animation: accordion-down 0.2s ease-out;
 }
@@ -608,15 +336,60 @@
   animation: accordion-up 0.2s ease-out;
 }
 
+@utility animate-pulse-highlight {
+  animation: pulse-highlight 0.8s ease-out;
+}
+
+/* Class-based animations for dynamic usage */
+.animate-pulse-highlight {
+  animation: pulse-highlight 0.8s ease-out;
+}
+
+.animate-fade-in-up-dynamic {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+.animate-new-item-highlight {
+  animation: new-item-highlight 1.2s ease-out;
+}
+
+@keyframes new-item-highlight {
+  0%, 50% {
+    border-color: rgba(34, 197, 94, 0.8);
+  }
+  25%, 75% {
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+  100% {
+    border-color: rgb(82, 82, 82);
+  }
+}
+
+@keyframes border-pulse {
+  0%, 100% {
+    border-color: rgba(245, 158, 11, 0.5);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.2);
+  }
+}
+
+.animate-border-pulse {
+  animation: border-pulse 2s ease-in-out infinite;
+}
+
 @layer base {
   * {
     border-color: var(--border);
   }
   html {
+    height: 100%;
     overscroll-behavior: none;
     touch-action: manipulation;
   }
   body {
+    height: 100%;
+    min-height: 100dvh;
     color: var(--foreground);
     background-color: var(--color-background-primary);
     font-family:
@@ -628,6 +401,10 @@
       "Helvetica Neue",
       Arial,
       sans-serif;
+  }
+  #root {
+    height: 100%;
+    min-height: 100dvh;
   }
 
   button:where(:not(:disabled)) {
@@ -736,44 +513,6 @@
     padding-top: var(--safe-area-inset-top);
   }
 
-  .safe-area-bottom {
-    padding-bottom: var(--safe-area-inset-bottom);
-  }
-
-  .safe-area-left {
-    padding-left: var(--safe-area-inset-left);
-  }
-
-  .safe-area-right {
-    padding-right: var(--safe-area-inset-right);
-  }
-
-  .safe-area-x {
-    padding-left: var(--safe-area-inset-left);
-    padding-right: var(--safe-area-inset-right);
-  }
-
-  .safe-area-y {
-    padding-top: var(--safe-area-inset-top);
-    padding-bottom: var(--safe-area-inset-bottom);
-  }
-
-  .safe-area-all {
-    padding-top: var(--safe-area-inset-top);
-    padding-right: var(--safe-area-inset-right);
-    padding-bottom: var(--safe-area-inset-bottom);
-    padding-left: var(--safe-area-inset-left);
-  }
-
-  /* iOS Status Bar Background - extends navigation color into safe area */
-  .ios-status-bar-bg {
-    background: linear-gradient(
-      to bottom,
-      var(--background-card) var(--safe-area-inset-top),
-      transparent var(--safe-area-inset-top)
-    );
-  }
-
   /* Disable iOS context menu on images */
   img {
     -webkit-touch-callout: none;
@@ -808,8 +547,14 @@
   /* Consolidated Dockview styles */
   .dockview-theme-abyss {
     --dv-separator-border: var(--bg-canvas, #111111) !important;
-    --dv-sash-color: var(--bg-canvas, #111111) !important; /* visible sash color */
-    --dv-active-sash-color: var(--bg-canvas, #111111) !important; /* hover/active color */
+    --dv-sash-color: var(
+      --bg-canvas,
+      #111111
+    ) !important; /* visible sash color */
+    --dv-active-sash-color: var(
+      --bg-canvas,
+      #111111
+    ) !important; /* hover/active color */
   }
 
   /* Tab containers */
@@ -921,14 +666,7 @@
     min-width: 0;
   }
 
-  /* Onboarding screen carausel */
-  .embla-onboarding .embla__slide {
-    flex: 0 0 304px;
-    min-width: 0;
-    min-height: 171px;
-  }
-
-  /* Onboarding screen carausel */
+  /* Subscription nudge carousel */
   .embla-subscription-nudge .embla__slide {
     flex: 0 0 284px;
     min-width: 0;

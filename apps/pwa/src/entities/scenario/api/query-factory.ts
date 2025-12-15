@@ -2,14 +2,14 @@
  * Scenario Query Factory
  *
  * Scenario-specific query factory that wraps card queries
- * with proper type safety for PlotCard.
+ * with proper type safety for ScenarioCard.
  */
 
 import { queryOptions } from "@tanstack/react-query";
 import { UniqueEntityID } from "@/shared/domain";
 import { CardService } from "@/app/services/card-service";
 import { CardDrizzleMapper } from "@/entities/card/mappers/card-drizzle-mapper";
-import { PlotCard } from "@/entities/card/domain";
+import { ScenarioCard } from "@/entities/card/domain";
 import { cardKeys } from "@/entities/card/api/query-factory";
 import {
   type SortOptionValue,
@@ -17,9 +17,9 @@ import {
 } from "@/shared/config/sort-options";
 
 // WeakMap cache for preventing unnecessary re-renders
-const selectResultCache = new WeakMap<object, PlotCard>();
+const selectResultCache = new WeakMap<object, ScenarioCard>();
 
-// Scenario-specific filter type (without type field since it's always Plot)
+// Scenario-specific filter type (without type field since it's always Scenario)
 export interface ScenarioListFilters {
   keyword?: string;
   limit?: number;
@@ -40,14 +40,14 @@ export const scenarioKeys = {
 export const scenarioQueries = {
   /**
    * Optimized scenario list query
-   * - Uses dedicated searchScenarios (single JOIN to plotCards only)
+   * - Uses dedicated searchScenarios (single query to scenarios table)
    * - Searches only scenario-specific fields for keywords
-   * - No unnecessary characterCards JOIN
+   * - No unnecessary characters table JOIN
    */
   list: (filters: ScenarioListFilters = {}) =>
     queryOptions({
       queryKey: scenarioKeys.list(filters),
-      queryFn: async (): Promise<PlotCard[]> => {
+      queryFn: async (): Promise<ScenarioCard[]> => {
         const result = await CardService.searchScenarios.execute({
           keyword: filters.keyword || "",
           limit: filters.limit || 100,
@@ -75,16 +75,16 @@ export const scenarioQueries = {
         const card = cardOrError.getValue();
 
         // Type guard at query level
-        if (!(card instanceof PlotCard)) {
+        if (!(card instanceof ScenarioCard)) {
           throw new Error(
-            `Expected PlotCard but got ${card.constructor.name}`,
+            `Expected ScenarioCard but got ${card.constructor.name}`,
           );
         }
 
         // Transform to persistence format for consistent caching
         return CardDrizzleMapper.toPersistence(card);
       },
-      select: (data): PlotCard | null => {
+      select: (data): ScenarioCard | null => {
         if (!data) return null;
 
         // Check cache first
@@ -95,7 +95,7 @@ export const scenarioQueries = {
         const result = CardDrizzleMapper.toDomain(data as any);
 
         // Type guard after domain conversion
-        if (!(result instanceof PlotCard)) {
+        if (!(result instanceof ScenarioCard)) {
           return null;
         }
 
@@ -111,5 +111,5 @@ export const scenarioQueries = {
  * Usage:
  *
  * const { data: scenario } = useQuery(scenarioQueries.detail(scenarioId));
- * // scenario is typed as PlotCard | null - no type guard needed!
+ * // scenario is typed as ScenarioCard | null - no type guard needed!
  */

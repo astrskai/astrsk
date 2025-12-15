@@ -5,7 +5,7 @@ import { Button, SearchInput } from "@/shared/ui/forms";
 import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
 import Carousel from "@/shared/ui/carousel-v2";
 import { cardQueries } from "@/entities/card/api/card-queries";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { ScenarioCard } from "@/entities/card/domain/scenario-card";
 import { CardType } from "@/entities/card/domain";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
@@ -16,8 +16,8 @@ import { DialogBase } from "@/shared/ui/dialogs/base";
 interface ScenarioSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedScenario: PlotCard | null;
-  onConfirm: (scenario: PlotCard | null) => void;
+  selectedScenario: ScenarioCard | null;
+  onConfirm: (scenario: ScenarioCard | null) => void;
   title?: string;
   description?: string;
   confirmButtonText?: string;
@@ -28,7 +28,7 @@ interface ScenarioSelectionDialogProps {
  * Wrapper component that handles useAsset hook and passes imageUrl to ScenarioPreview
  */
 interface ScenarioPreviewItemProps {
-  card: PlotCard;
+  card: ScenarioCard;
   cardId: string;
   isSelected: boolean;
   onCardClick: (cardId: string) => void;
@@ -72,7 +72,7 @@ const ScenarioPreviewItem = ({
           summary={card.props.cardSummary}
           tags={card.props.tags || []}
           tokenCount={card.props.tokenCount}
-          firstMessages={card.props.scenarios?.length || 0}
+          firstMessages={card.props.firstMessages?.length || 0}
           className={cn(
             isSelected
               ? "border-brand-500 hover:border-brand-400 border-2 shadow-lg"
@@ -89,7 +89,7 @@ const ScenarioPreviewItem = ({
  * Scenario Detail Panel
  * Displays detailed information about a selected scenario
  */
-const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
+const ScenarioDetailPanel = ({ plot }: { plot: ScenarioCard }) => {
   const [scenarioImageUrl] = useAsset(plot.props.iconAssetId);
 
   return (
@@ -102,7 +102,7 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
       {/* Scenario Image */}
       <div className="relative mx-auto aspect-[3/4] max-w-[200px] overflow-hidden rounded-lg md:max-w-xs">
         <img
-          src={scenarioImageUrl || "/img/placeholder/scenario-card-image.png"}
+          src={scenarioImageUrl || "/default/card/GM_ Dice of Fate.png"}
           alt={plot.props.title}
           className="h-full w-full object-cover"
         />
@@ -137,13 +137,13 @@ const ScenarioDetailPanel = ({ plot }: { plot: PlotCard }) => {
         </div>
       )}
 
-      {plot.props.scenarios && plot.props.scenarios.length > 0 && (
+      {plot.props.firstMessages && plot.props.firstMessages.length > 0 && (
         <div>
           <h4 className="text-fg-subtle text-center text-xs">
             First message
           </h4>
           <Carousel
-            slides={plot.props.scenarios.map((scenario, index) => ({
+            slides={plot.props.firstMessages.map((scenario, index) => ({
               title: scenario.name,
               content: (
                 <div
@@ -237,16 +237,16 @@ export function ScenarioSelectionDialog({
   const previewScenario = useMemo(() => {
     if (!previewScenarioId || !scenarioCards) return null;
     return scenarioCards.find(
-      (card: PlotCard) => card.id.toString() === previewScenarioId,
-    ) as PlotCard | null;
+      (card: ScenarioCard) => card.id.toString() === previewScenarioId,
+    ) as ScenarioCard | null;
   }, [previewScenarioId, scenarioCards]);
 
   // Get mobile detail scenario
   const mobileDetailScenario = useMemo(() => {
     if (!mobileDetailScenarioId || !scenarioCards) return null;
     return scenarioCards.find(
-      (card: PlotCard) => card.id.toString() === mobileDetailScenarioId,
-    ) as PlotCard | null;
+      (card: ScenarioCard) => card.id.toString() === mobileDetailScenarioId,
+    ) as ScenarioCard | null;
   }, [mobileDetailScenarioId, scenarioCards]);
 
   // Filter scenario cards by search keyword
@@ -255,7 +255,7 @@ export function ScenarioSelectionDialog({
     if (!searchKeyword.trim()) return scenarioCards;
 
     const keyword = searchKeyword.toLowerCase();
-    return scenarioCards.filter((card: PlotCard) => {
+    return scenarioCards.filter((card: ScenarioCard) => {
       const title = card.props.title?.toLowerCase() || "";
       return title.includes(keyword);
     });
@@ -276,8 +276,8 @@ export function ScenarioSelectionDialog({
     if (scenarioCards) {
       const selected = tempSelectedId
         ? (scenarioCards.find(
-            (card: PlotCard) => card.id.toString() === tempSelectedId,
-          ) as PlotCard | undefined)
+            (card: ScenarioCard) => card.id.toString() === tempSelectedId,
+          ) as ScenarioCard | undefined)
         : null;
       onConfirm(selected || null);
       handleClose();
@@ -353,7 +353,7 @@ export function ScenarioSelectionDialog({
               {/* Scenario Preview List */}
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {filteredScenarioCards.map((card: PlotCard) => {
+                  {filteredScenarioCards.map((card: ScenarioCard) => {
                     const cardId = card.id.toString();
                     const isSelected = tempSelectedId === cardId;
 

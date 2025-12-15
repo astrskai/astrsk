@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  Checkbox, ImportDialog, Label, ScrollArea,
+  Dialog,
+  DialogContent,
+  ImportDialog,
+  Loading,
   SvgIcon,
 } from "@/shared/ui";
-import { ModelItem } from "@/features/flow/ui/model-selection";
-import { AgentModelCard } from "@/features/flow/ui/agent-model-card";
 import { ModelTier } from "@/entities/agent/domain/agent";
 
 export interface AgentModel {
@@ -25,9 +26,11 @@ export interface SessionImportDialogProps {
       { apiSource: string; modelId: string; modelName: string }
     >,
   ) => Promise<void>;
-  onFileSelect?: (file: File) => Promise<AgentModel[] | void>;
+  // Commented out - no longer needed since we import as-is
+  // onFileSelect?: (file: File) => Promise<AgentModel[] | void>;
   file?: File | null;
-  agentModels?: AgentModel[];
+  // Commented out - no longer showing model selection
+  // agentModels?: AgentModel[];
   title?: string;
   description?: string;
 }
@@ -36,137 +39,80 @@ export function SessionImportDialog({
   open,
   onOpenChange,
   onImport,
-  onFileSelect,
   file: externalFile,
-  agentModels: externalAgentModels,
   title = "Import session",
   description = "Importing a session automatically imports all its related cards and flows.",
 }: SessionImportDialogProps) {
   const [importingFile, setImportingFile] = useState<File | null>(null);
-  const [agentModels, setAgentModels] = useState<AgentModel[]>([]);
-  const [agentModelOverrides, setAgentModelOverrides] = useState<
-    Map<string, { apiSource: string; modelId: string; modelName: string }>
-  >(new Map());
-  const [isIncludeHistory, setIsIncludeHistory] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
-  // Initialize with external file and agent models if provided
+  // Initialize with external file if provided and auto-import
   useEffect(() => {
-    if (open && externalFile) {
+    if (open && externalFile && !isImporting) {
       setImportingFile(externalFile);
+      // Auto-import when file is provided
+      handleImportFile(externalFile);
     }
-    if (open && externalAgentModels) {
-      setAgentModels(externalAgentModels);
-    }
-  }, [open, externalFile, externalAgentModels]);
+  }, [open, externalFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset state when dialog closes
   useEffect(() => {
     if (!open) {
       setImportingFile(null);
-      setAgentModels([]);
-      setAgentModelOverrides(new Map());
-      setIsIncludeHistory(false);
       setIsImporting(false);
     }
   }, [open]);
 
-  const handleFileSelect = async (file: File | null) => {
-    setImportingFile(file);
-
-    // If onFileSelect is provided, use it to get agent models
-    if (file && onFileSelect) {
-      const models = await onFileSelect(file);
-      if (models) {
-        setAgentModels(models);
-      }
-    }
-  };
-
-  const handleImport = async () => {
-    if (!importingFile) return;
-
+  const handleImportFile = async (file: File) => {
     setIsImporting(true);
     try {
-      await onImport(
-        importingFile,
-        isIncludeHistory,
-        agentModelOverrides.size > 0 ? agentModelOverrides : undefined,
-      );
+      // Import as-is without model overrides or history selection
+      await onImport(file, false, undefined);
+      onOpenChange(false);
+    } catch {
+      // Error handled by onImport, just close
       onOpenChange(false);
     } finally {
       setIsImporting(false);
     }
   };
 
+  const handleFileSelect = async (file: File | null) => {
+    if (!file) return;
+    setImportingFile(file);
+    // Auto-import when file is selected
+    await handleImportFile(file);
+  };
+
+  // If importing, show loading dialog
+  if (isImporting) {
+    return (
+      <Dialog open={open} onOpenChange={undefined}>
+        <DialogContent className="max-w-sm">
+          <div className="flex flex-col items-center justify-center gap-4 py-8">
+            <Loading />
+            <p className="text-fg-muted text-base">Importing session...</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Otherwise show file picker dialog
   return (
     <ImportDialog
       open={open}
       onOpenChange={onOpenChange}
-      onImport={handleImport}
+      onImport={() => importingFile ? handleImportFile(importingFile) : Promise.resolve()}
       title={title}
       description={description}
       accept=".session"
       fileIcon={<SvgIcon name="sessions_solid" size={24} />}
-      hideCloseWhenFile={true}
+      hideCloseWhenFile={false}
       file={importingFile}
       onFileSelect={handleFileSelect}
       onFileRemove={() => setImportingFile(null)}
       isImporting={isImporting}
-    >
-      {/* Agent Models Section */}
-      {agentModels.length > 0 && (
-        <div className="flex max-h-96 flex-col items-start justify-start gap-4 self-stretch overflow-hidden">
-          <ScrollArea className="max-h-96 w-full overflow-y-auto">
-            <div className="flex flex-col gap-4">
-              {agentModels.map((agent) => (
-                <AgentModelCard
-                  key={agent.agentId}
-                  agentName={
-                    agent.agentName || `Agent ${agent.agentId.slice(0, 8)}`
-                  }
-                  originalModel={agent.modelName}
-                  recommendedTier={agent.modelTier || ModelTier.Light}
-                >
-                  <div className="self-stretch">
-                    <ModelItem
-                      forceMobile={true}
-                      connectionChanged={(apiSource, modelId, modelName) => {
-                        const newOverrides = new Map(agentModelOverrides);
-                        if (modelName) {
-                          newOverrides.set(agent.agentId, {
-                            apiSource,
-                            modelId,
-                            modelName,
-                          });
-                        } else {
-                          newOverrides.delete(agent.agentId);
-                        }
-                        setAgentModelOverrides(newOverrides);
-                      }}
-                    />
-                  </div>
-                </AgentModelCard>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
-      )}
-
-      {/* Chat History Section - Now at the bottom */}
-      <Label className="inline-flex h-6 cursor-pointer items-center justify-start gap-2 self-stretch">
-        <Checkbox
-          defaultChecked={false}
-          checked={isIncludeHistory}
-          onCheckedChange={(checked) => {
-            setIsIncludeHistory(checked === true);
-          }}
-          disabled={isImporting}
-        />
-        <span className="text-fg-default justify-start text-base leading-relaxed font-normal">
-          Include chat messages
-        </span>
-      </Label>
-    </ImportDialog>
+    />
   );
 }

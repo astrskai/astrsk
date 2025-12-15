@@ -179,6 +179,10 @@ interface AppState {
   isGroupButtonDonNotShowAgain: boolean;
   setIsGroupButtonDonNotShowAgain: (isDonNotShowAgain: boolean) => void;
 
+  // Skip Player Character Confirmation (session creation)
+  isSkipPlayerCharacterConfirm: boolean;
+  setIsSkipPlayerCharacterConfirm: (isSkip: boolean) => void;
+
   // Settings
   settingPageLevel: SettingPageLevel;
   setSettingPageLevel: (settingPageLevel: SettingPageLevel) => void;
@@ -383,6 +387,13 @@ const useAppStoreBase = create<AppState>()(
       setIsGroupButtonDonNotShowAgain: (isDonNotShowAgain) =>
         set((state) => {
           state.isGroupButtonDonNotShowAgain = isDonNotShowAgain;
+        }),
+
+      // Skip Player Character Confirmation (session creation)
+      isSkipPlayerCharacterConfirm: false,
+      setIsSkipPlayerCharacterConfirm: (isSkip) =>
+        set((state) => {
+          state.isSkipPlayerCharacterConfirm = isSkip;
         }),
 
       // Settings

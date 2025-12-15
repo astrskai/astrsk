@@ -5,7 +5,6 @@ import { queryClient } from "@/shared/api/query-client";
 import { sessionQueries } from "@/entities/session/api";
 import { flowQueries } from "@/entities/flow/api/flow-queries";
 import { cardQueries } from "@/entities/card/api/card-queries";
-import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { logger } from "@/shared/lib";
 import type { AgentModel } from "@/features/session/ui/session-import-dialog";
 
@@ -38,9 +37,14 @@ export function useSessionImport() {
           throw new Error(importedSessionOrError.getError());
         }
 
+        const importedSession = importedSessionOrError.getValue();
+
         // Invalidate queries
         queryClient.invalidateQueries({
           queryKey: sessionQueries.lists(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: sessionQueries.detail(importedSession.id).queryKey,
         });
         queryClient.invalidateQueries({
           queryKey: flowQueries.lists(),
@@ -48,9 +52,6 @@ export function useSessionImport() {
         queryClient.invalidateQueries({
           queryKey: cardQueries.lists(),
         });
-
-        // Refetch backgrounds
-        fetchBackgrounds();
       } catch (error) {
         if (error instanceof Error) {
           toastError("Failed to import session", {

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Send, StopCircle } from "lucide-react";
 
 import ChatCharacterButton from "./chat-character-button";
@@ -9,8 +9,10 @@ import { UniqueEntityID } from "@/shared/domain";
 import { cn } from "@/shared/lib";
 import { AutoReply } from "@/shared/stores/session-store";
 import ChatStatsButton from "./chat-stats-button";
+import { useExtensionUI } from "@/shared/hooks/use-extension-ui";
 
 interface ChatInputProps {
+  sessionId: UniqueEntityID;
   aiCharacterIds: UniqueEntityID[];
   userCharacterId?: UniqueEntityID;
   streamingMessageId?: UniqueEntityID | null;
@@ -20,11 +22,16 @@ interface ChatInputProps {
   onAutoReply: () => void;
   onSendMessage?: (messageContent: string) => void;
   onStopGenerate?: () => void;
-  generateCharacterMessage?: (characterId: UniqueEntityID) => void;
+  generateCharacterMessage?: (
+    characterId: UniqueEntityID,
+    regenerateMessageId?: UniqueEntityID,
+    triggerType?: string,
+  ) => void;
   className?: string;
 }
 
 export default function ChatInput({
+  sessionId,
   aiCharacterIds,
   userCharacterId,
   streamingMessageId,
@@ -39,6 +46,15 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [isOpenGuide, setIsOpenGuide] = useState<boolean>(false);
   const [messageContent, setMessageContent] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Get extension UI components for the session input buttons slot
+  const extensionButtons = useExtensionUI("session-input-buttons", {
+    sessionId,
+    disabled: !!streamingMessageId,
+    generateCharacterMessage,
+    onCharacterButtonClicked: () => setIsOpenGuide(false),
+  });
   // const shouldShowTooltip =
   // !disabled && (isOpenGuide || !sessionOnboardingSteps.inferenceButton);
 
@@ -67,11 +83,17 @@ export default function ChatInput({
     >
       <div className="flex flex-row items-start justify-between gap-1">
         <div className="flex flex-row gap-4 overflow-x-auto">
+          {/* Extension buttons (e.g., scenario trigger) */}
+          {extensionButtons.map((button) => (
+            <div key={button.id}>{button.render()}</div>
+          ))}
+
           {userCharacterId && (
             <ChatCharacterButton
               characterId={userCharacterId}
               onClick={() => {
-                generateCharacterMessage?.(userCharacterId);
+                // Pass "user" trigger type to use user start node in flow
+                generateCharacterMessage?.(userCharacterId, undefined, "user");
                 onCharacterButtonClicked();
               }}
               isUser
@@ -114,6 +136,7 @@ export default function ChatInput({
 
       <div className="relative mt-2 md:mt-4">
         <input
+          ref={inputRef}
           type="text"
           className={cn(
             "w-full rounded-full border border-fg-default/30 bg-transparent px-4 py-1 pr-25 text-sm text-fg-default placeholder:text-sm placeholder:text-fg-subtle focus:border-fg-default/50 focus:outline-none md:py-2 md:text-base md:placeholder:text-base",
@@ -134,6 +157,7 @@ export default function ChatInput({
 
               onSendMessage?.(messageContent);
               setMessageContent("");
+              inputRef.current?.focus();
             }
           }}
         />
@@ -149,6 +173,7 @@ export default function ChatInput({
 
             onSendMessage?.(messageContent);
             setMessageContent("");
+            inputRef.current?.focus();
           }}
           className={cn(
             "absolute top-1/2 right-0 flex -translate-y-1/2 items-center gap-2 rounded-full border border-fg-default/30 bg-fg-default/10 px-4 py-1.5 font-semibold text-fg-default transition-colors hover:bg-fg-default/20 md:right-1",

@@ -1,4 +1,5 @@
 import { Result, UseCase } from "@/shared/core";
+import { UniqueEntityID } from "@/shared/domain";
 
 import { Agent, ApiType } from "@/entities/agent/domain";
 import { Flow } from "@/entities/flow/domain/flow";
@@ -14,17 +15,21 @@ export class CreateFlow implements UseCase<void, Result<Flow>> {
 
   async execute(): Promise<Result<Flow>> {
     try {
-      // Create agent
+      // Generate flow ID first (needed for agent creation)
+      const flowId = new UniqueEntityID();
+
+      // Create agent with flowId
       const agentOrError = Agent.create({
         name: "New Agent",
         targetApiType: ApiType.Chat,
+        flowId: flowId,
       });
       if (agentOrError.isFailure) {
         throw new Error(agentOrError.getError());
       }
       const agent = agentOrError.getValue();
 
-      // Create flow
+      // Create flow with the same flow ID
       const flowOrError = Flow.create({
         name: "New Flow",
         nodes: [
@@ -59,22 +64,22 @@ export class CreateFlow implements UseCase<void, Result<Flow>> {
           },
         ],
         responseTemplate: "{{new_agent.response}}",
-      });
+      }, flowId);
       if (flowOrError.isFailure) {
         throw new Error(flowOrError.getError());
       }
       const flow = flowOrError.getValue();
 
-      // Save agent
-      const savedAgentOrError = await this.saveAgentRepo.saveAgent(agent);
-      if (savedAgentOrError.isFailure) {
-        throw new Error(savedAgentOrError.getError());
-      }
-
-      // Save flow
+      // Save flow FIRST (so agent's foreign key can reference it)
       const savedFlowOrError = await this.saveFlowRepo.saveFlow(flow);
       if (savedFlowOrError.isFailure) {
         throw new Error(savedFlowOrError.getError());
+      }
+
+      // Save agent AFTER flow exists in database
+      const savedAgentOrError = await this.saveAgentRepo.saveAgent(agent);
+      if (savedAgentOrError.isFailure) {
+        throw new Error(savedAgentOrError.getError());
       }
 
       // Return flow

@@ -1,15 +1,15 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { UserIcon, ChevronLeft, Info } from "lucide-react";
+import { ChevronLeft, Info, Plus } from "lucide-react";
+import { useNavigate, useLocation } from "@tanstack/react-router";
 import { Button, SearchInput } from "@/shared/ui/forms";
-import CharacterCardUI from "@/features/character/ui/character-card";
+import { CharacterCard as CharacterCardUI, type CardAction } from "@astrsk/design-system";
 import Carousel from "@/shared/ui/carousel-v2";
 import { cardQueries } from "@/entities/card/api/card-queries";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import { CardType } from "@/entities/card/domain";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
-import type { CardAction } from "@/features/common/ui";
 import { DialogBase } from "@/shared/ui/dialogs/base";
 
 interface CharacterSelectionDialogProps {
@@ -85,6 +85,7 @@ const CharacterPreviewItem = ({
           tags={card.props.tags || []}
           tokenCount={card.props.tokenCount}
           className={cn(
+            "!h-[380px]", // Fixed height to prevent size variations
             isSelected
               ? "border-brand-500 hover:border-brand-400 border-2 shadow-lg"
               : "border-2 border-transparent",
@@ -107,7 +108,7 @@ const CharacterDetailPanel = ({ character }: { character: CharacterCard }) => {
   return (
     <div className="flex flex-col gap-4">
       {/* Title */}
-      <h3 className="hidden text-lg font-semibold text-fg-default md:block">
+      <h3 className="hidden text-center text-lg font-semibold text-fg-default md:block">
         {character.props.name || ""}
       </h3>
 
@@ -202,13 +203,12 @@ export function CharacterSelectionDialog({
   description = "Choose one or more AI character cards",
   confirmButtonText = "Add",
 }: CharacterSelectionDialogProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   // Temporary state for dialog selection (only committed on Confirm)
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(
     selectedCharacters.map((c) => c.id.toString()),
-  );
-  const [previewCharacterId, setPreviewCharacterId] = useState<string | null>(
-    null,
   );
   const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
   const [mobileDetailCharacterId, setMobileDetailCharacterId] = useState<
@@ -229,14 +229,6 @@ export function CharacterSelectionDialog({
       setMobileDetailCharacterId(null);
     }
   }, [open, selectedCharacters]);
-
-  // Get preview character details (desktop)
-  const previewCharacter = useMemo(() => {
-    if (!previewCharacterId || !characterCards) return null;
-    return characterCards.find(
-      (card: CharacterCard) => card.id.toString() === previewCharacterId,
-    ) as CharacterCard | null;
-  }, [previewCharacterId, characterCards]);
 
   // Get mobile detail character
   const mobileDetailCharacter = useMemo(() => {
@@ -316,6 +308,12 @@ export function CharacterSelectionDialog({
       description={showMobileDetail && mobileDetailCharacter ? "" : description}
       isShowCloseButton={false}
       size="2xl"
+      onOpenAutoFocus={(e) => {
+        // Prevent auto-focus on mobile to avoid keyboard popup
+        if (window.innerWidth < 768) {
+          e.preventDefault();
+        }
+      }}
       content={
         <>
           {/* Mobile Detail Header */}
@@ -346,10 +344,10 @@ export function CharacterSelectionDialog({
               </div>
             )}
 
-            {/* Left Side: Search + Character List */}
+            {/* Character Grid - Full Width */}
             <div
               className={cn(
-                "flex min-h-0 w-full flex-col gap-4 md:w-1/2",
+                "flex min-h-0 w-full flex-col gap-4",
                 showMobileDetail && "hidden md:flex",
               )}
             >
@@ -362,9 +360,9 @@ export function CharacterSelectionDialog({
                 className="flex-shrink-0"
               />
 
-              {/* Character Preview List */}
+              {/* Character Grid */}
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
                   {filteredCharacterCards.map(
                     (card: CharacterCard, index: number) => {
                       const cardId = card.id.toString();
@@ -384,7 +382,7 @@ export function CharacterSelectionDialog({
                             setShowMobileDetail(true);
                           }}
                           onMouseEnter={() => {
-                            setPreviewCharacterId(cardId);
+                            // No-op: preview removed
                           }}
                         />
                       );
@@ -394,7 +392,7 @@ export function CharacterSelectionDialog({
 
                 {/* Empty State */}
                 {filteredCharacterCards.length === 0 && (
-                  <div className="text-text-secondary flex flex-col items-center justify-center py-12 text-center">
+                  <div className="text-text-secondary flex flex-col items-center justify-center gap-4 py-12 text-center">
                     {searchKeyword ? (
                       <>
                         <p className="mb-2 text-lg">No characters found</p>
@@ -405,29 +403,33 @@ export function CharacterSelectionDialog({
                         <p className="mb-2 text-lg">
                           No character cards available
                         </p>
-                        <p className="text-sm">
+                        <p className="text-sm mb-4">
                           Create a character card first to continue
                         </p>
+                        <Button
+                          onClick={() => {
+                            // Close dialog and navigate to character creation page
+                            // Pass current location as returnTo parameter
+                            onOpenChange(false);
+                            navigate({
+                              to: "/assets/characters/{-$characterId}",
+                              params: { characterId: "new" },
+                              search: {
+                                mode: "edit",
+                                returnTo: location.pathname
+                              }
+                            });
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Create Character
+                        </Button>
                       </>
                     )}
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Right Side: Character Detail (Desktop only) */}
-            <div className="hidden w-1/2 flex-col overflow-y-auto rounded-lg bg-surface-raised p-4 md:flex">
-              {previewCharacter ? (
-                <CharacterDetailPanel character={previewCharacter} />
-              ) : (
-                <div className="text-fg-subtle flex h-full flex-col items-center justify-center text-center">
-                  <UserIcon className="mb-3 h-12 w-12 opacity-50" />
-                  <p className="text-lg">Hover over a character</p>
-                  <p className="text-sm">
-                    Move your mouse over a character to see details
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </>

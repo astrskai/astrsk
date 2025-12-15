@@ -7,10 +7,11 @@ import {
 } from "@/shared/stores/app-store";
 import { cn } from "@/shared/lib";
 import { Button, FloatingLabelInput, SvgIcon } from "@/shared/ui";
+import { IconGoogle, IconDiscord } from "@/shared/assets/icons";
 import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { logger } from "@/shared/lib";
-import { useSignIn, useSignUp } from "@clerk/clerk-react";
-import { ArrowLeft, Check } from "lucide-react";
+import { signIn, signUp, signInWithOAuth, resetPasswordRequest, updatePassword } from "@/shared/lib/auth-actions";
+import { ArrowLeft, Check, X } from "lucide-react";
 import { useCallback, useState } from "react";
 
 const SignUpStep = {
@@ -43,8 +44,8 @@ function FloatingActionButton({
     <Button
       className={cn(
         "group/fab absolute top-[24px] z-10 cursor-pointer rounded-full",
-        "bg-button-background-floating border-border-light text-text-primary border-[1px]",
-        "hover:bg-background-card hover:text-text-primary",
+        "bg-surface-overlay border-border-subtle text-fg-default border-[1px]",
+        "hover:bg-hover hover:text-fg-default",
         position === "top-left" ? "left-[40px]" : "right-[40px]",
         "!transition-all duration-300 ease-out",
         "h-[40px] min-w-[40px] p-0",
@@ -125,225 +126,161 @@ const SignUpPage = () => {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [emailCode, setEmailCode] = useState("");
 
+  // Loading state
+  const [isLoading, setIsLoading] = useState(false);
+
   // Sign up with SSO
-  const {
-    isLoaded: isLoadedSignUp,
-    signUp,
-    setActive: setActiveSignUp,
-  } = useSignUp();
-  const signUpWithGoogle = useCallback(() => {
-    // Check sign up is loaded
-    if (!isLoadedSignUp) {
-      return;
-    }
-
+  const signUpWithGoogle = useCallback(async () => {
     try {
-      // Try to sign up with google
-      signUp.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/sso-callback",
-      });
+      setIsLoading(true);
+      const { error } = await signInWithOAuth("google");
+      if (error) {
+        toastError("Failed to sign up", { description: error });
+      }
     } catch (error) {
       logger.error(error);
       toastError("Failed to sign up", {
-        description: JSON.stringify(error),
+        description: String(error),
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [isLoadedSignUp, signUp]);
-  const signUpWithDiscord = useCallback(() => {
-    // Check sign up is loaded
-    if (!isLoadedSignUp) {
-      return;
-    }
+  }, []);
 
+  const signUpWithDiscord = useCallback(async () => {
     try {
-      // Try to sign up with google
-      signUp.authenticateWithRedirect({
-        strategy: "oauth_discord",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/sso-callback",
-      });
+      setIsLoading(true);
+      const { error } = await signInWithOAuth("discord");
+      if (error) {
+        toastError("Failed to sign up", { description: error });
+      }
     } catch (error) {
       logger.error(error);
       toastError("Failed to sign up", {
-        description: JSON.stringify(error),
+        description: String(error),
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [isLoadedSignUp, signUp]);
+  }, []);
 
   // Sign up with email and password
   const signUpWithEmailAndPassword = useCallback(async () => {
-    // Check sign up is loaded
-    if (!isLoadedSignUp) {
-      return;
-    }
-
     try {
-      // Try to sign up
-      await signUp.create({
-        emailAddress: email,
-        password: password,
-      });
+      setIsLoading(true);
+      const { error } = await signUp({ email, password });
 
-      // Send verify email code
-      await signUp.prepareEmailAddressVerification({
-        strategy: "email_code",
-      });
+      if (error) {
+        toastError("Failed to sign up", { description: error });
+        return;
+      }
 
-      // Step to verify email code
+      // Supabase sends verification email automatically
+      // Show verification step
       setStep(SignUpStep.VerifySignUpEmail);
+      toastSuccess("Check your email", {
+        description: "We sent you a verification link",
+      });
     } catch (error) {
       logger.error(error);
       toastError("Failed to sign up", {
-        description: JSON.stringify(error),
+        description: String(error),
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [email, isLoadedSignUp, password, signUp]);
+  }, [email, password]);
+
   const verifySignUpEmailCode = useCallback(async () => {
-    // Check sign up is loaded
-    if (!isLoadedSignUp) {
-      return;
-    }
-
-    try {
-      // Verify code
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code: emailCode,
-      });
-
-      // Success to sign up
-      if (signUpAttempt.status === "complete") {
-        await setActiveSignUp({
-          session: signUpAttempt.createdSessionId,
-        });
-        toastSuccess("Welcome to astrsk!", {
-          description: "Your account is ready to use",
-        });
-        setActivePage(Page.Payment);
-      } else {
-        // Failed to sign up
-        toastError(signUpAttempt.status ?? "Sign up failed");
-      }
-    } catch (error) {
-      logger.error(error);
-      toastError("Failed to verify email code", {
-        description: JSON.stringify(error),
-      });
-    }
-  }, [emailCode, isLoadedSignUp, setActivePage, setActiveSignUp, signUp]);
+    // Note: Supabase uses email link verification, not code verification
+    // This is kept for UI consistency but the actual verification happens via email link
+    toastSuccess("Please check your email and click the verification link");
+    setActivePage(Page.Payment);
+  }, [setActivePage]);
 
   // Sign in
-  const {
-    isLoaded: isLoadedSignIn,
-    signIn,
-    setActive: setActiveSignIn,
-  } = useSignIn();
   const signInWithEmailAndPassword = useCallback(async () => {
-    // Check sign in is loaded
-    if (!isLoadedSignIn) {
-      return;
-    }
-
     try {
-      // Try to sign in
-      const signInAttempt = await signIn.create({
-        identifier: email,
-        password: password,
-      });
+      setIsLoading(true);
+      const { error } = await signIn({ email, password });
 
-      // Success to sign in
-      if (signInAttempt.status === "complete") {
-        await setActiveSignIn({
-          session: signInAttempt.createdSessionId,
-        });
-        setActivePage(Page.Payment);
-      } else {
-        // Failed to sign in
-        toastError(signInAttempt.status ?? "Sign in failed");
+      if (error) {
+        toastError("Failed to sign in", { description: error });
+        return;
       }
+
+      toastSuccess("Welcome back!");
+      setActivePage(Page.Payment);
     } catch (error) {
       logger.error(error);
       toastError("Failed to sign in", {
-        description: JSON.stringify(error),
+        description: String(error),
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [email, isLoadedSignIn, password, setActiveSignIn, setActivePage, signIn]);
+  }, [email, password, setActivePage]);
 
   // Forgot password
   const forgotPassword = useCallback(async () => {
-    // Check sign in is loaded
-    if (!isLoadedSignIn) {
-      return;
-    }
-
     try {
-      // Try to send reset password email code
-      await signIn.create({
-        strategy: "reset_password_email_code",
-        identifier: email,
-      });
+      setIsLoading(true);
+      const { error } = await resetPasswordRequest(email);
+
+      if (error) {
+        toastError("Failed to reset password", { description: error });
+        return;
+      }
 
       // Next step
       setPassword("");
       setPasswordConfirm("");
+      toastSuccess("Check your email", {
+        description: "We sent you a password reset link",
+      });
       setStep(SignUpStep.NewPassword);
     } catch (error) {
       logger.error(error);
       toastError("Failed to reset password", {
-        description: JSON.stringify(error),
+        description: String(error),
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [email, isLoadedSignIn, signIn]);
-  const resetPassword = useCallback(async () => {
-    // Check sign in is loaded
-    if (!isLoadedSignIn) {
-      return;
-    }
+  }, [email]);
 
+  const resetPasswordHandler = useCallback(async () => {
     try {
-      // Try to reset password
-      const signInAttempt = await signIn.attemptFirstFactor({
-        strategy: "reset_password_email_code",
-        code: emailCode,
-        password: password,
-      });
+      setIsLoading(true);
+      const { error } = await updatePassword(password);
 
-      // Success to reset password
-      if (signInAttempt.status === "complete") {
-        await setActiveSignIn({
-          session: signInAttempt.createdSessionId,
-        });
-        setActivePage(Page.Payment);
-      } else {
-        // Failed to reset password
-        toastError(signInAttempt.status ?? "Password reset failed");
+      if (error) {
+        toastError("Failed to reset password", { description: error });
+        return;
       }
+
+      toastSuccess("Password updated successfully");
+      setActivePage(Page.Payment);
     } catch (error) {
       logger.error(error);
       toastError("Failed to reset password", {
-        description: JSON.stringify(error),
+        description: String(error),
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [
-    emailCode,
-    isLoadedSignIn,
-    password,
-    setActivePage,
-    setActiveSignIn,
-    signIn,
-  ]);
+  }, [password, setActivePage]);
 
   return (
     <div className={cn("absolute inset-0 top-[var(--topbar-height)] z-40")}>
       {/* Close */}
       <button
-        className="text-text-subtle absolute top-[34px] right-[40px] z-50"
+        className="text-fg-subtle absolute top-[34px] right-[40px] z-50"
         onClick={() => {
           setActivePage(Page.Subscribe);
         }}
       >
-        <SvgIcon name="window_close" size={40} />
+        <X size={40} />
       </button>
 
       {/* Back */}
@@ -356,7 +293,7 @@ const SignUpPage = () => {
       />
 
       {/* Main */}
-      <div className="bg-background-surface-2 absolute inset-0">
+      <div className="bg-surface-raised absolute inset-0">
         {/* Form */}
         <div
           className={cn(
@@ -378,12 +315,12 @@ const SignUpPage = () => {
               className="mb-[24px]"
             />
             <Button className="w-full" size="lg" onClick={signUpWithGoogle}>
-              <SvgIcon name="google" size={18} /> Continue with Google
+              <IconGoogle className="h-[18px] w-[18px]" /> Continue with Google
             </Button>
             <Button className="w-full" size="lg" onClick={signUpWithDiscord}>
-              <SvgIcon name="discord" size={18} /> Continue with Discord
+              <IconDiscord className="h-[18px] w-[18px]" /> Continue with Discord
             </Button>
-            <div className="text-text-subtle text-[16px] leading-[25.6px] font-[500]">
+            <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[500]">
               or
             </div>
             <FloatingLabelInput
@@ -414,11 +351,11 @@ const SignUpPage = () => {
             >
               I already have an account
             </Button>
-            <div className="text-text-subtle text-center text-[16px] leading-[25.6px] font-[400]">
+            <div className="text-fg-subtle text-center text-[16px] leading-[25.6px] font-[400]">
               By clicking the button above, you agree to our
               <br />
               <button
-                className="text-secondary-normal"
+                className="text-accent-secondary"
                 onClick={() => {
                   setActivePage(Page.Settings);
                   setSettingPageLevel(SettingPageLevel.detail);
@@ -430,7 +367,7 @@ const SignUpPage = () => {
               </button>
               {" and "}
               <button
-                className="text-secondary-normal"
+                className="text-accent-secondary"
                 onClick={() => {
                   setActivePage(Page.Settings);
                   setSettingPageLevel(SettingPageLevel.detail);
@@ -459,10 +396,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
+              <div className="text-fg-default mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Create your password
               </div>
-              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
                 Your password must be at least 8 characters long,
                 <br />
                 and include 1 symbol and 1 number.
@@ -489,25 +426,25 @@ const SignUpPage = () => {
             <div className="flex flex-col gap-[8px]">
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   Minimum 8 characters
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   At least one number
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   At least one symbol
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   Match password confirm
                 </div>
               </div>
@@ -535,10 +472,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
+              <div className="text-fg-default mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Verify your email
               </div>
-              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
                 We just sent a 6-digit code to
                 <br />
                 {email}, enter it below:
@@ -553,14 +490,19 @@ const SignUpPage = () => {
                 setEmailCode(e.target.value);
               }}
             />
-            <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+            <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
               Don&apos;t see a code?{" "}
               <button
                 className="text-button-background-primary"
-                onClick={() => {
-                  signUp?.prepareEmailAddressVerification({
-                    strategy: "email_code",
-                  });
+                onClick={async () => {
+                  // In Supabase, we can resend by triggering sign up again
+                  // The user will receive a new verification email
+                  const { error } = await signUp({ email, password });
+                  if (error) {
+                    toastError("Failed to resend", { description: error });
+                  } else {
+                    toastSuccess("Verification email sent!");
+                  }
                 }}
               >
                 Resend to email
@@ -588,7 +530,7 @@ const SignUpPage = () => {
               height={28}
               className="absolute top-[30px]"
             />
-            <div className="text-text-primary mb-[24px] text-[20px] leading-[24px] font-[600]">
+            <div className="text-fg-default mb-[24px] text-[20px] leading-[24px] font-[600]">
               Welcome back
             </div>
             <FloatingLabelInput
@@ -643,10 +585,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
+              <div className="text-fg-default mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Forgot password
               </div>
-              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
                 Enter your email address. If it&apos;s correct, we&apos;ll send
                 <br />
                 you an email with password reset instructions.
@@ -680,10 +622,10 @@ const SignUpPage = () => {
               className="absolute top-[30px]"
             />
             <div className="mb-[24px] text-center">
-              <div className="text-text-primary mb-[8px] text-[20px] leading-[24px] font-[600]">
+              <div className="text-fg-default mb-[8px] text-[20px] leading-[24px] font-[600]">
                 Create new password
               </div>
-              <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+              <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
                 Your password must be at least 8 characters long,
                 <br />
                 and include 1 symbol and 1 number.
@@ -719,39 +661,39 @@ const SignUpPage = () => {
             <div className="flex flex-col gap-[8px]">
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   Minimum 8 characters
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   At least one number
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   At least one symbol
                 </div>
               </div>
               <div className="flex flex-row items-center gap-[4px]">
                 <Check size={16} />
-                <div className="text-text-subtle text-[12px] leading-[15px] font-[400]">
+                <div className="text-fg-subtle text-[12px] leading-[15px] font-[400]">
                   Match password confirm
                 </div>
               </div>
             </div>
-            <div className="text-text-subtle text-[16px] leading-[25.6px] font-[400]">
+            <div className="text-fg-subtle text-[16px] leading-[25.6px] font-[400]">
               Don&apos;t see a code?{" "}
               <button
-                className="text-button-background-primary"
+                className="text-accent-primary"
                 onClick={forgotPassword}
               >
                 Resend to email
               </button>
             </div>
-            <Button className="w-full" size="lg" onClick={resetPassword}>
+            <Button className="w-full" size="lg" onClick={resetPasswordHandler} loading={isLoading}>
               Save
             </Button>
           </div>
@@ -766,10 +708,10 @@ const SignUpPage = () => {
             step === SignUpStep.SignUp && "block",
           )}
         >
-          <div className="text-text-primary mb-[16px] text-[32px] leading-[40px] font-[600]">
+          <div className="text-fg-default mb-[16px] text-[32px] leading-[40px] font-[600]">
             Customize Every Detail
           </div>
-          <div className="text-text-muted-title text-[20px] leading-[24px] font-[500]">
+          <div className="text-fg-muted text-[20px] leading-[24px] font-[500]">
             Personalize LLMs, prompts, character, and plots to create a roleplay
             that&apos;s truly yours.
           </div>

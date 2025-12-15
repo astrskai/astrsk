@@ -4,15 +4,21 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { downloadFile } from "@/shared/lib";
+import {
+  DEFAULT_SHARE_EXPIRATION_DAYS,
+  ExportType,
+} from "@/shared/lib/cloud-upload-helpers";
+import { HARPY_HUB_URL } from "@/shared/lib/supabase-client";
 import { CardService } from "@/app/services/card-service";
 import { SessionService } from "@/app/services/session-service";
 import { characterKeys } from "@/entities/character/api";
 import { scenarioKeys } from "@/entities/scenario/api";
 import { TableName } from "@/db/schema/table-name";
+import { CardType } from "@/entities/card/domain";
 
 interface UseCardActionsOptions {
   /**
-   * Entity type name for toast messages (e.g., "character", "plot")
+   * Entity type name for toast messages (e.g., CardType.Character, CardType.Scenario)
    * Defaults to "card"
    */
   entityType?: string;
@@ -23,6 +29,13 @@ interface DeleteDialogState {
   cardId: string | null;
   title: string;
   usedSessionsCount: number;
+}
+
+interface ExportDialogState {
+  isOpen: boolean;
+  cardId: string | null;
+  title: string;
+  exportType: ExportType;
 }
 
 interface LoadingStates {
@@ -49,7 +62,7 @@ interface LoadingStates {
  *   handleDeleteClick,
  *   handleDeleteConfirm,
  *   closeDeleteDialog
- * } = useCardActions({ entityType: "character" });
+ * } = useCardActions({ entityType: CardType.Character });
  *
  * const actions = [
  *   { icon: Upload, onClick: handleExport(cardId, title), loading: loadingStates[cardId]?.exporting },
@@ -71,48 +84,85 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
     },
   );
 
+  const [exportDialogState, setExportDialogState] = useState<ExportDialogState>(
+    {
+      isOpen: false,
+      cardId: null,
+      title: "",
+      exportType: "file",
+    },
+  );
+
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({});
 
   /**
-   * Export card to PNG file
+   * Open export dialog for card
    */
-  const handleExport = useCallback(
-    (cardId: string, title: string) => async (e: MouseEvent) => {
-      e.stopPropagation();
-
-      setLoadingStates((prev) => ({
-        ...prev,
-        [cardId]: { ...(prev[cardId] ?? {}), exporting: true },
-      }));
-
-      try {
-        const result = await CardService.exportCardToFile.execute({
-          cardId: new UniqueEntityID(cardId),
-          options: { format: "png" },
-        });
-
-        if (result.isFailure) {
-          toastError("Failed to export", { description: result.getError() });
-          return;
-        }
-
-        downloadFile(result.getValue());
-        toastSuccess("Successfully exported!", {
-          description: `"${title}" exported`,
-        });
-      } catch (error) {
-        toastError("Failed to export", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      } finally {
-        setLoadingStates((prev) => ({
-          ...prev,
-          [cardId]: { ...(prev[cardId] ?? {}), exporting: false },
-        }));
-      }
-    },
+  const handleExportClick = useCallback(
+    (cardId: string, title: string, exportType: ExportType = "file") =>
+      (e: MouseEvent) => {
+        e.stopPropagation();
+        // Open dialog - export starts automatically in the dialog
+        setExportDialogState({ isOpen: true, cardId, title, exportType });
+      },
     [],
   );
+
+  /**
+   * Export card (either to file or cloud)
+   * Returns share URL for cloud exports
+   */
+  const handleExportConfirm = useCallback(
+    async (): Promise<string | void> => {
+      const { cardId, title, exportType } = exportDialogState;
+      if (!cardId) return;
+
+      try {
+        if (exportType === "cloud") {
+          // Export to cloud and wait for completion
+          const exportMethod =
+            entityType === CardType.Character
+              ? CardService.exportCharacterToCloud
+              : CardService.exportScenarioToCloud;
+
+          const shareResult = await exportMethod.execute({
+            cardId: new UniqueEntityID(cardId),
+            expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
+          });
+
+          if (shareResult.isFailure) {
+            throw new Error(shareResult.getError());
+          }
+
+          // Return share URL to dialog
+          return shareResult.getValue().shareUrl;
+        } else {
+          // Export to file (PNG)
+          const result = await CardService.exportCardToFile.execute({
+            cardId: new UniqueEntityID(cardId),
+            options: { format: "png" },
+          });
+
+          if (result.isFailure) {
+            throw new Error(result.getError());
+          }
+
+          downloadFile(result.getValue());
+          // Close dialog immediately for file exports
+        }
+      } catch (error) {
+        throw error;
+      }
+    },
+    [exportDialogState, entityType],
+  );
+
+  /**
+   * Close export dialog
+   */
+  const closeExportDialog = useCallback(() => {
+    setExportDialogState((prev) => ({ ...prev, isOpen: false }));
+  }, []);
 
   /**
    * Clone/copy card
@@ -126,7 +176,8 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
         [cardId]: { ...(prev[cardId] ?? {}), copying: true },
       }));
 
-      const entityTypeText = entityType === "plot" ? "scenario" : entityType;
+      const entityTypeText =
+        entityType === CardType.Plot ? "scenario" : entityType;
 
       try {
         const result = await CardService.cloneCard.execute({
@@ -213,7 +264,8 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
       [cardId]: { ...(prev[cardId] ?? {}), deleting: true },
     }));
 
-    const entityTypeText = entityType === "plot" ? "scenario" : entityType;
+    const entityTypeText =
+      entityType === CardType.Plot ? "scenario" : entityType;
 
     try {
       const result = await CardService.deleteCard.execute(
@@ -275,12 +327,15 @@ export function useCardActions(options: UseCardActionsOptions = {}) {
     // State
     loadingStates,
     deleteDialogState,
+    exportDialogState,
 
     // Handlers
-    handleExport,
+    handleExportClick,
+    handleExportConfirm,
     handleCopy,
     handleDeleteClick,
     handleDeleteConfirm,
     closeDeleteDialog,
+    closeExportDialog,
   };
 }

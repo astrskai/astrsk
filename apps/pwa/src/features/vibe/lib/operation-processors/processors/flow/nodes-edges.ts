@@ -63,6 +63,7 @@ async function createNodeEntityWithPredeterminedId(
           color: nodeColor, // Use flow system color assignment
           promptMessages: nodeData.promptMessages || [],
           schemaFields: nodeData.schemaFields || [],
+          flowId: new UniqueEntityID(flowId),
           ...nodeData
         }, new UniqueEntityID(predeterminedId));
         
@@ -78,15 +79,6 @@ async function createNodeEntityWithPredeterminedId(
         return predeterminedId;
         
       case NodeType.DATA_STORE:
-        console.log(`🟢🟢🟢 [NODES-EDGES] DATA STORE NODE CREATION CALLED - OPERATION PROCESSOR PATH`, {
-          nodeId: predeterminedId,
-          flowId: flowId,
-          name: nodeData.name || `Data Store ${predeterminedId}`,
-          hasDataStoreFields: !!(nodeData.dataStoreFields || []).length,
-          color: nodeColor,
-          timestamp: new Date().toISOString()
-        });
-        
         const dataStoreResult = await DataStoreNodeService.createDataStoreNode.execute({
           nodeId: predeterminedId, // Use predetermined UUID from analysis agent
           flowId: flowId,
@@ -242,8 +234,7 @@ export const nodeEdgeProcessors = {
         return { success: true, result: resource };
       } catch (error) {
         // No rollback needed for preview mode since we don't create backend entities
-        console.error('🔥 [NODE-CREATION] Preview creation failed:', error);
-        
+
         return handleCriticalError(error as Error, {
           operation: 'add_node',
           path: 'flow.nodes.append',
@@ -330,13 +321,7 @@ export const nodeEdgeProcessors = {
     description: "Pass-through for edge operations (handled in flow-operations.ts)",
     handler: async (context: OperationContext, match: PathMatchResult): Promise<OperationResult> => {
       // Pass-through: Don't create edges here, just acknowledge the operation
-      console.log(`🔄 [NODES-EDGES] Pass-through for flow.edges operation - handled in flow-operations.ts:`, {
-        path: 'flow.edges',
-        source: context.value?.source,
-        target: context.value?.target,
-        operation: context.operation
-      });
-      
+
       return { success: true, result: context.resource };
     }
   } as PathProcessor,
@@ -345,12 +330,7 @@ export const nodeEdgeProcessors = {
     pattern: pathPatterns.flow.edges.indexed,
     description: "Pass-through for edge removal (handled in flow-operations.ts)",
     handler: async (context: OperationContext, match: PathMatchResult): Promise<OperationResult> => {
-      // Pass-through: Don't remove edges here, just acknowledge the operation
-      console.log(`🔄 [NODES-EDGES] Pass-through for flow.edges[index] operation - handled in flow-operations.ts:`, {
-        path: `flow.edges[${match.groups.group1}]`,
-        operation: context.operation
-      });
-      
+
       return { success: true, result: context.resource };
     }
   } as PathProcessor

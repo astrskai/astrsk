@@ -125,10 +125,18 @@ const ProviderDisplay = ({
 
   return (
     <>
-      <button
+      <div
+        role="button"
+        tabIndex={0}
         onClick={onOpenEdit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onOpenEdit?.();
+          }
+        }}
         className={cn(
-          "group flex w-full items-center justify-between rounded-xl border p-4 text-left transition-all",
+          "group flex w-full cursor-pointer items-center justify-between rounded-xl border p-4 text-left transition-all",
           "border-border-default bg-surface-raised",
           "hover:border-border-muted hover:bg-surface-overlay",
         )}
@@ -160,7 +168,7 @@ const ProviderDisplay = ({
             <h4 className="text-sm font-semibold text-fg-default">
               {providerName}
             </h4>
-            <p className="mt-0.5 max-w-[100px] truncate text-xs text-fg-muted">
+            <p className="mt-0.5 max-w-[100px] truncate text-xs text-fg-subtle">
               {getSubtitle()}
             </p>
           </div>
@@ -198,7 +206,7 @@ const ProviderDisplay = ({
             />
           )}
         </div>
-      </button>
+      </div>
 
       {/* Delete confirmation dialog */}
       <DeleteConfirm

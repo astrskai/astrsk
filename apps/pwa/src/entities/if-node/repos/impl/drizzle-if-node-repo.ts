@@ -9,7 +9,7 @@ import { SaveIfNodeRepo } from "../save-if-node-repo";
 import { LoadIfNodeRepo } from "../load-if-node-repo";
 import { DeleteIfNodeRepo } from "../delete-if-node-repo";
 
-export class DrizzleIfNodeRepo 
+export class DrizzleIfNodeRepo
   implements SaveIfNodeRepo, LoadIfNodeRepo, DeleteIfNodeRepo {
 
   async saveIfNode(ifNode: IfNode): Promise<Result<IfNode>> {
@@ -110,6 +110,10 @@ export class DrizzleIfNodeRepo
       console.error("Failed to get if nodes by flow:", error);
       return Result.fail(`Failed to get if nodes by flow: ${error}`);
     }
+  }
+
+  async getIfNodesByFlowId(flowId: UniqueEntityID): Promise<Result<IfNode[]>> {
+    return this.getAllIfNodesByFlow(flowId.toString());
   }
 
   async deleteIfNode(id: UniqueEntityID): Promise<Result<void>> {

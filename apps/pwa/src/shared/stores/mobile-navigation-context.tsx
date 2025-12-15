@@ -1,17 +1,14 @@
-import { createContext, useContext } from "react";
+import { create } from "zustand";
+import { createSelectors } from "@/shared/lib/zustand-utils";
 
-// Mobile navigation context
-export const MobileNavigationContext = createContext<{
+interface MobileNavigationState {
   isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-} | null>(null);
+  setIsOpen: (isOpen: boolean) => void;
+}
 
-export const useMobileNavigation = () => {
-  const context = useContext(MobileNavigationContext);
-  if (!context) {
-    throw new Error(
-      "useMobileNavigation must be used within MobileNavigationProvider",
-    );
-  }
-  return context;
-};
+const useMobileNavigationStoreBase = create<MobileNavigationState>((set) => ({
+  isOpen: false,
+  setIsOpen: (isOpen) => set({ isOpen }),
+}));
+
+export const useMobileNavigationStore = createSelectors(useMobileNavigationStoreBase);

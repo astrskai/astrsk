@@ -1,42 +1,46 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/shared/ui";
+import { DialogBase } from "@/shared/ui/dialogs/base";
 import { ScrollAreaSimple } from "@/shared/ui/scroll-area-simple";
 import SelectableScenarioItem from "./selectable-scenario-item";
-import { Loader2 } from "lucide-react";
 
 interface SelectScenarioDialogProps {
+  open: boolean;
   onSkip: () => void;
   onAdd: (scenarioIndex: number) => void;
   renderedScenarios: Array<{ name: string; description: string }> | null;
   onRenderScenarios: () => void;
   sessionId: string;
-  plotCardId: string;
+  scenarioCardId: string;
 }
 
 const SelectScenarioDialog = ({
+  open,
   onSkip,
   onAdd,
   renderedScenarios,
   onRenderScenarios,
   sessionId,
-  plotCardId,
+  scenarioCardId,
 }: SelectScenarioDialogProps) => {
   const [selectedScenarioIndex, setSelectedScenarioIndex] = useState<
     number | null
   >(null);
   const [isAddingScenario, setIsAddingScenario] = useState<boolean>(false);
 
-  // Render scenarios on mount and when plotCardId changes
+  // Render first messages on mount and when scenarioCardId changes
   useEffect(() => {
-    onRenderScenarios();
-  }, [plotCardId, onRenderScenarios]);
+    if (open) {
+      onRenderScenarios();
+    }
+  }, [open, scenarioCardId, onRenderScenarios]);
 
-  // Reset selected index when sessionId or plotCardId changes
+  // Reset selected index when sessionId or scenarioCardId changes
   useEffect(() => {
     setSelectedScenarioIndex(null);
-  }, [sessionId, plotCardId]);
+  }, [sessionId, scenarioCardId]);
 
-  // Handle adding scenario
+  // Handle adding first message
   const handleAddScenario = async () => {
     if (selectedScenarioIndex !== null) {
       setIsAddingScenario(true);
@@ -48,81 +52,73 @@ const SelectScenarioDialog = ({
     }
   };
 
-  // Always show scenario selection view directly
-  if (renderedScenarios) {
-    // Scenario selection view
-    return (
-      <div className="bg-surface-raised outline outline-1 outline-border-subtle mx-auto inline-flex w-full max-w-[600px] flex-col items-start justify-start gap-2.5 overflow-hidden rounded-lg p-6">
-        <div className="flex flex-col items-end justify-start gap-6 self-stretch">
-          <div className="flex flex-col items-start justify-start gap-2 self-stretch">
-            <div className="text-fg-default justify-start self-stretch text-2xl font-semibold">
-              First message
-            </div>
-            <div className="text-fg-muted justify-start self-stretch text-base leading-tight font-medium">
-              Select a first message for your new session.
-            </div>
+  const dialogContent = renderedScenarios ? (
+    <ScrollAreaSimple className="flex max-h-[50vh] flex-col items-start justify-start gap-4">
+      {renderedScenarios.length > 0 ? (
+        renderedScenarios.map((scenario, index) => (
+          <SelectableScenarioItem
+            key={index}
+            name={scenario.name}
+            contents={scenario.description}
+            active={selectedScenarioIndex === index}
+            onClick={() => {
+              setSelectedScenarioIndex(index);
+            }}
+          />
+        ))
+      ) : (
+        <div className="inline-flex w-full flex-col items-start justify-start gap-4 self-stretch py-6">
+          <div className="text-fg-muted justify-start self-stretch text-center text-2xl font-bold">
+            No first messages yet
           </div>
-          <div className="relative self-stretch">
-            <ScrollAreaSimple className="flex max-h-[600px] flex-col items-start justify-start gap-4">
-              {renderedScenarios.length > 0 ? (
-                renderedScenarios.map((scenario, index) => (
-                  <SelectableScenarioItem
-                    key={index}
-                    name={scenario.name}
-                    contents={scenario.description}
-                    active={selectedScenarioIndex === index}
-                    onClick={() => {
-                      setSelectedScenarioIndex(index);
-                    }}
-                  />
-                ))
-              ) : (
-                <div className="inline-flex w-full flex-col items-start justify-start gap-4 self-stretch py-6">
-                  <div className="text-fg-muted justify-start self-stretch text-center text-2xl font-bold">
-                    No first messages yet
-                  </div>
-                  <div className="text-fg-muted justify-start self-stretch text-center text-base leading-normal font-medium">
-                    Start by adding a first message to your session.
-                    <br />
-                    First messages set the opening scene for your session <br />
-                    — like a narrator kicking things off.
-                  </div>
-                </div>
-              )}
-            </ScrollAreaSimple>
-          </div>
-          <div className="inline-flex items-center justify-start gap-2">
-            <Button
-              variant="ghost"
-              className="flex h-auto min-w-20 items-center justify-center gap-2 rounded-[20px] px-3 py-2.5"
-              onClick={onSkip}
-            >
-              <div className="text-button-background-primary justify-center text-sm leading-tight font-medium">
-                Skip
-              </div>
-            </Button>
-            <Button
-              disabled={selectedScenarioIndex === null || isAddingScenario}
-              onClick={handleAddScenario}
-              className="bg-button-background-primary inline-flex h-10 min-w-20 flex-col items-center justify-center gap-2.5 rounded-[20px] px-4 py-2.5"
-            >
-              <div className="inline-flex items-center justify-start gap-2">
-                {isAddingScenario && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                )}
-                <div className="text-button-foreground-primary justify-center text-sm leading-tight font-semibold">
-                  Add
-                </div>
-              </div>
-            </Button>
+          <div className="text-fg-muted justify-start self-stretch text-center text-base leading-normal font-medium">
+            Start by adding a first message to your session.
+            <br />
+            First messages set the opening scene for your session <br />
+            — like a narrator kicking things off.
           </div>
         </div>
-      </div>
-    );
-  }
+      )}
+    </ScrollAreaSimple>
+  ) : null;
 
-  // Loading state while scenarios are being rendered
-  return null;
+  const dialogFooter = (
+    <div className="flex items-center justify-end gap-2">
+      <Button
+        variant="ghost"
+        className="flex h-auto min-w-20 items-center justify-center gap-2 rounded-[20px] px-3 py-2.5"
+        onClick={onSkip}
+      >
+        <span className="text-button-background-primary justify-center text-sm leading-tight font-medium">
+          Skip
+        </span>
+      </Button>
+      <Button
+        variant="accent"
+        disabled={selectedScenarioIndex === null || isAddingScenario}
+        onClick={handleAddScenario}
+        loading={isAddingScenario}
+        className="min-w-20 rounded-[20px]"
+      >
+        Add
+      </Button>
+    </div>
+  );
+
+  return (
+    <DialogBase
+      open={open}
+      onOpenChange={() => {
+        // Prevent closing on overlay click or ESC
+        // Only onSkip and onAdd can close the dialog
+      }}
+      title="First message"
+      content={dialogContent}
+      footer={dialogFooter}
+      isShowCloseButton={false}
+      size="lg"
+    />
+  );
 };
 
 export default SelectScenarioDialog;

@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { Flow } from "@/entities/flow/domain/flow";
+import { IconHarpyLogo } from "@/shared/assets/icons";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import WorkflowCard from "@/features/flow/ui/workflow-card";
 import type { CardAction } from "@/features/common/ui";
@@ -10,6 +11,7 @@ import { useFlowActions } from "@/features/flow/model/use-flow-actions";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
 import { FlowExportDialog } from "@/features/flow/ui/flow-export-dialog";
 import { cn } from "@/shared/lib";
+import { ExportType } from "@/shared/lib/cloud-upload-helpers";
 
 interface WorkflowsGridProps {
   flows: Flow[];
@@ -28,6 +30,7 @@ interface WorkflowGridItemProps {
   onExportClick: (
     flowId: string,
     title: string,
+    exportType: ExportType,
   ) => (e: React.MouseEvent) => void;
   onCopy: (flowId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
@@ -52,7 +55,14 @@ function WorkflowGridItem({
     {
       icon: Upload,
       label: "Export",
-      onClick: onExportClick(flowId, flow.props.name),
+      onClick: onExportClick(flowId, flow.props.name, "file"),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: IconHarpyLogo,
+      label: "Harpy",
+      onClick: onExportClick(flowId, flow.props.name, "cloud"),
       disabled: loading.exporting,
       loading: loading.exporting,
     },

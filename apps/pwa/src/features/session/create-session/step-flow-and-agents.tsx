@@ -37,7 +37,7 @@ const AgentListItem = ({
   return (
     <div
       className={cn(
-        "bg-background-surface-3 relative inline-flex flex-col items-start justify-start gap-6 self-stretch rounded p-6",
+        "bg-surface-overlay relative inline-flex flex-col items-start justify-start gap-6 self-stretch rounded p-6",
         !isModelInvalid && "outline-border-light outline outline-offset-[-1px]",
       )}
     >
@@ -45,18 +45,18 @@ const AgentListItem = ({
         <div className="text-text-primary w-12 justify-start text-base font-medium">
           Agent
         </div>
-        <div className="text-text-body justify-start text-base font-normal">
+        <div className="text-neutral-300 justify-start text-base font-normal">
           {agent.props.name}
         </div>
       </div>
       <div className="inline-flex items-center justify-start gap-6">
         {isModelInvalid && (
-          <CircleAlert className="text-status-destructive-light -mr-4 min-h-4 min-w-4" />
+          <CircleAlert className="text-status-error -mr-4 min-h-4 min-w-4" />
         )}
         <div className="text-text-primary w-12 justify-start text-base font-medium">
           Model
         </div>
-        <div className="text-text-body justify-start text-base font-normal">
+        <div className="text-neutral-300 justify-start text-base font-normal">
           {`${apiSourceLabel.get((agent.props.apiSource as ApiSource) ?? "openai")} - ${agent.props.modelName}`}
         </div>
       </div>
@@ -64,7 +64,7 @@ const AgentListItem = ({
         <div
           className={cn(
             "pointer-events-none absolute inset-[-1px] rounded-lg",
-            "outline-status-destructive-light outline-2",
+            "outline-status-error outline-2",
           )}
         />
       )}
@@ -104,7 +104,7 @@ const StepFlowAndAgents = () => {
           <div
             className={cn(
               "text-text-primary text-[16px] leading-[19px] font-[400]",
-              isMobile && "text-text-body text-sm leading-tight font-medium",
+              isMobile && "text-neutral-300 text-sm leading-tight font-medium",
             )}
           >
             Choose a flow (a bundle of prompt preset and AI model) to use for
@@ -142,7 +142,7 @@ const StepFlowAndAgents = () => {
             <div
               className={cn(
                 "text-text-primary text-[16px] leading-[19px] font-[400]",
-                isMobile && "text-text-body text-sm leading-tight font-medium",
+                isMobile && "text-neutral-300 text-sm leading-tight font-medium",
               )}
             >
               Listed below are the agents that make up this flow.

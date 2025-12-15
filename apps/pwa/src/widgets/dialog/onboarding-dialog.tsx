@@ -55,7 +55,7 @@ const OnboardingDialog = () => {
     // Find the session that matches the selected genre
     const targetSessionName = GENRE_SESSION_MAP[selectedGenre];
     const targetSession = sessions.find(
-      (session: Session) => session.title === targetSessionName,
+      (session: Session) => session.name === targetSessionName,
     );
 
     if (targetSession) {
@@ -63,7 +63,7 @@ const OnboardingDialog = () => {
       setOnboardingSelectedSessionId(targetSession.id.toString());
 
       // Select the appropriate session
-      selectSession(targetSession.id, targetSession.title);
+      selectSession(targetSession.id, targetSession.name);
 
       navigate({
         to: "/sessions/$sessionId",
@@ -130,7 +130,7 @@ const OnboardingDialog = () => {
                 <div className="text-text-primary justify-start text-xl leading-relaxed font-semibold">
                   Sakura Blooms, hearts awaken
                 </div>
-                <div className="text-text-subtle text-sm font-semibold">
+                <div className="text-fg-subtle text-sm font-semibold">
                   Romance
                 </div>
               </div>
@@ -154,7 +154,7 @@ const OnboardingDialog = () => {
                 <div className="text-text-primary justify-start text-xl leading-relaxed font-semibold">
                   Dice of Fate
                 </div>
-                <div className="text-text-subtle text-sm font-semibold">
+                <div className="text-fg-subtle text-sm font-semibold">
                   Fantasy TRPG
                 </div>
               </div>

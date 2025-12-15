@@ -1,25 +1,5 @@
-import {
-  closestCenter,
-  DndContext,
-  DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  restrictToParentElement,
-  restrictToVerticalAxis,
-} from "@dnd-kit/modifiers";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { Database } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { toastError, toastSuccess, toastInfo } from "@/shared/ui/toast";
@@ -61,13 +41,9 @@ import { AutoReply, useSessionStore } from "@/shared/stores/session-store";
 import { cn } from "@/shared/lib";
 import { InlineChatStyles } from "./inline-chat-styles";
 
-import {
-  FloatingActionButton,
-  ScrollArea,
-  SvgIcon,
-} from "@/shared/ui";
+import { SvgIcon } from "@/shared/ui";
 import { showErrorDetails } from "@/shared/stores/error-dialog-store";
-import { PlotCard } from "@/entities/card/domain";
+import { ScenarioCard } from "@/entities/card/domain";
 import { DataStoreSavedField, Option } from "@/entities/turn/domain/option";
 import { Turn } from "@/entities/turn/domain/turn";
 import { PlaceholderType } from "@/entities/turn/domain/placeholder-type";
@@ -78,9 +54,9 @@ import delay from "lodash-es/delay";
 import { fetchCharacterCard } from "@/entities/card/api/query-factory";
 
 import UserInputs from "./user-inputs";
-import { SortableDataSchemaFieldItem } from "./message-components";
 import { SessionMessages } from "./session-messages";
 import SelectScenarioDialog from "./select-scenario-dialog";
+import SessionDataSidebar from "./session-data-sidebar";
 
 const SessionContent = ({
   onAddPlotCard,
@@ -204,6 +180,7 @@ const SessionContent = ({
     async (
       characterCardId: UniqueEntityID,
       regenerateMessageId?: UniqueEntityID,
+      triggerType?: string,
     ) => {
       // Check session
       if (!session) {
@@ -260,14 +237,16 @@ const SessionContent = ({
           // Get message from database
           streamingMessage = await fetchTurn(regenerateMessageId);
         } else {
-          // Get character name
+          // Get character name - use "Narrator" for scenario triggers
           const character = await fetchCharacterCard(characterCardId);
+          const characterName =
+            triggerType === "scenario" ? "Narrator" : character.props.name;
 
           // Create new empty message
           const messageOrError = Turn.create({
             sessionId: session.id,
             characterCardId: characterCardId,
-            characterName: character.props.name,
+            characterName: characterName,
             options: [],
           });
           if (messageOrError.isFailure) {
@@ -306,6 +285,11 @@ const SessionContent = ({
         setStreamingMessageId(streamingMessage.id);
         scrollToBottom({ behavior: "smooth" });
 
+        // Validate flow exists before executing
+        if (!session.props.flowId) {
+          throw new Error("Cannot play session without a flow. Please assign a flow to this session.");
+        }
+
         // Execute flow
         refStopGenerate.current = new AbortController();
         const flowResult = executeFlow({
@@ -314,6 +298,7 @@ const SessionContent = ({
           characterCardId: characterCardId,
           regenerateMessageId: regenerateMessageId,
           stopSignalByUser: refStopGenerate.current.signal,
+          triggerType: triggerType,
         });
 
         // Stream response
@@ -595,19 +580,22 @@ const SessionContent = ({
     [session, saveSessionMutation],
   );
 
-  // Add plot card modal
-  const [plotCard] = useCard<PlotCard>(session?.plotCard?.id);
+  // Add scenario card modal
+  const [scenarioCard] = useCard<ScenarioCard>(session?.plotCard?.id);
   const messageCount = session?.turnIds.length ?? 0;
-  const plotCardId = session?.plotCard?.id.toString() ?? "";
+  const scenarioCardId = session?.plotCard?.id.toString() ?? "";
   const sessionId = session?.id.toString() ?? "";
 
   // Select scenario modal
   const [isOpenSelectScenarioModal, setIsOpenSelectScenarioModal] =
     useState(false);
-  const plotCardScenarioCount = plotCard?.props.scenarios?.length ?? 0;
+  const scenarioCardFirstMessageCount =
+    (scenarioCard instanceof ScenarioCard
+      ? scenarioCard.props.firstMessages?.length
+      : 0) ?? 0;
   useEffect(() => {
     // Check scenario count
-    if (plotCardScenarioCount === 0) {
+    if (scenarioCardFirstMessageCount === 0) {
       setIsOpenSelectScenarioModal(false);
       return;
     }
@@ -620,7 +608,7 @@ const SessionContent = ({
 
     // Show select scenario modal
     setIsOpenSelectScenarioModal(true);
-  }, [messageCount, plotCardScenarioCount, sessionId, plotCardId]);
+  }, [messageCount, scenarioCardFirstMessageCount, sessionId, scenarioCardId]);
 
   // Render scenario
   const [renderedScenarios, setRenderedScenarios] = useState<
@@ -631,17 +619,27 @@ const SessionContent = ({
   >([]);
   const sessionUserCardId = session?.userCharacterCardId?.toString() ?? "";
   const sessionAllCards = JSON.stringify(session?.allCards);
-  const plotCardScenario = JSON.stringify(plotCard?.props.scenarios);
+  const scenarioCardFirstMessages = JSON.stringify(
+    scenarioCard instanceof ScenarioCard
+      ? scenarioCard.props.firstMessages
+      : undefined,
+  );
   const renderScenarios = useCallback(async () => {
     logger.debug("[Hook] useEffect: Render scenario");
 
-    // Check session and plot card
-    if (!session || !plotCard) {
+    // Check session and scenario card
+    if (!session || !scenarioCard) {
       return;
     }
 
-    // If no scenarios, set empty array
-    if (!plotCard.props.scenarios || plotCard.props.scenarios.length === 0) {
+    // Get first messages
+    const firstMessages =
+      scenarioCard instanceof ScenarioCard
+        ? scenarioCard.props.firstMessages
+        : undefined;
+
+    // If no first messages, set empty array
+    if (!firstMessages || firstMessages.length === 0) {
       setRenderedScenarios([]);
       return;
     }
@@ -678,23 +676,23 @@ const SessionContent = ({
       };
     }
 
-    // Render scenarios
+    // Render first messages
     const renderedScenarios = await Promise.all(
-      plotCard.props.scenarios.map(
-        async (scenario: { name: string; description: string }) => {
-          const renderedScenario = await TemplateRenderer.render(
-            scenario.description,
+      firstMessages.map(
+        async (message: { name: string; description: string }) => {
+          const renderedMessage = await TemplateRenderer.render(
+            message.description,
             context,
           );
           return {
-            name: scenario.name,
-            description: renderedScenario,
+            name: message.name,
+            description: renderedMessage,
           };
         },
       ),
     );
     setRenderedScenarios(renderedScenarios);
-  }, [sessionUserCardId, sessionAllCards, plotCardScenario]);
+  }, [sessionUserCardId, sessionAllCards, scenarioCardFirstMessages]);
 
   // Select scenario - no longer needed as state is managed within SelectScenarioModal
   const addScenario = useCallback(
@@ -846,8 +844,11 @@ const SessionContent = ({
     [generateCharacterMessage],
   );
 
-  // Session data
-  const [isOpenSessionData, setIsOpenSessionData] = useState(false);
+  // Session data panel state from store (per-session)
+  const dataPanelOpen = useSessionStore.use.dataPanelOpen();
+  const setDataPanelOpen = useSessionStore.use.setDataPanelOpen();
+  const sessionIdStr = selectedSessionId?.toString() ?? "";
+  const isOpenSessionData = sessionIdStr ? (dataPanelOpen[sessionIdStr] ?? false) : false;
 
   // Session onboarding
   const sessionOnboardingSteps = useAppStore.use.sessionOnboardingSteps();
@@ -1268,84 +1269,6 @@ const SessionContent = ({
     ];
   }, [flow?.props.dataStoreSchema?.fields, session?.dataSchemaOrder]);
 
-  // DnD sensors for data schema reordering
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
-  // Handle drag end for data schema field reordering
-  const handleDragEnd = useCallback(
-    async (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id || !session) {
-        return;
-      }
-
-      const oldIndex = sortedDataSchemaFields.findIndex(
-        (f) => f.name === active.id,
-      );
-      const newIndex = sortedDataSchemaFields.findIndex(
-        (f) => f.name === over.id,
-      );
-
-      if (oldIndex === -1 || newIndex === -1) {
-        return;
-      }
-
-      const reorderedFields = arrayMove(
-        sortedDataSchemaFields,
-        oldIndex,
-        newIndex,
-      );
-      const newOrder = reorderedFields.map((f) => f.name);
-
-      try {
-        session.setDataSchemaOrder(newOrder);
-        saveSessionMutation.mutate({
-          session,
-        });
-      } catch (error) {
-        logger.error("Failed to update data schema order", error);
-        toastError("Failed to update field order");
-      }
-    },
-    [sortedDataSchemaFields, session, saveSessionMutation],
-  );
-
-  // Update last turn data store
-  const updateDataStore = useCallback(
-    async (name: string, value: string) => {
-      if (!lastTurn) {
-        logger.error("No message");
-        toastError("No message");
-        return;
-      }
-
-      try {
-        // Find the field to update
-        const updatedDataStore = lastTurn.dataStore.map(
-          (field: DataStoreSavedField) =>
-            field.name === name ? { ...field, value } : field,
-        );
-
-        // Update the turn with new dataStore
-        lastTurn.setDataStore(updatedDataStore);
-
-        // Save to database
-        updateTurnMutation.mutate({
-          turn: lastTurn,
-        });
-      } catch (error) {
-        logger.error("Failed to update data store", error);
-        toastError("Failed to update data store field");
-      }
-    },
-    [updateTurnMutation, lastTurn],
-  );
-
   if (!selectedSessionId) {
     return null;
   }
@@ -1363,11 +1286,11 @@ const SessionContent = ({
         id={`session-${session.id}`}
         className={cn(
           "session-scrollbar relative z-10 h-full w-full overflow-auto contain-strict",
-          "pr-0 transition-[padding-right] duration-200",
-          // Desktop: data schema panel
-          isDataSchemaUsed && isOpenSessionData && "md:pr-[320px]",
+          "pl-0 transition-[padding-left] duration-200",
+          // Desktop: data schema panel on left
+          isDataSchemaUsed && isOpenSessionData && "md:pl-[384px]",
           // Mobile: no side panel (data schema hidden)
-          isDataSchemaUsed && isOpenSessionData && "max-md:pr-0",
+          isDataSchemaUsed && isOpenSessionData && "max-md:pl-0",
           // Bottom padding to prevent UserInputs overlap
           // Desktop: UserInputs height (~220px) + topbar height (40px)
           "pb-[250px]",
@@ -1416,35 +1339,23 @@ const SessionContent = ({
           </div>
         </div>
 
-        {/* Select Scenario Modal - absolute on mobile (inside scroll area), fixed on desktop (full viewport) */}
-        {isOpenSelectScenarioModal && (
-          <div
-            className={cn(
-              "z-[100] overflow-y-auto bg-black/50 px-[16px] py-[16px]",
-              // Mobile: absolute positioning inside scroll area (respects header)
-              "absolute inset-0",
-              // Desktop: fixed positioning (full viewport overlay)
-              "md:fixed md:inset-0",
-            )}
-          >
-            <div className="flex min-h-full items-center justify-center">
-              <SelectScenarioDialog
-                onSkip={() => {
-                  setIsOpenSelectScenarioModal(false);
-                }}
-                onAdd={addScenario}
-                renderedScenarios={renderedScenarios}
-                onRenderScenarios={renderScenarios}
-                sessionId={sessionId}
-                plotCardId={plotCardId}
-              />
-            </div>
-          </div>
-        )}
+        {/* Select Scenario Dialog */}
+        <SelectScenarioDialog
+          open={isOpenSelectScenarioModal}
+          onSkip={() => {
+            setIsOpenSelectScenarioModal(false);
+          }}
+          onAdd={addScenario}
+          renderedScenarios={renderedScenarios}
+          onRenderScenarios={renderScenarios}
+          sessionId={sessionId}
+          scenarioCardId={scenarioCardId}
+        />
       </div>
 
       {!isOpenSelectScenarioModal && (
         <UserInputs
+          sessionId={session.id}
           userCharacterCardId={session.userCharacterCardId}
           aiCharacterCardIds={session.aiCharacterCardIds}
           generateCharacterMessage={generateCharacterMessage}
@@ -1465,106 +1376,39 @@ const SessionContent = ({
           isGeneratingGlobalImage={isGeneratingGlobalImage}
           isGeneratingGlobalVideo={isGeneratingGlobalVideo}
           globalVideoStatus={globalVideoStatus}
+          isDataPanelOpen={isOpenSessionData}
+          onToggleDataPanel={() => {
+            if (sessionIdStr) {
+              setDataPanelOpen(sessionIdStr, !isOpenSessionData);
+            }
+            setSessionOnboardingStep("sessionData", true);
+          }}
+          showDataPanelButton={isDataSchemaUsed}
         />
       )}
 
-      {/* Data schema toggle & list - Desktop only */}
-      <div
-        className={cn(
-          "absolute top-[72px] right-[32px] bottom-[80px] flex flex-col items-end gap-[16px]",
-          !isDataSchemaUsed && "hidden",
-          // Mobile: hide data schema panel completely
-          "max-md:hidden",
-        )}
-      >
-        <FloatingActionButton
-          icon={<Database size={24} />}
-          label="Session data"
-          position="top-right"
-          className="top-0 right-0"
-          openned={isOpenSessionData}
-          onClick={() => {
-            setIsOpenSessionData((isOpen) => !isOpen);
+      {/* Data schema sidebar - Desktop only */}
+      {isDataSchemaUsed && (
+        <SessionDataSidebar
+          session={session}
+          isOpen={isOpenSessionData}
+          onToggle={() => {
+            // Toggle data panel in store
+            if (sessionIdStr) {
+              setDataPanelOpen(sessionIdStr, !isOpenSessionData);
+            }
             // Complete the entire onboarding if on sessionData step
-            console.log(
-              "shouldShowSessionDataTooltip",
-              shouldShowSessionDataTooltip,
-            );
             setSessionOnboardingStep("sessionData", true);
           }}
-          onboarding={shouldShowSessionDataTooltip}
-          onboardingTooltip={
-            shouldShowSessionDataTooltip
-              ? "Click to view and edit session stats"
-              : undefined
-          }
-          tooltipClassName="!top-[0px] !right-[50px]"
+          sortedDataSchemaFields={sortedDataSchemaFields}
+          isInitialDataStore={isInitialDataStore}
+          lastTurnDataStore={lastTurnDataStore}
+          lastTurn={lastTurn}
+          streamingMessageId={streamingMessageId}
+          streamingAgentName={streamingAgentName}
+          streamingModelName={streamingModelName}
         />
-        <div
-          className={cn(
-            "relative z-10 mt-[48px] w-[320px] rounded-[12px]",
-            "border-text-primary/10 border bg-[#3b3b3b]/50 backdrop-blur-xl",
-            "flex flex-col overflow-hidden",
-            "transition-opacity duration-200",
-            isOpenSessionData
-              ? "visible opacity-100"
-              : "pointer-events-none invisible opacity-0",
-          )}
-        >
-          <div className="border-text-primary/10 text-fg-default flex h-[72px] shrink-0 flex-row items-center border-b-1 p-[16px]">
-            {streamingMessageId ? (
-              <>
-                <SvgIcon
-                  name="astrsk_symbol"
-                  size={40}
-                  className="mr-[2px] animate-spin"
-                />
-                <div className="mr-[4px] text-[16px] leading-[25.6px] font-[400]">
-                  {streamingAgentName}
-                </div>
-                <div className="text-[16px] leading-[25.6px] font-[600]">
-                  {streamingModelName}
-                </div>
-              </>
-            ) : (
-              <div className="text-[16px] leading-[25.6px] font-[600]">
-                Session data
-              </div>
-            )}
-          </div>
-          <div className="relative overflow-hidden">
-            <ScrollArea className="h-full w-full">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-                modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-              >
-                <SortableContext
-                  items={sortedDataSchemaFields.map((field) => field.name)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {sortedDataSchemaFields.map((field) => (
-                    <SortableDataSchemaFieldItem
-                      key={field.name}
-                      name={field.name}
-                      type={field.type}
-                      value={
-                        isInitialDataStore
-                          ? field.initialValue
-                          : field.name in lastTurnDataStore
-                            ? lastTurnDataStore[field.name]
-                            : "--"
-                      }
-                      onEdit={isInitialDataStore ? undefined : updateDataStore}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
-            </ScrollArea>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { ApiService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
-import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { ApiConnection, ApiSource } from "@/entities/api/domain";
+import { useModelStore } from "@/shared/stores/model-store";
 
 export async function initStores(
   onProgress: (step: string, status: "start" | "success" | "warning" | "error", error?: string) => void,
@@ -18,17 +18,6 @@ export async function initStores(
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Failed to list API connections:", error);
     onProgress?.("api-connections", "error", errorMessage);
-    // Continue with background initialization even if provider setup fails
-    onProgress?.("backgrounds", "start");
-    try {
-      await fetchBackgrounds();
-      onProgress?.("backgrounds", "success");
-    } catch (bgError) {
-      const bgErrorMessage =
-        bgError instanceof Error ? bgError.message : String(bgError);
-      console.error("Failed to fetch backgrounds:", bgError);
-      onProgress?.("backgrounds", "error", bgErrorMessage);
-    }
     return;
   }
 
@@ -84,11 +73,71 @@ export async function initStores(
         onProgress?.("free-provider", "error", errorMessage);
       } else {
         onProgress?.("free-provider", "success");
+
+        // Set default models if not already configured
+        onProgress?.("default-models", "start");
+        try {
+          const modelStore = useModelStore.getState();
+
+          // Only set defaults if not already configured
+          if (!modelStore.defaultLiteModel || !modelStore.defaultStrongModel) {
+            // Get available models from the provider
+            const modelsResult = await ApiService.listApiModel.execute({
+              apiConnectionId: astrskaiProvider.id,
+            });
+
+            if (modelsResult.isSuccess) {
+              const models = modelsResult.getValue();
+
+              // Find Gemini 2.5 Flash for lite model (if not already set)
+              if (!modelStore.defaultLiteModel) {
+                const geminiFlash = models.find(
+                  (m) => m.id === "openai-compatible:google/gemini-2.5-flash"
+                );
+                if (geminiFlash) {
+                  modelStore.setDefaultLiteModel({
+                    apiConnectionId: astrskaiProvider.id.toString(),
+                    apiSource: ApiSource.AstrskAi,
+                    modelId: geminiFlash.id,
+                    modelName: geminiFlash.name,
+                  });
+                }
+              }
+
+              // Find DeepSeek for strong model (if not already set)
+              if (!modelStore.defaultStrongModel) {
+                const deepseek = models.find(
+                  (m) => m.id === "openai-compatible:deepseek/deepseek-chat"
+                );
+                if (deepseek) {
+                  modelStore.setDefaultStrongModel({
+                    apiConnectionId: astrskaiProvider.id.toString(),
+                    apiSource: ApiSource.AstrskAi,
+                    modelId: deepseek.id,
+                    modelName: deepseek.name,
+                  });
+                }
+              }
+
+              onProgress?.("default-models", "success");
+            } else {
+              onProgress?.("default-models", "warning", "Could not fetch models from provider");
+            }
+          } else {
+            // Already configured, skip
+            onProgress?.("default-models", "success");
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error("Failed to set default models:", error);
+          onProgress?.("default-models", "warning", errorMessage);
+        }
       }
     }
   } else {
     // Mark as success when skipped (already exists or env vars not set)
     onProgress?.("free-provider", "success");
+    onProgress?.("default-models", "success");
   }
 
   // Init default sessions - only for new users
@@ -108,18 +157,6 @@ export async function initStores(
     // Skip default-sessions since we couldn't check existing sessions
     onProgress?.("default-sessions", "start");
     onProgress?.("default-sessions", "error", "Skipped due to session check failure");
-
-    // Continue with background initialization even if session setup fails
-    onProgress?.("backgrounds", "start");
-    try {
-      await fetchBackgrounds();
-      onProgress?.("backgrounds", "success");
-    } catch (bgError) {
-      const bgErrorMessage =
-        bgError instanceof Error ? bgError.message : String(bgError);
-      console.error("Failed to fetch backgrounds:", bgError);
-      onProgress?.("backgrounds", "error", bgErrorMessage);
-    }
     return;
   }
 
@@ -198,14 +235,6 @@ export async function initStores(
     onProgress?.("default-sessions", "success");
   }
 
-  // Initialize backgrounds
-  onProgress?.("backgrounds", "start");
-  try {
-    await fetchBackgrounds();
-    onProgress?.("backgrounds", "success");
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Failed to fetch backgrounds:", error);
-    onProgress?.("backgrounds", "error", errorMessage);
-  }
+  // Note: Background initialization removed - backgrounds are now fetched via TanStack Query
+  // when a session is opened. Default backgrounds are static constants that don't need initialization.
 }

@@ -15,7 +15,8 @@ import {
   EmptyState,
 } from "@/shared/ui";
 import { Flow } from "@/entities/flow/domain/flow";
-import { flowQueries } from "@/entities/flow/api";
+import { flowQueries  } from "@/entities/flow/api";
+import { useCreateFlow } from "@/entities/flow/api/mutations/flow-mutations";
 import { FlowService } from "@/app/services/flow-service";
 import { logger } from "@/shared/lib";
 import { useResourceImport } from "@/shared/hooks/use-resource-import";
@@ -58,17 +59,14 @@ export function WorkflowsPage() {
   const { data: workflows = [], isLoading: isLoadingFlows } = useQuery(
     flowQueries.list({ keyword, sort: sortOption }),
   );
+  const createFlowMutation = useCreateFlow();
 
   // 4. Memoized callbacks - functions passed as props to child components
   const handleCreateFlow = useCallback(
     async (props: Partial<Flow["props"]>) => {
       try {
-        // Create flow using the domain use case
-        const flowOrError = await FlowService.createFlow.execute();
-        if (flowOrError.isFailure) {
-          throw new Error(flowOrError.getError());
-        }
-        const flow = flowOrError.getValue();
+        // Create flow using the mutation hook (auto-invalidates flow list)
+        const flow = await createFlowMutation.mutateAsync();
 
         // Update the flow name if provided and different from default
         if (props.name && props.name !== "New Flow") {
@@ -100,7 +98,7 @@ export function WorkflowsPage() {
         });
       }
     },
-    [navigate],
+    [navigate, createFlowMutation],
   );
 
   /**

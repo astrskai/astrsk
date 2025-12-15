@@ -1,211 +1,248 @@
-import { useState, useMemo, useCallback } from "react";
-import GridLayout, { Layout, WidthProvider } from "react-grid-layout";
-import { toastError, toastSuccess } from "@/shared/ui/toast";
-import { RotateCcw } from "lucide-react";
-
-const ResponsiveGridLayout = WidthProvider(GridLayout);
+import { useCallback } from "react";
+import { ChartNoAxesColumnIncreasing, PanelLeftClose, X } from "lucide-react";
+import { toastError } from "@/shared/ui/toast";
 
 import { cn } from "@/shared/lib";
+import { logger } from "@/shared/lib/logger";
 import { DataStoreSchemaField } from "@/entities/flow/domain";
 import { Session } from "@/entities/session/domain";
+import { Turn } from "@/entities/turn/domain/turn";
+import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { useSaveSession } from "@/entities/session/api";
-import "./session-data-sidebar.css";
+import { useUpdateTurn } from "@/entities/turn/api/turn-queries";
+import { UniqueEntityID } from "@/shared/domain";
+import { SvgIcon, ScrollArea } from "@/shared/ui";
+import { SortableDataSchemaFieldItem } from "./message-components";
+
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 interface SessionDataSidebarProps {
   session: Session;
   isOpen: boolean;
+  onToggle: () => void;
   sortedDataSchemaFields: DataStoreSchemaField[];
   isInitialDataStore: boolean;
   lastTurnDataStore: Record<string, string>;
-  savedLayout?: Array<{
-    i: string;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  }>;
+  lastTurn?: Turn;
+  streamingMessageId?: UniqueEntityID | null;
+  streamingAgentName?: string;
+  streamingModelName?: string;
 }
 
 export default function SessionDataSidebar({
   session,
   isOpen,
+  onToggle,
   sortedDataSchemaFields,
   isInitialDataStore,
   lastTurnDataStore,
-  savedLayout,
+  lastTurn,
+  streamingMessageId,
+  streamingAgentName,
+  streamingModelName,
 }: SessionDataSidebarProps) {
   const saveSessionMutation = useSaveSession();
+  const updateTurnMutation = useUpdateTurn();
 
-  // Generate default layout: 2-column grid
-  const defaultLayout = useMemo<Layout[]>(
-    () =>
-      sortedDataSchemaFields.map((field, index) => ({
-        i: field.name, // unique ID
-        x: (index % 2) * 6, // 2-column grid (0 or 6)
-        y: Math.floor(index / 2) * 3, // row position
-        w: 6, // half width (12 cols total)
-        h: 3, // 3 rows tall
-        minW: 4, // minimum 4 columns
-        minH: 2, // minimum 2 rows
-      })),
-    [sortedDataSchemaFields],
+  // DnD sensors for data schema reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
-  // Use saved layout if available, otherwise use default
-  const initialLayout = useMemo<Layout[]>(
-    () => savedLayout || defaultLayout,
-    [savedLayout, defaultLayout],
-  );
+  // Handle drag end for data schema field reordering
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id || !session) {
+        return;
+      }
 
-  const [layout, setLayout] = useState<Layout[]>(initialLayout);
+      const oldIndex = sortedDataSchemaFields.findIndex(
+        (f) => f.name === active.id,
+      );
+      const newIndex = sortedDataSchemaFields.findIndex(
+        (f) => f.name === over.id,
+      );
 
-  // Update layout state during drag/resize (no DB save)
-  const handleLayoutChange = useCallback((newLayout: Layout[]) => {
-    setLayout(newLayout);
-  }, []);
+      if (oldIndex === -1 || newIndex === -1) {
+        return;
+      }
 
-  // Save layout to database only when drag stops
-  const handleDragStop = useCallback(
-    async (newLayout: Layout[]) => {
+      const reorderedFields = arrayMove(
+        sortedDataSchemaFields,
+        oldIndex,
+        newIndex,
+      );
+      const newOrder = reorderedFields.map((f) => f.name);
+
       try {
-        // Use session from props (avoid race condition)
-        session.setWidgetLayout(
-          newLayout.map((item) => ({
-            i: item.i,
-            x: item.x,
-            y: item.y,
-            w: item.w,
-            h: item.h,
-          })),
-        );
-
-        // Save to backend
-        await saveSessionMutation.mutateAsync({ session });
-      } catch (error) {
-        toastError("Failed to save layout", {
-          description: error instanceof Error ? error.message : "Unknown error",
+        session.setDataSchemaOrder(newOrder);
+        saveSessionMutation.mutate({
+          session,
         });
+      } catch (error) {
+        logger.error("Failed to update data schema order", error);
+        toastError("Failed to update field order");
       }
     },
-    [session, saveSessionMutation],
+    [sortedDataSchemaFields, session, saveSessionMutation],
   );
 
-  // Save layout to database only when resize stops
-  const handleResizeStop = handleDragStop;
+  // Update last turn data store
+  const updateDataStore = useCallback(
+    async (name: string, value: string) => {
+      if (!lastTurn) {
+        logger.error("No message");
+        toastError("No message");
+        return;
+      }
 
-  // Reset layout to default
-  const handleResetLayout = useCallback(async () => {
-    try {
-      setLayout(defaultLayout);
+      try {
+        // Find the field to update
+        const updatedDataStore = lastTurn.dataStore.map(
+          (field: DataStoreSavedField) =>
+            field.name === name ? { ...field, value } : field,
+        );
 
-      // Clear widget layout using session from props (undefined = use default)
-      session.setWidgetLayout(undefined);
+        // Update the turn with new dataStore
+        lastTurn.setDataStore(updatedDataStore);
 
-      // Save to backend
-      await saveSessionMutation.mutateAsync({ session });
-
-      toastSuccess("Layout reset to default");
-    } catch (error) {
-      toastError("Failed to reset layout", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  }, [session, defaultLayout, saveSessionMutation]);
+        // Save to database
+        updateTurnMutation.mutate({
+          turn: lastTurn,
+        });
+      } catch (error) {
+        logger.error("Failed to update data store", error);
+        toastError("Failed to update data store field");
+      }
+    },
+    [updateTurnMutation, lastTurn],
+  );
 
   return (
-    <aside
-      className={cn(
-        "w-full max-w-dvw overflow-hidden bg-surface-raised/30 backdrop-blur-md transition-all duration-300 ease-in-out md:w-80 md:bg-transparent md:backdrop-blur-none",
-        // Mobile: fixed overlay with slide animation + bottom offset for ChatInput
-        // Don't use h-dvh - let top/bottom define height
-        "fixed top-10 left-0 z-10",
-        "bottom-27", // Reserve space for ChatInput (108px = 27 * 4px)
-        isOpen ? "translate-x-0" : "-translate-x-full",
-        // Desktop: relative layout with opacity + max-width animation
-        "md:relative md:top-0 md:bottom-auto md:h-dvh md:translate-x-0 md:pt-28",
-        isOpen
-          ? "md:max-w-80 md:opacity-100"
-          : "md:max-w-0 md:overflow-hidden md:opacity-0",
-      )}
-    >
-      <div className="h-full overflow-y-auto px-4">
-        {/* Reset Layout Button */}
-        <div className="sticky top-0 z-20 mb-2 hidden justify-end bg-transparent pt-2 pb-2">
+    <>
+      {/* Floating Toggle Button - visible when sidebar is closed, same style as settings button */}
+      <button
+        onClick={onToggle}
+        className={cn(
+          "absolute z-40 left-4 top-4",
+          "flex h-10 w-10 cursor-pointer items-center justify-center rounded-full",
+          "border border-border-subtle bg-surface",
+          "text-fg-muted hover:text-fg-default hover:bg-surface-raised",
+          // Desktop only
+          "max-md:hidden",
+          // Hide when sidebar is open - no animation
+          isOpen && "hidden",
+        )}
+        title="Open session data panel"
+        aria-label="Open session data panel"
+      >
+        <ChartNoAxesColumnIncreasing className="h-5 w-5" />
+      </button>
+
+      {/* Sidebar - Left side within session container */}
+      <aside
+        className={cn(
+          "bg-surface",
+          "transform transition-transform duration-300 ease-in-out",
+          "flex flex-col",
+          // Desktop: fixed width sidebar on left
+          "md:absolute md:top-0 md:bottom-0 md:left-0 md:z-30 md:w-96",
+          "md:shadow-[8px_0_24px_-4px_rgba(0,0,0,0.5)]",
+          isOpen ? "md:translate-x-0" : "md:-translate-x-full",
+          // Mobile: full screen overlay from bottom
+          "max-md:fixed max-md:inset-0 max-md:z-50",
+          isOpen ? "max-md:translate-y-0" : "max-md:translate-y-full",
+        )}
+      >
+        {/* Sidebar Header - matches settings sidebar style */}
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-surface p-4">
+          {streamingMessageId ? (
+            <div className="flex items-center gap-2 flex-1 overflow-hidden">
+              <SvgIcon
+                name="astrsk_symbol"
+                size={24}
+                className="animate-spin flex-shrink-0"
+              />
+              <div className="truncate text-sm">
+                <span className="text-fg-muted">{streamingAgentName}</span>
+                <span className="font-semibold text-fg-default ml-1">{streamingModelName}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1" />
+          )}
+
+          {/* Collapse Button - on right side */}
           <button
-            type="button"
-            onClick={handleResetLayout}
-            className="flex items-center gap-1 rounded-md border border-border-subtle bg-surface-raised/80 px-2 py-1 text-xs text-fg-subtle transition-colors hover:border-fg-subtle hover:bg-hover/80 hover:text-fg-muted"
-            aria-label="Reset layout to default"
+            onClick={onToggle}
+            className="cursor-pointer text-fg-subtle hover:text-fg-default"
+            title="Close panel"
+            aria-label="Close data panel"
           >
-            <RotateCcw className="h-3 w-3" />
-            Reset Layout
+            {/* Desktop: Panel close icon, Mobile: X icon */}
+            <PanelLeftClose className="h-5 w-5 hidden md:block" />
+            <X className="h-5 w-5 md:hidden" />
           </button>
         </div>
 
-        <ResponsiveGridLayout
-          layout={layout}
-          onLayoutChange={handleLayoutChange}
-          onDragStop={handleDragStop}
-          onResizeStop={handleResizeStop}
-          cols={12} // 12-column grid system
-          rowHeight={60} // each row is 60px
-          compactType="vertical" // automatic vertical compaction (magnetic)
-          preventCollision={false} // allow overlapping during drag
-          isDraggable={true} // enable drag
-          isResizable={true} // enable resize
-          margin={[8, 8]} // gap between widgets (x, y)
-          draggableHandle=".drag-handle" // only drag from handle
-        >
-          {sortedDataSchemaFields.map((field) => (
-            <div
-              key={field.name}
-              className="group relative flex h-full w-full flex-col overflow-hidden rounded-md border border-fg-default/20 bg-fg-default/20 backdrop-blur-lg transition-shadow hover:shadow-lg"
+        {/* Sidebar Content - Scrollable single column list */}
+        <div className="flex-1 overflow-hidden relative">
+          <ScrollArea className="h-full w-full">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+              modifiers={[restrictToVerticalAxis, restrictToParentElement]}
             >
-              {/* Header: Field name + Drag handle */}
-              <div className="flex items-center border-b border-fg-default/10 bg-fg-default/5">
-                {/* Drag handle - left side */}
-                <div className="drag-handle flex cursor-move items-center justify-center px-1 py-2 opacity-0 transition-opacity group-hover:opacity-100">
-                  <div className="text-xs text-fg-default">⋮⋮</div>
-                </div>
-
-                {/* Field name - always visible */}
-                <div className="flex-1 truncate px-2 py-2 text-center text-sm font-semibold break-words text-fg-default">
-                  {field.name}
-                </div>
-
-                {/* Spacer for symmetry */}
-                <div className="w-5"></div>
-              </div>
-
-              {/* Content area: Value only */}
-              <div className="flex flex-1 items-center justify-center overflow-auto p-3">
-                <div className="w-full text-center text-base font-semibold break-words text-fg-default">
-                  {isInitialDataStore
-                    ? field.initialValue
-                    : field.name in lastTurnDataStore
-                      ? lastTurnDataStore[field.name]
-                      : "--"}
-                </div>
-              </div>
-
-              {/* Resize handle indicator (visual only) */}
-              <div className="absolute right-0 bottom-0 h-4 w-4 cursor-se-resize opacity-0 transition-opacity group-hover:opacity-50">
-                <svg
-                  viewBox="0 0 16 16"
-                  className="h-full w-full text-fg-subtle"
-                >
-                  <path
-                    d="M15 15L15 10M15 15L10 15M15 15L11 11"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
+              <SortableContext
+                items={sortedDataSchemaFields.map((field) => field.name)}
+                strategy={verticalListSortingStrategy}
+              >
+                {sortedDataSchemaFields.map((field) => (
+                  <SortableDataSchemaFieldItem
+                    key={field.name}
+                    name={field.name}
+                    type={field.type}
+                    value={
+                      isInitialDataStore
+                        ? field.initialValue
+                        : field.name in lastTurnDataStore
+                          ? lastTurnDataStore[field.name]
+                          : "--"
+                    }
+                    onEdit={undefined}
                   />
-                </svg>
-              </div>
-            </div>
-          ))}
-        </ResponsiveGridLayout>
-      </div>
-    </aside>
+                ))}
+              </SortableContext>
+            </DndContext>
+          </ScrollArea>
+
+          {/* Bottom Fade Gradient for Scroll hint */}
+          <div className="h-6 w-full bg-gradient-to-t from-surface to-transparent pointer-events-none absolute bottom-0 left-0 z-10" />
+        </div>
+      </aside>
+    </>
   );
 }

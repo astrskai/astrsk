@@ -31,10 +31,6 @@ export const cards = pgTable(
     image_prompt: text(), // Prompt for image generation
     ...timestamps,
   },
-  (table) => [
-    // Index for type-based filtering (searchCharacters, searchPlots)
-    index("cards_type_idx").on(table.type),
-  ],
 );
 
 export type SelectCommonCard = typeof cards.$inferSelect;

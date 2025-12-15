@@ -18,7 +18,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
   Button,
-  Input,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -26,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 import { useFlowPanelContext } from "@/features/flow/ui/flow-panel-provider";
 import { useUpdateNodeTitle } from "@/entities/flow/api/mutations/node-mutations";
 import { useAgentStore } from "@/shared/stores/agent-store";

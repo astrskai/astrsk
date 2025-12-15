@@ -47,7 +47,7 @@ export const HelpVideoDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background-surface-2 outline-background-surface-2 max-w-[720px] rounded-lg p-6 shadow-[0px_10px_10px_-5px_rgba(0,0,0,0.10)] shadow-[0px_10px_25px_-5px_rgba(0,0,0,0.30)] outline outline-offset-[-1px]">
+      <DialogContent className="bg-surface-raised outline-surface-raised max-w-[720px] rounded-lg p-6 shadow-[0px_10px_10px_-5px_rgba(0,0,0,0.10)] shadow-[0px_10px_25px_-5px_rgba(0,0,0,0.30)] outline outline-offset-[-1px]">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-text-primary text-2xl leading-10 font-semibold">
             {config.title}
@@ -86,7 +86,7 @@ export const HelpVideoDialog = ({
         {/* Footer */}
         <div className="flex items-center justify-between">
           <div className="text-xs font-medium">
-            <span className="text-text-info">Watch the full tutorial on </span>
+            <span className="text-neutral-500">Watch the full tutorial on </span>
             <button
               className="text-secondary-normal hover:underline"
               onClick={() =>
@@ -99,7 +99,7 @@ export const HelpVideoDialog = ({
             >
               YouTube
             </button>
-            <span className="text-text-info"> or check out our </span>
+            <span className="text-neutral-500"> or check out our </span>
             <button
               className="text-secondary-normal hover:underline"
               onClick={() =>
@@ -108,7 +108,7 @@ export const HelpVideoDialog = ({
             >
               user docs
             </button>
-            <span className="text-text-info">.</span>
+            <span className="text-neutral-500">.</span>
           </div>
           <Button
             variant="ghost"

@@ -33,7 +33,7 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-background p-6 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  "fixed z-50 gap-4 bg-canvas p-6 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {
     variants: {
       side: {
@@ -73,7 +73,7 @@ const SheetContent = React.forwardRef<
         {...props}
       >
         {!hideClose && (
-          <SheetPrimitive.Close className="ring-offset-background data-[state=open]:bg-secondary absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none">
+          <SheetPrimitive.Close className="ring-offset-canvas data-[state=open]:bg-surface-overlay absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none">
             <X className="min-h-[24px] min-w-[24px]" />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
@@ -119,7 +119,7 @@ const SheetFooter = ({
   <div
     className={cn(
       "mt-auto flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      variant === "edit" && "bg-background border-t p-4",
+      variant === "edit" && "bg-canvas border-t p-4",
       className,
     )}
     {...props}
@@ -133,7 +133,7 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Title
     ref={ref}
-    className={cn("text-foreground text-lg font-semibold", className)}
+    className={cn("text-fg-default text-lg font-semibold", className)}
     {...props}
   />
 ));
@@ -145,7 +145,7 @@ const SheetDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Description
     ref={ref}
-    className={cn("text-muted-foreground text-sm", className)}
+    className={cn("text-fg-subtle text-sm", className)}
     {...props}
   />
 ));

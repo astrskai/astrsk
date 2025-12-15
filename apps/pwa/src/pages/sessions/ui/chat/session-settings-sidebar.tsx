@@ -11,38 +11,47 @@ import {
   Plus,
   FileUp,
   Image,
+  Copy,
+  Save,
+  BookOpen,
 } from "lucide-react";
 
 import { AssetService } from "@/app/services/asset-service";
-import ScenarioCard from "@/features/scenario/ui/scenario-card";
-import WorkflowCard from "@/features/flow/ui/workflow-card";
 import { CharacterSelectionDialog } from "@/features/character/ui/character-selection-dialog";
+import { IconWorkflow } from "@/shared/assets";
 import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 import { Session } from "@/entities/session/domain/session";
-import { PlotCard, CardType } from "@/entities/card/domain";
+import { ScenarioCard, CardType } from "@/entities/card/domain";
 import { CharacterCard } from "@/entities/card/domain/character-card";
 import {
   fetchSession,
   useSaveSession,
   useDeleteSession,
+  useCloneTemplateSession,
 } from "@/entities/session/api";
-import CharacterItem from "./settings/character-item";
+import PersonaItem from "./settings/persona-item";
+import StorySettingItem from "./settings/story-setting-item";
+import AddItemButton from "./settings/add-item-button";
 
 import { cn } from "@/shared/lib";
 import {
+  backgroundQueries,
+  getDefaultBackground,
+  getBackgroundAssetId,
   isDefaultBackground,
-  useBackgroundStore,
-} from "@/shared/stores/background-store";
+} from "@/entities/background/api";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { useQuery } from "@tanstack/react-query";
 import { useFlow } from "@/shared/hooks/use-flow";
 import { Loading, PopoverBase, DropdownMenuBase, Switch } from "@/shared/ui";
+import { Button } from "@/shared/ui/forms";
 import { DialogConfirm } from "@/shared/ui/dialogs/confirm";
 import { DialogBase } from "@/shared/ui/dialogs/base";
 import { useCard } from "@/shared/hooks/use-card";
 import { UniqueEntityID } from "@/shared/domain";
 import MessageStyling from "./settings/message-styling";
 import BackgroundGrid from "./settings/background-grid";
-import { AutoReply } from "@/shared/stores/session-store";
+import { AutoReply, useSessionUIStore } from "@/shared/stores/session-store";
 
 interface SessionSettingsSidebarProps {
   session: Session;
@@ -58,20 +67,65 @@ const ScenarioPreviewItem = ({
   scenarioId: UniqueEntityID;
   onClick?: () => void;
 }) => {
-  const [scenario] = useCard<PlotCard>(scenarioId);
+  const [scenario] = useCard<ScenarioCard>(scenarioId);
   const [imageUrl] = useAsset(scenario?.props?.iconAssetId);
 
+  if (!scenario) return null;
+
   return (
-    <ScenarioCard
-      title={scenario?.props?.title ?? ""}
-      imageUrl={imageUrl}
-      summary={scenario?.props?.summary}
-      tags={scenario?.props?.tags || []}
-      tokenCount={scenario?.props?.tokenCount}
-      firstMessages={scenario?.props?.scenarios?.length || 0}
-      className="min-h-[200px]"
+    <div
+      className="group flex h-[64px] cursor-pointer overflow-hidden rounded-lg border border-border-subtle hover:border-fg-subtle"
       onClick={onClick}
-    />
+    >
+      <div className="relative w-[25%]">
+        <img
+          className="h-full w-full object-cover"
+          src={imageUrl ?? "/default/card/GM_ Dice of Fate.png"}
+          alt={scenario?.props?.title || "Scenario"}
+        />
+      </div>
+      <div className="flex w-[75%] items-center justify-between gap-2 p-4">
+        <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-fg-default">
+          {scenario?.props?.title ?? ""}
+        </h3>
+        <p className="flex-shrink-0 text-sm text-fg-subtle">
+          <span className="font-semibold text-fg-default">
+            {scenario?.props?.tokenCount ?? 0}
+          </span>{" "}
+          <span>Tokens</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const WorkflowPreviewItem = ({
+  title,
+  nodeCount,
+  onClick,
+}: {
+  title: string;
+  nodeCount?: number;
+  onClick?: () => void;
+}) => {
+  return (
+    <div
+      className="group flex h-[64px] cursor-pointer overflow-hidden rounded-lg border border-border-subtle hover:border-fg-subtle"
+      onClick={onClick}
+    >
+      <div className="relative flex w-[25%] items-center justify-center bg-blue-500/10">
+        <IconWorkflow className="h-6 w-6 text-blue-400" />
+      </div>
+      <div className="flex w-[75%] items-center justify-between gap-2 p-4">
+        <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-fg-default">
+          {title}
+        </h3>
+        <p className="flex-shrink-0 text-sm text-fg-subtle">
+          <span className="font-semibold text-fg-default">{nodeCount ?? 0}</span>{" "}
+          <span>Nodes</span>
+        </p>
+      </div>
+    </div>
   );
 };
 
@@ -85,30 +139,36 @@ const SessionSettingsSidebar = ({
   const { data: flow, isLoading: isLoadingFlow } = useFlow(session?.flowId);
   const saveSessionMutation = useSaveSession();
   const deleteSessionMutation = useDeleteSession();
+  const cloneTemplateSessionMutation = useCloneTemplateSession();
+  const skipScenarioDialog = useSessionUIStore.use.skipScenarioDialog();
   const [isBackgroundDialogOpen, setIsBackgroundDialogOpen] =
     useState<boolean>(false);
   const [isBackgroundPopoverOpen, setIsBackgroundPopoverOpen] =
     useState<boolean>(false);
   const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
-  const [editedTitle, setEditedTitle] = useState<string>(session.title ?? "");
+  const [editedName, setEditedName] = useState<string>(session.name ?? "");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
-  const [isUserCharacterDialogOpen, setIsUserCharacterDialogOpen] =
-    useState<boolean>(false);
   const [isAiCharacterDialogOpen, setIsAiCharacterDialogOpen] =
     useState<boolean>(false);
   const [isScenarioDialogOpen, setIsScenarioDialogOpen] =
     useState<boolean>(false);
 
-  const { backgroundMap } = useBackgroundStore();
-  const background = backgroundMap.get(session.backgroundId?.toString() ?? "");
-  const [backgroundAsset] = useAsset(background?.assetId);
+  // Background - check if default first, then query for user background
+  const defaultBg = session.backgroundId ? getDefaultBackground(session.backgroundId) : undefined;
+
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(session.backgroundId),
+    enabled: !!session.backgroundId && !defaultBg,
+  });
+
+  const [backgroundAsset] = useAsset(getBackgroundAssetId(background));
 
   const backgroundImageSrc = useMemo(() => {
-    if (background && isDefaultBackground(background)) {
-      return background.src;
+    if (defaultBg) {
+      return defaultBg.src;
     }
     return backgroundAsset; // undefined or string
-  }, [background, backgroundAsset]);
+  }, [defaultBg, backgroundAsset]);
 
   const [coverImageSrc] = useAsset(session.coverId);
 
@@ -164,73 +224,13 @@ const SessionSettingsSidebar = ({
     [session.id, saveSessionMutation],
   );
 
-  const handleAddUserCharacter = useCallback(() => {
-    setIsUserCharacterDialogOpen(true);
-  }, []);
-
-  const handleConfirmUserCharacter = useCallback(
-    async (characters: CharacterCard[]) => {
-      // Single selection mode - take first character or null
-      const selectedCharacter = characters.length > 0 ? characters[0] : null;
-
-      if (!selectedCharacter) {
-        return;
-      }
-
-      try {
-        // Fetch latest session data
-        const latestSession = await fetchSession(session.id);
-
-        // Check if character is already in allCards
-        const existingCard = latestSession.allCards.find((card) =>
-          card.id.equals(selectedCharacter.id),
-        );
-
-        // If not in allCards, add it first
-        if (!existingCard) {
-          const addResult = latestSession.addCard(
-            selectedCharacter.id,
-            CardType.Character,
-          );
-          if (addResult.isFailure) {
-            toastError("Failed to add character", {
-              description: addResult.getError(),
-            });
-            return;
-          }
-        }
-
-        // Set as user character using validated method
-        const setResult = latestSession.setUserCharacterCardId(
-          selectedCharacter.id,
-        );
-        if (setResult.isFailure) {
-          toastError("Failed to set user character", {
-            description: setResult.getError(),
-          });
-          return;
-        }
-
-        // Save to backend
-        await saveSessionMutation.mutateAsync({ session: latestSession });
-
-        // Show success message
-        toastSuccess("User character added successfully");
-      } catch (error) {
-        toastError("Failed to add user character", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
-    },
-    [session.id, saveSessionMutation],
-  );
 
   const handleAddScenario = useCallback(() => {
     setIsScenarioDialogOpen(true);
   }, []);
 
   const handleConfirmScenario = useCallback(
-    async (scenario: PlotCard | null) => {
+    async (scenario: ScenarioCard | null) => {
       if (!scenario) {
         return;
       }
@@ -273,6 +273,30 @@ const SessionSettingsSidebar = ({
     [session.id, saveSessionMutation],
   );
 
+  const handleToggleCharacterActive = useCallback(
+    async (characterId: UniqueEntityID) => {
+      try {
+        // Fetch latest session data
+        const latestSession = await fetchSession(session.id);
+
+        // Find the card and toggle its enabled state
+        const card = latestSession.allCards.find((c) => c.id.equals(characterId));
+        if (!card) return;
+
+        const newEnabled = !card.enabled;
+        latestSession.setCardEnabled(characterId, newEnabled);
+
+        // Save to backend
+        await saveSessionMutation.mutateAsync({ session: latestSession });
+      } catch (error) {
+        toastError("Failed to toggle character", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    },
+    [session.id, saveSessionMutation],
+  );
+
   const handleChangeBackground = useCallback(
     async (backgroundId: UniqueEntityID | undefined) => {
       try {
@@ -301,8 +325,8 @@ const SessionSettingsSidebar = ({
   );
 
   const handleSaveTitle = useCallback(async () => {
-    if (!editedTitle.trim()) {
-      toastError("Title cannot be empty");
+    if (!editedName.trim()) {
+      toastError("Name cannot be empty");
       return;
     }
 
@@ -310,8 +334,8 @@ const SessionSettingsSidebar = ({
       // Fetch latest session data
       const latestSession = await fetchSession(session.id);
 
-      // Update title
-      latestSession.update({ title: editedTitle.trim() });
+      // Update name
+      latestSession.update({ name: editedName.trim() });
 
       // Save to backend
       await saveSessionMutation.mutateAsync({ session: latestSession });
@@ -320,16 +344,16 @@ const SessionSettingsSidebar = ({
       setIsEditingTitle(false);
 
       // Show success message
-      toastSuccess("Title updated successfully");
+      toastSuccess("Session name updated");
     } catch (error) {
-      toastError("Failed to update title", {
+      toastError("Failed to update session name", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     }
-  }, [editedTitle, session.id, saveSessionMutation]);
+  }, [editedName, session.id, saveSessionMutation]);
 
   const handleCancelEditTitle = useCallback(() => {
-    setEditedTitle("");
+    setEditedName("");
     setIsEditingTitle(false);
   }, []);
 
@@ -350,6 +374,31 @@ const SessionSettingsSidebar = ({
       });
     }
   }, [session.id, deleteSessionMutation, navigate]);
+
+  const handleSaveAsPreset = useCallback(async () => {
+    try {
+      // Clone as template session (isPlaySession: false, original title, no history)
+      const clonedSession = await cloneTemplateSessionMutation.mutateAsync({
+        sessionId: session.id,
+        includeHistory: false,
+      });
+
+      // Save the template session (title and isPlaySession already set by CloneTemplateSession)
+      await saveSessionMutation.mutateAsync({ session: clonedSession });
+
+      // Skip the first message dialog for the new session (user already saw it)
+      skipScenarioDialog(clonedSession.id.toString());
+
+      toastSuccess("Saved as preset successfully");
+
+      // Navigate to session grid to see the newly created preset
+      navigate({ to: "/sessions" });
+    } catch (error) {
+      toastError("Failed to save as asset", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }, [session.id, cloneTemplateSessionMutation, saveSessionMutation, skipScenarioDialog, navigate]);
 
   const coverImageInputId = useId();
 
@@ -423,13 +472,13 @@ const SessionSettingsSidebar = ({
   return (
     <aside
       className={cn(
-        "bg-surface fixed top-0 right-0 z-30 h-dvh max-w-dvw overflow-y-auto md:w-96",
+        "bg-surface fixed top-0 right-0 z-30 flex h-dvh max-w-dvw flex-col md:w-96",
         "transition-transform duration-300 ease-in-out",
         "shadow-[-8px_0_24px_-4px_rgba(0,0,0,0.5)]",
         isOpen ? "translate-x-0" : "translate-x-full",
       )}
     >
-      <div className="flex items-center justify-between gap-2 p-4">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-surface p-4">
         <button
           type="button"
           aria-label="Close settings panel"
@@ -442,8 +491,8 @@ const SessionSettingsSidebar = ({
           <div className="flex flex-1 items-center gap-2">
             <input
               type="text"
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleSaveTitle();
@@ -453,7 +502,7 @@ const SessionSettingsSidebar = ({
               }}
               className="flex-1 rounded-md border border-fg-disabled bg-surface-raised px-2 py-1 text-sm text-fg-default focus:border-brand-500 focus:outline-none"
               autoFocus
-              placeholder="Enter session title"
+              placeholder="Enter session name"
             />
             <button
               type="button"
@@ -473,15 +522,15 @@ const SessionSettingsSidebar = ({
             </button>
           </div>
         ) : (
-          <span className="flex items-center gap-2 text-base font-semibold text-fg-default">
-            {session.title ?? "Untitled Session"}
+          <span className="flex flex-1 items-center gap-2 min-w-0 text-base font-semibold text-fg-default">
+            <span className="truncate">{session.name ?? "Untitled Session"}</span>
             <button
               type="button"
-              aria-label="Edit session title"
-              className="cursor-pointer text-fg-subtle hover:text-fg-default"
+              aria-label="Edit session name"
+              className="cursor-pointer text-fg-subtle hover:text-fg-default flex-shrink-0"
               onClick={() => {
                 setIsEditingTitle(true);
-                setEditedTitle(session.title ?? "");
+                setEditedName(session.name ?? "");
               }}
             >
               <Pencil className="h-4 w-4" />
@@ -499,6 +548,11 @@ const SessionSettingsSidebar = ({
             </button>
           }
           items={[
+            {
+              label: "Save as asset",
+              icon: <Save className="h-4 w-4" />,
+              onClick: handleSaveAsPreset,
+            },
             {
               label: "Delete session",
               icon: <Trash2 className="h-4 w-4" />,
@@ -518,37 +572,43 @@ const SessionSettingsSidebar = ({
           confirmVariant="destructive"
           onConfirm={handleDeleteSession}
         />
+
       </div>
 
-      <div className="space-y-4 p-4 [&>section]:flex [&>section]:flex-col [&>section]:gap-2">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4 [&>section]:flex [&>section]:flex-col [&>section]:gap-2">
         <section>
-          <h3 className="font-semibold">AI Characters</h3>
+          <h3 className="font-semibold">AI characters</h3>
           <div className="space-y-2">
-            {session.aiCharacterCardIds.length > 0 ? (
-              session.aiCharacterCardIds.map((characterId, index) => (
-                <CharacterItem
-                  key={`ai-character-${index}-${characterId.toString()}`}
-                  characterId={characterId}
-                  onClick={() => {
-                    navigate({
-                      to: "/assets/characters/{-$characterId}",
-                      params: { characterId: characterId.toString() },
-                    });
-                  }}
-                />
-              ))
+            {session.characterCards
+              .filter((card) => !card.id.equals(session.userCharacterCardId))
+              .length > 0 ? (
+              session.characterCards
+                .filter((card) => !card.id.equals(session.userCharacterCardId))
+                .map((card, index) => (
+                  <PersonaItem
+                    key={`ai-character-${index}-${card.id.toString()}`}
+                    characterId={card.id}
+                    isEnabled={card.enabled}
+                    onClick={() => {
+                      navigate({
+                        to: "/assets/characters/{-$characterId}",
+                        params: { characterId: card.id.toString() },
+                        search: { mode: "edit" },
+                      });
+                    }}
+                    onToggleActive={() => handleToggleCharacterActive(card.id)}
+                  />
+                ))
             ) : (
               <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-surface-raised/50">
                 <p className="text-sm text-fg-subtle">No AI characters</p>
               </div>
             )}
-            <div
-              className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base"
+            <AddItemButton
+              icon={Plus}
+              label="Add AI character"
               onClick={handleAddAICharacter}
-            >
-              <Plus className="h-5 w-5" />
-              <p>Add AI Character</p>
-            </div>
+            />
           </div>
 
           {/* AI Character Selection Dialog */}
@@ -573,12 +633,13 @@ const SessionSettingsSidebar = ({
         </section>
 
         <section>
-          <h3 className="font-semibold">User Character</h3>
-          <div>
+          <h3 className="font-semibold">User character</h3>
+          <div className="space-y-2">
             {session.userCharacterCardId ? (
-              <CharacterItem
+              <PersonaItem
                 key={`user-character-${session.userCharacterCardId.toString()}`}
                 characterId={session.userCharacterCardId}
+                isEnabled={true}
                 onClick={() => {
                   navigate({
                     to: "/assets/characters/{-$characterId}",
@@ -586,59 +647,67 @@ const SessionSettingsSidebar = ({
                       characterId:
                         session.userCharacterCardId?.toString() ?? "",
                     },
+                    search: { mode: "edit" },
                   });
                 }}
               />
             ) : (
-              <div
-                className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base"
-                onClick={handleAddUserCharacter}
-              >
-                <Plus className="h-5 w-5" />
-                <p>Add User Character</p>
+              <div className="group flex h-[64px] overflow-hidden rounded-lg border border-border-subtle">
+                <div className="relative w-[25%]">
+                  <img
+                    className="h-full w-full object-cover"
+                    src="/img/placeholder/character-placeholder.png"
+                    alt="No Persona"
+                  />
+                </div>
+                <div className="flex w-[75%] items-center justify-between gap-2 p-4">
+                  <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-fg-default">
+                    No persona
+                  </h3>
+                </div>
               </div>
             )}
           </div>
-
-          {/* User Character Selection Dialog */}
-          <CharacterSelectionDialog
-            open={isUserCharacterDialogOpen}
-            onOpenChange={setIsUserCharacterDialogOpen}
-            selectedCharacters={[]}
-            onConfirm={handleConfirmUserCharacter}
-            excludeCharacterIds={session.aiCharacterCardIds.map((id) =>
-              id.toString(),
-            )}
-            isMultipleSelect={false}
-            title="Select User Character"
-            description="Choose a character to play as in this session"
-            confirmButtonText="Add"
-          />
         </section>
 
         <section>
-          <h3 className="font-semibold">Scenario</h3>
-          <div>
-            {session.plotCard ? (
-              <ScenarioPreviewItem
-                scenarioId={session.plotCard.id}
-                onClick={() => {
+          <h3 className="font-semibold">Story setting</h3>
+          <div className="space-y-2">
+            <StorySettingItem
+              icon={BookOpen}
+              title="Scenario"
+              onClick={() => {
+                if (session.plotCard) {
                   navigate({
                     to: "/assets/scenarios/{-$scenarioId}",
                     params: {
                       scenarioId: session.plotCard?.id.toString() ?? "",
                     },
                   });
-                }}
-              />
-            ) : (
-              <div
-                className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base"
-                onClick={handleAddScenario}
-              >
-                <Plus className="h-5 w-5" />
-                <p>Add Scenario</p>
+                } else {
+                  handleAddScenario();
+                }
+              }}
+            />
+
+            {isLoadingFlow ? (
+              <div className="flex h-[64px] items-center justify-center rounded-lg border border-border-subtle">
+                <Loading size="sm" />
               </div>
+            ) : (
+              <StorySettingItem
+                icon={IconWorkflow}
+                title="Workflow"
+                onClick={() => {
+                  if (!flow?.id) return;
+
+                  navigate({
+                    to: "/assets/workflows/$workflowId",
+                    params: { workflowId: flow.id.toString() },
+                  });
+                }}
+                disabled={!flow}
+              />
             )}
           </div>
 
@@ -652,34 +721,6 @@ const SessionSettingsSidebar = ({
             description="Choose a scenario to add to this session"
             confirmButtonText="Add"
           />
-        </section>
-
-        <section>
-          <h3 className="font-semibold">Workflow</h3>
-          <div>
-            {isLoadingFlow ? (
-              <Loading size="sm" />
-            ) : flow ? (
-              <WorkflowCard
-                title={flow?.props.name ?? "No flow selected"}
-                description={flow?.props.description}
-                nodeCount={flow?.props.nodes.length}
-                className="min-h-[140px]"
-                onClick={() => {
-                  if (!flow?.id) return;
-
-                  navigate({
-                    to: "/assets/workflows/$workflowId",
-                    params: { workflowId: flow.id.toString() },
-                  });
-                }}
-              />
-            ) : (
-              <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-border-subtle bg-surface-raised/50">
-                <p className="text-sm text-fg-subtle">No flow selected</p>
-              </div>
-            )}
-          </div>
         </section>
 
         <section className="block md:hidden!">
@@ -718,15 +759,12 @@ const SessionSettingsSidebar = ({
           >
             {coverImageSrc ? (
               <img
-                className="h-32 w-full rounded-lg object-cover"
+                className="h-[64px] w-full rounded-lg object-cover"
                 src={coverImageSrc}
                 alt="Cover image"
               />
             ) : (
-              <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base">
-                <FileUp className="h-5 w-5" />
-                <p>Upload Cover Image</p>
-              </div>
+              <AddItemButton icon={FileUp} label="Upload cover image" />
             )}
           </label>
           <input
@@ -749,15 +787,12 @@ const SessionSettingsSidebar = ({
           >
             {backgroundImageSrc ? (
               <img
-                className="h-32 w-full rounded-lg object-cover"
+                className="h-[64px] w-full rounded-lg object-cover"
                 src={backgroundImageSrc}
                 alt="Background image"
               />
             ) : (
-              <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base">
-                <Image className="h-5 w-5" />
-                <p>Select Background Image</p>
-              </div>
+              <AddItemButton icon={Image} label="Select background image" />
             )}
           </button>
 
@@ -767,6 +802,7 @@ const SessionSettingsSidebar = ({
             title="Select Background"
             content={
               <BackgroundGrid
+                sessionId={session.id}
                 currentBackgroundId={session.backgroundId}
                 onSelect={handleChangeBackground}
                 isEditable={true}
@@ -788,20 +824,18 @@ const SessionSettingsSidebar = ({
               <div className="cursor-pointer rounded-lg transition-opacity hover:brightness-110">
                 {backgroundImageSrc ? (
                   <img
-                    className="h-32 w-full rounded-lg object-cover"
+                    className="h-[64px] w-full rounded-lg object-cover"
                     src={backgroundImageSrc}
                     alt="Background image"
                   />
                 ) : (
-                  <div className="bg-black-alternate text-fg-muted hover:bg-black-alternate/10 flex h-16 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border-muted text-sm font-medium transition-colors md:text-base">
-                    <Image className="h-5 w-5" />
-                    <p>Select Background Image</p>
-                  </div>
+                  <AddItemButton icon={Image} label="Select background image" />
                 )}
               </div>
             }
             content={
               <BackgroundGrid
+                sessionId={session.id}
                 currentBackgroundId={session.backgroundId}
                 onSelect={handleChangeBackground}
                 isEditable={true}
@@ -818,6 +852,34 @@ const SessionSettingsSidebar = ({
             chatStyles={session.chatStyles}
           />
         </section>
+
+        {/* Save as asset - Mobile only (inside sections) */}
+        <section className="md:hidden!">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="w-full"
+            onClick={handleSaveAsPreset}
+          >
+            <Save className="h-5 w-5" />
+            Save as asset
+          </Button>
+        </section>
+      </div>
+
+      {/* Save as asset - Desktop only (footer) */}
+      <div className="mt-auto hidden p-4 pt-0 md:block">
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          className="w-full"
+          onClick={handleSaveAsPreset}
+        >
+          <Save className="h-5 w-5" />
+          Save as asset
+        </Button>
       </div>
     </aside>
   );

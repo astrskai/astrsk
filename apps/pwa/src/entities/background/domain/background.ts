@@ -5,10 +5,11 @@ import { formatFail } from "@/shared/lib";
 export interface BackgroundProps {
   name: string;
   assetId: UniqueEntityID;
+  sessionId: UniqueEntityID;
   updatedAt: Date;
 }
 
-export const BackgroundPropsKeys = ["name", "assetId", "updatedAt"];
+export const BackgroundPropsKeys = ["name", "assetId", "sessionId", "updatedAt"];
 
 type CreateBackgroundProps = Partial<BackgroundProps>;
 
@@ -19,6 +20,10 @@ export class Background extends AggregateRoot<BackgroundProps> {
 
   get assetId(): UniqueEntityID {
     return this.props.assetId;
+  }
+
+  get sessionId(): UniqueEntityID {
+    return this.props.sessionId;
   }
 
   get updatedAt(): Date {
@@ -41,6 +46,7 @@ export class Background extends AggregateRoot<BackgroundProps> {
     try {
       const guardResult = Guard.againstNullOrUndefinedBulk([
         { argument: props.name, argumentName: "name" },
+        { argument: props.sessionId, argumentName: "sessionId" },
       ]);
       if (guardResult.isFailure) {
         return formatFail(guardResult.getError());
@@ -50,6 +56,7 @@ export class Background extends AggregateRoot<BackgroundProps> {
         {
           name: props.name ?? "",
           assetId: props.assetId ?? new UniqueEntityID(),
+          sessionId: props.sessionId ?? new UniqueEntityID(),
           updatedAt: props.updatedAt ?? new Date(),
         },
         id,

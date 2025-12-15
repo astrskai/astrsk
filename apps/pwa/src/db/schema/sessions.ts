@@ -1,4 +1,5 @@
-import { jsonb, pgTable, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 import { AutoReply } from "@/shared/stores/session-store";
 import { TableName } from "@/db/schema/table-name";
@@ -9,7 +10,13 @@ import { CardListItemJson } from "@/entities/session/mappers/session-drizzle-map
 
 export const sessions = pgTable(TableName.Sessions, {
   id: uuid().primaryKey(),
-  title: varchar().notNull(),
+  title: varchar().notNull(), // TODO: Deprecated - use 'name' instead
+
+  // Metadata fields (similar to flows and characters)
+  name: varchar().notNull(),
+  tags: text().array().notNull().default(sql`'{}'`),
+  summary: text(),
+
   all_cards: jsonb().$type<CardListItemJson[]>().notNull(),
   user_character_card_id: uuid(),
   turn_ids: jsonb().$type<string[]>().notNull(),
@@ -17,10 +24,12 @@ export const sessions = pgTable(TableName.Sessions, {
   cover_id: uuid(),
   translation: jsonb().$type<TranslationConfigJSON>(),
   chat_styles: jsonb().$type<ChatStyles>(),
-  flow_id: uuid().notNull(),
-  auto_reply: varchar().$type<AutoReply>().notNull().default(AutoReply.Off),
+  flow_id: uuid(), // Nullable - session can exist without a flow (during import)
+  auto_reply: varchar().$type<AutoReply>().notNull().default(AutoReply.Random),
   data_schema_order: jsonb().$type<string[]>().notNull().default([]),
   widget_layout: jsonb().$type<Array<{ i: string; x: number; y: number; w: number; h: number }>>(),
+  is_play_session: boolean().notNull().default(false),
+  config: jsonb().$type<Record<string, unknown>>().notNull().default({}),
   ...timestamps,
 });
 

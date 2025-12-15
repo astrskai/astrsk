@@ -1,7 +1,6 @@
 import { ApiService } from "@/app/services";
 import { SessionService } from "@/app/services/session-service";
 import { useAppStore } from "@/shared/stores/app-store";
-import { fetchBackgrounds } from "@/shared/stores/background-store";
 import { ApiConnection, ApiSource } from "@/entities/api/domain";
 import { useQuery } from "@tanstack/react-query";
 
@@ -99,7 +98,7 @@ export const useDefaultInitialized = () => {
           const file = new File([await response.blob()], path, {
             type: "image/png",
           });
-          await CardService.importCardFromFile.execute(file);
+          await CardService.importCardFromFile.execute({ file });
         }
 
         for (const path of plotFilePath) {
@@ -108,57 +107,57 @@ export const useDefaultInitialized = () => {
           const file = new File([await response.blob()], path, {
             type: "image/png",
           });
-          await CardService.importCardFromFile.execute(file);
+          await CardService.importCardFromFile.execute({ file });
         }
       }
       */
 
       // Init default sessions - only for new users who haven't selected a genre yet
-      if (!sessionOnboardingSteps.genreSelection) {
-        const sessions = (await SessionService.listSession.execute({}))
-          .throwOnFailure()
-          .getValue();
-        if (sessions && sessions.length === 0) {
-          // Import default sessions
-          const sessionFilePaths = [
-            "/default/session/dice_of_fate.astrsk.session",
-            "/default/session/sakura_blooms,_hearts_awaken.astrsk.session",
-          ];
+      // if (!sessionOnboardingSteps.genreSelection) {
+      //   const sessions = (await SessionService.listSession.execute({}))
+      //     .throwOnFailure()
+      //     .getValue();
+      //   if (sessions && sessions.length === 0) {
+      //     // Import default sessions
+      //     const sessionFilePaths = [
+      //       "/default/session/dice_of_fate.astrsk.session",
+      //       "/default/session/sakura_blooms,_hearts_awaken.astrsk.session",
+      //     ];
 
-          for (const path of sessionFilePaths) {
-            try {
-              const response = await fetch(path);
-              const file = new File(
-                [await response.blob()],
-                path.split("/").pop() || path,
-                {
-                  type: "application/octet-stream",
-                },
-              );
+      //     for (const path of sessionFilePaths) {
+      //       try {
+      //         const response = await fetch(path);
+      //         const file = new File(
+      //           [await response.blob()],
+      //           path.split("/").pop() || path,
+      //           {
+      //             type: "application/octet-stream",
+      //           },
+      //         );
 
-              const importResult =
-                await SessionService.importSessionFromFile.execute({
-                  file: file,
-                  includeHistory: true,
-                });
-              if (importResult.isFailure) {
-                console.log(
-                  "Failed to import session:",
-                  path,
-                  importResult.getError(),
-                );
-                continue;
-              }
-            } catch (error) {
-              console.log("Error fetching session file:", path, error);
-              continue;
-            }
-          }
-        }
-      }
+      //         const importResult =
+      //           await SessionService.importSessionFromFile.execute({
+      //             file: file,
+      //             includeHistory: true,
+      //           });
+      //         if (importResult.isFailure) {
+      //           console.log(
+      //             "Failed to import session:",
+      //             path,
+      //             importResult.getError(),
+      //           );
+      //           continue;
+      //         }
+      //       } catch (error) {
+      //         console.log("Error fetching session file:", path, error);
+      //         continue;
+      //       }
+      //     }
+      //   }
+      // }
 
-      // Initialize backgrounds - Load all backgrounds into the store
-      await fetchBackgrounds();
+      // Note: Background store is initialized with default backgrounds.
+      // Session-specific user backgrounds are fetched when a session is opened (in detail.tsx).
 
       return true;
     },

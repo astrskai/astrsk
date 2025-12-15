@@ -7,14 +7,14 @@ interface TextareaProps
   error?: string;
   labelPosition?: "top" | "left" | "inner";
   autoResize?: boolean;
-  caption?: string;
+  caption?: React.ReactNode;
   isRequired?: boolean; // For display purposes only (shows * indicator)
 }
 
 // Shared style constants
 const STYLES = {
   textarea: {
-    base: "w-full min-h-[120px] rounded-lg border bg-neutral-800 px-4 py-3 text-base text-neutral-100 placeholder:text-neutral-500 outline-none",
+    base: "w-full min-h-[120px] rounded-lg border bg-surface-raised px-4 py-3 text-base text-fg-default placeholder:text-fg-subtle outline-none",
     focus: "focus:ring-2 focus:ring-offset-0",
     transition: "transition-all",
     disabled: "disabled:cursor-not-allowed disabled:opacity-50",
@@ -26,11 +26,11 @@ const STYLES = {
   border: {
     error:
       "border-status-error focus:border-status-error focus:ring-status-error/20",
-    normal: "border-neutral-600 focus:border-brand-500 focus:ring-brand-500/20",
+    normal: "border-border-default focus:border-brand-500 focus:ring-brand-500/20",
   },
   label: {
     floating:
-      "absolute left-3 top-0 -translate-y-1/2 rounded-sm bg-neutral-800 px-1 text-xs font-medium transition-all pointer-events-none",
+      "absolute left-3 top-0 -translate-y-1/2 rounded-sm bg-canvas px-1 text-xs font-medium transition-all pointer-events-none",
     standard: "text-sm font-medium text-neutral-200",
   },
   text: {
@@ -38,26 +38,26 @@ const STYLES = {
     secondary: "text-neutral-400",
     required: "text-accent-purple ml-1",
     small: "mt-1 text-xs",
-    caption: "mt-1 pl-2 text-xs",
+    caption: "mt-1 pl-2 text-xs text-neutral-300",
   },
 } as const;
 
 // Sub-components
-const RequiredIndicator = () => (
-  <span className={STYLES.text.required}>*</span>
-);
+const RequiredIndicator = () => <span className={STYLES.text.required}>*</span>;
 
 const FeedbackMessages = ({
   error,
   caption,
 }: {
   error?: string;
-  caption?: string;
+  caption?: React.ReactNode;
 }) => (
   <>
-    {error && <p className={cn(STYLES.text.error, STYLES.text.small)}>{error}</p>}
+    {error && (
+      <p className={cn(STYLES.text.error, STYLES.text.small)}>{error}</p>
+    )}
     {!error && caption && (
-      <p className={cn(STYLES.text.secondary, STYLES.text.caption)}>{caption}</p>
+      <div className={cn(STYLES.text.caption)}>{caption}</div>
     )}
   </>
 );
@@ -81,7 +81,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const internalRef = useRef<HTMLTextAreaElement>(null);
 
     // Expose the internal ref to the parent via forwardRef
-    useImperativeHandle(ref, () => internalRef.current!);
+    // Note: internalRef.current is guaranteed to be set during commit phase when useImperativeHandle runs
+    useImperativeHandle(ref, () => internalRef.current!, []);
 
     // Auto-resize logic
     useEffect(() => {
@@ -96,9 +97,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 
       adjustHeight();
       textarea.addEventListener("input", adjustHeight);
+      textarea.addEventListener("focus", adjustHeight);
 
       return () => {
         textarea.removeEventListener("input", adjustHeight);
+        textarea.removeEventListener("focus", adjustHeight);
       };
     }, [autoResize, props.value]);
 
@@ -164,7 +167,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       <div
         className={cn(
           "flex w-full",
-          labelPosition === "top" ? "flex-col gap-2" : "flex-row items-start gap-4",
+          labelPosition === "top"
+            ? "flex-col gap-2"
+            : "flex-row items-start gap-4",
         )}
       >
         <label className={STYLES.label.standard}>

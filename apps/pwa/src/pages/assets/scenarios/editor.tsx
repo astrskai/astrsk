@@ -29,6 +29,7 @@ import { useScrollToTop } from "@/shared/hooks/use-scroll-to-top";
 import { AccordionBase } from "@/shared/ui";
 import { DialogConfirm } from "@/shared/ui/dialogs";
 import { toastSuccess, toastError } from "@/shared/ui/toast";
+import { TAG_DEFAULT } from "@/entities/card/domain";
 
 interface LorebookEntryFormData {
   id: string;
@@ -64,21 +65,6 @@ interface ScenarioFormData {
   lorebookEntries: LorebookEntryFormData[];
 }
 
-// Constants
-const TAG_DEFAULT: readonly string[] = [
-  "Female",
-  "Male",
-  "Villain",
-  "Fictional",
-  "OC",
-  "LGBTQA+",
-  "Platonic",
-  "Angst",
-  "Dead Dove",
-  "Fluff",
-  "Historical",
-  "Royalty",
-];
 
 const FirstMessageItemTitle = ({
   name,
@@ -402,6 +388,7 @@ const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 const ScenarioEditorPage = () => {
   const navigate = useNavigate();
   const { scenarioId } = Route.useParams();
+  const { returnTo } = Route.useSearch();
 
   // Determine if we're in create mode (no scenarioId or "new")
   const isCreateMode = !scenarioId || scenarioId === "new";
@@ -532,7 +519,7 @@ const ScenarioEditorPage = () => {
         iconAssetId: scenario.props.iconAssetId?.toString() || undefined,
         description: scenario.props.description || "",
         firstMessages:
-          scenario.props.scenarios?.map((s, idx) => ({
+          scenario.props.firstMessages?.map((s, idx) => ({
             id: crypto.randomUUID(),
             name: s.name || `First Message ${idx + 1}`,
             description: s.description || "",
@@ -578,7 +565,8 @@ const ScenarioEditorPage = () => {
   }, [previewImage]);
 
   const handleGoBack = () => {
-    navigate({ to: "/assets/scenarios" });
+    // Use browser's back button to go to previous page (usually session)
+    window.history.back();
   };
 
   const handleUploadImage = () => {
@@ -748,8 +736,12 @@ const ScenarioEditorPage = () => {
         conceptualOrigin: normalizeField(data.conceptualOrigin),
       });
 
-      // Navigate back to scenarios list page
-      navigate({ to: "/assets/scenarios" });
+      // Navigate back - use returnTo if provided, otherwise scenarios list
+      if (returnTo) {
+        navigate({ to: returnTo as any });
+      } else {
+        navigate({ to: "/assets/scenarios" });
+      }
     } catch (error) {
       toastError("Failed to save scenario", {
         description:
@@ -816,7 +808,8 @@ const ScenarioEditorPage = () => {
       </div>
 
       <div className="mx-auto w-full max-w-4xl space-y-6 p-4">
-        <section className="flex w-full flex-col items-center justify-center gap-4">
+        {/* HIDDEN: Image setting section - commented out per user request */}
+        {/* <section className="flex w-full flex-col items-center justify-center gap-4">
           {displayImage ? (
             <div className="relative max-w-[200px]">
               <img
@@ -844,7 +837,7 @@ const ScenarioEditorPage = () => {
             </button>
           )}
 
-          <div className="space-y-4">
+          <div className="w-full space-y-4">
             <h2 className="text-base font-semibold text-neutral-100">
               Metadata
             </h2>
@@ -919,7 +912,6 @@ const ScenarioEditorPage = () => {
                   );
                 })}
 
-                {/* Custom tags (can be deleted) */}
                 {tags
                   .filter((tag) => !TAG_DEFAULT.includes(tag))
                   .map((tag, index) => (
@@ -969,7 +961,7 @@ const ScenarioEditorPage = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <section className="space-y-4">
           <h2 className="text-base font-semibold text-neutral-100">
@@ -1058,7 +1050,7 @@ const ScenarioEditorPage = () => {
 
           {lorebookFields.length === 0 ? (
             <p className="text-sm text-neutral-400">
-              No lorebook entries yet. Add one to get started.
+              No lorebook entries
             </p>
           ) : (
             <AccordionBase

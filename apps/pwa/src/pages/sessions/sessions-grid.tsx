@@ -1,24 +1,26 @@
-import { Upload, Copy, Trash2 } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { Upload, Copy, Trash2, Loader2 } from "lucide-react";
 import { useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { SessionCard, type CardAction } from "@astrsk/design-system";
 
 import { Session } from "@/entities/session/domain/session";
+
+import { IconHarpyLogo } from "@/shared/assets/icons";
 import type {
   SessionWithCharacterMetadata,
   CharacterMetadata,
 } from "@/entities/session/api";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { DialogConfirm } from "@/shared/ui/dialogs";
-import { Checkbox, Label } from "@/shared/ui";
 
-import SessionCard from "@/features/session/ui/session-card";
-import type { CardAction } from "@/features/common/ui";
 import { useSessionActions } from "@/features/session/model/use-session-actions";
 import { useNewItemAnimation } from "@/shared/hooks/use-new-item-animation";
 import { SessionExportDialog } from "@/features/session/ui/session-export-dialog";
-import { useSessionStore } from "@/shared/stores/session-store";
 import { useAsset } from "@/shared/hooks/use-asset";
+import { useCharacterAvatars } from "@/entities/character/hooks/use-character-avatars";
 import { cn } from "@/shared/lib";
+
+const SESSION_PLACEHOLDER_IMAGE = "/img/placeholder/scenario-placeholder.png";
 
 interface SessionsGridProps {
   sessions: SessionWithCharacterMetadata[];
@@ -41,6 +43,7 @@ interface SessionGridItemProps {
     sessionId: string,
     title: string,
     flowId: UniqueEntityID | undefined,
+    exportType?: "file" | "cloud",
   ) => (e: React.MouseEvent) => void;
   onCopy: (sessionId: string, title: string) => (e: React.MouseEvent) => void;
   onDeleteClick: (
@@ -61,52 +64,95 @@ function SessionGridItem({
   onDeleteClick,
 }: SessionGridItemProps) {
   const sessionId = session.id.toString();
-  const messageCount = session.props.turnIds.length;
 
   // Get session background image
   const coverId = session.props.coverId;
   const [coverImageUrl] = useAsset(coverId);
 
-  // Simple validation: check if session has AI character cards
-  // Avoid expensive per-card queries (useSessionValidation with nested flow queries)
-  const isInvalid = session.aiCharacterCardIds.length === 0;
+  // Resolve character avatar URLs
+  const resolvedAvatars = useCharacterAvatars(characterAvatars);
+
+  // Check if session is generating workflow
+  const isGenerating = session.config?.generationStatus === "generating";
 
   const actions: CardAction[] = [
     {
       icon: Upload,
       label: "Export",
-      onClick: onExportClick(sessionId, session.props.title, session.flowId),
+      onClick: onExportClick(
+        sessionId,
+        session.props.name,
+        session.flowId,
+        "file",
+      ),
+      disabled: loading.exporting,
+      loading: loading.exporting,
+    },
+    {
+      icon: IconHarpyLogo,
+      label: "Harpy",
+      onClick: onExportClick(
+        sessionId,
+        session.props.name,
+        session.flowId,
+        "cloud",
+      ),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: Copy,
       label: "Copy",
-      onClick: onCopy(sessionId, session.props.title),
+      onClick: onCopy(sessionId, session.props.name),
       disabled: loading.copying,
       loading: loading.copying,
     },
     {
       icon: Trash2,
       label: "Delete",
-      onClick: onDeleteClick(sessionId, session.props.title),
+      onClick: onDeleteClick(sessionId, session.props.name),
       disabled: loading.deleting,
       loading: loading.deleting,
       className: "text-red-400 hover:text-red-300",
     },
   ];
 
+  // Generating overlay - wrap SessionCard with loading UI
+  if (isGenerating) {
+    return (
+      <div className="relative">
+        <SessionCard
+          title={session.props.name || "Untitled Session"}
+          imageUrl={coverImageUrl}
+          placeholderImageUrl={SESSION_PLACEHOLDER_IMAGE}
+          isDisabled={true}
+          actions={actions}
+          className={cn("cursor-not-allowed", className)}
+          characterAvatars={resolvedAvatars}
+          areCharactersLoading={areCharactersLoading}
+          tags={session.props.tags}
+        />
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-xl bg-zinc-900/95">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+          <p className="mt-3 text-sm font-medium text-zinc-300">
+            Generating workflow...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <SessionCard
-      title={session.props.title || "Untitled Session"}
+      title={session.props.name || "Untitled Session"}
       imageUrl={coverImageUrl}
-      messageCount={messageCount}
-      isInvalid={isInvalid}
+      placeholderImageUrl={SESSION_PLACEHOLDER_IMAGE}
       onClick={() => onSessionClick(sessionId)}
       actions={actions}
       className={className}
-      characterAvatars={characterAvatars}
+      characterAvatars={resolvedAvatars}
       areCharactersLoading={areCharactersLoading}
+      tags={session.props.tags}
     />
   );
 }
@@ -126,25 +172,20 @@ export function SessionsGrid({
   newlyCreatedSessionId = null,
   areCharactersLoading = false,
 }: SessionsGridProps) {
-  const navigate = useNavigate();
-  const selectSession = useSessionStore.use.selectSession();
   const { animatingId, triggerAnimation } = useNewItemAnimation();
+  const navigate = useNavigate();
 
   const {
     loadingStates,
     deleteDialogState,
     exportDialogState,
-    copyDialogState,
     handleExportClick,
     handleExportConfirm,
     handleCopyClick,
-    handleCopyConfirm,
-    toggleIncludeChatHistory,
     handleDeleteClick,
     handleDeleteConfirm,
     closeDeleteDialog,
     closeExportDialog,
-    closeCopyDialog,
   } = useSessionActions({
     onCopySuccess: (sessionId) => triggerAnimation(sessionId),
   });
@@ -156,13 +197,12 @@ export function SessionsGrid({
     }
   }, [newlyCreatedSessionId, triggerAnimation]);
 
+  /**
+   * Handle session click - navigate to settings page
+   */
   const handleSessionClick = (sessionId: string) => {
-    const item = sessions.find((s) => s.session.id.toString() === sessionId);
-    if (item) {
-      selectSession(item.session.id, item.session.props.title);
-    }
     navigate({
-      to: "/sessions/$sessionId",
+      to: "/sessions/settings/$sessionId",
       params: { sessionId },
     });
   };
@@ -170,31 +210,32 @@ export function SessionsGrid({
   return (
     <>
       {/* Sessions Grid - Uses auto-fill with minmax to ensure stable card sizes */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] sm:gap-6">
         {sessions.map(({ session, characterAvatars }) => {
           const sessionId = session.id.toString();
           const loading = loadingStates[sessionId] || {};
           const isNewlyCreated = animatingId === sessionId;
 
           return (
-            <SessionGridItem
-              key={sessionId}
-              session={session}
-              characterAvatars={characterAvatars}
-              loading={loading}
-              className={cn(
-                isNewlyCreated && [
-                  "border-green-500!",
-                  "shadow-[0_0_20px_rgba(34,197,94,0.5)]",
-                  "animate-pulse",
-                ],
-              )}
-              areCharactersLoading={areCharactersLoading}
-              onSessionClick={handleSessionClick}
-              onExportClick={handleExportClick}
-              onCopy={handleCopyClick}
-              onDeleteClick={handleDeleteClick}
-            />
+            <div key={sessionId} className="relative">
+              <SessionGridItem
+                session={session}
+                characterAvatars={characterAvatars}
+                loading={loading}
+                className={cn(
+                  isNewlyCreated && [
+                    "border-green-500!",
+                    "shadow-[0_0_20px_rgba(34,197,94,0.5)]",
+                    "animate-pulse",
+                  ],
+                )}
+                areCharactersLoading={areCharactersLoading}
+                onSessionClick={handleSessionClick}
+                onExportClick={handleExportClick}
+                onCopy={handleCopyClick}
+                onDeleteClick={handleDeleteClick}
+              />
+            </div>
           );
         })}
       </div>
@@ -203,39 +244,8 @@ export function SessionsGrid({
       <SessionExportDialog
         open={exportDialogState.isOpen}
         onOpenChange={closeExportDialog}
-        agents={exportDialogState.agents}
-        onExport={async (modelTierSelections, includeHistory) => {
-          const { sessionId, title } = exportDialogState;
-          if (sessionId) {
-            await handleExportConfirm(
-              sessionId,
-              title,
-              modelTierSelections,
-              includeHistory,
-            );
-          }
-        }}
-      />
-
-      {/* Copy Confirmation Dialog */}
-      <DialogConfirm
-        open={copyDialogState.isOpen}
-        onOpenChange={closeCopyDialog}
-        title="Copy session"
-        description="Do you want to include chat history?"
-        content={
-          <Label className="flex flex-row items-center gap-2">
-            <Checkbox
-              checked={copyDialogState.includeChatHistory}
-              onCheckedChange={toggleIncludeChatHistory}
-            />
-            <span className="text-sm font-normal">
-              Include chat messages in the duplicated session
-            </span>
-          </Label>
-        }
-        confirmLabel="Copy"
-        onConfirm={handleCopyConfirm}
+        exportType={exportDialogState.exportType}
+        onExport={handleExportConfirm}
       />
 
       {/* Delete Confirmation Dialog */}

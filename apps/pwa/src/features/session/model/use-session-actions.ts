@@ -4,11 +4,13 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { downloadFile, logger } from "@/shared/lib";
+import {
+  DEFAULT_SHARE_EXPIRATION_DAYS,
+  ExportType,
+} from "@/shared/lib/cloud-upload-helpers";
+import { HARPY_HUB_URL } from "@/shared/lib/supabase-client";
 import { SessionService } from "@/app/services/session-service";
-import { FlowService } from "@/app/services/flow-service";
-import { AgentService } from "@/app/services/agent-service";
 import { sessionQueries } from "@/entities/session/api";
-import { ModelTier, AgentModelTierInfo } from "@/entities/agent/domain";
 
 interface DeleteDialogState {
   isOpen: boolean;
@@ -20,14 +22,7 @@ interface ExportDialogState {
   isOpen: boolean;
   sessionId: string | null;
   title: string;
-  agents: AgentModelTierInfo[];
-}
-
-interface CopyDialogState {
-  isOpen: boolean;
-  sessionId: string | null;
-  title: string;
-  includeChatHistory: boolean;
+  exportType: ExportType;
 }
 
 interface LoadingStates {
@@ -48,36 +43,6 @@ interface UseSessionActionsOptions {
 /**
  * Hook for session action handlers (export, copy, delete)
  * Provides state management and handlers for session operations
- *
- * Similar to useCardActions and useFlowActions but for sessions with:
- * - 2-step export process (fetch agents → select tiers → export)
- * - Copy with optional chat history inclusion
- * - Delete confirmation
- *
- * @example
- * ```tsx
- * const {
- *   loadingStates,
- *   deleteDialogState,
- *   exportDialogState,
- *   copyDialogState,
- *   handleExportClick,
- *   handleExportConfirm,
- *   handleCopyClick,
- *   handleCopyConfirm,
- *   handleDeleteClick,
- *   handleDeleteConfirm,
- *   closeDeleteDialog,
- *   closeExportDialog,
- *   closeCopyDialog
- * } = useSessionActions({ onCopySuccess });
- *
- * const actions = [
- *   { icon: Upload, onClick: handleExportClick(sessionId, title, flowId), loading: loadingStates[sessionId]?.exporting },
- *   { icon: Copy, onClick: handleCopyClick(sessionId, title), loading: loadingStates[sessionId]?.copying },
- *   { icon: Trash2, onClick: handleDeleteClick(sessionId, title), loading: loadingStates[sessionId]?.deleting },
- * ];
- * ```
  */
 export function useSessionActions(options: UseSessionActionsOptions = {}) {
   const { onCopySuccess } = options;
@@ -96,233 +61,135 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       isOpen: false,
       sessionId: null,
       title: "",
-      agents: [],
+      exportType: "file",
     },
   );
-
-  const [copyDialogState, setCopyDialogState] = useState<CopyDialogState>({
-    isOpen: false,
-    sessionId: null,
-    title: "",
-    includeChatHistory: false,
-  });
 
   const [loadingStates, setLoadingStates] = useState<LoadingStates>({});
 
   /**
-   * Open export dialog and fetch agent info from flow
+   * Open export dialog - export will start automatically
+   * @param exportType - "file" for JSON download, "cloud" for Harpy cloud upload
    */
   const handleExportClick = useCallback(
-    (sessionId: string, title: string, flowId: UniqueEntityID | undefined) =>
-      async (e: MouseEvent) => {
+    (sessionId: string, title: string, _flowId: UniqueEntityID | undefined, exportType: ExportType = "file") =>
+      (e: MouseEvent) => {
         e.stopPropagation();
-
-        setLoadingStates((prev) => ({
-          ...prev,
-          [sessionId]: { ...(prev[sessionId] ?? {}), exporting: true },
-        }));
-
-        try {
-          if (!flowId) {
-            toastError("No flow associated with this session");
-            return;
-          }
-
-          // Get flow with nodes to find agents
-          const flowQuery = await queryClient.fetchQuery({
-            queryKey: ["flow-with-nodes", flowId.toString()],
-            queryFn: async () => {
-              const result = await FlowService.getFlowWithNodes.execute(flowId);
-              if (result.isFailure) throw new Error(result.getError());
-              return result.getValue();
-            },
-          });
-
-          if (!flowQuery) {
-            toastError("Failed to load flow");
-            return;
-          }
-
-          // Get agents for this flow
-          const agents: AgentModelTierInfo[] = [];
-          for (const node of flowQuery.props.nodes) {
-            if (node.type === "agent") {
-              // Agent nodes store agentId in node.data.agentId, fallback to node.id
-              const agentId = (node.data as any)?.agentId || node.id;
-
-              if (!agentId) {
-                continue;
-              }
-
-              // Fetch agent data
-              const agentQuery = await queryClient.fetchQuery({
-                queryKey: ["agent", agentId],
-                queryFn: async () => {
-                  const result = await AgentService.getAgent.execute(
-                    new UniqueEntityID(agentId),
-                  );
-                  if (result.isFailure) throw new Error(result.getError());
-                  return result.getValue();
-                },
-              });
-
-              if (agentQuery) {
-                agents.push({
-                  agentId: agentId,
-                  agentName: agentQuery.props.name,
-                  modelName: agentQuery.props.modelName || "",
-                  recommendedTier: ModelTier.Light,
-                  selectedTier: agentQuery.props.modelTier || ModelTier.Light,
-                });
-              }
-            }
-          }
-
-          setExportDialogState({ isOpen: true, sessionId, title, agents });
-        } catch (error) {
-          logger.error("Failed to prepare export:", error);
-          toastError("Failed to prepare export", {
-            description:
-              error instanceof Error ? error.message : "Unknown error",
-          });
-        } finally {
-          setLoadingStates((prev) => ({
-            ...prev,
-            [sessionId]: { ...(prev[sessionId] ?? {}), exporting: false },
-          }));
-        }
+        // Open dialog - export starts automatically in the dialog
+        setExportDialogState({ isOpen: true, sessionId, title, exportType });
       },
-    [queryClient],
+    [],
   );
 
   /**
-   * Export session with tier selections and optional chat history
+   * Export session (either to file or cloud)
    */
   const handleExportConfirm = useCallback(
-    async (
-      sessionId: string,
-      title: string,
-      modelTierSelections: Map<string, ModelTier>,
-      includeHistory: boolean,
-    ) => {
+    async (): Promise<string | void> => {
+      const { sessionId, title, exportType } = exportDialogState;
+      if (!sessionId) return;
+
       try {
-        // Export session to file with model tier selections
-        const fileOrError = await SessionService.exportSessionToFile.execute({
-          sessionId: new UniqueEntityID(sessionId),
-          includeHistory,
-          modelTierSelections,
-        });
+        if (exportType === "cloud") {
+          // Export session to cloud and wait for completion
+          const shareResult = await SessionService.exportSessionToCloud.execute({
+            sessionId: new UniqueEntityID(sessionId),
+            expirationDays: DEFAULT_SHARE_EXPIRATION_DAYS,
+          });
 
-        if (fileOrError.isFailure) {
-          throw new Error(fileOrError.getError());
+          if (shareResult.isFailure) {
+            throw new Error(shareResult.getError());
+          }
+
+          // Return share URL to dialog
+          return shareResult.getValue().shareUrl;
+        } else {
+          // Export session to file (JSON download)
+          const fileOrError = await SessionService.exportSessionToFile.execute({
+            sessionId: new UniqueEntityID(sessionId),
+            // TODO: These are commented out for now - export as-is
+            // includeHistory: false,
+            // modelTierSelections: new Map(),
+          });
+
+          if (fileOrError.isFailure) {
+            throw new Error(fileOrError.getError());
+          }
+
+          const file = fileOrError.getValue();
+          if (!file) {
+            throw new Error("Export returned empty file");
+          }
+
+          // Download session file
+          downloadFile(file);
+
+          toastSuccess("Successfully exported!", {
+            description: `"${title}" exported`,
+          });
         }
-
-        const file = fileOrError.getValue();
-        if (!file) {
-          throw new Error("Export returned empty file");
-        }
-
-        // Download session file
-        downloadFile(file);
-
-        toastSuccess("Successfully exported!", {
-          description: `"${title}" exported`,
-        });
-
-        setExportDialogState({
-          isOpen: false,
-          sessionId: null,
-          title: "",
-          agents: [],
-        });
       } catch (error) {
         logger.error(error);
-        toastError("Failed to export", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
+        toastError(
+          `Failed to export ${exportType === "cloud" ? "to cloud" : "to file"}`,
+          {
+            description:
+              error instanceof Error ? error.message : "Unknown error",
+          },
+        );
+        throw error; // Re-throw so dialog knows export failed
       }
     },
-    [],
+    [exportDialogState],
   );
 
   /**
-   * Open copy dialog
+   * Copy session directly (no dialog, like character cards)
    */
   const handleCopyClick = useCallback(
-    (sessionId: string, title: string) => (e: MouseEvent) => {
+    (sessionId: string, title: string) => async (e: MouseEvent) => {
       e.stopPropagation();
-      setCopyDialogState({
-        isOpen: true,
-        sessionId,
-        title,
-        includeChatHistory: false,
-      });
-    },
-    [],
-  );
 
-  /**
-   * Toggle include chat history option
-   */
-  const toggleIncludeChatHistory = useCallback(() => {
-    setCopyDialogState((prev) => ({
-      ...prev,
-      includeChatHistory: !prev.includeChatHistory,
-    }));
-  }, []);
-
-  /**
-   * Clone/copy session with optional chat history
-   */
-  const handleCopyConfirm = useCallback(async () => {
-    const { sessionId, title, includeChatHistory } = copyDialogState;
-    if (!sessionId) return;
-
-    setLoadingStates((prev) => ({
-      ...prev,
-      [sessionId]: { ...(prev[sessionId] ?? {}), copying: true },
-    }));
-
-    try {
-      // Clone session
-      const copiedSessionOrError = await SessionService.cloneSession.execute({
-        sessionId: new UniqueEntityID(sessionId),
-        includeHistory: includeChatHistory,
-      });
-
-      if (copiedSessionOrError.isFailure) {
-        throw new Error(copiedSessionOrError.getError());
-      }
-
-      const copiedSession = copiedSessionOrError.getValue();
-
-      // Notify parent of successful copy for animation
-      onCopySuccess?.(copiedSession.id.toString());
-
-      toastSuccess("Session copied", {
-        description: `Created copy of "${title}"`,
-      });
-
-      await queryClient.invalidateQueries({ queryKey: sessionQueries.lists() });
-
-      setCopyDialogState({
-        isOpen: false,
-        sessionId: null,
-        title: "",
-        includeChatHistory: false,
-      });
-    } catch (error) {
-      logger.error(error);
-      toastError("Failed to copy", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    } finally {
       setLoadingStates((prev) => ({
         ...prev,
-        [sessionId]: { ...(prev[sessionId] ?? {}), copying: false },
+        [sessionId]: { ...(prev[sessionId] ?? {}), copying: true },
       }));
-    }
-  }, [copyDialogState, queryClient, onCopySuccess]);
+
+      try {
+        // Clone session (without chat history)
+        const copiedSessionOrError = await SessionService.cloneSession.execute({
+          sessionId: new UniqueEntityID(sessionId),
+          includeHistory: false,
+        });
+
+        if (copiedSessionOrError.isFailure) {
+          throw new Error(copiedSessionOrError.getError());
+        }
+
+        const copiedSession = copiedSessionOrError.getValue();
+
+        // Notify parent of successful copy for animation
+        onCopySuccess?.(copiedSession.id.toString());
+
+        toastSuccess("Session copied", {
+          description: `Created copy of "${title}"`,
+        });
+
+        await queryClient.invalidateQueries({ queryKey: sessionQueries.lists() });
+      } catch (error) {
+        logger.error(error);
+        toastError("Failed to copy", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      } finally {
+        setLoadingStates((prev) => ({
+          ...prev,
+          [sessionId]: { ...(prev[sessionId] ?? {}), copying: false },
+        }));
+      }
+    },
+    [queryClient, onCopySuccess],
+  );
 
   /**
    * Open delete confirmation dialog
@@ -400,19 +267,7 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
       isOpen: false,
       sessionId: null,
       title: "",
-      agents: [],
-    });
-  }, []);
-
-  /**
-   * Close copy dialog without copying
-   */
-  const closeCopyDialog = useCallback(() => {
-    setCopyDialogState({
-      isOpen: false,
-      sessionId: null,
-      title: "",
-      includeChatHistory: false,
+      exportType: "file",
     });
   }, []);
 
@@ -421,18 +276,14 @@ export function useSessionActions(options: UseSessionActionsOptions = {}) {
     loadingStates,
     deleteDialogState,
     exportDialogState,
-    copyDialogState,
 
     // Handlers
     handleExportClick,
     handleExportConfirm,
     handleCopyClick,
-    handleCopyConfirm,
-    toggleIncludeChatHistory,
     handleDeleteClick,
     handleDeleteConfirm,
     closeDeleteDialog,
     closeExportDialog,
-    closeCopyDialog,
   };
 }

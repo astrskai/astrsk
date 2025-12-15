@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Trash2, BookOpen } from "lucide-react";
 import ScenarioCardUI from "@/features/scenario/ui/scenario-card";
-import { PlotCard } from "@/entities/card/domain/plot-card";
+import { ScenarioCard } from "@/entities/card/domain/scenario-card";
 import { cn } from "@/shared/lib";
 import { useAsset } from "@/shared/hooks/use-asset";
 import type { CardAction } from "@/features/common/ui";
 import { ScenarioSelectionDialog } from "@/features/scenario/ui/scenario-selection-dialog";
 
 interface ScenarioSelectionStepProps {
-  selectedScenario: PlotCard | null;
-  onScenarioSelected: (plot: PlotCard | null) => void;
+  selectedScenario: ScenarioCard | null;
+  onScenarioSelected: (plot: ScenarioCard | null) => void;
 }
 
 /**
@@ -17,7 +17,7 @@ interface ScenarioSelectionStepProps {
  * Wrapper component for selected scenario with Remove action
  */
 interface SelectedScenarioCardProps {
-  card: PlotCard;
+  card: ScenarioCard;
   onClick: () => void;
   onRemove: (e: React.MouseEvent) => void;
 }
@@ -48,7 +48,7 @@ const SelectedScenarioCard = ({
       summary={card.props.cardSummary}
       tags={card.props.tags || []}
       tokenCount={card.props.tokenCount}
-      firstMessages={card.props.scenarios?.length || 0}
+      firstMessages={card.props.firstMessages?.length || 0}
       actions={actions}
       onClick={onClick}
     />

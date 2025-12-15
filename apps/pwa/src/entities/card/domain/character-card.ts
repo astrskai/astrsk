@@ -10,11 +10,20 @@ import {
 } from "@/entities/card/domain/card";
 import { Lorebook } from "@/entities/card/domain/lorebook";
 
+// Type for first messages (used for 1:1 sessions)
+export interface CharacterFirstMessage {
+  name: string;
+  description: string;
+}
+
 export interface CharacterCardProps {
   name?: string;
   description?: string;
   exampleDialogue?: string;
   lorebook?: Lorebook;
+  // 1:1 Session specific fields
+  scenario?: string;
+  firstMessages?: CharacterFirstMessage[];
 }
 
 export interface CharacterCardPropsJSON {
@@ -22,6 +31,8 @@ export interface CharacterCardPropsJSON {
   description?: string;
   exampleDialogue?: string;
   lorebook?: ReturnType<Lorebook["toJSON"]>;
+  scenario?: string;
+  firstMessages?: CharacterFirstMessage[];
 }
 
 export type CreateCharacterCardProps = CreateCardProps &
@@ -56,7 +67,11 @@ export class CharacterCard extends AggregateRoot<
           description: props.description,
           exampleDialogue: props.exampleDialogue,
           lorebook: props.lorebook,
+          sessionId: props.sessionId,
           updatedAt: props.updatedAt || new Date(),
+          // 1:1 Session specific fields
+          scenario: props.scenario,
+          firstMessages: props.firstMessages,
         },
         id ?? new UniqueEntityID(),
       );

@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Route } from "@/routes/_layout/sessions/$sessionId";
@@ -6,7 +6,11 @@ import { sessionQueries } from "@/entities/session/api";
 import { flowQueries } from "@/entities/flow/api";
 import { DataStoreSchemaField } from "@/entities/flow/domain";
 
-import { useBackgroundStore } from "@/shared/stores/background-store";
+import {
+  backgroundQueries,
+  getDefaultBackground,
+  getBackgroundAssetId,
+} from "@/entities/background/api";
 import { useAsset } from "@/shared/hooks/use-asset";
 import { UniqueEntityID } from "@/shared/domain";
 import { Loading } from "@/shared/ui";
@@ -20,20 +24,32 @@ import { turnQueries } from "@/entities/turn/api/turn-queries";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { AutoReply } from "@/shared/stores/session-store";
 import { useSaveSession } from "@/entities/session/api/mutations";
+import { useSessionConfig } from "@/shared/hooks/use-session-config";
+import { usePlaySessionAuth } from "@/shared/hooks/use-play-session-auth";
+import { PlaySessionLoginPage } from "@/pages/auth/play-session-login";
 
 export default function ChatPage() {
-  const [isOpenSessionDataSidebar, setIsOpenSessionDataSidebar] =
-    useState<boolean>(false);
-  const [isOpenSettings, setIsOpenSettings] = useState<boolean>(false);
-
   const saveSessionMutation = useSaveSession();
 
   const { sessionId } = Route.useParams();
-  const sessionIdEntity = sessionId as unknown as UniqueEntityID;
+  const sessionIdEntity = sessionId ? new UniqueEntityID(sessionId) : undefined;
+
+  // Check if user needs authentication for play session
+  const playSessionAuth = usePlaySessionAuth(sessionIdEntity);
 
   const { data: session, isLoading } = useQuery(
-    sessionQueries.detail(sessionIdEntity ?? undefined),
+    sessionQueries.detail(sessionIdEntity),
   );
+
+  // Session config hook - manages panel states
+  const {
+    isSettingsPanelOpen,
+    isDataPanelOpen,
+    toggleSettingsPanel,
+    toggleDataPanel,
+  } = useSessionConfig({
+    session: session ?? null,
+  });
 
   const { data: flow } = useQuery(
     flowQueries.detail(session?.flowId?.toString() ?? ""),
@@ -45,15 +61,20 @@ export default function ChatPage() {
     ),
   );
 
-  // Background
-  const { backgroundMap } = useBackgroundStore();
-  const background = backgroundMap.get(
-    session?.props.backgroundId?.toString() ?? "",
-  );
-  const [backgroundAsset] = useAsset(background?.assetId);
-  const backgroundSrc =
-    backgroundAsset ??
-    (background && "src" in background ? background.src : "");
+  // Background - check if default first, then query for user background
+  const backgroundId = session?.props.backgroundId;
+  const defaultBg = backgroundId ? getDefaultBackground(backgroundId) : undefined;
+
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(backgroundId),
+    enabled: !!backgroundId && !defaultBg,
+  });
+
+  const [backgroundAsset] = useAsset(getBackgroundAssetId(background));
+
+  const backgroundSrc = defaultBg
+    ? defaultBg.src
+    : backgroundAsset ?? "";
 
   const isLoadingBackground = backgroundAsset === "/img/skeleton.svg";
   const shouldShowBackground = backgroundSrc && !isLoadingBackground;
@@ -156,47 +177,91 @@ export default function ChatPage() {
     saveSessionMutation.isPending,
   ]);
 
-  return isLoading ? (
-    <Loading />
-  ) : session ? (
-    <div className="relative z-0 flex h-dvh flex-col">
-      {shouldShowBackground && (
+  // Wrapper function to convert toggle to the expected (isOpen: boolean) => void signature
+  const handleDataPanelToggle = useCallback(
+    (isOpen: boolean) => {
+      // Only toggle if current state differs from desired state
+      if (isDataPanelOpen !== isOpen) {
+        toggleDataPanel();
+      }
+    },
+    [isDataPanelOpen, toggleDataPanel],
+  );
+
+  // Show loading while checking auth or loading session
+  if (isLoading || playSessionAuth.isLoading) {
+    return <Loading />;
+  }
+
+  // Show login page if user needs authentication
+  if (playSessionAuth.needsAuth) {
+    return <PlaySessionLoginPage />;
+  }
+
+  return session ? (
+    <div className="relative z-0 flex h-dvh flex-col overflow-hidden">
+      {shouldShowBackground ? (
         <div
           className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat opacity-60"
           style={{ backgroundImage: `url(${backgroundSrc})` }}
         />
+      ) : (
+        /* Galaxy theme gradient background when no background image is selected */
+        <div
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              "radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 50%), " +
+              "radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), " +
+              "radial-gradient(ellipse at 50% 50%, rgba(79, 70, 229, 0.06) 0%, transparent 70%), " +
+              "linear-gradient(to bottom, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%)",
+          }}
+        >
+          {/* Subtle star-like dots */}
+          <div
+            className="absolute inset-0 opacity-20"
+            style={{
+              backgroundImage:
+                "radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.3), transparent), " +
+                "radial-gradient(1px 1px at 40px 70px, rgba(139, 92, 246, 0.4), transparent), " +
+                "radial-gradient(1px 1px at 90px 40px, rgba(99, 102, 241, 0.3), transparent), " +
+                "radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.2), transparent), " +
+                "radial-gradient(1px 1px at 160px 20px, rgba(139, 92, 246, 0.3), transparent)",
+              backgroundSize: "180px 100px",
+            }}
+          />
+        </div>
       )}
 
       <SessionHeader
-        title={session.title ?? "Session"}
-        isOpenDataSidebar={isOpenSessionDataSidebar}
-        onDataSidebarClick={() => setIsOpenSessionDataSidebar((prev) => !prev)}
-        onSettingsClick={() => setIsOpenSettings(true)}
+        title={session.name ?? "Session"}
+        onSettingsClick={toggleSettingsPanel}
       />
 
-      <div className="flex flex-1">
+      <div className="relative flex flex-1 overflow-hidden">
         <SessionDataSidebar
           session={session}
-          isOpen={isOpenSessionDataSidebar}
+          isOpen={isDataPanelOpen}
+          onToggle={toggleDataPanel}
           sortedDataSchemaFields={sortedDataSchemaFields}
           isInitialDataStore={isInitialDataStore}
           lastTurnDataStore={lastTurnDataStore}
-          savedLayout={session.widgetLayout}
+          lastTurn={lastTurn}
         />
 
         <ChatMainArea
           data={session}
-          isOpenStats={isOpenSessionDataSidebar}
-          onOpenStats={setIsOpenSessionDataSidebar}
+          isOpenStats={isDataPanelOpen}
+          onOpenStats={handleDataPanelToggle}
           onAutoReply={handleAutoReplyClick}
         />
       </div>
 
       <SessionSettingsSidebar
         session={session}
-        isOpen={isOpenSettings}
+        isOpen={isSettingsPanelOpen}
         onAutoReply={handleAutoReplyClick}
-        onClose={() => setIsOpenSettings(false)}
+        onClose={toggleSettingsPanel}
       />
     </div>
   ) : (

@@ -1,7 +1,6 @@
 import { useAsset } from "@/shared/hooks/use-asset";
 import { sessionQueries } from "@/entities/session/api";
 import { useAppStore } from "@/shared/stores/app-store";
-import { useBackgroundStore } from "@/shared/stores/background-store";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { Session } from "@/entities/session/domain/session";
 import {
@@ -11,14 +10,23 @@ import {
 import { cn } from "@/shared/lib";
 import { UniqueEntityID } from "@/shared/domain";
 import { Route } from "@/routes/_layout/sessions/$sessionId";
-import { CardTab } from "@/features/session/create-session/step-cards";
+import {
+  CardTab,
+  CardTabValue,
+} from "@/features/session/create-session/step-cards";
 import { SessionContent, SessionSettings } from "./ui/chat";
 import { FloatingActionButton, ScrollArea, SvgIcon } from "@/shared/ui";
 import { logger } from "@/shared/lib";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  backgroundQueries,
+  getDefaultBackground,
+  getBackgroundAssetId,
+  isDefaultBackground,
+} from "@/entities/background/api";
 
 export default function SessionDetailPage({
   className,
@@ -27,23 +35,36 @@ export default function SessionDetailPage({
 }) {
   const navigate = useNavigate();
   const { sessionId } = Route.useParams();
-  const [isOpenSettings, setIsOpenSettings] = useState(false);
   const [sidebarKeyword, setSidebarKeyword] = useState("");
-  const { selectedSessionId } = useSessionStore();
   const selectSession = useSessionStore.use.selectSession();
+
+  // Use URL sessionId directly for the query instead of store (fixes F5 refresh issue)
+  const sessionIdEntity = sessionId ? new UniqueEntityID(sessionId) : undefined;
   const { data: session, isLoading } = useQuery(
-    sessionQueries.detail(selectedSessionId ?? undefined),
+    sessionQueries.detail(sessionIdEntity),
   );
+
+  // Settings panel state from store (per-session)
+  const settingsPanelOpen = useSessionStore.use.settingsPanelOpen();
+  const setSettingsPanelOpen = useSessionStore.use.setSettingsPanelOpen();
+  const isOpenSettings = sessionId ? (settingsPanelOpen[sessionId] ?? false) : false;
+
+  // Toggle settings panel
+  const toggleSettingsPanel = useCallback((open: boolean) => {
+    if (sessionId) {
+      setSettingsPanelOpen(sessionId, open);
+    }
+  }, [sessionId, setSettingsPanelOpen]);
   const { data: sessions = [] } = useQuery(
     sessionQueries.list({ keyword: sidebarKeyword }),
   );
 
-  // Set selected session when sessionId changes
+  // Sync store with URL params (for other components that depend on the store)
   useEffect(() => {
     if (sessionId) {
-      selectSession(new UniqueEntityID(sessionId), "Session");
+      selectSession(new UniqueEntityID(sessionId), session?.name ?? "Session");
     }
-  }, [sessionId, selectSession]);
+  }, [sessionId, selectSession, session?.name]);
 
   // Check session exists
   useEffect(() => {
@@ -59,15 +80,21 @@ export default function SessionDetailPage({
     sessionOnboardingSteps.inferenceButton &&
     !sessionOnboardingSteps.sessionEdit;
 
-  // Background
-  const { backgroundMap } = useBackgroundStore();
-  const background = backgroundMap.get(
-    session?.props.backgroundId?.toString() ?? "",
-  );
-  const [backgroundAsset] = useAsset(background?.assetId);
-  const backgroundSrc =
-    backgroundAsset ??
-    (background && "src" in background ? background.src : "");
+  // Background - check if default first, then query for user background
+  const backgroundId = session?.props.backgroundId;
+  const defaultBg = backgroundId ? getDefaultBackground(backgroundId) : undefined;
+
+  const { data: background } = useQuery({
+    ...backgroundQueries.detail(backgroundId),
+    enabled: !!backgroundId && !defaultBg,
+  });
+
+  const [backgroundAsset] = useAsset(getBackgroundAssetId(background));
+
+  // Determine background source
+  const backgroundSrc = defaultBg
+    ? defaultBg.src
+    : backgroundAsset ?? "";
 
   // Don't show background if it's still loading (skeleton path indicates loading)
   const isLoadingBackground = backgroundAsset === "/img/skeleton.svg";
@@ -75,10 +102,10 @@ export default function SessionDetailPage({
 
   // Add plot card
   const refEditCards = useRef<HTMLDivElement>(null);
-  const refInitCardTab = useRef<CardTab>("ai");
+  const refInitCardTab = useRef<CardTab>(CardTabValue.AI);
   const onAddPlotCard = () => {
-    setIsOpenSettings(true);
-    refInitCardTab.current = "plot";
+    toggleSettingsPanel(true);
+    refInitCardTab.current = CardTabValue.Plot;
     refEditCards.current?.click();
   };
 
@@ -112,12 +139,12 @@ export default function SessionDetailPage({
 
         {/* Center: Session title */}
         <h1 className="text-fg-default flex-1 truncate text-center text-base font-semibold">
-          {session?.title ?? "Session"}
+          {session?.name ?? "Session"}
         </h1>
 
         {/* Right: Settings/Close button */}
         <button
-          onClick={() => setIsOpenSettings(!isOpenSettings)}
+          onClick={() => toggleSettingsPanel(!isOpenSettings)}
           className="text-fg-muted hover:text-fg-default -mr-2 flex h-10 w-10 items-center justify-center transition-colors"
           aria-label={isOpenSettings ? "Close settings" : "Session settings"}
         >
@@ -142,11 +169,11 @@ export default function SessionDetailPage({
           onKeywordChange={setSidebarKeyword}
           defaultExpanded={true}
         >
-          {sessions.map((session: Session) => (
+          {sessions.map((s: Session) => (
             <SessionListItem
-              key={session.id.toString()}
-              session={session}
-              isActive={session.id.toString() === selectedSessionId?.toString()}
+              key={s.id.toString()}
+              session={s}
+              isActive={s.id.toString() === sessionId}
             />
           ))}
         </SearchableSidebar>
@@ -182,7 +209,7 @@ export default function SessionDetailPage({
               isOpenSettings && "pointer-events-none opacity-0",
             )}
             onClick={() => {
-              setIsOpenSettings(true);
+              toggleSettingsPanel(true);
             }}
             onboarding={shouldShowSessionEditTooltip && !isOpenSettings}
             onboardingTooltip="Click to edit session details"
@@ -196,7 +223,7 @@ export default function SessionDetailPage({
               !isOpenSettings && "pointer-events-none opacity-0",
             )}
             onClick={() => {
-              setIsOpenSettings(false);
+              toggleSettingsPanel(false);
             }}
           />
           <div
@@ -209,7 +236,7 @@ export default function SessionDetailPage({
             <header className="border-border-default bg-surface relative z-10 flex h-14 items-center justify-between border-b px-4 md:hidden">
               {/* Left: Back button */}
               <button
-                onClick={() => setIsOpenSettings(false)}
+                onClick={() => toggleSettingsPanel(false)}
                 className="text-fg-muted hover:text-fg-default -ml-2 flex h-10 w-10 items-center justify-center transition-colors"
                 aria-label="Back to session"
               >
@@ -227,7 +254,7 @@ export default function SessionDetailPage({
 
             <ScrollArea className="flex-1">
               <SessionSettings
-                setIsOpenSettings={setIsOpenSettings}
+                setIsOpenSettings={toggleSettingsPanel}
                 refEditCards={refEditCards}
                 refInitCardTab={refInitCardTab}
                 isSettingsOpen={isOpenSettings}

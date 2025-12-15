@@ -324,7 +324,7 @@ export function Editor({
   return (
     <div
       className={cn(
-        "bg-background-surface-0 outline-border-normal relative h-full w-full rounded-md outline-1 outline-offset-[-1px]",
+        "bg-canvas outline-border-normal relative h-full w-full rounded-md outline-1 outline-offset-[-1px]",
         containerClassName,
       )}
       onFocus={onFocus}
@@ -334,22 +334,22 @@ export function Editor({
       {expandable && (
         <button
           onClick={handleExpandToggle}
-          className="hover:bg-background-surface-1 absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-sm transition-colors"
+          className="hover:bg-surface absolute top-2 right-2 z-10 flex h-6 w-6 items-center justify-center rounded-sm transition-colors"
           aria-label={isExpanded ? "Minimize editor" : "Maximize editor"}
         >
           {isExpanded ? (
-            <Minimize2 className="text-text-subtle h-4 w-4" />
+            <Minimize2 className="text-fg-subtle h-4 w-4" />
           ) : (
-            <Maximize2 className="text-text-subtle h-4 w-4" />
+            <Maximize2 className="text-fg-subtle h-4 w-4" />
           )}
         </button>
       )}
       <div className={cn("relative h-full w-full", paddingClasses, className)}>
         <ErrorBoundary
           fallback={
-            <div className="bg-background-surface-0 flex h-full w-full items-center justify-center">
-              <div className="bg-background-surface-2 flex flex-col items-center gap-2 rounded-md px-4 py-3 shadow-sm">
-                <p className="text-text-subtle text-sm">Failed to load editor</p>
+            <div className="bg-canvas flex h-full w-full items-center justify-center">
+              <div className="bg-surface-raised flex flex-col items-center gap-2 rounded-md px-4 py-3 shadow-sm">
+                <p className="text-fg-subtle text-sm">Failed to load editor</p>
                 <button
                   onClick={() => window.location.reload()}
                   className="text-text-primary text-xs underline hover:no-underline"
@@ -365,10 +365,10 @@ export function Editor({
         >
           <Suspense
             fallback={
-              <div className="bg-background-surface-0 flex h-full w-full items-center justify-center">
-                <div className="bg-background-surface-2 flex items-center gap-2 rounded-md px-3 py-2 shadow-sm">
+              <div className="bg-canvas flex h-full w-full items-center justify-center">
+                <div className="bg-surface-raised flex items-center gap-2 rounded-md px-3 py-2 shadow-sm">
                   <div className="border-border-normal border-t-text-primary h-4 w-4 animate-spin rounded-full border-2"></div>
-                  <span className="text-text-subtle text-xs font-medium">
+                  <span className="text-fg-subtle text-xs font-medium">
                     Loading editor...
                   </span>
                 </div>
@@ -391,10 +391,10 @@ export function Editor({
 
         {/* Loading overlay */}
         {isLoading && (
-          <div className="bg-background-surface-0/80 absolute inset-0 z-20 flex items-center justify-center backdrop-blur-sm">
-            <div className="bg-background-surface-2 flex items-center gap-2 rounded-md px-3 py-2 shadow-sm">
+          <div className="bg-canvas/80 absolute inset-0 z-20 flex items-center justify-center backdrop-blur-sm">
+            <div className="bg-surface-raised flex items-center gap-2 rounded-md px-3 py-2 shadow-sm">
               <div className="border-border-normal border-t-text-primary h-4 w-4 animate-spin rounded-full border-2"></div>
-              <span className="text-text-subtle text-xs font-medium">
+              <span className="text-fg-subtle text-xs font-medium">
                 Saving...
               </span>
             </div>

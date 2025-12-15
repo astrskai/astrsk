@@ -1,4 +1,5 @@
 import * as Dialog from "@radix-ui/react-dialog";
+import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { X } from "lucide-react";
 import { cn } from "@/shared/lib";
 
@@ -13,6 +14,10 @@ interface DialogBaseProps {
   isShowCloseButton?: boolean;
   size?: "sm" | "md" | "lg" | "xl" | "2xl"; // Dialog size (default: "md")
   className?: string; // Custom className for dialog content container
+  contentClassName?: string; // Custom className for inner content wrapper (default: scrollable)
+  closeOnOverlayClick?: boolean; // If true, allows closing by clicking outside (default: true)
+  hideTitle?: boolean; // If true, visually hides title (still accessible to screen readers)
+  onOpenAutoFocus?: (event: Event) => void; // Callback to control auto-focus behavior when dialog opens
 }
 
 export const DialogBase = ({
@@ -26,6 +31,10 @@ export const DialogBase = ({
   isShowCloseButton = true,
   size = "md",
   className,
+  contentClassName,
+  closeOnOverlayClick = true,
+  hideTitle = false,
+  onOpenAutoFocus,
 }: DialogBaseProps) => {
   // Map size to max-width classes
   const sizeClasses = {
@@ -57,19 +66,44 @@ export const DialogBase = ({
             "data-[state=closed]:duration-200 data-[state=open]:duration-200",
             className,
           )}
+          // Explicitly set to undefined when no description to suppress Radix warning
+          {...(!description && { "aria-describedby": undefined })}
+          onPointerDownOutside={(e) => {
+            if (!closeOnOverlayClick) {
+              e.preventDefault();
+            }
+          }}
+          onInteractOutside={(e) => {
+            if (!closeOnOverlayClick) {
+              e.preventDefault();
+            }
+          }}
+          onOpenAutoFocus={onOpenAutoFocus}
         >
-          {title && (
+          {title && hideTitle ? (
+            <VisuallyHidden.Root asChild>
+              <Dialog.Title>{title}</Dialog.Title>
+            </VisuallyHidden.Root>
+          ) : title ? (
             <Dialog.Title className="m-0 flex-shrink-0 text-lg font-semibold text-fg-default md:text-xl">
               {title}
             </Dialog.Title>
-          )}
+          ) : null}
 
-          <Dialog.Description className="mx-0 mt-2 mb-4 flex-shrink-0 text-sm text-fg-muted">
-            {description}
-          </Dialog.Description>
+          {description && !hideTitle ? (
+            <Dialog.Description className="mx-0 mt-2 mb-4 flex-shrink-0 text-sm text-fg-muted">
+              {description}
+            </Dialog.Description>
+          ) : description ? (
+            <VisuallyHidden.Root asChild>
+              <Dialog.Description>{description}</Dialog.Description>
+            </VisuallyHidden.Root>
+          ) : null}
 
           {/* Scrollable Content */}
-          <div className="min-h-0 flex-1 overflow-y-auto">{content}</div>
+          <div className={cn("min-h-0 flex-1 overflow-y-auto", contentClassName)}>
+            {content}
+          </div>
 
           {/* Fixed Footer (always visible) */}
           {footer && <div className="mt-4 flex-shrink-0">{footer}</div>}
@@ -79,7 +113,7 @@ export const DialogBase = ({
               <button
                 type="button"
                 aria-label="Close"
-                className="absolute top-3 right-3 inline-flex cursor-pointer items-center text-fg-muted hover:text-fg-default"
+                className="absolute top-3 right-3 z-20 inline-flex cursor-pointer items-center text-fg-muted hover:text-fg-default"
               >
                 <X className="h-6 w-6" />
               </button>

@@ -127,8 +127,11 @@ persistQueryClient({
   },
 });
 
-// Initialize broadcast
-broadcastQueryClient({
-  queryClient,
-  broadcastChannel: "astrsk-query-broadcast",
-});
+// Initialize broadcast for multi-tab sync (skip for web version)
+// VITE_SKIP_WAITING=true disables broadcast to prevent multi-tab sync issues in web mode
+if (import.meta.env.VITE_SKIP_WAITING !== "true") {
+  broadcastQueryClient({
+    queryClient,
+    broadcastChannel: "astrsk-query-broadcast",
+  });
+}

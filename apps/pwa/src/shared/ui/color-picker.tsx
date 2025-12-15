@@ -9,11 +9,11 @@ import { useForwardedRef } from "@/shared/hooks/use-forwarded-ref";
 import type { ButtonProps } from "@/shared/ui";
 import {
   Button,
-  Input,
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/ui";
+import { Input } from "@/shared/ui/forms";
 
 interface ColorPickerProps {
   value?: string | null;

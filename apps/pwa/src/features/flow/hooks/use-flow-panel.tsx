@@ -126,7 +126,7 @@ export function FlowPanelLoading({
 export function FlowPanelError({ message }: { message: string }) {
   return (
     <div className="bg-surface-raised flex h-full w-full items-center justify-center">
-      <div className="text-status-destructive">{message}</div>
+      <div className="text-status-error">{message}</div>
     </div>
   );
 }

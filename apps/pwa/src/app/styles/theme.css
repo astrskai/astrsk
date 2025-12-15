@@ -12,7 +12,6 @@
    ----------------------------------------------- */
 :root {
   /* Neutral Scale (cool-toned, pairs with blue brand) */
-  --color-neutral-0: #000000;
   --color-neutral-950: #0a0a0c;
   --color-neutral-900: #141416;
   --color-neutral-800: #232328;
@@ -52,7 +51,7 @@
 
   /* === Backgrounds === */
   /* canvas: Base page background */
-  --bg-canvas: var(--color-neutral-0);
+  --bg-canvas: #000000;
   /* surface: Layered backgrounds (cards, panels, sidebars) */
   --bg-surface: var(--color-neutral-950);
   --bg-surface-raised: var(--color-neutral-900);
@@ -157,7 +156,6 @@
    ----------------------------------------------- */
 @theme {
   /* Neutral Scale */
-  --color-neutral-0: #000000;
   --color-neutral-950: #0a0a0c;
   --color-neutral-900: #141416;
   --color-neutral-800: #232328;
@@ -234,4 +232,43 @@
     background-color: var(--bg-canvas);
     color: var(--fg-muted);
   }
+}
+
+/* -----------------------------------------------
+   7. KEYFRAMES & ANIMATIONS
+   ----------------------------------------------- */
+@keyframes bounce-typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.4;
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.1);
+  }
+}
+
+@utility animate-bounce-typing {
+  animation: bounce-typing 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    box-shadow: 0 0 0 0 rgba(91, 130, 186, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(91, 130, 186, 0);
+  }
+  100% {
+    transform: scale(0.8);
+    box-shadow: 0 0 0 0 rgba(91, 130, 186, 0);
+  }
+}
+
+@utility animate-pulse-ring {
+  animation: pulse-ring 2s infinite;
 }

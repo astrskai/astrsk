@@ -87,41 +87,47 @@ Before you begin, ensure you have the following installed:
 
 ### ⚙️ Tech Stack
 
-- **Frontend**: React, TypeScript, Vite
-- **Styling**: Tailwind CSS
-- **State Management**: TanStack Query (React Query) + Zustand
+- **Frontend**: React 18, TypeScript 5, Vite 6
+- **Styling**: Tailwind CSS v4
+- **Routing**: TanStack Router
+- **State Management**: TanStack Query v5 + Zustand
 - **UI Components**: shadcn/ui (built on Radix UI)
-- **Database**: PGlite (PostgreSQL WASM) - Local only
+- **Database**: PGlite (PostgreSQL WASM) + Drizzle ORM - Local only
 - **AI SDKs**: Vercel AI SDK with multiple providers
-- **PWA**: Vite PWA plugin
+- **PWA**: Vite PWA plugin with service worker
 - **Desktop**: Electron wrapper with auto-updater
 
 ### 🏗️ Project Structure
 
 ```
 astrsk/
-└── apps/
-    ├── pwa/                # Main PWA application
-    │   ├── src/
-    │   │   ├── modules/    # Domain modules (DDD structure)
-    │   │   │   ├── agent/
-    │   │   │   ├── flow/
-    │   │   │   └── session/
-    │   │   ├── app/        # Application layer
-    │   │   ├── components/ # shadcn/ui components
-    │   │   ├── db/         # Database schema and migrations
-    │   │   └── shared/     # Shared utilities
-    │   └── public/
-    └── electron/           # Electron wrapper (native desktop app)
-        ├── build/          # Build resources (icons, entitlements)
-        ├── resources/      # Application resources
-        ├── src/
-        │   ├── main/       # Main process (window management, IPC)
-        │   ├── preload/    # Preload scripts (secure bridge)
-        │   └── shared/     # Shared types and constants
-        ├── electron.vite.config.ts
-        ├── electron-builder.yml     # Production build config
-        └── tsconfig.*.json          # TypeScript configs
+├── apps/
+│   ├── pwa/                  # Main PWA application (Feature-Sliced Design)
+│   │   └── src/
+│   │       ├── app/          # App initialization, providers, services
+│   │       ├── pages/        # Route pages (1 route = 1 page)
+│   │       ├── widgets/      # Reusable UI blocks across pages
+│   │       ├── features/     # User interactions & business logic
+│   │       │   ├── character/
+│   │       │   ├── flow/
+│   │       │   ├── session/
+│   │       │   └── vibe/
+│   │       ├── entities/     # Business domain models
+│   │       │   ├── agent/
+│   │       │   ├── card/
+│   │       │   ├── flow/
+│   │       │   └── session/
+│   │       ├── shared/       # Foundation (UI kit, hooks, utilities)
+│   │       ├── db/           # Database schema and migrations
+│   │       └── routes/       # TanStack Router route definitions
+│   └── electron/             # Electron wrapper (native desktop app)
+│       ├── src/
+│       │   ├── main/         # Main process (window management, IPC)
+│       │   ├── preload/      # Preload scripts (secure bridge)
+│       │   └── shared/       # Shared types and constants
+│       └── electron-builder.yml
+└── packages/
+    └── design-system/        # Shared UI components library
 ```
 
 ### 📋 Scripts
@@ -205,7 +211,7 @@ This project is licensed under the **AGPL-v3** License - see the [LICENSE](LICEN
 
 - **Website**: [astrsk.ai](https://about.astrsk.ai)
 - **User Documentation**: [docs.astrsk.ai](https://docs.astrsk.ai/)
-- **Discord**: [astrsk.ai](https://discord.com/invite/J6ry7w8YCF)
+- **Discord**: [astrsk.ai](https://discord.gg/EcNSKX4qMQ)
 - **Reddit**: [r/astrsk_ai](https://www.reddit.com/r/astrsk_ai/)
 - **Twitter/X**: [@astrskai](https://x.com/astrskai)
 - **LinkedIn**: [astrsk-ai](https://www.linkedin.com/company/astrsk-ai/)

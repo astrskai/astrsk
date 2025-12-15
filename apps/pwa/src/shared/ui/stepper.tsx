@@ -26,7 +26,7 @@ const Step = ({
     <>
       <button
         className={cn(
-          "focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:ring-1 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50",
+          "focus-visible:ring-border-focus inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:ring-1 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50",
           "my-[-16px] h-[72px] gap-[16px] rounded-full p-[16px]",
         )}
         disabled={disabled}
@@ -37,8 +37,8 @@ const Step = ({
             "size-[40px] rounded-full",
             "bg-text-placeholder text-background-container font-[500]",
             "grid place-content-center",
-            (active || completed) && "bg-primary-normal",
-            "hover:bg-background-surface-light",
+            (active || completed) && "bg-brand-400",
+            "hover:bg-hover",
           )}
         >
           {completed ? (
@@ -197,11 +197,11 @@ const Stepper = ({
   };
 
   return (
-    <div className="bg-background-surface-2 absolute inset-0 flex flex-col">
+    <div className="bg-surface-raised absolute inset-0 flex flex-col">
       <div
         className={cn(
           "w-full px-[40px] py-[24px]",
-          "bg-background-surface-3",
+          "bg-surface-overlay",
           "flex flex-row items-center justify-between",
         )}
       >
@@ -277,7 +277,7 @@ const Stepper = ({
         </div>
       </div>
       <ScrollArea className={cn(className)}>
-        <div className="bg-background-surface-2 sticky top-0 z-10 py-[40px] pb-[60px]">
+        <div className="bg-surface-raised sticky top-0 z-10 py-[40px] pb-[60px]">
           {steps.length > 1 && (
             <div className="mx-auto flex flex-row items-center justify-center">
               {steps.map((step, index) => (
