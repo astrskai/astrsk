@@ -10,6 +10,7 @@ interface PasswordInputControlledProps {
   placeholder?: string;
   error?: string;
   showLockIcon?: boolean;
+  autoComplete?: "current-password" | "new-password";
 }
 
 export function PasswordInput({
@@ -19,6 +20,7 @@ export function PasswordInput({
   placeholder,
   error,
   showLockIcon = false,
+  autoComplete = "current-password",
 }: PasswordInputControlledProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -35,6 +37,7 @@ export function PasswordInput({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        autoComplete={autoComplete}
         className={`bg-surface-raised h-11 rounded-xl pr-10 ${showLockIcon ? "pl-10" : ""} ${error ? "border-status-error" : ""}`}
         required
       />

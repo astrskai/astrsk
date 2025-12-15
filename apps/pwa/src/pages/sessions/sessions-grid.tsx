@@ -22,7 +22,6 @@ import { cn } from "@/shared/lib";
 
 const SESSION_PLACEHOLDER_IMAGE = "/img/placeholder/scenario-placeholder.png";
 
-
 interface SessionsGridProps {
   sessions: SessionWithCharacterMetadata[];
   newlyCreatedSessionId?: string | null;
@@ -80,14 +79,24 @@ function SessionGridItem({
     {
       icon: Upload,
       label: "Export",
-      onClick: onExportClick(sessionId, session.props.name, session.flowId, "file"),
+      onClick: onExportClick(
+        sessionId,
+        session.props.name,
+        session.flowId,
+        "file",
+      ),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
     {
       icon: IconHarpyLogo,
       label: "Harpy",
-      onClick: onExportClick(sessionId, session.props.name, session.flowId, "cloud"),
+      onClick: onExportClick(
+        sessionId,
+        session.props.name,
+        session.flowId,
+        "cloud",
+      ),
       disabled: loading.exporting,
       loading: loading.exporting,
     },
@@ -121,10 +130,13 @@ function SessionGridItem({
           className={cn("cursor-not-allowed", className)}
           characterAvatars={resolvedAvatars}
           areCharactersLoading={areCharactersLoading}
+          tags={session.props.tags}
         />
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-xl bg-zinc-900/95">
           <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-          <p className="mt-3 text-sm font-medium text-zinc-300">Generating workflow...</p>
+          <p className="mt-3 text-sm font-medium text-zinc-300">
+            Generating workflow...
+          </p>
         </div>
       </div>
     );
@@ -140,6 +152,7 @@ function SessionGridItem({
       className={className}
       characterAvatars={resolvedAvatars}
       areCharactersLoading={areCharactersLoading}
+      tags={session.props.tags}
     />
   );
 }
@@ -194,13 +207,10 @@ export function SessionsGrid({
     });
   };
 
-
-
-
   return (
     <>
       {/* Sessions Grid - Uses auto-fill with minmax to ensure stable card sizes */}
-      <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] sm:gap-6">
         {sessions.map(({ session, characterAvatars }) => {
           const sessionId = session.id.toString();
           const loading = loadingStates[sessionId] || {};
@@ -249,8 +259,6 @@ export function SessionsGrid({
         cancelLabel="Cancel"
         confirmVariant="destructive"
       />
-
-
     </>
   );
 }
