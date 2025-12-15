@@ -9,6 +9,8 @@ import { ASSISTANT_AVATARS } from "./chat-panel";
 import type { SessionStep } from "./session-stepper";
 import { useTypingIndicator } from "./use-typing-indicator";
 
+type SheetState = "collapsed" | "peek" | "expanded";
+
 interface MobileChatSheetProps {
   /** Chat messages to display */
   messages: ChatMessage[];
@@ -22,9 +24,9 @@ interface MobileChatSheetProps {
   onStop?: () => void;
   /** Whether AI is currently generating */
   isLoading?: boolean;
+  /** Initial state of the sheet (default: "collapsed") */
+  initialState?: SheetState;
 }
-
-type SheetState = "collapsed" | "peek" | "expanded";
 
 const SHEET_HEIGHTS = {
   collapsed: 100,      // Handle + message preview + input bar
@@ -43,8 +45,9 @@ export function MobileChatSheet({
   onSubmit,
   onStop,
   isLoading = false,
+  initialState = "collapsed",
 }: MobileChatSheetProps) {
-  const [sheetState, setSheetState] = useState<SheetState>("collapsed");
+  const [sheetState, setSheetState] = useState<SheetState>(initialState);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Use form context from parent (FormProvider in new.tsx)

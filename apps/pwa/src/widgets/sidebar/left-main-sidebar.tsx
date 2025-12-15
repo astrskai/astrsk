@@ -356,21 +356,24 @@ const SidebarHeader = ({
     >
       <div
         className={cn(
-          "flex cursor-pointer items-center overflow-hidden",
+          "flex cursor-pointer items-center gap-2 overflow-hidden",
           isCollapsed ? "hidden" : "flex",
         )}
-        onClick={handleGoToHome}
       >
-        <AstrskLogo className="h-5" />
+        <AstrskLogo className="h-5" onClick={handleGoToHome} />
+        <UpdaterNew variant="default" />
       </div>
 
-      {/* Desktop Collapse Toggle */}
-      <button
-        onClick={toggleSidebar}
-        className="hidden text-zinc-400 transition-colors hover:text-white md:block"
-      >
-        <PanelLeft size={16} />
-      </button>
+      {/* Desktop Collapse Toggle + Update Indicator when collapsed */}
+      <div className="hidden items-center gap-2 md:flex">
+        {isCollapsed && <UpdaterNew variant="indicator" />}
+        <button
+          onClick={toggleSidebar}
+          className="text-zinc-400 transition-colors hover:text-white"
+        >
+          <PanelLeft size={16} />
+        </button>
+      </div>
 
       {/* Mobile Close Button */}
       <button
@@ -538,14 +541,13 @@ export const LeftMainSidebar = ({
       {/* Sidebar Container */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r transition-all duration-300 ease-in-out md:relative md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-zinc-800 bg-zinc-950 transition-all duration-300 ease-in-out md:relative md:translate-x-0",
           isMobileOpen ? "translate-x-0" : "-translate-x-full",
           isCollapsed ? "md:w-20" : "md:w-64",
           "w-64",
           // Home page blended background when collapsed on desktop
-          isHomePage
-            ? "md:border-zinc-800/30 md:bg-zinc-950/50 md:backdrop-blur-xl"
-            : "border-zinc-800 bg-zinc-950",
+          isHomePage &&
+            "md:border-zinc-800/30 md:bg-zinc-950/50 md:backdrop-blur-xl",
         )}
       >
         <SidebarHeader
@@ -574,7 +576,7 @@ export const LeftMainSidebar = ({
             onItemClick={closeMobileMenu}
           />
 
-          {/* Settings */}
+          {/* Settings - pinned to bottom of nav area */}
           <div className="mt-auto">
             <NavItem
               icon={Settings}
@@ -587,26 +589,14 @@ export const LeftMainSidebar = ({
           </div>
         </div>
 
-        <UserProfile
-          isCollapsed={isCollapsed}
-          onSignOut={handleSignOut}
-          onSignIn={handleSignIn}
-          closeMobileMenu={closeMobileMenu}
-        />
-
-        {/* Footer with UpdaterNew and Version - hidden when collapsed on desktop */}
-        <div
-          className={cn(
-            "flex flex-col gap-2 border-t border-zinc-800 px-4 py-2",
-            isCollapsed ? "md:hidden" : "block",
-          )}
-        >
-          <div className="flex justify-center">
-            <UpdaterNew />
-          </div>
-          <div className="text-center text-[10px] text-zinc-400">
-            v{__APP_VERSION__}
-          </div>
+        {/* Footer - pinned to bottom */}
+        <div className="mt-auto flex-shrink-0">
+          <UserProfile
+            isCollapsed={isCollapsed}
+            onSignOut={handleSignOut}
+            onSignIn={handleSignIn}
+            closeMobileMenu={closeMobileMenu}
+          />
         </div>
       </div>
     </>
