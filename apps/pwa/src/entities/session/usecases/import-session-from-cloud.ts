@@ -70,14 +70,12 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
     }
 
     try {
-      console.log(`[importAsset] Starting import for asset: ${assetId}`);
 
       // Find asset in the fetched data
       let assetData = assetsData.find((a) => a.id === assetId);
 
       // If not in session assets, fetch it directly
       if (!assetData) {
-        console.log(`[importAsset] Asset not in bundle, fetching from cloud...`);
         const assetResult = await fetchAssetFromCloud(assetId);
         if (assetResult.isFailure) {
           console.warn(`[importAsset] Failed to fetch asset ${assetId}: ${assetResult.getError()}`);
@@ -86,25 +84,26 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         assetData = assetResult.getValue();
       }
 
-      console.log(`[importAsset] Asset metadata:`, {
-        id: assetData.id,
-        name: assetData.name,
-        file_path: assetData.file_path,
-        mime_type: assetData.mime_type,
-      });
+      // Check if this is a CDN reference (default background)
+      // CDN paths for default backgrounds: /backgrounds/ (not /assets/ which is local OPFS)
+      const isCdnReference = assetData.file_path.startsWith('/backgrounds/');
 
+      if (isCdnReference) {
+        // For CDN references (default backgrounds), just return the original asset ID
+        // The file_path is already a CDN path that the app can use directly
+        return new UniqueEntityID(assetData.id);
+      }
+
+      // For user-uploaded assets, download and save locally
       // Construct full URL from file_path and download
       const fullUrl = getStorageUrl(assetData.file_path);
-      console.log(`[importAsset] Converted file_path to full URL: ${fullUrl}`);
 
       const blobResult = await downloadAssetFromUrl(fullUrl);
       if (blobResult.isFailure) {
-        console.warn(`[importAsset] Failed to download asset file: ${blobResult.getError()}`);
         return undefined;
       }
 
       const blob = blobResult.getValue();
-      console.log(`[importAsset] Downloaded blob: size=${blob.size}, type=${blob.type}`);
 
       // Convert blob to File
       const file = new File([blob], assetData.name, {
@@ -114,17 +113,10 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
       // Save to local storage
       const savedAssetResult = await this.saveFileToAsset.execute({ file });
       if (savedAssetResult.isFailure) {
-        console.warn(`[importAsset] Failed to save asset locally: ${savedAssetResult.getError()}`);
         return undefined;
       }
 
       const savedAsset = savedAssetResult.getValue();
-      console.log(`[importAsset] ✓ Asset saved successfully:`, {
-        newAssetId: savedAsset.id.toString(),
-        localFilePath: savedAsset.filePath,
-        name: savedAsset.name,
-        sizeByte: savedAsset.sizeByte,
-      });
 
       return savedAsset.id;
     } catch (error) {
@@ -147,12 +139,6 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
     const flowData = bundle.flow;
     const newFlowId = new UniqueEntityID();
 
-    // Debug logging to understand ID mappings
-    console.log(`[importFlow] Flow nodes:`, (flowData.nodes as any[]).map((n: any) => ({ id: n.id, type: n.type })));
-    console.log(`[importFlow] Bundle agents:`, bundle.agents.map((a) => ({ id: a.id, name: a.name })));
-    console.log(`[importFlow] Bundle data store nodes:`, bundle.dataStoreNodes.map((n) => ({ id: n.id, name: n.name })));
-    console.log(`[importFlow] Bundle if nodes:`, bundle.ifNodes.map((n) => ({ id: n.id, name: n.name })));
-
     // Create ID mappings using mapper helper
     const nodeIdMapResult = FlowSupabaseMapper.createNodeIdMap(
       flowData.nodes as any[],
@@ -160,11 +146,6 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
       bundle.dataStoreNodes.map((n) => n.id),
       bundle.ifNodes.map((n) => n.id),
     );
-
-    console.log(`[importFlow] Node ID map entries:`);
-    nodeIdMapResult.forEach((newId, oldId) => {
-      console.log(`  ${oldId} -> ${newId}`);
-    });
 
     // Copy to our local map
     nodeIdMapResult.forEach((value, key) => nodeIdMap.set(key, value));
@@ -178,13 +159,11 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
     );
 
     if (flowResult.isFailure) {
-      console.error(`Failed to create flow: ${flowResult.getError()}`);
       return { flowId: undefined, nodeIdMap };
     }
 
     const savedFlowResult = await this.saveFlowRepo.saveFlow(flowResult.getValue());
     if (savedFlowResult.isFailure) {
-      console.error(`Failed to save flow: ${savedFlowResult.getError()}`);
       return { flowId: undefined, nodeIdMap };
     }
 
@@ -195,13 +174,6 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         console.warn(`[importFlow] No node ID mapping found for agent: ${agentData.id}`);
         continue;
       }
-
-      console.log(`[importFlow] Creating agent from cloud data:`, {
-        originalId: agentData.id,
-        newNodeId,
-        newFlowId: newFlowId.toString(),
-        name: agentData.name,
-      });
 
       try {
         const modelOverride = agentModelOverrides?.get(agentData.id);
@@ -221,8 +193,6 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         const savedAgentResult = await this.saveAgentRepo.saveAgent(agentResult.getValue());
         if (savedAgentResult.isFailure) {
           console.error(`[importFlow] Failed to save agent ${agentData.id}: ${savedAgentResult.getError()}`);
-        } else {
-          console.log(`[importFlow] ✓ Agent saved successfully: ${savedAgentResult.getValue().id.toString()}`);
         }
       } catch (error) {
         console.error(`[importFlow] Failed to create agent from cloud data: ${error}`);
@@ -236,14 +206,6 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         console.warn(`[importFlow] No node ID mapping found for data store node: ${nodeData.id}`);
         continue;
       }
-
-      console.log(`[importFlow] Creating data store node from cloud data:`, {
-        originalId: nodeData.id,
-        newNodeId,
-        newFlowId: newFlowId.toString(),
-        name: nodeData.name,
-        fieldsCount: nodeData.data_store_fields?.length ?? 0,
-      });
 
       try {
         const nodeResult = DataStoreNodeSupabaseMapper.fromCloud(
@@ -260,8 +222,6 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         const savedNodeResult = await this.saveDataStoreNodeRepo.saveDataStoreNode(nodeResult.getValue());
         if (savedNodeResult.isFailure) {
           console.error(`[importFlow] Failed to save data store node ${nodeData.id}: ${savedNodeResult.getError()}`);
-        } else {
-          console.log(`[importFlow] ✓ Data store node saved successfully: ${savedNodeResult.getValue().id.toString()}`);
         }
       } catch (error) {
         console.error(`[importFlow] Failed to create data store node from cloud data: ${error}`);
@@ -275,13 +235,6 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         console.warn(`[importFlow] No node ID mapping found for if node: ${nodeData.id}`);
         continue;
       }
-
-      console.log(`[importFlow] Creating if node from cloud data:`, {
-        originalId: nodeData.id,
-        newNodeId,
-        newFlowId: newFlowId.toString(),
-        name: nodeData.name,
-      });
 
       try {
         const nodeResult = IfNodeSupabaseMapper.fromCloud(
@@ -298,8 +251,6 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         const savedNodeResult = await this.saveIfNodeRepo.saveIfNode(nodeResult.getValue());
         if (savedNodeResult.isFailure) {
           console.error(`[importFlow] Failed to save if node ${nodeData.id}: ${savedNodeResult.getError()}`);
-        } else {
-          console.log(`[importFlow] ✓ If node saved successfully: ${savedNodeResult.getValue().id.toString()}`);
         }
       } catch (error) {
         console.error(`[importFlow] Failed to create if node from cloud data: ${error}`);
@@ -430,14 +381,12 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
       // 7. Import background
       let backgroundId: UniqueEntityID | undefined;
       if (sessionData.background_id) {
-        console.log(`[ImportSession] Importing background: ${sessionData.background_id}`);
 
         // Try to find in bundle first
         let bgAssetData = bundle.assets.find((a) => a.id === sessionData.background_id);
 
         // If not in bundle, fetch directly from cloud
         if (!bgAssetData) {
-          console.log(`[ImportSession] Background not in bundle, fetching from cloud...`);
           const bgAssetResult = await fetchAssetFromCloud(sessionData.background_id);
           if (bgAssetResult.isSuccess) {
             bgAssetData = bgAssetResult.getValue();
@@ -447,25 +396,34 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
         }
 
         if (bgAssetData) {
-          const bgFullUrl = getStorageUrl(bgAssetData.file_path);
-          console.log(`[ImportSession] Downloading background from: ${bgFullUrl}`);
-          const blobResult = await downloadAssetFromUrl(bgFullUrl);
-          if (blobResult.isSuccess) {
-            const file = new File([blobResult.getValue()], bgAssetData.name, {
-              type: bgAssetData.mime_type,
-            });
-            const bgResult = await this.saveFileToBackground.execute({
-              file,
-              sessionId: newSessionId,
-            });
-            if (bgResult.isSuccess) {
-              backgroundId = bgResult.getValue().id;
-              console.log(`[ImportSession] ✓ Background saved successfully: ${backgroundId.toString()}`);
-            } else {
-              console.warn(`[ImportSession] Failed to save background: ${bgResult.getError()}`);
-            }
+          // Check if this is a CDN reference (default background)
+          // CDN paths for default backgrounds: /backgrounds/ (not /assets/ which is local OPFS)
+          const isCdnReference = bgAssetData.file_path.startsWith('/backgrounds/');
+
+          if (isCdnReference) {
+            // For CDN references (default backgrounds), just use the original asset ID
+            // The file_path is already a CDN path that the app can use directly
+            backgroundId = new UniqueEntityID(bgAssetData.id);
           } else {
-            console.warn(`[ImportSession] Failed to download background: ${blobResult.getError()}`);
+            // For user-uploaded backgrounds, download and save locally
+            const bgFullUrl = getStorageUrl(bgAssetData.file_path);
+            const blobResult = await downloadAssetFromUrl(bgFullUrl);
+            if (blobResult.isSuccess) {
+              const file = new File([blobResult.getValue()], bgAssetData.name, {
+                type: bgAssetData.mime_type,
+              });
+              const bgResult = await this.saveFileToBackground.execute({
+                file,
+                sessionId: newSessionId,
+              });
+              if (bgResult.isSuccess) {
+                backgroundId = bgResult.getValue().id;
+              } else {
+                console.warn(`[ImportSession] Failed to save background: ${bgResult.getError()}`);
+              }
+            } else {
+              console.warn(`[ImportSession] Failed to download background: ${blobResult.getError()}`);
+            }
           }
         } else {
           console.warn(`[ImportSession] Background asset not found: ${sessionData.background_id}`);
