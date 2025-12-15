@@ -160,6 +160,18 @@ export async function initStores(
     return;
   }
 
+  // Migrate sessions with messages to play sessions
+  onProgress?.("migrate-play-sessions", "start");
+  try {
+    await SessionService.migrateSessionsWithMessagesToPlaySessions.execute({});
+    onProgress?.("migrate-play-sessions", "success");
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Failed to migrate sessions to play sessions:", error);
+    // This is not critical, just log warning and continue
+    onProgress?.("migrate-play-sessions", "warning", errorMessage);
+  }
+
   if (sessions.length === 0) {
     onProgress?.("default-sessions", "start");
     // Import default sessions
