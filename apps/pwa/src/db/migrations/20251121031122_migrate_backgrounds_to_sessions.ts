@@ -54,8 +54,13 @@ export async function migrateBackgroundsToSessions() {
     console.log(`\nProcessing background ${globalBg.id} - "${globalBg.name}"...`);
 
     // Find all sessions referencing this background
+    // Only select columns that exist at this migration point to avoid schema mismatch
+    // (e.g., is_play_session column is added in later migrations)
     const sessionsUsingBg = await db
-      .select()
+      .select({
+        id: sessions.id,
+        background_id: sessions.background_id,
+      })
       .from(sessions)
       .where(eq(sessions.background_id, globalBg.id));
 
