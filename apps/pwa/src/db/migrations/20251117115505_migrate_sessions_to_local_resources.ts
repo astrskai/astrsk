@@ -64,8 +64,16 @@ export async function migrateSessionsToLocalResources() {
 
   // Step 2: Get all sessions
   console.log("Step 2: Loading all sessions...");
-  const allSessions = await db.select().from(sessions);
-    console.log(`  Found ${allSessions.length} sessions to process`);
+  // Note: Only select columns that exist at this migration point (is_play_session added in later migration)
+  const allSessions = await db
+    .select({
+      id: sessions.id,
+      flow_id: sessions.flow_id,
+      all_cards: sessions.all_cards,
+      user_character_card_id: sessions.user_character_card_id,
+    })
+    .from(sessions);
+  console.log(`  Found ${allSessions.length} sessions to process`);
 
     let processedCount = 0;
     let skippedCount = 0;
