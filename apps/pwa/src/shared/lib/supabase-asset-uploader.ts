@@ -46,7 +46,6 @@ export async function uploadAssetToSupabase(
       // For external URLs/CDN paths (default backgrounds), use the path directly
       // Skip file upload - just insert metadata with the CDN reference
       storagePath = asset.props.filePath;
-      console.log(`[uploadAssetToSupabase] Skipping file upload for external URL/CDN path: ${storagePath}`);
     } else {
       // For local assets, upload file to Supabase Storage
       const assetFile = await file(asset.props.filePath).getOriginFile();
