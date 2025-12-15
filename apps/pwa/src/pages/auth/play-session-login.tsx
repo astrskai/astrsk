@@ -196,6 +196,7 @@ export function PlaySessionLoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
             className="bg-surface-raised h-11 rounded-xl"
             required
           />
