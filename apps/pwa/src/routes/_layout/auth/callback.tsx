@@ -7,12 +7,24 @@ import { logger } from "@/shared/lib/logger";
 // Process OAuth tokens BEFORE React renders to prevent "stale token" errors
 // caused by the long app initialization time (PGLite DB can take 30-100 seconds)
 const processTokensImmediately = async () => {
+  logger.info("🔥 Module loaded, checking for OAuth tokens in URL...", {
+    hash: window.location.hash,
+    search: window.location.search,
+  });
+
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
   const accessToken = hashParams.get("access_token");
   const refreshToken = hashParams.get("refresh_token");
 
+  logger.info("🔍 Token check:", {
+    hasAccessToken: !!accessToken,
+    hasRefreshToken: !!refreshToken,
+    accessTokenLength: accessToken?.length,
+    refreshTokenLength: refreshToken?.length,
+  });
+
   if (accessToken && refreshToken) {
-    logger.info("Processing OAuth tokens immediately (before React mount)");
+    logger.info("✅ Processing OAuth tokens immediately (before React mount)");
     const supabase = getSupabaseAuthClient();
 
     const { data, error } = await supabase.auth.setSession({
@@ -21,21 +33,30 @@ const processTokensImmediately = async () => {
     });
 
     if (error) {
-      logger.error("Failed to set session from OAuth tokens:", error);
+      logger.error("❌ Failed to set session from OAuth tokens:", error);
       return;
     }
 
     if (data?.session) {
-      logger.info("OAuth session established successfully");
+      logger.info("🎉 OAuth session established successfully", {
+        userId: data.session.user?.id,
+        email: data.session.user?.email,
+      });
       // Redirect immediately
       const redirectPath = localStorage.getItem("authRedirectPath");
       if (redirectPath) {
         localStorage.removeItem("authRedirectPath");
+        logger.info("🔄 Redirecting to stored path:", redirectPath);
         window.location.href = redirectPath;
       } else {
+        logger.info("🔄 Redirecting to home");
         window.location.href = window.location.origin + "/";
       }
+    } else {
+      logger.warn("⚠️ No session data after setSession");
     }
+  } else {
+    logger.info("ℹ️ No tokens in URL hash, skipping immediate processing");
   }
 };
 
@@ -57,6 +78,7 @@ function AuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
+      logger.info("🔥 AuthCallback component mounted (React useEffect running)");
       const supabase = getSupabaseAuthClient();
 
       // Get the auth code from URL if present
@@ -67,10 +89,11 @@ function AuthCallback() {
       const refreshToken = hashParams.get("refresh_token");
       const code = queryParams.get("code");
 
-      logger.info("OAuth callback received:", {
+      logger.info("📋 OAuth callback received:", {
         hasCode: !!code,
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
+        url: window.location.href,
       });
 
       try {
