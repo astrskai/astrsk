@@ -14,6 +14,8 @@ import { logger } from "@/shared/lib/logger";
 
 // Only run on /auth/callback route
 if (window.location.pathname === "/auth/callback") {
+  logger.debug("OAuth interceptor: Running on /auth/callback");
+
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
   const accessToken = hashParams.get("access_token");
   const refreshToken = hashParams.get("refresh_token");
@@ -48,6 +50,8 @@ if (window.location.pathname === "/auth/callback") {
           exists: !!storedSession,
           length: storedSession?.length,
         });
+
+        // Session is saved, ready to redirect
 
         // Redirect to home or saved path
         const redirectPath = localStorage.getItem("authRedirectPath");
