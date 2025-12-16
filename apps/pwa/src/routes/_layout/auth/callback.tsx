@@ -48,6 +48,13 @@ const processTokensImmediately = async () => {
       // Wait for session to persist to storage
       await new Promise(resolve => setTimeout(resolve, 1000));
 
+      // Verify session is in localStorage before redirect
+      const storedSession = localStorage.getItem("astrsk-auth");
+      logger.info("📦 Session in localStorage:", {
+        exists: !!storedSession,
+        length: storedSession?.length,
+      });
+
       // Redirect immediately - don't wait for React
       const redirectPath = localStorage.getItem("authRedirectPath");
       if (redirectPath) {

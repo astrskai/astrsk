@@ -195,6 +195,8 @@ This project uses the following third-party software. The full text of each lice
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         maximumFileSizeToCacheInBytes: 20 * 1024 * 1024, // 20MB
+        // Exclude OAuth callback from navigation fallback
+        navigateFallbackDenylist: [/^\/auth\/callback/],
       },
 
       devOptions: {
@@ -202,6 +204,8 @@ This project uses the following third-party software. The full text of each lice
         navigateFallback: "index.html",
         suppressWarnings: true,
         type: "module",
+        // Exclude OAuth callback from navigation fallback in dev mode too
+        navigateFallbackAllowlist: [/^(?!.*\/auth\/callback).*/],
       },
     }),
   ],
