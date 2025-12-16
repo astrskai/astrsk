@@ -18,25 +18,28 @@ function AuthCallback() {
     const handleCallback = async () => {
       const supabase = getSupabaseAuthClient();
 
-      // Get the auth code from URL if present
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const queryParams = new URLSearchParams(window.location.search);
-
-      const accessToken = hashParams.get("access_token");
-      const refreshToken = hashParams.get("refresh_token");
-      const code = queryParams.get("code");
-      const error_description = queryParams.get("error_description");
-
-      // Debug logging for Safari troubleshooting
-      logger.debug("OAuth callback received:", {
-        hasCode: !!code,
-        hasAccessToken: !!accessToken,
-        hasRefreshToken: !!refreshToken,
-        errorDescription: error_description,
-        userAgent: navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'
-      });
-
       try {
+        // Get the auth code from URL if present
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const queryParams = new URLSearchParams(window.location.search);
+
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const code = queryParams.get("code");
+        const error_description = queryParams.get("error_description");
+
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+        // Debug logging for troubleshooting
+        logger.info("OAuth callback received:", {
+          hasCode: !!code,
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken,
+          errorDescription: error_description,
+          isSafari,
+          url: window.location.href,
+        });
+
         // If there's an error in the URL, handle it
         if (error_description) {
           logger.error("OAuth error from provider:", error_description);
@@ -44,59 +47,85 @@ function AuthCallback() {
           return;
         }
 
+        // Handle PKCE flow (code in query params)
         if (code) {
-          // Exchange code for session (PKCE flow)
-          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          logger.info("Exchanging PKCE code for session...");
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
           if (exchangeError) {
-            logger.error("Code exchange error:", exchangeError);
+            logger.error("PKCE code exchange failed:", {
+              message: exchangeError.message,
+              status: exchangeError.status,
+              code: exchangeError.code,
+            });
 
-            // Safari ITP workaround: If code exchange fails, wait for detectSessionInUrl
-            // to automatically handle the session (configured in supabase-client.ts)
-            logger.info("Waiting for detectSessionInUrl to handle session...");
+            // For Safari, try to get session anyway (may be cached)
+            if (isSafari) {
+              logger.info("Safari detected, checking for cached session...");
+              const { data: { session: cachedSession } } = await supabase.auth.getSession();
+              if (cachedSession) {
+                logger.info("Found cached session, proceeding");
+                redirectAfterLogin(cachedSession);
+                return;
+              }
+            }
 
-            // Give detectSessionInUrl time to process (500ms)
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-        } else if (accessToken && refreshToken) {
-          // Set session from tokens (implicit flow)
-          const { error: setSessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (setSessionError) {
-            logger.error("Set session error:", setSessionError);
             navigate({ to: "/sign-in" });
             return;
           }
-        } else {
-          // No code or tokens - let detectSessionInUrl handle it
-          logger.info("No explicit auth params, waiting for detectSessionInUrl...");
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
 
-        // Check if we have a valid session (may have been set by detectSessionInUrl)
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (session) {
-          logger.debug("OAuth login successful", { userId: session.user?.id });
-
-          // Check if there's a stored redirect path (e.g., from play session login)
-          const redirectPath = localStorage.getItem("authRedirectPath");
-          if (redirectPath) {
-            localStorage.removeItem("authRedirectPath");
-            window.location.href = redirectPath; // Use window.location for full page reload
-          } else {
-            navigate({ to: "/" });
+          if (data?.session) {
+            logger.info("PKCE exchange successful");
+            redirectAfterLogin(data.session);
+            return;
           }
-        } else {
-          logger.warn("No session after OAuth callback, redirecting to sign-in");
-          navigate({ to: "/sign-in" });
         }
+
+        // Handle implicit flow (tokens in hash)
+        if (accessToken && refreshToken) {
+          logger.info("Setting session from implicit flow tokens...");
+          const { data, error: setSessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (setSessionError) {
+            logger.error("Failed to set session from tokens:", setSessionError);
+            navigate({ to: "/sign-in" });
+            return;
+          }
+
+          if (data?.session) {
+            logger.info("Implicit flow session set successfully");
+            redirectAfterLogin(data.session);
+            return;
+          }
+        }
+
+        // No code or tokens found
+        logger.warn("No auth code or tokens found in callback URL");
+        navigate({ to: "/sign-in" });
       } catch (error) {
         logger.error("OAuth callback error:", error);
         navigate({ to: "/sign-in" });
       }
     };
+
+    // Helper function to handle redirect after successful login
+    function redirectAfterLogin(session: any) {
+      logger.info("Redirecting after successful login", { userId: session.user?.id });
+
+      // Check if there's a stored redirect path (e.g., from play session login)
+      const redirectPath = localStorage.getItem("authRedirectPath");
+      if (redirectPath) {
+        localStorage.removeItem("authRedirectPath");
+        logger.info("Redirecting to stored path:", redirectPath);
+        window.location.href = redirectPath; // Use window.location for full page reload
+      } else {
+        logger.info("Redirecting to home");
+        navigate({ to: "/" });
+      }
+    }
 
     handleCallback();
   }, [navigate]);
