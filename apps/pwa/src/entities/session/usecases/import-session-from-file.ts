@@ -321,9 +321,16 @@ export class ImportSessionFromFile
         }
       }
 
+      // Store file's id as original_id for tracking
+      const config = sessionProps.config || {};
+      if (sessionProps.id && !config.original_id) {
+        config.original_id = sessionProps.id;
+      }
+
       // Create session FIRST (without flows/cards) so it exists in database
       // Handle backward compatibility: use 'name' if available, fallback to 'title'
       const sessionName = sessionProps.name || sessionProps.title || "Imported Session";
+
       const sessionOrError = Session.create({
         name: sessionName,
         title: sessionName, // Keep in sync
@@ -336,6 +343,7 @@ export class ImportSessionFromFile
           ? sessionProps.chat_styles
           : undefined,
         flowId: undefined, // Will be updated after importing flow
+        config, // Store original_id from file's id field
       }, newSessionId);
       if (sessionOrError.isFailure) {
         throw new Error(sessionOrError.getError());

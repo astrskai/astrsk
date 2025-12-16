@@ -52,6 +52,7 @@ export class CardDrizzleMapper {
           sessionId: row.session_id
             ? new UniqueEntityID(row.session_id)
             : undefined,
+          config: (row.config as Record<string, unknown>) ?? undefined,
           name: row.name,
           description: row.description ?? undefined,
           exampleDialogue: row.example_dialogue ?? undefined,
@@ -85,6 +86,7 @@ export class CardDrizzleMapper {
           sessionId: row.session_id
             ? new UniqueEntityID(row.session_id)
             : undefined,
+          config: (row.config as Record<string, unknown>) ?? undefined,
           name: row.name,
           description: row.description ?? undefined,
           firstMessages: row.first_messages ?? undefined,
@@ -132,6 +134,7 @@ export class CardDrizzleMapper {
       vibe_session_id: domain.props.vibeSessionId ?? null,
       image_prompt: domain.props.imagePrompt ?? null,
       session_id: domain.props.sessionId?.toString() ?? null,
+      config: domain.props.config ?? {},
       name: domain.props.name ?? "",
       description: domain.props.description ?? null,
       example_dialogue: domain.props.exampleDialogue ?? null,
@@ -161,6 +164,7 @@ export class CardDrizzleMapper {
       vibe_session_id: domain.props.vibeSessionId ?? null,
       image_prompt: domain.props.imagePrompt ?? null,
       session_id: domain.props.sessionId?.toString() ?? null,
+      config: domain.props.config ?? {},
       name: domain.props.name ?? domain.props.title,
       description: domain.props.description ?? null,
       first_messages: domain.props.firstMessages ?? null,

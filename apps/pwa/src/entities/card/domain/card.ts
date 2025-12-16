@@ -46,6 +46,9 @@ export interface CardProps {
   // UniqueEntityID = local to specific session (hidden from global lists)
   sessionId?: UniqueEntityID;
 
+  // Flexible config storage (e.g., original_id from import)
+  config?: Record<string, unknown>;
+
   // Set by System
   createdAt: Date;
   updatedAt: Date;
@@ -64,6 +67,7 @@ export const CardPropsKeys = [
   "vibeSessionId",
   "imagePrompt",
   "sessionId",
+  "config",
   "createdAt",
   "updatedAt",
   "tokenCount",

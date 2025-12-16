@@ -112,6 +112,7 @@ export class FlowSupabaseMapper {
         summary: data.summary ?? undefined,
         version: data.version ?? undefined,
         conceptualOrigin: data.conceptual_origin ?? undefined,
+        config: { original_id: data.id }, // Store original cloud ID before cloning
         readyState: ReadyState.Draft, // Always start as draft
         // createdAt/updatedAt are set automatically by Flow.create()
       },

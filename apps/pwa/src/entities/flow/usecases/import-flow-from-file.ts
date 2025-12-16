@@ -196,7 +196,13 @@ export class ImportFlowFromFile implements UseCase<Command, Result<Flow>> {
       }
 
       // Destructure the flow data
-      const { agents, panelStructure, viewport, ...flowJson } = parsedData;
+      const { agents, panelStructure, viewport, id: originalId, ...flowJson } = parsedData;
+
+      // Store file's id as original_id for tracking
+      const config = flowJson.config || {};
+      if (originalId && !config.original_id) {
+        config.original_id = originalId;
+      }
 
       // Import agent with new id
       const agentIdMap = new Map<string, string>();
@@ -236,8 +242,8 @@ export class ImportFlowFromFile implements UseCase<Command, Result<Flow>> {
         agentIdMap.set(oldId, agent.id.toString());
       }
 
-      // Create flow
-      const flowOrError = Flow.fromJSON(flowJson);
+      // Create flow with original_id in config
+      const flowOrError = Flow.fromJSON({ ...flowJson, config });
       if (flowOrError.isFailure) {
         throw new Error(flowOrError.getError());
       }

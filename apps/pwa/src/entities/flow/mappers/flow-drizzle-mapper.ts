@@ -41,6 +41,7 @@ export class FlowDrizzleMapper {
           sessionId: row.session_id
             ? new UniqueEntityID(row.session_id)
             : undefined,
+          config: (row.config as Record<string, unknown>) ?? undefined,
           readyState: (row.ready_state as ReadyState) || ReadyState.Draft,
           validationIssues: row.validation_issues as any,
         },
@@ -87,6 +88,7 @@ export class FlowDrizzleMapper {
         viewport: props.viewport,
         vibe_session_id: props.vibeSessionId ?? null,
         session_id: props.sessionId?.toString() ?? null,
+        config: props.config ?? {},
         ready_state: props.readyState,
         validation_issues: props.validationIssues,
         created_at: props.createdAt,

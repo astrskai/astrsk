@@ -68,6 +68,7 @@ export class CharacterCard extends AggregateRoot<
           exampleDialogue: props.exampleDialogue,
           lorebook: props.lorebook,
           sessionId: props.sessionId,
+          config: props.config,
           updatedAt: props.updatedAt || new Date(),
           // 1:1 Session specific fields
           scenario: props.scenario,

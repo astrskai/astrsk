@@ -44,6 +44,7 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
 
     // Extract export session data
     const paths = [
+      "id", // Export for future extensibility
       "name",
       "title", // Keep for backward compatibility with imports
       "all_cards",
@@ -53,6 +54,7 @@ export class ExportSessionToFile implements UseCase<Command, Result<File>> {
       "translation",
       "chat_styles",
       "flow_id",
+      "config", // Export config for future extensibility
     ];
     if (includeHistory) {
       paths.push("turn_ids");

@@ -73,6 +73,7 @@ export class CardSupabaseMapper {
         scenario: data.scenario ?? undefined,
         firstMessages: data.first_messages ?? undefined,
         sessionId,
+        config: { original_id: data.id }, // Store original cloud ID before cloning
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -167,6 +168,7 @@ export class CardSupabaseMapper {
         firstMessages: data.first_messages ?? [],
         lorebook,
         sessionId,
+        config: { original_id: data.id }, // Store original cloud ID before cloning
         createdAt: new Date(),
         updatedAt: new Date(),
       },
