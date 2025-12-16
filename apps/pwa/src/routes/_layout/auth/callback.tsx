@@ -3,9 +3,10 @@ import { useEffect } from "react";
 import { getSupabaseAuthClient } from "@/shared/lib/supabase-client";
 import { logger } from "@/shared/lib/logger";
 
-// Note: Immediate token processing now happens in oauth-interceptor.ts
-// which runs at app entry point (before main.tsx) to catch tokens before
-// the long PGLite DB initialization starts
+// Note: oauth-interceptor.ts runs at app entry point (before main.tsx)
+// It detects OAuth tokens and sets a flag for better UX messaging
+// main.tsx skips all initialization during OAuth callback to avoid worker conflicts
+// This component processes tokens after React mounts, then triggers full page reload to home
 
 export const Route = createFileRoute("/_layout/auth/callback")({
   component: AuthCallback,
@@ -71,6 +72,9 @@ function AuthCallback() {
         if (session) {
           logger.info("OAuth login successful", { userId: session.user?.id });
 
+          // Clear OAuth login flag
+          sessionStorage.removeItem("oauth-login-in-progress");
+
           // Check if there's a stored redirect path (e.g., from play session login)
           const redirectPath = localStorage.getItem("authRedirectPath");
           if (redirectPath) {
@@ -79,10 +83,13 @@ function AuthCallback() {
             window.location.href = redirectPath;
           } else {
             logger.info("Redirecting to home");
-            navigate({ to: "/" });
+            // Use window.location for full page reload to trigger initialization
+            window.location.href = "/";
           }
         } else {
           logger.warn("No session after OAuth callback");
+          // Clear OAuth login flag on error too
+          sessionStorage.removeItem("oauth-login-in-progress");
           navigate({ to: "/sign-in" });
         }
       } catch (error) {
