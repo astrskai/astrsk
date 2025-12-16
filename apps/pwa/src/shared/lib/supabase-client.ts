@@ -52,6 +52,8 @@ export function getSupabaseAuthClient(): SupabaseClient {
         persistSession: true,
         storageKey: "astrsk-auth",
         storage: window.localStorage,
+        detectSessionInUrl: true, // Helps detect session after OAuth redirect (Safari compatible)
+        flowType: 'pkce', // Forces PKCE flow for Safari ITP compatibility
       },
     });
   }

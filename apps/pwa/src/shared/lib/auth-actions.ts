@@ -217,6 +217,11 @@ export async function signInWithOAuth(
     provider,
     options: {
       redirectTo: callbackUrl,
+      skipBrowserRedirect: false, // Ensure browser redirect happens for PKCE flow
+      queryParams: {
+        access_type: 'offline', // Request refresh token
+        prompt: 'consent', // Always show consent screen for consistent behavior
+      },
     },
   });
 

@@ -26,6 +26,14 @@ function AuthCallback() {
       const refreshToken = hashParams.get("refresh_token");
       const code = queryParams.get("code");
 
+      // Debug logging for Safari troubleshooting
+      logger.debug("OAuth callback received:", {
+        hasCode: !!code,
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        userAgent: navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'
+      });
+
       try {
         if (code) {
           // Exchange code for session (PKCE flow)
