@@ -45,13 +45,19 @@ const processTokensImmediately = async () => {
         email: data.session.user?.email,
       });
 
-      // Store session info for the React component to handle redirect
-      // This prevents race conditions with app initialization
-      sessionStorage.setItem("oauth_session_ready", "true");
+      // Wait a bit for session to persist to storage
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Clear hash from URL without redirecting
-      logger.info("🧹 Clearing tokens from URL...");
-      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      // Redirect immediately - don't wait for React
+      const redirectPath = localStorage.getItem("authRedirectPath");
+      if (redirectPath) {
+        localStorage.removeItem("authRedirectPath");
+        logger.info("🔄 Redirecting to stored path:", redirectPath);
+        window.location.href = redirectPath;
+      } else {
+        logger.info("🔄 Redirecting to home");
+        window.location.href = window.location.origin + "/";
+      }
     } else {
       logger.warn("⚠️ No session data after setSession");
     }
@@ -79,26 +85,6 @@ function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       logger.info("🔥 AuthCallback component mounted (React useEffect running)");
-
-      // Check if immediate processing already handled the session
-      const sessionReady = sessionStorage.getItem("oauth_session_ready");
-      if (sessionReady) {
-        logger.info("✨ Session already established by immediate processing");
-        sessionStorage.removeItem("oauth_session_ready");
-
-        // Redirect to the stored path or home
-        const redirectPath = localStorage.getItem("authRedirectPath");
-        if (redirectPath) {
-          localStorage.removeItem("authRedirectPath");
-          logger.info("🔄 Redirecting to stored path:", redirectPath);
-          window.location.href = redirectPath;
-        } else {
-          logger.info("🔄 Redirecting to home");
-          navigate({ to: "/" });
-        }
-        return;
-      }
-
       const supabase = getSupabaseAuthClient();
 
       // Get the auth code from URL if present
