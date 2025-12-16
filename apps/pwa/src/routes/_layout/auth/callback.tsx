@@ -8,8 +8,10 @@ import { logger } from "@/shared/lib/logger";
 // caused by the long app initialization time (PGLite DB can take 30-100 seconds)
 const processTokensImmediately = async () => {
   logger.info("🔥 Module loaded, checking for OAuth tokens in URL...", {
+    fullUrl: window.location.href,
     hash: window.location.hash,
     search: window.location.search,
+    pathname: window.location.pathname,
   });
 
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
