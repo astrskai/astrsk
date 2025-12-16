@@ -52,8 +52,7 @@ export function getSupabaseAuthClient(): SupabaseClient {
         persistSession: true,
         storageKey: "astrsk-auth",
         storage: window.localStorage,
-        // Let Supabase auto-detect the flow type from URL
-        // detectSessionInUrl will handle both PKCE and implicit flow automatically
+        detectSessionInUrl: true, // Auto-detect and process auth tokens/codes from URL
       },
     });
   }

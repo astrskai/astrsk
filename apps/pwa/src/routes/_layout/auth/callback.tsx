@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { getSupabaseAuthClient } from "@/shared/lib/supabase-client";
 import { logger } from "@/shared/lib/logger";
 
@@ -13,8 +13,16 @@ export const Route = createFileRoute("/_layout/auth/callback")({
  */
 function AuthCallback() {
   const navigate = useNavigate();
+  const hasRun = useRef(false);
 
   useEffect(() => {
+    // Prevent double execution in React StrictMode or on mobile Safari
+    if (hasRun.current) {
+      logger.debug("Auth callback already running, skipping duplicate execution");
+      return;
+    }
+    hasRun.current = true;
+
     const handleCallback = async () => {
       const supabase = getSupabaseAuthClient();
 
@@ -120,10 +128,12 @@ function AuthCallback() {
       if (redirectPath) {
         localStorage.removeItem("authRedirectPath");
         logger.info("Redirecting to stored path:", redirectPath);
-        window.location.href = redirectPath; // Use window.location for full page reload
+        window.location.href = redirectPath;
       } else {
         logger.info("Redirecting to home");
-        navigate({ to: "/" });
+        // Use window.location.href instead of navigate() for better mobile Safari compatibility
+        // This ensures a full page reload and clears the auth callback URL from history
+        window.location.href = window.location.origin + "/";
       }
     }
 
