@@ -1,3 +1,6 @@
+// OAuth interceptor MUST run first, before any other imports
+import "./oauth-interceptor";
+
 import { initServices } from "@/app/services/init-services.ts";
 import { useAppStore } from "@/shared/stores/app-store.tsx";
 import { initStores } from "@/shared/stores/init-stores.ts";

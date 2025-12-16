@@ -3,80 +3,9 @@ import { useEffect } from "react";
 import { getSupabaseAuthClient } from "@/shared/lib/supabase-client";
 import { logger } from "@/shared/lib/logger";
 
-// IMMEDIATE TOKEN PROCESSING
-// Process OAuth tokens BEFORE React renders to prevent "stale token" errors
-// caused by the long app initialization time (PGLite DB can take 30-100 seconds)
-const processTokensImmediately = async () => {
-  logger.info("🔥 Module loaded, checking for OAuth tokens in URL...", {
-    fullUrl: window.location.href,
-    hash: window.location.hash,
-    search: window.location.search,
-    pathname: window.location.pathname,
-  });
-
-  const hashParams = new URLSearchParams(window.location.hash.substring(1));
-  const accessToken = hashParams.get("access_token");
-  const refreshToken = hashParams.get("refresh_token");
-
-  logger.info("🔍 Token check:", {
-    hasAccessToken: !!accessToken,
-    hasRefreshToken: !!refreshToken,
-    accessTokenLength: accessToken?.length,
-    refreshTokenLength: refreshToken?.length,
-  });
-
-  if (accessToken && refreshToken) {
-    logger.info("✅ Processing OAuth tokens immediately (before React mount)");
-    const supabase = getSupabaseAuthClient();
-
-    const { data, error } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    if (error) {
-      logger.error("❌ Failed to set session from OAuth tokens:", error);
-      return;
-    }
-
-    if (data?.session) {
-      logger.info("🎉 OAuth session established successfully", {
-        userId: data.session.user?.id,
-        email: data.session.user?.email,
-      });
-
-      // Wait for session to persist to storage
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Verify session is in localStorage before redirect
-      const storedSession = localStorage.getItem("astrsk-auth");
-      logger.info("📦 Session in localStorage:", {
-        exists: !!storedSession,
-        length: storedSession?.length,
-      });
-
-      // Redirect immediately - don't wait for React
-      const redirectPath = localStorage.getItem("authRedirectPath");
-      if (redirectPath) {
-        localStorage.removeItem("authRedirectPath");
-        logger.info("🔄 Redirecting to stored path:", redirectPath);
-        window.location.href = redirectPath;
-      } else {
-        logger.info("🔄 Redirecting to home");
-        window.location.href = window.location.origin + "/";
-      }
-    } else {
-      logger.warn("⚠️ No session data after setSession");
-    }
-  } else {
-    logger.info("ℹ️ No tokens in URL hash, skipping immediate processing");
-  }
-};
-
-// Process tokens immediately (non-blocking)
-processTokensImmediately().catch(err => {
-  logger.error("Error processing OAuth tokens:", err);
-});
+// Note: Immediate token processing now happens in oauth-interceptor.ts
+// which runs at app entry point (before main.tsx) to catch tokens before
+// the long PGLite DB initialization starts
 
 export const Route = createFileRoute("/_layout/auth/callback")({
   component: AuthCallback,
