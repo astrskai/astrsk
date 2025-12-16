@@ -52,7 +52,8 @@ export function getSupabaseAuthClient(): SupabaseClient {
         persistSession: true,
         storageKey: "astrsk-auth",
         storage: window.localStorage,
-        detectSessionInUrl: true, // Auto-detect and process auth tokens/codes from URL
+        // Let the callback handler do the work - don't auto-detect
+        detectSessionInUrl: false,
       },
     });
   }

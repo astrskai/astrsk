@@ -1,7 +1,48 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { getSupabaseAuthClient } from "@/shared/lib/supabase-client";
 import { logger } from "@/shared/lib/logger";
+
+// IMMEDIATE TOKEN PROCESSING
+// Process OAuth tokens BEFORE React renders to prevent "stale token" errors
+// caused by the long app initialization time (PGLite DB can take 30-100 seconds)
+const processTokensImmediately = async () => {
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const accessToken = hashParams.get("access_token");
+  const refreshToken = hashParams.get("refresh_token");
+
+  if (accessToken && refreshToken) {
+    logger.info("Processing OAuth tokens immediately (before React mount)");
+    const supabase = getSupabaseAuthClient();
+
+    const { data, error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (error) {
+      logger.error("Failed to set session from OAuth tokens:", error);
+      return;
+    }
+
+    if (data?.session) {
+      logger.info("OAuth session established successfully");
+      // Redirect immediately
+      const redirectPath = localStorage.getItem("authRedirectPath");
+      if (redirectPath) {
+        localStorage.removeItem("authRedirectPath");
+        window.location.href = redirectPath;
+      } else {
+        window.location.href = window.location.origin + "/";
+      }
+    }
+  }
+};
+
+// Process tokens immediately (non-blocking)
+processTokensImmediately().catch(err => {
+  logger.error("Error processing OAuth tokens:", err);
+});
 
 export const Route = createFileRoute("/_layout/auth/callback")({
   component: AuthCallback,
@@ -13,129 +54,77 @@ export const Route = createFileRoute("/_layout/auth/callback")({
  */
 function AuthCallback() {
   const navigate = useNavigate();
-  const hasRun = useRef(false);
 
   useEffect(() => {
-    // Prevent double execution in React StrictMode or on mobile Safari
-    if (hasRun.current) {
-      logger.debug("Auth callback already running, skipping duplicate execution");
-      return;
-    }
-    hasRun.current = true;
-
     const handleCallback = async () => {
       const supabase = getSupabaseAuthClient();
 
+      // Get the auth code from URL if present
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const queryParams = new URLSearchParams(window.location.search);
+
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const code = queryParams.get("code");
+
+      logger.info("OAuth callback received:", {
+        hasCode: !!code,
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+      });
+
       try {
-        // Get the auth code from URL if present
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const queryParams = new URLSearchParams(window.location.search);
-
-        const accessToken = hashParams.get("access_token");
-        const refreshToken = hashParams.get("refresh_token");
-        const code = queryParams.get("code");
-        const error_description = queryParams.get("error_description");
-
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-        // Debug logging for troubleshooting
-        logger.info("OAuth callback received:", {
-          hasCode: !!code,
-          hasAccessToken: !!accessToken,
-          hasRefreshToken: !!refreshToken,
-          errorDescription: error_description,
-          isSafari,
-          url: window.location.href,
-        });
-
-        // If there's an error in the URL, handle it
-        if (error_description) {
-          logger.error("OAuth error from provider:", error_description);
-          navigate({ to: "/sign-in" });
-          return;
-        }
-
-        // Handle PKCE flow (code in query params)
         if (code) {
+          // Exchange code for session (PKCE flow)
           logger.info("Exchanging PKCE code for session...");
-          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-          if (exchangeError) {
-            logger.error("PKCE code exchange failed:", {
-              message: exchangeError.message,
-              status: exchangeError.status,
-              code: exchangeError.code,
-            });
-
-            // For Safari, try to get session anyway (may be cached)
-            if (isSafari) {
-              logger.info("Safari detected, checking for cached session...");
-              const { data: { session: cachedSession } } = await supabase.auth.getSession();
-              if (cachedSession) {
-                logger.info("Found cached session, proceeding");
-                redirectAfterLogin(cachedSession);
-                return;
-              }
-            }
-
+          if (error) {
+            logger.error("Code exchange error:", error);
             navigate({ to: "/sign-in" });
             return;
           }
-
-          if (data?.session) {
-            logger.info("PKCE exchange successful");
-            redirectAfterLogin(data.session);
-            return;
-          }
-        }
-
-        // Handle implicit flow (tokens in hash)
-        if (accessToken && refreshToken) {
-          logger.info("Setting session from implicit flow tokens...");
-          const { data, error: setSessionError } = await supabase.auth.setSession({
+        } else if (accessToken && refreshToken) {
+          // Set session from tokens (implicit flow) - handled by immediate processing above
+          // This is a fallback in case immediate processing didn't run
+          logger.info("Setting session from tokens (fallback)...");
+          const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
 
-          if (setSessionError) {
-            logger.error("Failed to set session from tokens:", setSessionError);
+          if (error) {
+            logger.error("Set session error:", error);
             navigate({ to: "/sign-in" });
-            return;
-          }
-
-          if (data?.session) {
-            logger.info("Implicit flow session set successfully");
-            redirectAfterLogin(data.session);
             return;
           }
         }
 
-        // No code or tokens found
-        logger.warn("No auth code or tokens found in callback URL");
-        navigate({ to: "/sign-in" });
+        // Check if we have a valid session
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (session) {
+          logger.info("OAuth login successful", { userId: session.user?.id });
+
+          // Check if there's a stored redirect path (e.g., from play session login)
+          const redirectPath = localStorage.getItem("authRedirectPath");
+          if (redirectPath) {
+            localStorage.removeItem("authRedirectPath");
+            logger.info("Redirecting to stored path:", redirectPath);
+            window.location.href = redirectPath;
+          } else {
+            logger.info("Redirecting to home");
+            navigate({ to: "/" });
+          }
+        } else {
+          logger.warn("No session after OAuth callback");
+          navigate({ to: "/sign-in" });
+        }
       } catch (error) {
         logger.error("OAuth callback error:", error);
         navigate({ to: "/sign-in" });
       }
     };
-
-    // Helper function to handle redirect after successful login
-    function redirectAfterLogin(session: any) {
-      logger.info("Redirecting after successful login", { userId: session.user?.id });
-
-      // Check if there's a stored redirect path (e.g., from play session login)
-      const redirectPath = localStorage.getItem("authRedirectPath");
-      if (redirectPath) {
-        localStorage.removeItem("authRedirectPath");
-        logger.info("Redirecting to stored path:", redirectPath);
-        window.location.href = redirectPath;
-      } else {
-        logger.info("Redirecting to home");
-        // Use window.location.href instead of navigate() for better mobile Safari compatibility
-        // This ensures a full page reload and clears the auth callback URL from history
-        window.location.href = window.location.origin + "/";
-      }
-    }
 
     handleCallback();
   }, [navigate]);
