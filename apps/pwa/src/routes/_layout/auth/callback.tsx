@@ -45,8 +45,8 @@ const processTokensImmediately = async () => {
         email: data.session.user?.email,
       });
 
-      // Wait a bit for session to persist to storage
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for session to persist to storage
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Redirect immediately - don't wait for React
       const redirectPath = localStorage.getItem("authRedirectPath");
