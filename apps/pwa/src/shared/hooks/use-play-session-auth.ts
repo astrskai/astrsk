@@ -59,6 +59,8 @@ export function usePlaySessionAuth(sessionId?: UniqueEntityID): PlaySessionAuthS
 
     // Check if default models are using AstrskAi provider
     const hasAstrskProvider =
+      !defaultLiteModel ||
+      !defaultStrongModel ||
       defaultLiteModel?.apiSource === ApiSource.AstrskAi ||
       defaultStrongModel?.apiSource === ApiSource.AstrskAi;
 
