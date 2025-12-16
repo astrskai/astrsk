@@ -200,12 +200,9 @@ This project uses the following third-party software. The full text of each lice
       },
 
       devOptions: {
-        enabled: true,
-        navigateFallback: "index.html",
+        enabled: false, // Disable service worker in dev mode to avoid OAuth issues
         suppressWarnings: true,
         type: "module",
-        // Exclude OAuth callback from navigation fallback in dev mode too
-        navigateFallbackAllowlist: [/^(?!.*\/auth\/callback).*/],
       },
     }),
   ],
