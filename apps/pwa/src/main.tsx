@@ -69,8 +69,10 @@ async function initializeApp() {
   const { initializeSteps, startStep, completeStep, warnStep, failStep, saveLog, setShowProgressScreen } =
     useInitializationStore.getState();
 
-  // Check if this is the first install (no previous initialization log)
-  const isFirstInstall = !loadInitializationLog();
+  // Check previous initialization log
+  const previousLog = loadInitializationLog();
+  const isFirstInstall = !previousLog;
+  const previousInitSuccessful = previousLog && !previousLog.hasError;
 
   // First install: show detailed progress screen immediately
   if (isFirstInstall) {
@@ -115,6 +117,19 @@ async function initializeApp() {
       </AuthProvider>
     </StrictMode>,
   );
+
+  // Fast path: Skip re-initialization if already initialized in this browser session.
+  // This handles OAuth redirects on iOS Chrome where PGlite re-initialization can hang.
+  // We use sessionStorage (cleared on tab close) to track initialization within a session.
+  // On cold start (new tab), full initialization runs including migration checks.
+  const SESSION_INIT_KEY = "astrsk-session-initialized";
+  const sessionInitialized = sessionStorage.getItem(SESSION_INIT_KEY) === "true";
+
+  if (sessionInitialized && previousInitSuccessful) {
+    logger.debug("⚡ Fast path: Already initialized in this session, skipping full init");
+    useAppStore.getState().setIsOfflineReady(true);
+    return;
+  }
 
   // Progress callback for all initialization functions
   const onProgress = (
@@ -198,6 +213,9 @@ async function initializeApp() {
 
     // Mark app as ready - App component will switch from InitializationScreen to actual app
     useAppStore.getState().setIsOfflineReady(true);
+
+    // Mark session as initialized (for fast path on OAuth redirects)
+    sessionStorage.setItem(SESSION_INIT_KEY, "true");
   } catch (error) {
     logger.error("Failed to initialize app:", error);
 
