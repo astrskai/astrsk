@@ -5,6 +5,7 @@ import {
   FileText,
   Database,
   Terminal,
+  PackageOpen,
 } from "lucide-react";
 import { Switch } from "@/shared/ui";
 import { useNavigate } from "@tanstack/react-router";
@@ -126,6 +127,21 @@ export default function AdvancedPage() {
               }
               window.api.config.setConfig("allowInsecureContent", checked);
             }}
+          />
+        </div>
+      </section>
+
+      {/* Recovery Tools */}
+      <section>
+        <SectionTitle title="Recovery" />
+        <div className="rounded-2xl border border-border-default bg-surface-raised">
+          <SettingsLinkItem
+            icon={<PackageOpen size={18} />}
+            label="Data recovery tools"
+            description="Recover character data from failed migrations, create database snapshots, or run remote recovery scripts."
+            onClick={() =>
+              navigate({ to: "/settings/advanced/recovery" })
+            }
           />
         </div>
       </section>

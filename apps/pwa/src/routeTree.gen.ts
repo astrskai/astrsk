@@ -48,6 +48,9 @@ import { Route as LayoutSessionsSettingsSessionIdRouteImport } from './routes/_l
 import { Route as LayoutAssetsWorkflowsWorkflowIdRouteImport } from './routes/_layout/assets/workflows/$workflowId'
 import { Route as LayoutAssetsScenariosChar123ScenarioIdChar125RouteImport } from './routes/_layout/assets/scenarios/{-$scenarioId}'
 import { Route as LayoutAssetsCharactersChar123CharacterIdChar125RouteImport } from './routes/_layout/assets/characters/{-$characterId}'
+import { Route as LayoutSettingsAdvancedRecoveryIndexRouteImport } from './routes/_layout/settings/advanced/recovery/index'
+import { Route as LayoutSettingsAdvancedRecoveryRemoteScriptRouteImport } from './routes/_layout/settings/advanced/recovery/remote-script'
+import { Route as LayoutSettingsAdvancedRecoveryCharacterRecoveryRouteImport } from './routes/_layout/settings/advanced/recovery/character-recovery'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -261,6 +264,24 @@ const LayoutAssetsCharactersChar123CharacterIdChar125Route =
     path: '/assets/characters/{-$characterId}',
     getParentRoute: () => LayoutRoute,
   } as any)
+const LayoutSettingsAdvancedRecoveryIndexRoute =
+  LayoutSettingsAdvancedRecoveryIndexRouteImport.update({
+    id: '/advanced/recovery/',
+    path: '/advanced/recovery/',
+    getParentRoute: () => LayoutSettingsRoute,
+  } as any)
+const LayoutSettingsAdvancedRecoveryRemoteScriptRoute =
+  LayoutSettingsAdvancedRecoveryRemoteScriptRouteImport.update({
+    id: '/advanced/recovery/remote-script',
+    path: '/advanced/recovery/remote-script',
+    getParentRoute: () => LayoutSettingsRoute,
+  } as any)
+const LayoutSettingsAdvancedRecoveryCharacterRecoveryRoute =
+  LayoutSettingsAdvancedRecoveryCharacterRecoveryRouteImport.update({
+    id: '/advanced/recovery/character-recovery',
+    path: '/advanced/recovery/character-recovery',
+    getParentRoute: () => LayoutSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/email-verification': typeof LayoutEmailVerificationRoute
@@ -301,6 +322,9 @@ export interface FileRoutesByFullPath {
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/advanced': typeof LayoutSettingsAdvancedIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
+  '/settings/advanced/recovery/character-recovery': typeof LayoutSettingsAdvancedRecoveryCharacterRecoveryRoute
+  '/settings/advanced/recovery/remote-script': typeof LayoutSettingsAdvancedRecoveryRemoteScriptRoute
+  '/settings/advanced/recovery': typeof LayoutSettingsAdvancedRecoveryIndexRoute
 }
 export interface FileRoutesByTo {
   '/email-verification': typeof LayoutEmailVerificationRoute
@@ -340,6 +364,9 @@ export interface FileRoutesByTo {
   '/settings/account': typeof LayoutSettingsAccountIndexRoute
   '/settings/advanced': typeof LayoutSettingsAdvancedIndexRoute
   '/settings/legal': typeof LayoutSettingsLegalIndexRoute
+  '/settings/advanced/recovery/character-recovery': typeof LayoutSettingsAdvancedRecoveryCharacterRecoveryRoute
+  '/settings/advanced/recovery/remote-script': typeof LayoutSettingsAdvancedRecoveryRemoteScriptRoute
+  '/settings/advanced/recovery': typeof LayoutSettingsAdvancedRecoveryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -382,6 +409,9 @@ export interface FileRoutesById {
   '/_layout/settings/account/': typeof LayoutSettingsAccountIndexRoute
   '/_layout/settings/advanced/': typeof LayoutSettingsAdvancedIndexRoute
   '/_layout/settings/legal/': typeof LayoutSettingsLegalIndexRoute
+  '/_layout/settings/advanced/recovery/character-recovery': typeof LayoutSettingsAdvancedRecoveryCharacterRecoveryRoute
+  '/_layout/settings/advanced/recovery/remote-script': typeof LayoutSettingsAdvancedRecoveryRemoteScriptRoute
+  '/_layout/settings/advanced/recovery/': typeof LayoutSettingsAdvancedRecoveryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -424,6 +454,9 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/advanced'
     | '/settings/legal'
+    | '/settings/advanced/recovery/character-recovery'
+    | '/settings/advanced/recovery/remote-script'
+    | '/settings/advanced/recovery'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/email-verification'
@@ -463,6 +496,9 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/advanced'
     | '/settings/legal'
+    | '/settings/advanced/recovery/character-recovery'
+    | '/settings/advanced/recovery/remote-script'
+    | '/settings/advanced/recovery'
   id:
     | '__root__'
     | '/_layout'
@@ -504,6 +540,9 @@ export interface FileRouteTypes {
     | '/_layout/settings/account/'
     | '/_layout/settings/advanced/'
     | '/_layout/settings/legal/'
+    | '/_layout/settings/advanced/recovery/character-recovery'
+    | '/_layout/settings/advanced/recovery/remote-script'
+    | '/_layout/settings/advanced/recovery/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -789,6 +828,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAssetsCharactersChar123CharacterIdChar125RouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/settings/advanced/recovery/': {
+      id: '/_layout/settings/advanced/recovery/'
+      path: '/advanced/recovery'
+      fullPath: '/settings/advanced/recovery'
+      preLoaderRoute: typeof LayoutSettingsAdvancedRecoveryIndexRouteImport
+      parentRoute: typeof LayoutSettingsRoute
+    }
+    '/_layout/settings/advanced/recovery/remote-script': {
+      id: '/_layout/settings/advanced/recovery/remote-script'
+      path: '/advanced/recovery/remote-script'
+      fullPath: '/settings/advanced/recovery/remote-script'
+      preLoaderRoute: typeof LayoutSettingsAdvancedRecoveryRemoteScriptRouteImport
+      parentRoute: typeof LayoutSettingsRoute
+    }
+    '/_layout/settings/advanced/recovery/character-recovery': {
+      id: '/_layout/settings/advanced/recovery/character-recovery'
+      path: '/advanced/recovery/character-recovery'
+      fullPath: '/settings/advanced/recovery/character-recovery'
+      preLoaderRoute: typeof LayoutSettingsAdvancedRecoveryCharacterRecoveryRouteImport
+      parentRoute: typeof LayoutSettingsRoute
+    }
   }
 }
 
@@ -806,6 +866,9 @@ interface LayoutSettingsRouteChildren {
   LayoutSettingsAccountIndexRoute: typeof LayoutSettingsAccountIndexRoute
   LayoutSettingsAdvancedIndexRoute: typeof LayoutSettingsAdvancedIndexRoute
   LayoutSettingsLegalIndexRoute: typeof LayoutSettingsLegalIndexRoute
+  LayoutSettingsAdvancedRecoveryCharacterRecoveryRoute: typeof LayoutSettingsAdvancedRecoveryCharacterRecoveryRoute
+  LayoutSettingsAdvancedRecoveryRemoteScriptRoute: typeof LayoutSettingsAdvancedRecoveryRemoteScriptRoute
+  LayoutSettingsAdvancedRecoveryIndexRoute: typeof LayoutSettingsAdvancedRecoveryIndexRoute
 }
 
 const LayoutSettingsRouteChildren: LayoutSettingsRouteChildren = {
@@ -825,6 +888,12 @@ const LayoutSettingsRouteChildren: LayoutSettingsRouteChildren = {
   LayoutSettingsAccountIndexRoute: LayoutSettingsAccountIndexRoute,
   LayoutSettingsAdvancedIndexRoute: LayoutSettingsAdvancedIndexRoute,
   LayoutSettingsLegalIndexRoute: LayoutSettingsLegalIndexRoute,
+  LayoutSettingsAdvancedRecoveryCharacterRecoveryRoute:
+    LayoutSettingsAdvancedRecoveryCharacterRecoveryRoute,
+  LayoutSettingsAdvancedRecoveryRemoteScriptRoute:
+    LayoutSettingsAdvancedRecoveryRemoteScriptRoute,
+  LayoutSettingsAdvancedRecoveryIndexRoute:
+    LayoutSettingsAdvancedRecoveryIndexRoute,
 }
 
 const LayoutSettingsRouteWithChildren = LayoutSettingsRoute._addFileChildren(
