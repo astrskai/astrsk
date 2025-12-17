@@ -90,12 +90,14 @@ async function initializeApp() {
     { id: "image-service", label: "Initialize image service" },
     { id: "card-service", label: "Initialize card service" },
     { id: "session-service", label: "Initialize session service" },
+    { id: "session-cleanup", label: "Cleanup stale sessions" },
     { id: "api-connections", label: "Load API connections" },
     { id: "free-provider", label: "Setup free AI provider (if needed)" },
     { id: "default-models", label: "Configure default models" },
     { id: "check-sessions", label: "Check existing sessions" },
     { id: "migrate-play-sessions", label: "Migrate play sessions" },
     { id: "default-sessions", label: "Import default sessions (new users)" },
+    { id: "extensions", label: "Initialize extensions" },
   ]);
 
   // Create root and render App AFTER store is initialized
