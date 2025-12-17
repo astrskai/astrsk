@@ -92,8 +92,8 @@ async function initializeApp() {
     { id: "free-provider", label: "Setup free AI provider (if needed)" },
     { id: "default-models", label: "Configure default models" },
     { id: "check-sessions", label: "Check existing sessions" },
+    { id: "migrate-play-sessions", label: "Migrate play sessions" },
     { id: "default-sessions", label: "Import default sessions (new users)" },
-    { id: "backgrounds", label: "Load background assets" },
   ]);
 
   // Create root and render App AFTER store is initialized
