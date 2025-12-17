@@ -116,12 +116,57 @@ export class LegacyCharacterRecovery {
 
     if (!hasCharacterCards && !hasPlotCards && !hasCards) {
       this.log("\n✅ No legacy tables found. Your data has been migrated.");
+
+      // Still check current tables to show what exists
+      this.log("\n🔍 Checking current tables:");
+
+      const hasCharactersTable = await db.execute(sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables
+          WHERE table_name = 'characters'
+        ) as exists
+      `);
+      const hasChars = Boolean(hasCharactersTable.rows[0].exists);
+      this.log(`  characters table: ${hasChars ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+
+      let currentCharCount = 0;
+      if (hasChars) {
+        const charCount = await db.execute(sql`SELECT COUNT(*) as count FROM characters`);
+        currentCharCount = Number(charCount.rows[0].count);
+        this.log(`  Found ${currentCharCount} characters in characters table`);
+
+        // Sample characters
+        const sampleChars = await db.execute(sql`SELECT id, name FROM characters LIMIT 5`);
+        if (sampleChars.rows.length > 0) {
+          this.log(`  Sample characters:`);
+          sampleChars.rows.forEach((char: any, i: number) => {
+            this.log(`    ${i + 1}. ${char.name} (${char.id})`);
+          });
+        }
+      }
+
+      const hasScenariosTable = await db.execute(sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables
+          WHERE table_name = 'scenarios'
+        ) as exists
+      `);
+      const hasScens = Boolean(hasScenariosTable.rows[0].exists);
+      this.log(`  scenarios table: ${hasScens ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+
+      let currentScenCount = 0;
+      if (hasScens) {
+        const scenCount = await db.execute(sql`SELECT COUNT(*) as count FROM scenarios`);
+        currentScenCount = Number(scenCount.rows[0].count);
+        this.log(`  Found ${currentScenCount} scenarios in scenarios table`);
+      }
+
       return {
         hasLegacyTables: false,
         legacyCharacterCount: 0,
-        currentCharacterCount: 0,
+        currentCharacterCount: currentCharCount,
         legacyScenarioCount: 0,
-        currentScenarioCount: 0,
+        currentScenarioCount: currentScenCount,
         missingCharacters: 0,
         missingScenarios: 0,
         canRecover: false,
@@ -144,8 +189,33 @@ export class LegacyCharacterRecovery {
       oldCharacterCount = Number(oldCount.rows[0].count);
     }
 
-    const newCount = await db.execute(sql`SELECT COUNT(*) as count FROM characters`);
-    newCharacterCount = Number(newCount.rows[0].count);
+    // Check if characters table exists before querying
+    const tableExists = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'characters'
+      ) as exists
+    `);
+    const hasCharactersTable = Boolean(tableExists.rows[0].exists);
+    this.log(`\n🔍 Checking current tables:`);
+    this.log(`  characters table: ${hasCharactersTable ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+
+    if (hasCharactersTable) {
+      const newCount = await db.execute(sql`SELECT COUNT(*) as count FROM characters`);
+      newCharacterCount = Number(newCount.rows[0].count);
+      this.log(`  Found ${newCharacterCount} characters in characters table`);
+
+      // Also check what characters exist (for debugging)
+      const sampleChars = await db.execute(sql`SELECT id, name FROM characters LIMIT 5`);
+      if (sampleChars.rows.length > 0) {
+        this.log(`  Sample characters:`);
+        sampleChars.rows.forEach((char: any, i: number) => {
+          this.log(`    ${i + 1}. ${char.name} (${char.id})`);
+        });
+      }
+    } else {
+      this.log(`  ⚠️ Characters table does not exist!`);
+    }
 
     if (hasCards && hasPlotCards) {
       const oldPlot = await db.execute(sql`
@@ -157,8 +227,22 @@ export class LegacyCharacterRecovery {
       oldPlotCount = Number(oldPlot.rows[0].count);
     }
 
-    const newScen = await db.execute(sql`SELECT COUNT(*) as count FROM scenarios`);
-    newScenarioCount = Number(newScen.rows[0].count);
+    const scenTableExists = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'scenarios'
+      ) as exists
+    `);
+    const hasScenariosTable = Boolean(scenTableExists.rows[0].exists);
+    this.log(`  scenarios table: ${hasScenariosTable ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+
+    if (hasScenariosTable) {
+      const newScen = await db.execute(sql`SELECT COUNT(*) as count FROM scenarios`);
+      newScenarioCount = Number(newScen.rows[0].count);
+      this.log(`  Found ${newScenarioCount} scenarios in scenarios table`);
+    } else {
+      this.log(`  ⚠️ Scenarios table does not exist!`);
+    }
 
     const missingChars = Math.max(0, oldCharacterCount - newCharacterCount);
     const missingScens = Math.max(0, oldPlotCount - newScenarioCount);
@@ -341,16 +425,22 @@ export class LegacyCharacterRecovery {
   }
 
   /**
-   * Step 4: Recover missing characters
+   * Step 4: Recover missing characters WITH session-aware logic
+   *
+   * This method:
+   * 1. Creates a global copy (session_id = NULL) - the template
+   * 2. Finds all sessions that reference this character
+   * 3. Creates session-local copies for each session
+   * 4. Updates session references (all_cards, user_character_card_id)
    */
-  async recoverCharacters(): Promise<{ recovered: number; failed: number }> {
-    this.log("🔧 Starting character recovery...");
+  async recoverCharacters(): Promise<{ recovered: number; failed: number; sessionCopiesCreated: number }> {
+    this.log("🔧 Starting session-aware character recovery...");
 
     const missingChars = await this.getMissingCharacters();
 
     if (missingChars.length === 0) {
       this.log("  ✅ No missing characters to recover");
-      return { recovered: 0, failed: 0 };
+      return { recovered: 0, failed: 0, sessionCopiesCreated: 0 };
     }
 
     const db = await Drizzle.getInstance();
@@ -367,76 +457,75 @@ export class LegacyCharacterRecovery {
 
     let recovered = 0;
     let failed = 0;
+    let sessionCopiesCreated = 0;
 
     for (const char of missingChars) {
       try {
-        // Convert tags from JSONB to array
-        let tagsArray: string[] = [];
-        if (char.tags) {
-          if (typeof char.tags === 'string') {
-            tagsArray = JSON.parse(char.tags);
-          } else if (Array.isArray(char.tags)) {
-            tagsArray = char.tags;
-          }
+        this.log(`\n  Processing character: ${char.name} (${char.id})`);
+
+        // Step 1: Create global copy (session_id = NULL)
+        this.log(`    Creating global template...`);
+        await this.insertCharacter(char, null, hasScenarioField, hasFirstMessagesField, hasConfigField);
+        this.log(`    ✅ Global copy created`);
+
+        // Step 2: Find all sessions that reference this character
+        const sessionsReferencingChar = await db.execute(sql`
+          SELECT id, all_cards, user_character_card_id
+          FROM sessions
+          WHERE
+            user_character_card_id = ${char.id}
+            OR all_cards::text LIKE ${'%' + char.id + '%'}
+        `);
+
+        if (sessionsReferencingChar.rows.length === 0) {
+          this.log(`    No sessions reference this character`);
+          recovered++;
+          continue;
         }
 
-        // Convert tags array to PostgreSQL array literal
-        const tagsLiteral = `{${tagsArray.map(tag => `"${tag.replace(/"/g, '\\"')}"`).join(',')}}`;
+        this.log(`    Found ${sessionsReferencingChar.rows.length} sessions referencing this character`);
 
-        // Build INSERT query dynamically based on schema version
-        // Old schema (current users): no scenario, first_messages, config
-        // New schema (future): has scenario, first_messages, config
-        const columns = ['id', 'title', 'icon_asset_id', 'tags', 'creator', 'card_summary', 'version',
-                         'conceptual_origin', 'vibe_session_id', 'image_prompt',
-                         'name', 'description', 'example_dialogue', 'lorebook'];
+        // Step 3: For each session, create a session-local copy and update references
+        for (const session of sessionsReferencingChar.rows) {
+          const sessionId = (session as any).id;
+          const allCards = (session as any).all_cards;
+          const userCharacterId = (session as any).user_character_card_id;
 
-        const values: string[] = [
-          `'${char.id}'`,
-          char.title ? `'${char.title.replace(/'/g, "''")}'` : 'NULL',
-          char.icon_asset_id ? `'${char.icon_asset_id}'` : 'NULL',
-          `'${tagsLiteral}'::text[]`,
-          char.creator ? `'${char.creator.replace(/'/g, "''")}'` : 'NULL',
-          char.card_summary ? `'${char.card_summary.replace(/'/g, "''")}'` : 'NULL',
-          char.version ? `'${char.version.replace(/'/g, "''")}'` : 'NULL',
-          char.conceptual_origin ? `'${char.conceptual_origin.replace(/'/g, "''")}'` : 'NULL',
-          char.vibe_session_id ? `'${char.vibe_session_id}'` : 'NULL',
-          char.image_prompt ? `'${char.image_prompt.replace(/'/g, "''")}'` : 'NULL',
-          `'${char.name.replace(/'/g, "''")}'`,
-          char.description ? `'${char.description.replace(/'/g, "''")}'` : 'NULL',
-          char.example_dialogue ? `'${char.example_dialogue.replace(/'/g, "''")}'` : 'NULL',
-          char.lorebook ? `'${JSON.stringify(char.lorebook).replace(/'/g, "''")}'::jsonb` : 'NULL',
-        ];
+          this.log(`      Processing session ${sessionId}...`);
 
-        // Add new fields only if they exist in current schema
-        if (hasScenarioField) {
-          columns.push('scenario');
-          values.push('NULL');
+          // Generate new ID for session-local copy (using Web Crypto API)
+          const sessionLocalId = crypto.randomUUID();
+
+          // Create session-local copy
+          await this.insertCharacter(char, sessionId, hasScenarioField, hasFirstMessagesField, hasConfigField, sessionLocalId);
+          this.log(`        ✅ Session-local copy created: ${sessionLocalId}`);
+          sessionCopiesCreated++;
+
+          // Update all_cards if it references this character
+          const updatedAllCards = allCards.map((cardItem: any) => {
+            if (cardItem.id === char.id) {
+              return { ...cardItem, id: sessionLocalId };
+            }
+            return cardItem;
+          });
+
+          // Update user_character_card_id if it references this character
+          const updatedUserCharacterId = userCharacterId === char.id ? sessionLocalId : userCharacterId;
+
+          // Update session
+          await db.execute(sql`
+            UPDATE sessions
+            SET
+              all_cards = ${JSON.stringify(updatedAllCards)}::jsonb,
+              user_character_card_id = ${updatedUserCharacterId}
+            WHERE id = ${sessionId}
+          `);
+
+          this.log(`        ✅ Session references updated`);
         }
-        if (hasFirstMessagesField) {
-          columns.push('first_messages');
-          values.push('NULL');
-        }
-        if (hasConfigField) {
-          columns.push('config');
-          values.push(`'{}'::jsonb`);
-        }
-
-        // Always add these at the end
-        columns.push('session_id', 'created_at', 'updated_at');
-        values.push(
-          'NULL',
-          `'${new Date(char.created_at).toISOString()}'`,
-          `'${new Date(char.updated_at).toISOString()}'`
-        );
-
-        await db.execute(sql.raw(`
-          INSERT INTO characters (${columns.join(', ')})
-          VALUES (${values.join(', ')})
-          ON CONFLICT (id) DO NOTHING
-        `));
 
         recovered++;
-        this.log(`  ✅ Recovered: ${char.name} (${char.id})`);
+        this.log(`  ✅ Recovered: ${char.name} (${char.id}) with ${sessionsReferencingChar.rows.length} session copies`);
       } catch (error) {
         failed++;
         const errorMsg = error instanceof Error ? error.message : String(error);
@@ -445,22 +534,103 @@ export class LegacyCharacterRecovery {
       }
     }
 
-    this.log(`\n📊 Recovery complete: ${recovered} recovered, ${failed} failed`);
+    this.log(`\n📊 Recovery complete:`);
+    this.log(`  ${recovered} characters recovered`);
+    this.log(`  ${sessionCopiesCreated} session-local copies created`);
+    this.log(`  ${failed} failed`);
 
-    return { recovered, failed };
+    return { recovered, failed, sessionCopiesCreated };
   }
 
   /**
-   * Step 5: Recover missing scenarios
+   * Helper: Insert a character (global or session-local)
    */
-  async recoverScenarios(): Promise<{ recovered: number; failed: number }> {
-    this.log("🔧 Starting scenario recovery...");
+  private async insertCharacter(
+    char: LegacyCharacterData,
+    sessionId: string | null,
+    hasScenarioField: boolean,
+    hasFirstMessagesField: boolean,
+    hasConfigField: boolean,
+    customId?: string
+  ): Promise<void> {
+    const db = await Drizzle.getInstance();
+
+    // Convert tags from JSONB to array
+    let tagsArray: string[] = [];
+    if (char.tags) {
+      if (typeof char.tags === 'string') {
+        tagsArray = JSON.parse(char.tags);
+      } else if (Array.isArray(char.tags)) {
+        tagsArray = char.tags;
+      }
+    }
+
+    // Convert tags array to PostgreSQL array literal
+    const tagsLiteral = `{${tagsArray.map(tag => `"${tag.replace(/"/g, '\\"')}"`).join(',')}}`;
+
+    // Build INSERT query dynamically based on schema version
+    const columns = ['id', 'title', 'icon_asset_id', 'tags', 'creator', 'card_summary', 'version',
+                     'conceptual_origin', 'vibe_session_id', 'image_prompt',
+                     'name', 'description', 'example_dialogue', 'lorebook'];
+
+    const charId = customId || char.id;
+    const values: string[] = [
+      `'${charId}'`,
+      char.title ? `'${char.title.replace(/'/g, "''")}'` : 'NULL',
+      char.icon_asset_id ? `'${char.icon_asset_id}'` : 'NULL',
+      `'${tagsLiteral}'::text[]`,
+      char.creator ? `'${char.creator.replace(/'/g, "''")}'` : 'NULL',
+      char.card_summary ? `'${char.card_summary.replace(/'/g, "''")}'` : 'NULL',
+      char.version ? `'${char.version.replace(/'/g, "''")}'` : 'NULL',
+      char.conceptual_origin ? `'${char.conceptual_origin.replace(/'/g, "''")}'` : 'NULL',
+      char.vibe_session_id ? `'${char.vibe_session_id}'` : 'NULL',
+      char.image_prompt ? `'${char.image_prompt.replace(/'/g, "''")}'` : 'NULL',
+      `'${char.name.replace(/'/g, "''")}'`,
+      char.description ? `'${char.description.replace(/'/g, "''")}'` : 'NULL',
+      char.example_dialogue ? `'${char.example_dialogue.replace(/'/g, "''")}'` : 'NULL',
+      char.lorebook ? `'${JSON.stringify(char.lorebook).replace(/'/g, "''")}'::jsonb` : 'NULL',
+    ];
+
+    // Add new fields only if they exist in current schema
+    if (hasScenarioField) {
+      columns.push('scenario');
+      values.push('NULL');
+    }
+    if (hasFirstMessagesField) {
+      columns.push('first_messages');
+      values.push('NULL');
+    }
+    if (hasConfigField) {
+      columns.push('config');
+      values.push(`'{}'::jsonb`);
+    }
+
+    // Always add these at the end
+    columns.push('session_id', 'created_at', 'updated_at');
+    values.push(
+      sessionId ? `'${sessionId}'` : 'NULL',
+      `'${new Date(char.created_at).toISOString()}'`,
+      `'${new Date(char.updated_at).toISOString()}'`
+    );
+
+    await db.execute(sql.raw(`
+      INSERT INTO characters (${columns.join(', ')})
+      VALUES (${values.join(', ')})
+      ON CONFLICT (id) DO NOTHING
+    `));
+  }
+
+  /**
+   * Step 5: Recover missing scenarios (with session-aware logic)
+   */
+  async recoverScenarios(): Promise<{ recovered: number; failed: number; sessionCopiesCreated: number }> {
+    this.log("🔧 Starting session-aware scenario recovery...");
 
     const missingScens = await this.getMissingScenarios();
 
     if (missingScens.length === 0) {
       this.log("  ✅ No missing scenarios to recover");
-      return { recovered: 0, failed: 0 };
+      return { recovered: 0, failed: 0, sessionCopiesCreated: 0 };
     }
 
     const db = await Drizzle.getInstance();
@@ -473,65 +643,63 @@ export class LegacyCharacterRecovery {
 
     let recovered = 0;
     let failed = 0;
+    let sessionCopiesCreated = 0;
 
     for (const scen of missingScens) {
       try {
-        let tagsArray: string[] = [];
-        if (scen.tags) {
-          if (typeof scen.tags === 'string') {
-            tagsArray = JSON.parse(scen.tags);
-          } else if (Array.isArray(scen.tags)) {
-            tagsArray = scen.tags;
-          }
+        this.log(`\n  Processing scenario: ${scen.title} (${scen.id})`);
+
+        // Step 1: Create global template (session_id = NULL)
+        this.log(`    Creating global template...`);
+        await this.insertScenario(scen, null, hasConfigField);
+        this.log(`    ✅ Global copy created`);
+
+        // Step 2: Find all sessions that reference this scenario
+        const sessionsReferencingScen = await db.execute(sql`
+          SELECT id, all_cards
+          FROM sessions
+          WHERE all_cards::text LIKE ${'%' + scen.id + '%'}
+        `);
+
+        this.log(`    Found ${sessionsReferencingScen.rows.length} sessions referencing this scenario`);
+
+        // Step 3: For each session, create session-local copy and update references
+        for (const session of sessionsReferencingScen.rows) {
+          const sessionId = (session as any).id;
+          const allCards = (session as any).all_cards;
+
+          this.log(`      Processing session ${sessionId}...`);
+
+          // Generate new ID for session-local copy (using Web Crypto API)
+          const sessionLocalId = crypto.randomUUID();
+
+          // Create session-local copy
+          await this.insertScenario(scen, sessionId, hasConfigField, sessionLocalId);
+          this.log(`        ✅ Session-local copy created: ${sessionLocalId}`);
+          sessionCopiesCreated++;
+
+          // Step 4: Update session references in all_cards
+          const updatedAllCards = allCards.map((cardItem: any) => {
+            if (cardItem.id === scen.id && (cardItem.type === 'scenario' || cardItem.type === 'plot')) {
+              return {
+                ...cardItem,
+                id: sessionLocalId,
+                type: 'scenario', // Normalize type to 'scenario'
+              };
+            }
+            return cardItem;
+          });
+
+          await db.execute(sql`
+            UPDATE sessions
+            SET all_cards = ${JSON.stringify(updatedAllCards)}::jsonb
+            WHERE id = ${sessionId}
+          `);
+          this.log(`        ✅ Session references updated`);
         }
-
-        // Convert tags array to PostgreSQL array literal
-        const tagsLiteral = `{${tagsArray.map(tag => `"${tag.replace(/'/g, "''").replace(/"/g, '\\"')}"`).join(',')}}`;
-
-        // Build INSERT query dynamically based on schema version
-        const columns = ['id', 'title', 'icon_asset_id', 'tags', 'creator', 'card_summary', 'version',
-                         'conceptual_origin', 'vibe_session_id', 'image_prompt',
-                         'name', 'description', 'first_messages', 'lorebook'];
-
-        const values: string[] = [
-          `'${scen.id}'`,
-          scen.title ? `'${scen.title.replace(/'/g, "''")}'` : 'NULL',
-          scen.icon_asset_id ? `'${scen.icon_asset_id}'` : 'NULL',
-          `'${tagsLiteral}'::text[]`,
-          scen.creator ? `'${scen.creator.replace(/'/g, "''")}'` : 'NULL',
-          scen.card_summary ? `'${scen.card_summary.replace(/'/g, "''")}'` : 'NULL',
-          scen.version ? `'${scen.version.replace(/'/g, "''")}'` : 'NULL',
-          scen.conceptual_origin ? `'${scen.conceptual_origin.replace(/'/g, "''")}'` : 'NULL',
-          scen.vibe_session_id ? `'${scen.vibe_session_id}'` : 'NULL',
-          scen.image_prompt ? `'${scen.image_prompt.replace(/'/g, "''")}'` : 'NULL',
-          `'${scen.title.replace(/'/g, "''")}'`,
-          scen.description ? `'${scen.description.replace(/'/g, "''")}'` : 'NULL',
-          scen.first_messages ? `'${JSON.stringify(scen.first_messages).replace(/'/g, "''")}'::jsonb` : 'NULL',
-          scen.lorebook ? `'${JSON.stringify(scen.lorebook).replace(/'/g, "''")}'::jsonb` : 'NULL',
-        ];
-
-        // Add config field only if it exists in current schema
-        if (hasConfigField) {
-          columns.push('config');
-          values.push(`'{}'::jsonb`);
-        }
-
-        // Always add these at the end
-        columns.push('session_id', 'created_at', 'updated_at');
-        values.push(
-          'NULL',
-          `'${new Date(scen.created_at).toISOString()}'`,
-          `'${new Date(scen.updated_at).toISOString()}'`
-        );
-
-        await db.execute(sql.raw(`
-          INSERT INTO scenarios (${columns.join(', ')})
-          VALUES (${values.join(', ')})
-          ON CONFLICT (id) DO NOTHING
-        `));
 
         recovered++;
-        this.log(`  ✅ Recovered: ${scen.title} (${scen.id})`);
+        this.log(`  ✅ Recovered: ${scen.title} (${scen.id}) with ${sessionsReferencingScen.rows.length} session copies`);
       } catch (error) {
         failed++;
         const errorMsg = error instanceof Error ? error.message : String(error);
@@ -540,17 +708,87 @@ export class LegacyCharacterRecovery {
       }
     }
 
-    this.log(`\n📊 Recovery complete: ${recovered} recovered, ${failed} failed`);
+    this.log(`\n📊 Recovery complete:`);
+    this.log(`  ${recovered} scenarios recovered`);
+    this.log(`  ${sessionCopiesCreated} session-local copies created`);
+    this.log(`  ${failed} failed`);
 
-    return { recovered, failed };
+    return { recovered, failed, sessionCopiesCreated };
+  }
+
+  /**
+   * Helper method to insert a scenario (used by recoverScenarios)
+   */
+  private async insertScenario(
+    scen: LegacyScenarioData,
+    sessionId: string | null,
+    hasConfigField: boolean,
+    customId?: string
+  ): Promise<void> {
+    const db = await Drizzle.getInstance();
+
+    let tagsArray: string[] = [];
+    if (scen.tags) {
+      if (typeof scen.tags === 'string') {
+        tagsArray = JSON.parse(scen.tags);
+      } else if (Array.isArray(scen.tags)) {
+        tagsArray = scen.tags;
+      }
+    }
+
+    // Convert tags array to PostgreSQL array literal
+    const tagsLiteral = `{${tagsArray.map(tag => `"${tag.replace(/'/g, "''").replace(/"/g, '\\"')}"`).join(',')}}`;
+
+    // Build INSERT query dynamically based on schema version
+    const columns = ['id', 'title', 'icon_asset_id', 'tags', 'creator', 'card_summary', 'version',
+                     'conceptual_origin', 'vibe_session_id', 'image_prompt',
+                     'name', 'description', 'first_messages', 'lorebook'];
+
+    const scenId = customId || scen.id;
+    const values: string[] = [
+      `'${scenId}'`,
+      scen.title ? `'${scen.title.replace(/'/g, "''")}'` : 'NULL',
+      scen.icon_asset_id ? `'${scen.icon_asset_id}'` : 'NULL',
+      `'${tagsLiteral}'::text[]`,
+      scen.creator ? `'${scen.creator.replace(/'/g, "''")}'` : 'NULL',
+      scen.card_summary ? `'${scen.card_summary.replace(/'/g, "''")}'` : 'NULL',
+      scen.version ? `'${scen.version.replace(/'/g, "''")}'` : 'NULL',
+      scen.conceptual_origin ? `'${scen.conceptual_origin.replace(/'/g, "''")}'` : 'NULL',
+      scen.vibe_session_id ? `'${scen.vibe_session_id}'` : 'NULL',
+      scen.image_prompt ? `'${scen.image_prompt.replace(/'/g, "''")}'` : 'NULL',
+      `'${scen.title.replace(/'/g, "''")}'`,
+      scen.description ? `'${scen.description.replace(/'/g, "''")}'` : 'NULL',
+      scen.first_messages ? `'${JSON.stringify(scen.first_messages).replace(/'/g, "''")}'::jsonb` : 'NULL',
+      scen.lorebook ? `'${JSON.stringify(scen.lorebook).replace(/'/g, "''")}'::jsonb` : 'NULL',
+    ];
+
+    // Add config field only if it exists in current schema
+    if (hasConfigField) {
+      columns.push('config');
+      values.push(`'{}'::jsonb`);
+    }
+
+    // Always add these at the end
+    columns.push('session_id', 'created_at', 'updated_at');
+    values.push(
+      sessionId ? `'${sessionId}'` : 'NULL',
+      `'${new Date(scen.created_at).toISOString()}'`,
+      `'${new Date(scen.updated_at).toISOString()}'`
+    );
+
+    await db.execute(sql.raw(`
+      INSERT INTO scenarios (${columns.join(', ')})
+      VALUES (${values.join(', ')})
+      ON CONFLICT (id) DO NOTHING
+    `));
   }
 
   /**
    * Step 6: Recover everything (characters + scenarios)
    */
   async recoverAll(): Promise<{
-    characters: { recovered: number; failed: number };
-    scenarios: { recovered: number; failed: number };
+    characters: { recovered: number; failed: number; sessionCopiesCreated: number };
+    scenarios: { recovered: number; failed: number; sessionCopiesCreated: number };
   }> {
     this.log("🚀 Starting full recovery...\n");
 
@@ -559,8 +797,8 @@ export class LegacyCharacterRecovery {
     if (!report.canRecover) {
       this.log("✅ Nothing to recover!");
       return {
-        characters: { recovered: 0, failed: 0 },
-        scenarios: { recovered: 0, failed: 0 },
+        characters: { recovered: 0, failed: 0, sessionCopiesCreated: 0 },
+        scenarios: { recovered: 0, failed: 0, sessionCopiesCreated: 0 },
       };
     }
 
@@ -568,8 +806,8 @@ export class LegacyCharacterRecovery {
     const scenResult = await this.recoverScenarios();
 
     this.log("\n✅ RECOVERY COMPLETE!");
-    this.log(`  Characters: ${charResult.recovered} recovered, ${charResult.failed} failed`);
-    this.log(`  Scenarios: ${scenResult.recovered} recovered, ${scenResult.failed} failed`);
+    this.log(`  Characters: ${charResult.recovered} recovered, ${charResult.sessionCopiesCreated} session copies, ${charResult.failed} failed`);
+    this.log(`  Scenarios: ${scenResult.recovered} recovered, ${scenResult.sessionCopiesCreated} session copies, ${scenResult.failed} failed`);
 
     return {
       characters: charResult,

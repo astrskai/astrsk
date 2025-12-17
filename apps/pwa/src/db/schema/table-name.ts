@@ -11,7 +11,7 @@ export const TableName = {
   DataStoreNodes: "data_store_nodes",
   IfNodes: "if_nodes",
 
-  // Card (Old - to be removed after migration)
+  // Card (Old - kept as backup for recovery tool)
   Cards: "cards",
   CharacterCards: "character_cards",
   PlotCards: "plot_cards",
