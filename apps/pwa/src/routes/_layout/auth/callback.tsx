@@ -71,11 +71,14 @@ function AuthCallback() {
           logger.debug("OAuth login successful, redirecting to settings...");
           setStatus("Success! Redirecting...");
 
+          // Set flag for deferred initialization on iOS
+          // This tells App.tsx to show UI first, then initialize in background
+          sessionStorage.setItem("oauth_just_completed", "true");
+
           // Use replace() instead of href to prevent back-button issues
-          // Add delay to let iOS Safari clean up resources and stabilize storage context
           setTimeout(() => {
             window.location.replace("/settings");
-          }, 500);
+          }, 300);
         } else {
           logger.warn("No session after OAuth callback");
           setStatus("No session found");

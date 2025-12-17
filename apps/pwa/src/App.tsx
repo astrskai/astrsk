@@ -59,6 +59,9 @@ function App() {
   // Skip initialization UI for OAuth callback - it handles its own loading state
   const isAuthCallback = window.location.pathname === "/auth/callback";
 
+  // Check if this is a return from OAuth (iOS deferred initialization)
+  const isOAuthReturn = sessionStorage.getItem("oauth_just_completed") === "true";
+
   // Run initialization directly in the component
   useEffect(() => {
     // Skip if OAuth callback or already started
@@ -70,6 +73,30 @@ function App() {
     }
 
     initStartedRef.current = true;
+
+    // OAuth return: show UI immediately, initialize in background with delay
+    if (isOAuthReturn) {
+      logger.debug("🔐 OAuth return detected - showing UI first, deferred initialization");
+      sessionStorage.removeItem("oauth_just_completed");
+
+      // Show UI immediately
+      setIsInitialized(true);
+      useAppStore.getState().setIsAppInitialized(true);
+
+      // Run initialization in background after a delay (iOS storage stabilization)
+      setTimeout(() => {
+        logger.debug("🚀 Starting deferred initialization...");
+        runInitialization().then((result) => {
+          if (result.success) {
+            logger.debug("✅ Deferred initialization completed successfully");
+          } else {
+            logger.error("❌ Deferred initialization failed:", result.error);
+          }
+        });
+      }, 2000); // 2 second delay for iOS storage to stabilize
+      return;
+    }
+
     logger.debug("🚀 Starting initialization from App component...");
 
     runInitialization().then((result) => {
@@ -83,7 +110,7 @@ function App() {
         // Error state is handled by showProgressScreen + hasError
       }
     });
-  }, [isAuthCallback]);
+  }, [isAuthCallback, isOAuthReturn]);
 
   // Show initialization UI while app is not ready
   if (!isInitialized && !isAuthCallback) {
