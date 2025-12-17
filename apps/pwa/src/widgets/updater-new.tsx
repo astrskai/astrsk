@@ -58,6 +58,9 @@ const UpdaterNew = ({ variant = "default" }: UpdaterNewProps) => {
   // Restart and apply update
   const updateServiceWorker = useAppStore.use.updateServiceWorker();
   const restartApp = useCallback(async () => {
+    // Clear session initialization flag to force full re-initialization after update
+    // This ensures new migrations run after app updates
+    sessionStorage.removeItem("astrsk-session-initialized");
     await updateServiceWorker?.();
     await window.api?.updater?.quitAndInstall();
   }, [updateServiceWorker]);
