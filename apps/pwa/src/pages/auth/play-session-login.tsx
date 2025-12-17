@@ -237,9 +237,9 @@ export function PlaySessionLoginPage() {
       </form>
 
       {/* Info text */}
-      <p className="text-fg-muted mt-6 text-center text-xs">
+      {/* <p className="text-fg-muted mt-6 text-center text-xs">
         New users will receive a confirmation email to verify their account.
-      </p>
+      </p> */}
 
       {/* ---- NEW SECONDARY OPTION ---- */}
       <div className="mt-8 pt-6 w-full border-t border-zinc-900 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
