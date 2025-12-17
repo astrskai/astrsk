@@ -405,9 +405,6 @@ importers:
       drizzle-kit:
         specifier: ^0.31.5
         version: 0.31.5
-      eruda:
-        specifier: ^3.4.3
-        version: 3.4.3
       eslint:
         specifier: ^9.18.0
         version: 9.31.0(jiti@2.6.1)
@@ -501,6 +498,14 @@ importers:
       workbox-window:
         specifier: ^7.3.0
         version: 7.3.0
+
+  ../..: {}
+
+  ../../packages/design-system: {}
+
+  ../electron: {}
+
+  ../vibe-shared-types: {}
 
 packages:
 
@@ -4484,9 +4489,6 @@ packages:
 
   error-ex@1.3.2:
     resolution: {integrity: sha512-7dFHNmqeFSEt2ZBsCriorKnn3Z2pj+fd9kmI6QoWw4//DL+icEBfc0U7qJCisqrTsKTjw4fNFy2pW9OqStD84g==}
-
-  eruda@3.4.3:
-    resolution: {integrity: sha512-J2TsF4dXSspOXev5bJ6mljv0dRrxj21wklrDzbvPmYaEmVoC+2psylyRi70nUPFh1mTQfIBsSusUtAMZtUN+/w==}
 
   es-abstract@1.24.0:
     resolution: {integrity: sha512-WSzPgsdLtTcQwm4CROfS5ju2Wa1QQcVeT37jFjYzdFz1r9ahadC8B8/a4qxJxM+09F18iumCdRmlr96ZYkQvEg==}
@@ -11528,8 +11530,6 @@ snapshots:
   error-ex@1.3.2:
     dependencies:
       is-arrayish: 0.2.1
-
-  eruda@3.4.3: {}
 
   es-abstract@1.24.0:
     dependencies:

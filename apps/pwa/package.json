@@ -153,7 +153,6 @@
     "@vitest/ui": "^3.1.4",
     "dotenv": "^16.5.0",
     "drizzle-kit": "^0.31.5",
-    "eruda": "^3.4.3",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-import-resolver-typescript": "^3.6.1",
