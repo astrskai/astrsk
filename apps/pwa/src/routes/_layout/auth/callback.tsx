@@ -72,10 +72,10 @@ function AuthCallback() {
           setStatus("Success! Redirecting...");
 
           // Use replace() instead of href to prevent back-button issues
-          // and add small delay to let iOS Safari clean up resources
+          // Add delay to let iOS Safari clean up resources and stabilize storage context
           setTimeout(() => {
             window.location.replace("/settings");
-          }, 100);
+          }, 500);
         } else {
           logger.warn("No session after OAuth callback");
           setStatus("No session found");
