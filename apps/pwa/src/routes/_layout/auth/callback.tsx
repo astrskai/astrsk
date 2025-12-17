@@ -68,19 +68,12 @@ function AuthCallback() {
         } = await supabase.auth.getSession();
 
         if (session) {
-          logger.debug("OAuth login successful, redirecting to home...");
+          logger.debug("OAuth login successful, redirecting to settings...");
           setStatus("Success! Redirecting...");
 
-          // Get redirect path
-          const storedPath = localStorage.getItem("authRedirectPath");
-          const redirectPath = storedPath || "/";
-          if (storedPath) {
-            localStorage.removeItem("authRedirectPath");
-          }
-
-          // Hard redirect to clean URL - this ensures fresh page load
+          // Hard redirect to settings page - this ensures fresh page load
           // and proper PGlite initialization on iOS Chrome
-          window.location.href = redirectPath;
+          window.location.href = "/settings";
         } else {
           logger.warn("No session after OAuth callback");
           setStatus("No session found");
