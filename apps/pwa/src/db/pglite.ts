@@ -40,7 +40,7 @@ async function restoreDumpFiles() {
       continue;
     }
     const buffer = Base64.toUint8Array(assetDump);
-    await write(normalizedAssetPath, buffer);
+    await write(normalizedAssetPath, buffer.buffer as ArrayBuffer);
   }
 
   // Delete dump
