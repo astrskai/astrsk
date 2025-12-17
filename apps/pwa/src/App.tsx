@@ -24,12 +24,18 @@ initializeEnvironment();
  * Simple loading spinner shown during initialization
  * when progress screen is not needed (subsequent loads without migrations)
  */
-function InitSpinner() {
+function InitSpinner({ isOfflineReady, isAuthCallback }: { isOfflineReady: boolean; isAuthCallback: boolean }) {
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-4 bg-black/50">
       <div className="bg-canvas flex items-center gap-3 rounded-full px-5 py-3 shadow-lg">
         <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
         <span className="text-text-secondary text-sm">Initializing...</span>
+      </div>
+      {/* Debug info */}
+      <div className="bg-canvas rounded-lg px-4 py-2 text-xs font-mono opacity-70">
+        <div>isOfflineReady: {String(isOfflineReady)}</div>
+        <div>isAuthCallback: {String(isAuthCallback)}</div>
+        <div>pathname: {window.location.pathname}</div>
       </div>
     </div>
   );
@@ -53,7 +59,7 @@ function App() {
       return <InitializationScreen />;
     }
     // Show simple spinner for normal loads
-    return <InitSpinner />;
+    return <InitSpinner isOfflineReady={isOfflineReady} isAuthCallback={isAuthCallback} />;
   }
 
   return (

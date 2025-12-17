@@ -126,30 +126,6 @@ async function initializeApp() {
     return;
   }
 
-  // OAuth redirect handling:
-  // When redirected from /auth/callback, PGlite initialization can hang on iOS Chrome/Safari.
-  // We defer initialization using setTimeout to allow the browser to settle after redirect.
-  // Wrapped in try-catch for private browsing mode compatibility where sessionStorage may be unavailable.
-  const OAUTH_REDIRECT_KEY = "astrsk-oauth-redirect";
-  let isOAuthRedirect = false;
-  try {
-    isOAuthRedirect = sessionStorage.getItem(OAUTH_REDIRECT_KEY) === "true";
-    if (isOAuthRedirect) {
-      sessionStorage.removeItem(OAUTH_REDIRECT_KEY);
-    }
-  } catch (e) {
-    // sessionStorage may be unavailable in private browsing mode
-    // Continue with normal initialization
-    logger.warn("Failed to check OAuth redirect flag:", e);
-  }
-
-  if (isOAuthRedirect) {
-    logger.debug("🔄 OAuth redirect detected - forcing clean page reload");
-    // Force a completely clean page load by navigating away and back
-    // This helps iOS browsers fully reset their Worker state after OAuth redirect
-    window.location.replace(window.location.pathname);
-    return;
-  }
 
   // Progress callback for all initialization functions
   const onProgress = (
