@@ -144,13 +144,11 @@ async function initializeApp() {
   }
 
   if (isOAuthRedirect) {
-    logger.debug("🔄 OAuth redirect detected - deferring PGlite initialization by 1 second");
-    // Show loading state while waiting
-    useAppStore.getState().setIsOfflineReady(false);
-    // Defer initialization by 1 second to let browser fully settle after OAuth redirect
-    // This helps prevent PGlite Worker hang on iOS Chrome/Safari
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    logger.debug("🔄 OAuth redirect delay complete - proceeding with initialization");
+    logger.debug("🔄 OAuth redirect detected - forcing clean page reload");
+    // Force a completely clean page load by navigating away and back
+    // This helps iOS browsers fully reset their Worker state after OAuth redirect
+    window.location.replace(window.location.pathname);
+    return;
   }
 
   // Progress callback for all initialization functions
