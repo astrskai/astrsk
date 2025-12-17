@@ -140,25 +140,9 @@ export async function initStores(
     onProgress?.("default-models", "success");
   }
 
-  // Init default sessions - only for new users
-  // Check if user has any sessions (only need to check if 1 exists, not fetch all)
+  // Check sessions step (kept for future use when default sessions are re-enabled)
   onProgress?.("check-sessions", "start");
-  let sessions;
-  try {
-    sessions = (await SessionService.listSession.execute({ limit: 1 }))
-      .throwOnFailure()
-      .getValue();
-    onProgress?.("check-sessions", "success");
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Failed to check sessions:", error);
-    onProgress?.("check-sessions", "error", errorMessage);
-
-    // Skip default-sessions since we couldn't check existing sessions
-    onProgress?.("default-sessions", "start");
-    onProgress?.("default-sessions", "error", "Skipped due to session check failure");
-    return;
-  }
+  onProgress?.("check-sessions", "success");
 
   // Migrate sessions with messages to play sessions
   onProgress?.("migrate-play-sessions", "start");
@@ -172,80 +156,10 @@ export async function initStores(
     onProgress?.("migrate-play-sessions", "warning", errorMessage);
   }
 
-  if (sessions.length === 0) {
-    onProgress?.("default-sessions", "start");
-    // Import default sessions
-    const sessionFilePaths = [
-      "/default/session/dice_of_fate.astrsk.session",
-      "/default/session/sakura_blooms,_hearts_awaken.astrsk.session",
-    ];
-
-    const errorDetails: string[] = [];
-    const totalFiles = sessionFilePaths.length;
-
-    for (const path of sessionFilePaths) {
-      const fileName = path.split("/").pop() || path;
-      try {
-        const response = await fetch(path);
-        if (!response.ok) {
-          const errorMsg = `${fileName}: HTTP ${response.status} ${response.statusText}`;
-          console.error(`Failed to fetch session file: ${errorMsg}`);
-          errorDetails.push(errorMsg);
-          continue;
-        }
-        const file = new File(
-          [await response.blob()],
-          fileName,
-          {
-            type: "application/octet-stream",
-          },
-        );
-
-        const importResult = await SessionService.importSessionFromFile.execute(
-          {
-            file: file,
-            includeHistory: true,
-          },
-        );
-        if (importResult.isFailure) {
-          const errorMsg = `${fileName}: ${importResult.getError()}`;
-          console.error("Failed to import session:", errorMsg);
-          errorDetails.push(errorMsg);
-          continue;
-        }
-      } catch (error) {
-        const errorMsg = `${fileName}: ${error instanceof Error ? error.message : String(error)}`;
-        console.error("Error fetching session file:", errorMsg);
-        errorDetails.push(errorMsg);
-        continue;
-      }
-    }
-
-    const failedCount = errorDetails.length;
-    const successCount = totalFiles - failedCount;
-
-    if (failedCount === 0) {
-      // All succeeded
-      onProgress?.("default-sessions", "success");
-    } else if (failedCount === totalFiles) {
-      // All failed (critical)
-      onProgress?.(
-        "default-sessions",
-        "error",
-        `Failed to import all ${failedCount} session(s):\n${errorDetails.join("\n")}`,
-      );
-    } else {
-      // Partial failure (some succeeded, some failed)
-      onProgress?.(
-        "default-sessions",
-        "warning",
-        `Partially imported sessions (${successCount}/${totalFiles} succeeded):\n${errorDetails.join("\n")}`,
-      );
-    }
-  } else {
-    // Mark as success when skipped (sessions already exist)
-    onProgress?.("default-sessions", "success");
-  }
+  // Default session import is currently disabled (no default session files available)
+  // Skip this step and mark as success
+  onProgress?.("default-sessions", "start");
+  onProgress?.("default-sessions", "success");
 
   // Note: Background initialization removed - backgrounds are now fetched via TanStack Query
   // when a session is opened. Default backgrounds are static constants that don't need initialization.
