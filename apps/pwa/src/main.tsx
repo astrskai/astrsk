@@ -121,8 +121,8 @@ async function initializeApp() {
   const isAuthCallback = window.location.pathname === "/auth/callback";
   if (isAuthCallback) {
     logger.debug("🔐 OAuth callback detected - skipping initialization, will init after redirect");
-    // Mark app as ready so AuthCallback component can render and process tokens
-    useAppStore.getState().setIsOfflineReady(true);
+    // Mark app as initialized so AuthCallback component can render and process tokens
+    useAppStore.getState().setIsAppInitialized(true);
     return;
   }
 
@@ -207,8 +207,8 @@ async function initializeApp() {
       window.history.replaceState(null, "", "/");
     }
 
-    // Mark app as ready - App component will switch from InitializationScreen to actual app
-    useAppStore.getState().setIsOfflineReady(true);
+    // Mark app as initialized - App component will switch from InitializationScreen to actual app
+    useAppStore.getState().setIsAppInitialized(true);
   } catch (error) {
     logger.error("Failed to initialize app:", error);
 

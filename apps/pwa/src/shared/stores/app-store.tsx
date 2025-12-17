@@ -99,6 +99,10 @@ export interface PollingContext {
 }
 
 interface AppState {
+  // App initialization (PGlite + services)
+  isAppInitialized: boolean;
+  setIsAppInitialized: (isAppInitialized: boolean) => void;
+
   // PWA (service worker)
   isOfflineReady: boolean;
   setIsOfflineReady: (isOfflineReady: boolean) => void;
@@ -224,6 +228,13 @@ const lastPagePerMenu = new Map<Menu, Page>([
 const useAppStoreBase = create<AppState>()(
   persist(
     immer((set, get) => ({
+      // App initialization (PGlite + services)
+      isAppInitialized: false,
+      setIsAppInitialized: (isAppInitialized) =>
+        set((state) => {
+          state.isAppInitialized = isAppInitialized;
+        }),
+
       // PWA (service worker)
       isOfflineReady: false,
       setIsOfflineReady: (isOfflineReady) =>
@@ -492,6 +503,7 @@ const useAppStoreBase = create<AppState>()(
           Object.entries(state).filter(
             ([key]) =>
               ![
+                "isAppInitialized", // Don't persist - must be false on page load
                 "isOfflineReady",
                 "isUpdateReadyPWA",
                 "updateServiceWorker",
