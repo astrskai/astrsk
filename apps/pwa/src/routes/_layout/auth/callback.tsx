@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getSupabaseAuthClient } from "@/shared/lib/supabase-client";
 import { logger } from "@/shared/lib/logger";
 import { useAppStore } from "@/shared/stores/app-store";
+import { useInitializationStore } from "@/shared/stores/initialization-store";
 
 export const Route = createFileRoute("/_layout/auth/callback")({
   component: AuthCallback,
@@ -104,8 +105,22 @@ function AuthCallback() {
 
     const checkAndNavigate = (attempt: number) => {
       const ready = useAppStore.getState().isOfflineReady;
-      setDebugInfo(`Polling #${attempt}: isOfflineReady=${ready}`);
-      logger.debug("[AuthCallback] Polling isOfflineReady:", ready);
+      const initSteps = useInitializationStore.getState().steps;
+      const stepsCount = initSteps.length;
+      const currentStep = initSteps.find(s => s.status === "running")?.label || "none";
+      const errorStep = initSteps.find(s => s.status === "error")?.label;
+      const successCount = initSteps.filter(s => s.status === "success").length;
+
+      let stepInfo: string;
+      if (stepsCount === 0) {
+        stepInfo = "NO STEPS (init not started?)";
+      } else if (errorStep) {
+        stepInfo = `ERR: ${errorStep}`;
+      } else {
+        stepInfo = `${currentStep} (${successCount}/${stepsCount})`;
+      }
+      setDebugInfo(`#${attempt} ready=${ready} | ${stepInfo}`);
+      logger.debug("[AuthCallback] Polling:", { ready, currentStep, errorStep });
 
       if (ready) {
         setDebugInfo("Ready! Navigating...");
@@ -138,12 +153,16 @@ function AuthCallback() {
   }, [authComplete, redirectPath, navigate]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
       <div className="flex items-center gap-3">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         <span className="text-fg-subtle text-sm">Completing sign in...</span>
       </div>
-      <div className="text-fg-muted text-xs font-mono">{debugInfo}</div>
+      <div className="text-fg-muted text-xs font-mono text-center">{debugInfo}</div>
+      <div className="mt-4 max-w-md w-full bg-black/10 rounded p-3 text-xs font-mono space-y-1">
+        <div>authComplete: {String(authComplete)}</div>
+        <div>redirectPath: {redirectPath}</div>
+      </div>
     </div>
   );
 }
