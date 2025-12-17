@@ -90,12 +90,14 @@ async function initializeApp() {
     { id: "image-service", label: "Initialize image service" },
     { id: "card-service", label: "Initialize card service" },
     { id: "session-service", label: "Initialize session service" },
+    { id: "session-cleanup", label: "Cleanup stale sessions" },
     { id: "api-connections", label: "Load API connections" },
     { id: "free-provider", label: "Setup free AI provider (if needed)" },
     { id: "default-models", label: "Configure default models" },
     { id: "check-sessions", label: "Check existing sessions" },
     { id: "migrate-play-sessions", label: "Migrate play sessions" },
     { id: "default-sessions", label: "Import default sessions (new users)" },
+    { id: "extensions", label: "Initialize extensions" },
   ]);
 
   // Create root and render App AFTER store is initialized
@@ -113,15 +115,14 @@ async function initializeApp() {
     </StrictMode>,
   );
 
-  // Fast path: Skip re-initialization if already initialized in this browser session.
-  // This handles OAuth redirects on iOS Chrome where PGlite re-initialization can hang.
-  // We use sessionStorage (cleared on tab close) to track initialization within a session.
-  // On cold start (new tab), full initialization runs including migration checks.
-  const SESSION_INIT_KEY = "astrsk-session-initialized";
-  const sessionInitialized = sessionStorage.getItem(SESSION_INIT_KEY) === "true";
-
-  if (sessionInitialized && previousInitSuccessful) {
-    logger.debug("⚡ Fast path: Already initialized in this session, skipping full init");
+  // OAuth callback special handling:
+  // Skip ALL initialization on /auth/callback to prevent PGlite hang on iOS Chrome.
+  // The AuthCallback component will handle token exchange and redirect to a clean URL,
+  // where normal initialization will occur.
+  const isAuthCallback = window.location.pathname === "/auth/callback";
+  if (isAuthCallback) {
+    logger.debug("🔐 OAuth callback detected - skipping initialization, will init after redirect");
+    // Mark app as ready so AuthCallback component can render and process tokens
     useAppStore.getState().setIsOfflineReady(true);
     return;
   }
@@ -183,11 +184,11 @@ async function initializeApp() {
       onProgress("run-migrations", "success");
     }
 
-    // Step 3: Init services (ALWAYS run - in-memory initialization)
+    // Step 3: Init services
     logger.debug("🔧 Initializing services...");
     await initServices(onProgress);
 
-    // Step 4: Init stores (ALWAYS run - loads data into memory)
+    // Step 4: Init stores
     logger.debug("📦 Initializing stores...");
     await initStores(onProgress);
 
@@ -208,9 +209,6 @@ async function initializeApp() {
 
     // Mark app as ready - App component will switch from InitializationScreen to actual app
     useAppStore.getState().setIsOfflineReady(true);
-
-    // Mark session as initialized (for fast path on OAuth redirects)
-    sessionStorage.setItem(SESSION_INIT_KEY, "true");
   } catch (error) {
     logger.error("Failed to initialize app:", error);
 
