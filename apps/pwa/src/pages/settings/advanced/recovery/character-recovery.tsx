@@ -65,8 +65,8 @@ export default function CharacterRecoveryPage() {
     canRecover: boolean;
   } | null>(null);
   const [recoveryResult, setRecoveryResult] = useState<{
-    characters: { recovered: number; failed: number };
-    scenarios: { recovered: number; failed: number };
+    characters: { recovered: number; failed: number; sessionCopiesCreated: number };
+    scenarios: { recovered: number; failed: number; sessionCopiesCreated: number };
   } | null>(null);
 
 
@@ -202,7 +202,7 @@ export default function CharacterRecoveryPage() {
       </div>
 
       {/* Test Mode (Developer Tool) - COMMENTED OUT FOR NOW */}
-      {/* <div className="rounded-2xl border border-status-warning bg-status-warning/10 p-6">
+      <div className="rounded-2xl border border-status-warning bg-status-warning/10 p-6">
         <div className="mb-4 flex items-start gap-3">
           <TestTube className="mt-0.5 shrink-0 text-status-warning" size={20} />
           <div>
@@ -270,7 +270,7 @@ export default function CharacterRecoveryPage() {
           <p className="mt-1"><strong className="text-status-error">Danger Mode:</strong> Simulates real migration failure (DELETES characters, breaks sessions)</p>
           <p className="mt-1"><strong className="text-status-info">Diagnose DB State:</strong> Check exact table counts to understand where data is stored</p>
         </div>
-      </div> */}
+      </div>
 
       {/* Recovery Card */}
       <div className="rounded-2xl border border-border-default bg-surface-raised p-6">
@@ -451,9 +451,21 @@ export default function CharacterRecoveryPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-fg-subtle">Session copies created:</span>
+                    <span className="font-mono text-status-success">
+                      {recoveryResult.characters.sessionCopiesCreated}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-fg-subtle">Scenarios recovered:</span>
                     <span className="font-mono text-status-success">
                       {recoveryResult.scenarios.recovered}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-fg-subtle">Scenario session copies:</span>
+                    <span className="font-mono text-status-success">
+                      {recoveryResult.scenarios.sessionCopiesCreated}
                     </span>
                   </div>
                 </div>

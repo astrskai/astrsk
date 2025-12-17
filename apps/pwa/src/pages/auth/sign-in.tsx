@@ -243,9 +243,9 @@ export function SignInPage() {
       </form>
 
       {/* Info text */}
-      <p className="text-fg-muted mt-6 text-center text-xs">
+      {/* <p className="text-fg-muted mt-6 text-center text-xs">
         New users will receive a confirmation email to verify their account.
-      </p>
+      </p> */}
     </AuthLayout>
   );
 }
