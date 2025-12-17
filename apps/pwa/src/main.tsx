@@ -149,6 +149,18 @@ async function initializeApp() {
   let needsMigration = false;
 
   try {
+    // Wait for render to stabilize before initializing DB
+    // This helps iOS Safari stabilize storage context after redirects
+    await new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 50)));
+
+    // Request persistent storage to reduce eviction risk on iOS
+    try {
+      const persisted = await navigator.storage?.persist?.();
+      logger.debug(`Storage persistence: ${persisted ? "granted" : "denied or unavailable"}`);
+    } catch {
+      logger.debug("Storage persistence API not available");
+    }
+
     // Step 1: Initialize database engine (PGlite)
     // This can take ~2 seconds on first load (PGlite initialization polling)
     onProgress("database-engine", "start");
