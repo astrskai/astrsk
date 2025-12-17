@@ -71,14 +71,9 @@ function AuthCallback() {
           logger.debug("OAuth login successful, redirecting to settings...");
           setStatus("Success! Redirecting...");
 
-          // Set flag for deferred initialization on iOS
-          // This tells App.tsx to show UI first, then initialize in background
-          sessionStorage.setItem("oauth_just_completed", "true");
-
-          // Use replace() instead of href to prevent back-button issues
-          setTimeout(() => {
-            window.location.replace("/settings");
-          }, 300);
+          // Hard redirect to settings page - this ensures fresh page load
+          // and proper PGlite initialization on iOS Chrome
+          window.location.href = "/settings";
         } else {
           logger.warn("No session after OAuth callback");
           setStatus("No session found");

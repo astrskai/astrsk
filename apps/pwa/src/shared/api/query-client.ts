@@ -129,8 +129,7 @@ persistQueryClient({
 
 // Initialize broadcast for multi-tab sync (skip for web version)
 // VITE_SKIP_WAITING=true disables broadcast to prevent multi-tab sync issues in web mode
-// TEMPORARILY DISABLED for OAuth hang debugging - testing if BroadcastChannel causes iOS issues
-if (false && import.meta.env.VITE_SKIP_WAITING !== "true") {
+if (import.meta.env.VITE_SKIP_WAITING !== "true") {
   broadcastQueryClient({
     queryClient,
     broadcastChannel: "astrsk-query-broadcast",
