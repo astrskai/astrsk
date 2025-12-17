@@ -17,7 +17,7 @@ import "@/app/styles/global.css";
 import "@/app/styles/theme.css";
 
 // Mobile console debugging (eruda) - only in non-production
-if (import.meta.env.DEV || window.location.hostname.includes("dev.")) {
+if (import.meta.env.DEV || window.location.hostname.startsWith("devapp.")) {
   import("eruda").then((eruda) => eruda.default.init());
 }
 

@@ -28,10 +28,7 @@ function AuthCallback() {
   const [authComplete, setAuthComplete] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string>("/");
 
-  // 2. Store hooks
-  const isOfflineReady = useAppStore.use.isOfflineReady();
-
-  // 3. Navigation hooks
+  // 2. Navigation hooks
   const navigate = useNavigate();
 
   // Step 1: Process OAuth callback (runs once on mount)
