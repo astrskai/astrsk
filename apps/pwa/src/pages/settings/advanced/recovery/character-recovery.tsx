@@ -202,7 +202,7 @@ export default function CharacterRecoveryPage() {
       </div>
 
       {/* Test Mode (Developer Tool) - COMMENTED OUT FOR NOW */}
-      <div className="rounded-2xl border border-status-warning bg-status-warning/10 p-6">
+      {/* <div className="rounded-2xl border border-status-warning bg-status-warning/10 p-6">
         <div className="mb-4 flex items-start gap-3">
           <TestTube className="mt-0.5 shrink-0 text-status-warning" size={20} />
           <div>
@@ -270,7 +270,7 @@ export default function CharacterRecoveryPage() {
           <p className="mt-1"><strong className="text-status-error">Danger Mode:</strong> Simulates real migration failure (DELETES characters, breaks sessions)</p>
           <p className="mt-1"><strong className="text-status-info">Diagnose DB State:</strong> Check exact table counts to understand where data is stored</p>
         </div>
-      </div>
+      </div> */}
 
       {/* Recovery Card */}
       <div className="rounded-2xl border border-border-default bg-surface-raised p-6">
