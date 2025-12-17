@@ -2,7 +2,6 @@ import { initServices } from "@/app/services/init-services.ts";
 import { useAppStore } from "@/shared/stores/app-store.tsx";
 import { initStores } from "@/shared/stores/init-stores.ts";
 import { useInitializationStore, loadInitializationLog } from "@/shared/stores/initialization-store.tsx";
-import { InitializationScreen } from "@/shared/ui/initialization-screen";
 import { PwaRegister } from "@/app/providers/pwa-register";
 import { AuthProvider } from "@/app/providers/auth-provider";
 import { runUnifiedMigrations, hasPendingMigrations } from "@/db/migrations";
@@ -50,16 +49,28 @@ function ConvexWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Initialize the application
+ *
+ * Key design: We render App ONCE and let it handle initialization UI internally.
+ * This prevents HMR conflicts that occur when root.render() is called multiple times
+ * with different component trees.
+ */
 async function initializeApp() {
-  // Create root
-  const root = createRoot(document.getElementById("root")!);
-
   // Track initialization time
   const startTime = performance.now();
 
-  // Initialize steps in the store
-  const { initializeSteps, startStep, completeStep, warnStep, failStep, saveLog } =
+  // Initialize steps in the store BEFORE rendering
+  const { initializeSteps, startStep, completeStep, warnStep, failStep, saveLog, setShowProgressScreen } =
     useInitializationStore.getState();
+
+  // Check if this is the first install (no previous initialization log)
+  const isFirstInstall = !loadInitializationLog();
+
+  // First install: show detailed progress screen immediately
+  if (isFirstInstall) {
+    setShowProgressScreen(true);
+  }
 
   // Define all initialization steps
   initializeSteps([
@@ -85,38 +96,20 @@ async function initializeApp() {
     { id: "backgrounds", label: "Load background assets" },
   ]);
 
-  // Initialization overlay component (blocks interaction during init)
-  const InitOverlay = ({ showProgressScreen }: { showProgressScreen: boolean }) => {
-    if (showProgressScreen) {
-      return <InitializationScreen />;
-    }
+  // Create root and render App AFTER store is initialized
+  const root = createRoot(document.getElementById("root")!);
 
-    return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-        <div className="flex items-center gap-3 rounded-full bg-canvas px-5 py-3 shadow-lg">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span className="text-text-secondary text-sm">Initializing...</span>
-        </div>
-      </div>
-    );
-  };
-
-  // Check if this is the first install (no previous initialization log)
-  const isFirstInstall = !loadInitializationLog();
-
-  // Track whether to show detailed progress screen or simple spinner
-  // First install: show progress screen immediately
-  // Subsequent loads: show simple spinner, upgrade to progress screen if needed
-  let showProgressScreen = isFirstInstall;
-
-  // Helper function to render initialization overlay (without App)
-  const renderInitOverlay = () => {
-    root.render(
-      <StrictMode>
-        <InitOverlay showProgressScreen={showProgressScreen} />
-      </StrictMode>,
-    );
-  };
+  // Render app once - App component handles showing InitializationScreen vs actual app
+  root.render(
+    <StrictMode>
+      <AuthProvider>
+        <ConvexWrapper>
+          <PwaRegister />
+          <App />
+        </ConvexWrapper>
+      </AuthProvider>
+    </StrictMode>,
+  );
 
   // Progress callback for all initialization functions
   const onProgress = (
@@ -133,7 +126,7 @@ async function initializeApp() {
     } else if (status === "error") {
       failStep(stepId, error || "Unknown error");
     }
-    // No need to re-render: InitializationScreen subscribes to store changes via Zustand
+    // App component subscribes to store changes via Zustand - no re-render needed
   };
 
   // Variable to track if migrations were needed (for logging)
@@ -144,11 +137,6 @@ async function initializeApp() {
     // This can take ~2 seconds on first load (PGlite initialization polling)
     onProgress("database-engine", "start");
 
-    // Show loading overlay before DB check
-    // - First install: full progress screen
-    // - Normal loads: simple spinner during DB initialization
-    renderInitOverlay();
-
     const dbCheckStart = performance.now();
     needsMigration = await hasPendingMigrations();
     const dbCheckDuration = performance.now() - dbCheckStart;
@@ -156,12 +144,10 @@ async function initializeApp() {
     logger.debug(`⏱️ DB initialization took ${Math.round(dbCheckDuration)}ms`);
     onProgress("database-engine", "success");
 
-    if (needsMigration && !showProgressScreen) {
-      // App update with new migrations: upgrade to progress screen
-      showProgressScreen = true;
-      renderInitOverlay();
+    // App update with new migrations: upgrade to progress screen
+    if (needsMigration && !isFirstInstall) {
+      setShowProgressScreen(true);
     }
-    // Otherwise: keep current overlay (progress screen or simple spinner)
 
     logger.debug(`🔍 Pending migrations: ${needsMigration}`);
 
@@ -194,13 +180,10 @@ async function initializeApp() {
     const initTime = performance.now() - startTime;
     logger.debug(`✅ Initialization completed in ${Math.round(initTime)}ms`);
 
-    // Save initialization log only when migrations were executed (first run or app update)
-    if (needsMigration) {
+    // Save initialization log on first install or when migrations were executed
+    if (isFirstInstall || needsMigration) {
       saveLog(Math.round(initTime));
     }
-
-    // Mark app as ready
-    useAppStore.getState().setIsOfflineReady(true);
 
     // Navigate to home on first install (before router initializes)
     // This ensures users start from "/" after initial setup, regardless of URL
@@ -208,29 +191,19 @@ async function initializeApp() {
       window.history.replaceState(null, "", "/");
     }
 
-    // Render final app with providers
-    root.render(
-      <StrictMode>
-        <AuthProvider>
-          <ConvexWrapper>
-            <PwaRegister />
-            <App />
-          </ConvexWrapper>
-        </AuthProvider>
-      </StrictMode>,
-    );
+    // Mark app as ready - App component will switch from InitializationScreen to actual app
+    useAppStore.getState().setIsOfflineReady(true);
   } catch (error) {
     logger.error("Failed to initialize app:", error);
 
-    // On failure, persist the current step states as a log (when migrations were attempted)
-    if (needsMigration) {
+    // On failure, persist the current step states as a log
+    if (isFirstInstall || needsMigration) {
       const initTime = performance.now() - startTime;
       saveLog(Math.round(initTime));
     }
 
     // Show progress screen with error state
-    showProgressScreen = true;
-    renderInitOverlay();
+    setShowProgressScreen(true);
   }
 }
 initializeApp();

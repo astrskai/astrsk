@@ -33,7 +33,7 @@ const DATA_MIGRATION_TABLE = "__data_migrations";
 interface MigrationRecord {
   hash?: string; // SQL migrations have hash
   filename: string;
-  type: 'sql' | 'typescript';
+  type: "sql" | "typescript";
   timestamp: number; // Unix timestamp in milliseconds
   executed_at?: Date;
 }
@@ -52,8 +52,10 @@ import { migrateBackgroundsToSessions } from "./20251121031122_migrate_backgroun
 const typescriptMigrations: Record<string, () => Promise<void>> = {
   "20251117050000_migrate_cards_data.ts": migrateCardsData,
   "20251117115504_populate_agent_flow_id.ts": populateAgentFlowId,
-  "20251117115505_migrate_sessions_to_local_resources.ts": migrateSessionsToLocalResources,
-  "20251121031122_migrate_backgrounds_to_sessions.ts": migrateBackgroundsToSessions,
+  "20251117115505_migrate_sessions_to_local_resources.ts":
+    migrateSessionsToLocalResources,
+  "20251121031122_migrate_backgrounds_to_sessions.ts":
+    migrateBackgroundsToSessions,
 };
 
 /**
@@ -61,7 +63,9 @@ const typescriptMigrations: Record<string, () => Promise<void>> = {
  */
 async function ensureMigrationInfrastructure(db: any) {
   // Create drizzle schema for SQL migrations
-  await db.execute(sql`CREATE SCHEMA IF NOT EXISTS ${sql.identifier(DRIZZLE_MIGRATION_SCHEMA)}`);
+  await db.execute(
+    sql`CREATE SCHEMA IF NOT EXISTS ${sql.identifier(DRIZZLE_MIGRATION_SCHEMA)}`,
+  );
 
   // Create drizzle migration table for SQL migrations
   await db.execute(sql`
@@ -171,7 +175,10 @@ export async function hasPendingMigrations(): Promise<boolean> {
     return false;
   } catch (error) {
     // If any error occurs, assume migrations are needed (safe default)
-    logger.error("⚠️ Error checking pending migrations, will run migrations:", error);
+    logger.error(
+      "⚠️ Error checking pending migrations, will run migrations:",
+      error,
+    );
     return true;
   }
 }
@@ -186,6 +193,28 @@ type OnProgress = (
 ) => void;
 
 /**
+ * Detailed migration error information
+ */
+export interface MigrationErrorDetails {
+  migrationHash?: string;
+  migrationFilename: string;
+  migrationType: "sql" | "typescript";
+  timestamp: string;
+  failedQuery?: string;
+  errorMessage: string;
+  errorStack?: string;
+}
+
+/**
+ * Store for last migration error (accessible from UI for recovery)
+ */
+let lastMigrationError: MigrationErrorDetails | null = null;
+
+export function getLastMigrationError(): MigrationErrorDetails | null {
+  return lastMigrationError;
+}
+
+/**
  * Run all migrations in timestamp order
  *
  * This function:
@@ -197,7 +226,9 @@ type OnProgress = (
  *
  * @param onProgress - Optional callback for UI progress reporting
  */
-export async function runUnifiedMigrations(onProgress?: OnProgress): Promise<void> {
+export async function runUnifiedMigrations(
+  onProgress?: OnProgress,
+): Promise<void> {
   logger.debug("🔄 Starting unified migrations (SQL + TypeScript)...\n");
 
   // Step: Initialize database
@@ -223,7 +254,7 @@ export async function runUnifiedMigrations(onProgress?: OnProgress): Promise<voi
     allMigrations.push({
       hash: migration.hash,
       filename: `${migration.hash}.sql`,
-      type: 'sql',
+      type: "sql",
       timestamp: migration.folderMillis,
     });
   }
@@ -232,7 +263,7 @@ export async function runUnifiedMigrations(onProgress?: OnProgress): Promise<voi
   for (const filename of Object.keys(typescriptMigrations)) {
     allMigrations.push({
       filename,
-      type: 'typescript',
+      type: "typescript",
       timestamp: filenameTimestampToMillis(filename),
     });
   }
@@ -242,7 +273,7 @@ export async function runUnifiedMigrations(onProgress?: OnProgress): Promise<voi
 
   // Filter to pending migrations only
   const pendingMigrations = allMigrations.filter((migration) => {
-    if (migration.type === 'sql') {
+    if (migration.type === "sql") {
       return !executedSqlHashes.has(migration.hash!);
     } else {
       return !executedTsFilenames.has(migration.filename);
@@ -269,8 +300,9 @@ export async function runUnifiedMigrations(onProgress?: OnProgress): Promise<voi
   for (const migration of pendingMigrations) {
     const timestamp = new Date(migration.timestamp).toISOString();
 
-    if (migration.type === 'sql') {
+    if (migration.type === "sql") {
       logger.debug(`⚡ [${timestamp}] Executing SQL: ${migration.hash}`);
+      let currentQuery: string | undefined;
       try {
         // Find migration in migrations.json and execute SQL
         const sqlMigration = migrations.find((m) => m.hash === migration.hash);
@@ -280,6 +312,7 @@ export async function runUnifiedMigrations(onProgress?: OnProgress): Promise<voi
 
         // Execute each SQL statement
         for (const sqlStatement of sqlMigration.sql) {
+          currentQuery = sqlStatement;
           await db.execute(sqlStatement);
         }
 
@@ -288,22 +321,76 @@ export async function runUnifiedMigrations(onProgress?: OnProgress): Promise<voi
         logger.debug(`✅ [${timestamp}] Completed SQL: ${migration.hash}\n`);
         sqlCount++;
       } catch (error) {
-        logger.error(`❌ [${timestamp}] Failed SQL: ${migration.hash}`, error);
-        onProgress?.("run-migrations", "error", `SQL migration failed: ${migration.hash}`);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
+        // Store detailed error information for UI recovery
+        lastMigrationError = {
+          migrationHash: migration.hash,
+          migrationFilename: `${migration.hash}.sql`,
+          migrationType: "sql",
+          timestamp,
+          failedQuery: currentQuery,
+          errorMessage,
+          errorStack,
+        };
+
+        logger.error(`❌ [${timestamp}] Failed SQL: ${migration.hash}`);
+        logger.error(`   Migration hash: ${migration.hash}`);
+        logger.error(
+          `   Failed query: ${currentQuery?.substring(0, 200)}${(currentQuery?.length || 0) > 200 ? "..." : ""}`,
+        );
+        logger.error(`   Error: ${errorMessage}`);
+        if (errorStack) {
+          logger.error(`   Stack: ${errorStack}`);
+        }
+
+        // Create detailed error message for UI
+        const detailedError = [
+          `Migration: ${migration.hash}`,
+          `Query: ${currentQuery?.substring(0, 100)}${(currentQuery?.length || 0) > 100 ? "..." : ""}`,
+          `Error: ${errorMessage}`,
+        ].join("\n");
+
+        onProgress?.("run-migrations", "error", detailedError);
         throw error; // SQL migrations should not fail
       }
     } else {
-      logger.debug(`📜 [${timestamp}] Running TypeScript: ${migration.filename}`);
+      logger.debug(
+        `📜 [${timestamp}] Running TypeScript: ${migration.filename}`,
+      );
       try {
         // Execute TypeScript migration
         await typescriptMigrations[migration.filename]();
 
         // Mark as executed
         await markTypescriptMigrationExecuted(db, migration.filename);
-        logger.debug(`✅ [${timestamp}] Completed TypeScript: ${migration.filename}\n`);
+        logger.debug(
+          `✅ [${timestamp}] Completed TypeScript: ${migration.filename}\n`,
+        );
         tsCount++;
       } catch (error) {
-        logger.error(`❌ [${timestamp}] Failed TypeScript: ${migration.filename}`, error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+
+        // Store detailed error information
+        lastMigrationError = {
+          migrationFilename: migration.filename,
+          migrationType: "typescript",
+          timestamp,
+          errorMessage,
+          errorStack,
+        };
+
+        logger.error(
+          `❌ [${timestamp}] Failed TypeScript: ${migration.filename}`,
+        );
+        logger.error(`   Error: ${errorMessage}`);
+        if (errorStack) {
+          logger.error(`   Stack: ${errorStack}`);
+        }
         // Don't throw - allow app to continue even if TypeScript migration fails
         logger.error("   ⚠️  Migration failed but continuing...\n");
       }

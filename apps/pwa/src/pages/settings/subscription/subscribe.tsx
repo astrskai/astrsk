@@ -35,29 +35,31 @@ const SubscribePage = () => {
   const userId = user?.id;
   const [isLoading, setIsLoading] = useState(false);
 
-  const signUpWithDiscord = useCallback(async () => {
+  const signUpWithDiscord = useCallback(() => {
     // Check already signed in
     if (isAuthenticated) {
       toastInfo("You already signed in");
       return;
     }
 
-    try {
-      // Try to sign up with Discord
-      setIsLoading(true);
+    // IMPORTANT: Safari blocks popups/redirects that don't happen synchronously
+    // from a user gesture. We must call signInWithOAuth synchronously (no await before it).
+    setIsLoading(true);
 
-      const { error } = await signInWithOAuth("discord");
-      if (error) {
-        toastError("Failed to sign up", { description: error });
-      }
-    } catch (error) {
-      logger.error(error);
-      toastError("Failed to sign up", {
-        description: String(error),
+    signInWithOAuth("discord")
+      .then(({ error }) => {
+        if (error) {
+          setIsLoading(false);
+          toastError("Failed to sign up", { description: error });
+        }
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        logger.error(error);
+        toastError("Failed to sign up", {
+          description: String(error),
+        });
       });
-    } finally {
-      setIsLoading(false);
-    }
   }, [isAuthenticated]);
 
   // Open join server dialog

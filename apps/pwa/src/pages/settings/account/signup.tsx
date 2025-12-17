@@ -130,38 +130,44 @@ const SignUpPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Sign up with SSO
-  const signUpWithGoogle = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const { error } = await signInWithOAuth("google");
-      if (error) {
-        toastError("Failed to sign up", { description: error });
-      }
-    } catch (error) {
-      logger.error(error);
-      toastError("Failed to sign up", {
-        description: String(error),
+  // IMPORTANT: Safari blocks popups/redirects that don't happen synchronously
+  // from a user gesture. We must call signInWithOAuth synchronously (no await before it).
+  const signUpWithGoogle = useCallback(() => {
+    setIsLoading(true);
+
+    signInWithOAuth("google")
+      .then(({ error }) => {
+        if (error) {
+          setIsLoading(false);
+          toastError("Failed to sign up", { description: error });
+        }
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        logger.error(error);
+        toastError("Failed to sign up", {
+          description: String(error),
+        });
       });
-    } finally {
-      setIsLoading(false);
-    }
   }, []);
 
-  const signUpWithDiscord = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const { error } = await signInWithOAuth("discord");
-      if (error) {
-        toastError("Failed to sign up", { description: error });
-      }
-    } catch (error) {
-      logger.error(error);
-      toastError("Failed to sign up", {
-        description: String(error),
+  const signUpWithDiscord = useCallback(() => {
+    setIsLoading(true);
+
+    signInWithOAuth("discord")
+      .then(({ error }) => {
+        if (error) {
+          setIsLoading(false);
+          toastError("Failed to sign up", { description: error });
+        }
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        logger.error(error);
+        toastError("Failed to sign up", {
+          description: String(error),
+        });
       });
-    } finally {
-      setIsLoading(false);
-    }
   }, []);
 
   // Sign up with email and password

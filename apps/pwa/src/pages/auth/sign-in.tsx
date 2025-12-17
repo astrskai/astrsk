@@ -109,28 +109,31 @@ export function SignInPage() {
     }
   }, [email, password, isAuthenticated, navigate]);
 
-  const handleOAuthSignIn = useCallback(async (provider: "google" | "discord" | "apple") => {
+  const handleOAuthSignIn = useCallback((provider: "google" | "discord" | "apple") => {
     if (isAuthenticated) {
       toastInfo("You are already signed in");
       return;
     }
 
-    try {
-      setIsLoading(true);
-      const { error } = await signInWithOAuth(provider);
+    // IMPORTANT: Safari blocks popups/redirects that don't happen synchronously
+    // from a user gesture. We must call signInWithOAuth synchronously (no await before it).
+    setIsLoading(true);
 
-      if (error) {
+    // signInWithOAuth triggers redirect, so we don't need to await or handle success
+    signInWithOAuth(provider)
+      .then(({ error }) => {
+        if (error) {
+          setIsLoading(false);
+          toastError("Failed to sign in", { description: error });
+        }
+      })
+      .catch((error) => {
         setIsLoading(false);
-        toastError("Failed to sign in", { description: error });
-      }
-      // If successful, Supabase will redirect to OAuth provider
-    } catch (error) {
-      setIsLoading(false);
-      logger.error("OAuth sign in error:", error);
-      toastError("Failed to sign in", {
-        description: "Please try again or contact support if the issue persists.",
+        logger.error("OAuth sign in error:", error);
+        toastError("Failed to sign in", {
+          description: "Please try again or contact support if the issue persists.",
+        });
       });
-    }
   }, [isAuthenticated]);
 
   return (
