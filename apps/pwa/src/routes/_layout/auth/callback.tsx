@@ -71,8 +71,11 @@ function AuthCallback() {
           logger.debug("OAuth login successful, redirecting to settings...");
           setStatus("Success! Redirecting...");
 
-          // Hard redirect to settings page
-          window.location.href = "/settings";
+          // Use replace() instead of href to prevent back-button issues
+          // and add small delay to let iOS Safari clean up resources
+          setTimeout(() => {
+            window.location.replace("/settings");
+          }, 100);
         } else {
           logger.warn("No session after OAuth callback");
           setStatus("No session found");
