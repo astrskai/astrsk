@@ -1,6 +1,3 @@
-// OAuth interceptor MUST run first, before any other imports
-import "./oauth-interceptor";
-
 import { initServices } from "@/app/services/init-services.ts";
 import { useAppStore } from "@/shared/stores/app-store.tsx";
 import { initStores } from "@/shared/stores/init-stores.ts";
@@ -88,23 +85,17 @@ async function initializeApp() {
     { id: "backgrounds", label: "Load background assets" },
   ]);
 
-  // Check if OAuth login is in progress
-  const isOAuthLogin = sessionStorage.getItem("oauth-login-in-progress") === "true";
-
   // Initialization overlay component (blocks interaction during init)
   const InitOverlay = ({ showProgressScreen }: { showProgressScreen: boolean }) => {
     if (showProgressScreen) {
       return <InitializationScreen />;
     }
 
-    // Show different message for OAuth login
-    const message = isOAuthLogin ? "Completing sign in, please wait..." : "Initializing...";
-
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
         <div className="flex items-center gap-3 rounded-full bg-canvas px-5 py-3 shadow-lg">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span className="text-text-secondary text-sm">{message}</span>
+          <span className="text-text-secondary text-sm">Initializing...</span>
         </div>
       </div>
     );
@@ -149,32 +140,38 @@ async function initializeApp() {
   let needsMigration = false;
 
   try {
-    logger.debug("🚀 Starting initialization...");
-
     // Step 1: Initialize database engine (PGlite)
     // This can take ~2 seconds on first load (PGlite initialization polling)
     onProgress("database-engine", "start");
-    logger.debug("📊 Step 1: database-engine progress updated");
 
     // Show loading overlay before DB check
     // - First install: full progress screen
     // - Normal loads: simple spinner during DB initialization
-    logger.debug("🎨 Rendering init overlay...");
     renderInitOverlay();
-    logger.debug("✅ Init overlay rendered");
 
-    // OPTIMIZATION: Skip database initialization during OAuth callback
-    // - Skipping all database/service/store initialization avoids worker conflicts
-    // - Database remains intact and will be used on next page load
-    // - This ensures fast and reliable OAuth login on Safari
-    const isOAuthCallback = window.location.pathname === "/auth/callback";
+    const dbCheckStart = performance.now();
+    needsMigration = await hasPendingMigrations();
+    const dbCheckDuration = performance.now() - dbCheckStart;
 
-    if (isOAuthCallback) {
-      logger.info("⚡ OAuth callback - skipping database initialization");
+    logger.debug(`⏱️ DB initialization took ${Math.round(dbCheckDuration)}ms`);
+    onProgress("database-engine", "success");
 
-      // Mark all DB steps as skipped/success
-      onProgress("database-engine", "start");
-      onProgress("database-engine", "success");
+    if (needsMigration && !showProgressScreen) {
+      // App update with new migrations: upgrade to progress screen
+      showProgressScreen = true;
+      renderInitOverlay();
+    }
+    // Otherwise: keep current overlay (progress screen or simple spinner)
+
+    logger.debug(`🔍 Pending migrations: ${needsMigration}`);
+
+    // Step 2: Migrate database (only if there are pending migrations)
+    if (needsMigration) {
+      logger.debug("🔨 Running database migrations...");
+      await runUnifiedMigrations(onProgress);
+    } else {
+      logger.debug("⏭️ No pending migrations, skipping migration steps");
+      // Mark migration steps as success immediately
       onProgress("database-init", "start");
       onProgress("database-init", "success");
       onProgress("migration-schema", "start");
@@ -183,91 +180,15 @@ async function initializeApp() {
       onProgress("check-migrations", "success");
       onProgress("run-migrations", "start");
       onProgress("run-migrations", "success");
-
-      needsMigration = false;
-    } else {
-      // Normal path: check and run migrations
-      logger.debug("🔍 About to call hasPendingMigrations()...");
-
-      const dbCheckStart = performance.now();
-      needsMigration = await hasPendingMigrations();
-      const dbCheckDuration = performance.now() - dbCheckStart;
-
-      logger.debug(`⏱️ DB initialization took ${Math.round(dbCheckDuration)}ms`);
-      onProgress("database-engine", "success");
-
-      if (needsMigration && !showProgressScreen) {
-        // App update with new migrations: upgrade to progress screen
-        showProgressScreen = true;
-        renderInitOverlay();
-      }
-
-      logger.debug(`🔍 Pending migrations: ${needsMigration}`);
-
-      // Step 2: Migrate database (only if there are pending migrations)
-      if (needsMigration) {
-        logger.debug("🔨 Running database migrations...");
-        await runUnifiedMigrations(onProgress);
-      } else {
-        logger.debug("⏭️ No pending migrations, skipping migration steps");
-        // Mark migration steps as success immediately
-        onProgress("database-init", "start");
-        onProgress("database-init", "success");
-        onProgress("migration-schema", "start");
-        onProgress("migration-schema", "success");
-        onProgress("check-migrations", "start");
-        onProgress("check-migrations", "success");
-        onProgress("run-migrations", "start");
-        onProgress("run-migrations", "success");
-      }
     }
 
-    // Step 3 & 4: Init services and stores
-    // SKIP during OAuth callback to avoid database access (DB is being cleared)
-    if (isOAuthCallback) {
-      logger.info("⚡ OAuth callback - skipping services and stores initialization");
+    // Step 3: Init services (ALWAYS run - in-memory initialization)
+    logger.debug("🔧 Initializing services...");
+    await initServices(onProgress);
 
-      // Mark service steps as skipped/success
-      onProgress("asset-service", "start");
-      onProgress("asset-service", "success");
-      onProgress("api-service", "start");
-      onProgress("api-service", "success");
-      onProgress("agent-service", "start");
-      onProgress("agent-service", "success");
-      onProgress("node-services", "start");
-      onProgress("node-services", "success");
-      onProgress("vibe-service", "start");
-      onProgress("vibe-service", "success");
-      onProgress("flow-service", "start");
-      onProgress("flow-service", "success");
-      onProgress("image-service", "start");
-      onProgress("image-service", "success");
-      onProgress("card-service", "start");
-      onProgress("card-service", "success");
-      onProgress("session-service", "start");
-      onProgress("session-service", "success");
-
-      // Mark store steps as skipped/success
-      onProgress("api-connections", "start");
-      onProgress("api-connections", "success");
-      onProgress("free-provider", "start");
-      onProgress("free-provider", "success");
-      onProgress("default-models", "start");
-      onProgress("default-models", "success");
-      onProgress("check-sessions", "start");
-      onProgress("check-sessions", "success");
-      onProgress("default-sessions", "start");
-      onProgress("default-sessions", "success");
-      onProgress("backgrounds", "start");
-      onProgress("backgrounds", "success");
-    } else {
-      // Normal path: init services and stores
-      logger.debug("🔧 Initializing services...");
-      await initServices(onProgress);
-
-      logger.debug("📦 Initializing stores...");
-      await initStores(onProgress);
-    }
+    // Step 4: Init stores (ALWAYS run - loads data into memory)
+    logger.debug("📦 Initializing stores...");
+    await initStores(onProgress);
 
     // Calculate initialization time
     const initTime = performance.now() - startTime;

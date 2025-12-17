@@ -213,12 +213,6 @@ export async function signInWithOAuth(
   // Build callback URL
   const callbackUrl = `${window.location.origin}/auth/callback`;
 
-  logger.info("🚀 Starting OAuth flow:", {
-    provider,
-    callbackUrl,
-    currentPath,
-  });
-
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
@@ -227,13 +221,8 @@ export async function signInWithOAuth(
   });
 
   if (error) {
-    logger.error("❌ OAuth initiation error:", error);
     return { error: error.message, data: null };
   }
-
-  logger.info("✅ OAuth initiated successfully, redirecting to provider...", {
-    url: data.url,
-  });
 
   return { error: null, data };
 }

@@ -52,8 +52,6 @@ export function getSupabaseAuthClient(): SupabaseClient {
         persistSession: true,
         storageKey: "astrsk-auth",
         storage: window.localStorage,
-        // Let the callback handler do the work - don't auto-detect
-        detectSessionInUrl: false,
       },
     });
   }
