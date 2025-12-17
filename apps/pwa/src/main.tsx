@@ -16,6 +16,11 @@ import "@astrsk/design-system/styles";
 import "@/app/styles/global.css";
 import "@/app/styles/theme.css";
 
+// Mobile console debugging (eruda) - only in non-production
+if (import.meta.env.DEV || window.location.hostname.includes("dev.")) {
+  import("eruda").then((eruda) => eruda.default.init());
+}
+
 // Convex client setup
 const isConvexReady =
   import.meta.env.VITE_CONVEX_URL &&

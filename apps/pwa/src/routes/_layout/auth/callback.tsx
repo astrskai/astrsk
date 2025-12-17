@@ -24,10 +24,15 @@ export const Route = createFileRoute("/_layout/auth/callback")({
  * - This avoids triggering another page reload which can cause issues on iOS Chrome
  */
 function AuthCallback() {
-  const isOfflineReady = useAppStore.use.isOfflineReady();
-  const navigate = useNavigate();
+  // 1. State hooks
   const [authComplete, setAuthComplete] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string>("/");
+
+  // 2. Store hooks
+  const isOfflineReady = useAppStore.use.isOfflineReady();
+
+  // 3. Navigation hooks
+  const navigate = useNavigate();
 
   // Step 1: Process OAuth callback (runs once on mount)
   useEffect(() => {
@@ -91,13 +96,44 @@ function AuthCallback() {
     handleCallback();
   }, []);
 
-  // Step 2: Navigate after both auth and app initialization complete
+  // Step 2: Navigate after auth complete
+  // Use polling to check isOfflineReady since Zustand subscription may not work reliably
   useEffect(() => {
-    if (authComplete && isOfflineReady) {
-      logger.debug("App initialized, navigating to:", redirectPath);
-      navigate({ to: redirectPath, replace: true });
-    }
-  }, [authComplete, isOfflineReady, navigate, redirectPath]);
+    if (!authComplete) return;
+
+    logger.debug("[AuthCallback] Auth complete, waiting for initialization...");
+
+    const checkAndNavigate = () => {
+      const ready = useAppStore.getState().isOfflineReady;
+      logger.debug("[AuthCallback] Polling isOfflineReady:", ready);
+
+      if (ready) {
+        logger.debug("App initialized, navigating to:", redirectPath);
+        navigate({ to: redirectPath, replace: true });
+        return true;
+      }
+      return false;
+    };
+
+    // Check immediately
+    if (checkAndNavigate()) return;
+
+    // Poll every 100ms for up to 30 seconds
+    let attempts = 0;
+    const maxAttempts = 300;
+    const interval = setInterval(() => {
+      attempts++;
+      if (checkAndNavigate() || attempts >= maxAttempts) {
+        clearInterval(interval);
+        if (attempts >= maxAttempts) {
+          logger.error("[AuthCallback] Timeout waiting for initialization, forcing navigation");
+          window.location.href = redirectPath;
+        }
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [authComplete, redirectPath, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
