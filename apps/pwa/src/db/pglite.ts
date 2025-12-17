@@ -101,16 +101,56 @@ export class Pglite {
         });
       }
 
-      // Create PGlite instance
-      Pglite._instance = new PGliteWorker(
-        new Worker({
-          name: "pglite-worker",
-        }),
-        {
+      // Detect browser and device
+      const userAgent = navigator.userAgent;
+      const isSafari = userAgent.includes('Safari') && !userAgent.includes('Chrome');
+      const hasWebLocks = 'locks' in navigator;
+
+      // Detect mobile devices
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+
+      // Safari (especially on iOS) has buggy Web Locks implementation - always use direct PGlite
+      // Mobile devices should also use direct PGlite for better stability
+      const supportsWebLocks = hasWebLocks && !isSafari && !isMobile;
+
+      const browserInfo = {
+        isChrome: userAgent.includes('Chrome') && !userAgent.includes('Edg'),
+        isSafari,
+        isFirefox: userAgent.includes('Firefox'),
+        isEdge: userAgent.includes('Edg'),
+        isMobile,
+        isIOS,
+        hasWebLocksAPI: hasWebLocks,
+        willUseWebLocks: supportsWebLocks,
+      };
+
+      logger.debug("🔵 [PGlite.init] Browser detection", browserInfo);
+
+      if (supportsWebLocks) {
+        // Use PGliteWorker for multi-tab support (Chrome, Firefox, Edge)
+        logger.debug("🔵 [PGlite.init] Using PGliteWorker (multi-tab mode)");
+        Pglite._instance = new PGliteWorker(
+          new Worker({
+            name: "pglite-worker",
+          }),
+          {
+            dataDir: PGLITE_DATA_DIR,
+            relaxedDurability: true,
+          },
+        );
+      } else {
+        // Fallback to direct PGlite (Safari, mobile, or browsers without Web Locks)
+        logger.debug("🔵 [PGlite.init] Using direct PGlite (single-tab mode)");
+        const { PGlite: PGliteClass } = await import("@electric-sql/pglite");
+        const instance = new PGliteClass({
           dataDir: PGLITE_DATA_DIR,
           relaxedDurability: true,
-        },
-      );
+        });
+
+        await instance.waitReady;
+        Pglite._instance = instance;
+      }
 
       // Wait for PGlite to be ready using waitReady (recommended by PGlite docs)
       // Use Promise.race with timeout to prevent infinite hang on iOS
