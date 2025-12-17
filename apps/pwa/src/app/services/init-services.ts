@@ -15,9 +15,7 @@ import { logger } from "@/shared/lib/logger";
 
 export async function initServices(
   onProgress?: (service: string, status: "start" | "success" | "warning" | "error", error?: string) => void,
-  options?: { skipDbOperations?: boolean },
 ): Promise<void> {
-  const { skipDbOperations = false } = options ?? {};
   let currentService: string | undefined;
   try {
     // Common
@@ -123,16 +121,13 @@ export async function initServices(
     onProgress?.(currentService, "success");
 
     // Cleanup stale generating sessions (sessions interrupted by page refresh)
-    // Skip in fast path to avoid DB access that can hang on iOS Chrome OAuth redirects
-    if (!skipDbOperations) {
-      currentService = "session-cleanup";
-      onProgress?.(currentService, "start");
-      const cleanedCount = await cleanupStaleGeneratingSessions();
-      if (cleanedCount > 0) {
-        logger.info(`[init-services] Cleaned up ${cleanedCount} interrupted session(s)`);
-      }
-      onProgress?.(currentService, "success");
+    currentService = "session-cleanup";
+    onProgress?.(currentService, "start");
+    const cleanedCount = await cleanupStaleGeneratingSessions();
+    if (cleanedCount > 0) {
+      logger.info(`[init-services] Cleaned up ${cleanedCount} interrupted session(s)`);
     }
+    onProgress?.(currentService, "success");
 
     // Extensions - Initialize last, after all services are ready
     currentService = "extensions";

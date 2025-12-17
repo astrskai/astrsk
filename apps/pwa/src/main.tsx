@@ -115,17 +115,17 @@ async function initializeApp() {
     </StrictMode>,
   );
 
-  // Fast path: Skip DB re-initialization if already initialized in this browser session.
-  // This handles OAuth redirects on iOS Chrome where PGlite re-initialization can hang.
-  // We use sessionStorage (cleared on tab close) to track initialization within a session.
-  // On cold start (new tab), full initialization runs including migration checks.
-  //
-  // IMPORTANT: We still need to initialize services (SessionService, etc.) because
-  // they are in-memory objects that don't persist across page refreshes.
-  // Only the DB initialization (PGlite) can be skipped.
-  const SESSION_INIT_KEY = "astrsk-session-initialized";
-  const sessionInitialized = sessionStorage.getItem(SESSION_INIT_KEY) === "true";
-  const skipDbInit = sessionInitialized && !!previousInitSuccessful;
+  // OAuth callback special handling:
+  // Skip ALL initialization on /auth/callback to prevent PGlite hang on iOS Chrome.
+  // The AuthCallback component will handle token exchange and redirect to a clean URL,
+  // where normal initialization will occur.
+  const isAuthCallback = window.location.pathname === "/auth/callback";
+  if (isAuthCallback) {
+    logger.debug("🔐 OAuth callback detected - skipping initialization, will init after redirect");
+    // Mark app as ready so AuthCallback component can render and process tokens
+    useAppStore.getState().setIsOfflineReady(true);
+    return;
+  }
 
   // Progress callback for all initialization functions
   const onProgress = (
@@ -149,13 +149,31 @@ async function initializeApp() {
   let needsMigration = false;
 
   try {
-    // Fast path: Skip only DB initialization, but still init services
-    if (skipDbInit) {
-      logger.debug("⚡ Fast path: Skipping DB init, but initializing services...");
+    // Step 1: Initialize database engine (PGlite)
+    // This can take ~2 seconds on first load (PGlite initialization polling)
+    onProgress("database-engine", "start");
 
-      // Mark DB steps as skipped
-      onProgress("database-engine", "start");
-      onProgress("database-engine", "success");
+    const dbCheckStart = performance.now();
+    needsMigration = await hasPendingMigrations();
+    const dbCheckDuration = performance.now() - dbCheckStart;
+
+    logger.debug(`⏱️ DB initialization took ${Math.round(dbCheckDuration)}ms`);
+    onProgress("database-engine", "success");
+
+    // App update with new migrations: upgrade to progress screen
+    if (needsMigration && !isFirstInstall) {
+      setShowProgressScreen(true);
+    }
+
+    logger.debug(`🔍 Pending migrations: ${needsMigration}`);
+
+    // Step 2: Migrate database (only if there are pending migrations)
+    if (needsMigration) {
+      logger.debug("🔨 Running database migrations...");
+      await runUnifiedMigrations(onProgress);
+    } else {
+      logger.debug("⏭️ No pending migrations, skipping migration steps");
+      // Mark migration steps as success immediately
       onProgress("database-init", "start");
       onProgress("database-init", "success");
       onProgress("migration-schema", "start");
@@ -164,69 +182,15 @@ async function initializeApp() {
       onProgress("check-migrations", "success");
       onProgress("run-migrations", "start");
       onProgress("run-migrations", "success");
-    } else {
-      // Step 1: Initialize database engine (PGlite)
-      // This can take ~2 seconds on first load (PGlite initialization polling)
-      onProgress("database-engine", "start");
-
-      const dbCheckStart = performance.now();
-      needsMigration = await hasPendingMigrations();
-      const dbCheckDuration = performance.now() - dbCheckStart;
-
-      logger.debug(`⏱️ DB initialization took ${Math.round(dbCheckDuration)}ms`);
-      onProgress("database-engine", "success");
-
-      // App update with new migrations: upgrade to progress screen
-      if (needsMigration && !isFirstInstall) {
-        setShowProgressScreen(true);
-      }
-
-      logger.debug(`🔍 Pending migrations: ${needsMigration}`);
-
-      // Step 2: Migrate database (only if there are pending migrations)
-      if (needsMigration) {
-        logger.debug("🔨 Running database migrations...");
-        await runUnifiedMigrations(onProgress);
-      } else {
-        logger.debug("⏭️ No pending migrations, skipping migration steps");
-        // Mark migration steps as success immediately
-        onProgress("database-init", "start");
-        onProgress("database-init", "success");
-        onProgress("migration-schema", "start");
-        onProgress("migration-schema", "success");
-        onProgress("check-migrations", "start");
-        onProgress("check-migrations", "success");
-        onProgress("run-migrations", "start");
-        onProgress("run-migrations", "success");
-      }
     }
 
-    // Step 3: Init services (ALWAYS run - in-memory initialization, doesn't persist across refresh)
-    // In fast path, skip DB operations to avoid PGlite hang on iOS Chrome OAuth redirects
+    // Step 3: Init services
     logger.debug("🔧 Initializing services...");
-    await initServices(onProgress, { skipDbOperations: skipDbInit });
+    await initServices(onProgress);
 
-    // Step 4: Init stores (skip in fast path - these require DB access)
-    // In fast path, the stores will be initialized lazily when data is first accessed
-    if (!skipDbInit) {
-      logger.debug("📦 Initializing stores...");
-      await initStores(onProgress);
-    } else {
-      logger.debug("⚡ Fast path: Skipping store initialization (will init lazily)");
-      // Mark store-related steps as skipped
-      onProgress("api-connections", "start");
-      onProgress("api-connections", "success");
-      onProgress("free-provider", "start");
-      onProgress("free-provider", "success");
-      onProgress("default-models", "start");
-      onProgress("default-models", "success");
-      onProgress("check-sessions", "start");
-      onProgress("check-sessions", "success");
-      onProgress("migrate-play-sessions", "start");
-      onProgress("migrate-play-sessions", "success");
-      onProgress("default-sessions", "start");
-      onProgress("default-sessions", "success");
-    }
+    // Step 4: Init stores
+    logger.debug("📦 Initializing stores...");
+    await initStores(onProgress);
 
     // Calculate initialization time
     const initTime = performance.now() - startTime;
@@ -245,9 +209,6 @@ async function initializeApp() {
 
     // Mark app as ready - App component will switch from InitializationScreen to actual app
     useAppStore.getState().setIsOfflineReady(true);
-
-    // Mark session as initialized (for fast path on OAuth redirects)
-    sessionStorage.setItem(SESSION_INIT_KEY, "true");
   } catch (error) {
     logger.error("Failed to initialize app:", error);
 
