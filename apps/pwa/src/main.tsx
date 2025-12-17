@@ -116,14 +116,41 @@ async function initializeApp() {
   );
 
   // OAuth callback special handling:
-  // Skip ALL initialization on /auth/callback to prevent PGlite hang on iOS Chrome.
-  // The AuthCallback component will handle token exchange and redirect to a clean URL,
-  // where normal initialization will occur.
+  // Skip ALL initialization on /auth/callback to prevent PGlite hang on iOS Chrome/Safari.
+  // The AuthCallback component will handle token exchange and redirect to a clean URL.
   const isAuthCallback = window.location.pathname === "/auth/callback";
   if (isAuthCallback) {
     logger.debug("🔐 OAuth callback detected - skipping initialization, will init after redirect");
     // Mark app as ready so AuthCallback component can render and process tokens
     useAppStore.getState().setIsOfflineReady(true);
+    return;
+  }
+
+  // OAuth redirect handling:
+  // When redirected from /auth/callback, PGlite initialization can hang on iOS Chrome/Safari.
+  // We defer initialization using setTimeout to allow the browser to settle after redirect.
+  // Wrapped in try-catch for private browsing mode compatibility where sessionStorage may be unavailable.
+  const OAUTH_REDIRECT_KEY = "astrsk-oauth-redirect";
+  let isOAuthRedirect = false;
+  try {
+    isOAuthRedirect = sessionStorage.getItem(OAUTH_REDIRECT_KEY) === "true";
+    if (isOAuthRedirect) {
+      sessionStorage.removeItem(OAUTH_REDIRECT_KEY);
+    }
+  } catch (e) {
+    // sessionStorage may be unavailable in private browsing mode
+    // Continue with normal initialization
+    logger.warn("Failed to check OAuth redirect flag:", e);
+  }
+
+  if (isOAuthRedirect) {
+    logger.debug("🔄 OAuth redirect detected - deferring PGlite initialization");
+    // Defer initialization to next tick to let browser settle
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+    // Show loading state while waiting
+    useAppStore.getState().setIsOfflineReady(false);
     return;
   }
 
