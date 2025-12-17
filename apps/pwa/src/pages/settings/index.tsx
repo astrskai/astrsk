@@ -15,7 +15,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { Avatar } from "@astrsk/design-system";
 import { SvgIcon } from "@/shared/ui";
-import { IconDiscord } from "@/shared/assets/icons";
+import { IconDiscord, IconGithub } from "@/shared/assets/icons";
 import { toastError } from "@/shared/ui/toast";
 import { useAuth } from "@/shared/hooks/use-auth";
 
@@ -210,6 +210,13 @@ export default function SettingsPage() {
             description="r/astrsk_ai discussion"
             type="external"
             onClick={() => openInNewTab("https://www.reddit.com/r/astrsk_ai/")}
+          />
+          <SettingsItem
+            icon={<IconGithub className="h-5 w-5" />}
+            label="View on GitHub"
+            description="Open source repository"
+            type="external"
+            onClick={() => openInNewTab("https://github.com/astrskai/astrsk")}
           />
         </div>
       </section>
