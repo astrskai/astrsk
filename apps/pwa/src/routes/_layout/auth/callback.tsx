@@ -73,7 +73,14 @@ function AuthCallback() {
 
           // Set flag to indicate we're coming from OAuth callback
           // This allows main.tsx to defer PGlite initialization
-          sessionStorage.setItem("astrsk-oauth-redirect", "true");
+          // Wrapped in try-catch for private browsing mode compatibility
+          try {
+            sessionStorage.setItem("astrsk-oauth-redirect", "true");
+          } catch (e) {
+            // sessionStorage may be unavailable in private browsing mode
+            // Continue with redirect anyway - initialization will happen normally
+            logger.warn("Failed to set OAuth redirect flag:", e);
+          }
 
           // Hard redirect to settings page
           window.location.href = "/settings";
