@@ -6,6 +6,9 @@ import { initializeEnvironment } from "@/shared/lib/environment";
 import { useAppStore } from "@/shared/stores/app-store";
 import { useInitializationStore } from "@/shared/stores/initialization-store";
 import { InitializationScreen } from "@/shared/ui/initialization-screen";
+import { runInitialization } from "@/app/init/run-initialization";
+import { useEffect, useRef, useState } from "react";
+import { logger } from "@/shared/lib/logger";
 
 import { routeTree } from "./routeTree.gen";
 
@@ -22,11 +25,8 @@ initializeEnvironment();
 
 /**
  * Simple loading spinner shown during initialization
- * when progress screen is not needed (subsequent loads without migrations)
  */
 function InitSpinner() {
-  const isAppInitialized = useAppStore.use.isAppInitialized();
-  const isOfflineReady = useAppStore.use.isOfflineReady();
   const steps = useInitializationStore((state) => state.steps);
   const currentStep = steps.find((s) => s.status === "running");
   const completedCount = steps.filter((s) => s.status === "success").length;
@@ -37,10 +37,8 @@ function InitSpinner() {
         <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
         <span className="text-text-secondary text-sm">Initializing...</span>
       </div>
-      {/* Debug info - shows current initialization step and state */}
+      {/* Debug info - shows current initialization step */}
       <div className="bg-canvas rounded-lg px-4 py-2 text-xs font-mono opacity-70 text-center space-y-1">
-        <div>isAppInitialized: {String(isAppInitialized)}</div>
-        <div>isOfflineReady: {String(isOfflineReady)}</div>
         <div>Step: {currentStep?.label || "Starting..."}</div>
         <div>Progress: {completedCount}/{steps.length}</div>
         <div>Path: {window.location.pathname}</div>
@@ -50,9 +48,10 @@ function InitSpinner() {
 }
 
 function App() {
-  const isAppInitialized = useAppStore.use.isAppInitialized();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const initStartedRef = useRef(false);
+
   const showProgressScreen = useInitializationStore.use.showProgressScreen();
-  // Efficient selector: only re-renders when hasError boolean changes, not on every step update
   const hasError = useInitializationStore(
     (state) => state.steps.some((step) => step.status === "error"),
   );
@@ -60,9 +59,34 @@ function App() {
   // Skip initialization UI for OAuth callback - it handles its own loading state
   const isAuthCallback = window.location.pathname === "/auth/callback";
 
+  // Run initialization directly in the component
+  useEffect(() => {
+    // Skip if OAuth callback or already started
+    if (isAuthCallback || initStartedRef.current) {
+      if (isAuthCallback) {
+        setIsInitialized(true); // Allow callback component to render
+      }
+      return;
+    }
+
+    initStartedRef.current = true;
+    logger.debug("🚀 Starting initialization from App component...");
+
+    runInitialization().then((result) => {
+      if (result.success) {
+        logger.debug("✅ Initialization completed successfully");
+        setIsInitialized(true);
+        // Also update the store for other components that might check it
+        useAppStore.getState().setIsAppInitialized(true);
+      } else {
+        logger.error("❌ Initialization failed:", result.error);
+        // Error state is handled by showProgressScreen + hasError
+      }
+    });
+  }, [isAuthCallback]);
+
   // Show initialization UI while app is not ready
-  // Note: isAppInitialized is separate from isOfflineReady (PWA service worker state)
-  if (!isAppInitialized && !isAuthCallback) {
+  if (!isInitialized && !isAuthCallback) {
     // Show detailed progress screen for first install, migrations, or errors
     if (showProgressScreen || hasError) {
       return <InitializationScreen />;
