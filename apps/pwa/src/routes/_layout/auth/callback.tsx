@@ -27,6 +27,7 @@ function AuthCallback() {
   // 1. State hooks
   const [authComplete, setAuthComplete] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string>("/");
+  const [debugInfo, setDebugInfo] = useState<string>("Initializing...");
 
   // 2. Navigation hooks
   const navigate = useNavigate();
@@ -98,13 +99,16 @@ function AuthCallback() {
   useEffect(() => {
     if (!authComplete) return;
 
+    setDebugInfo("Auth complete, waiting for init...");
     logger.debug("[AuthCallback] Auth complete, waiting for initialization...");
 
-    const checkAndNavigate = () => {
+    const checkAndNavigate = (attempt: number) => {
       const ready = useAppStore.getState().isOfflineReady;
+      setDebugInfo(`Polling #${attempt}: isOfflineReady=${ready}`);
       logger.debug("[AuthCallback] Polling isOfflineReady:", ready);
 
       if (ready) {
+        setDebugInfo("Ready! Navigating...");
         logger.debug("App initialized, navigating to:", redirectPath);
         navigate({ to: redirectPath, replace: true });
         return true;
@@ -113,16 +117,17 @@ function AuthCallback() {
     };
 
     // Check immediately
-    if (checkAndNavigate()) return;
+    if (checkAndNavigate(0)) return;
 
     // Poll every 100ms for up to 30 seconds
     let attempts = 0;
     const maxAttempts = 300;
     const interval = setInterval(() => {
       attempts++;
-      if (checkAndNavigate() || attempts >= maxAttempts) {
+      if (checkAndNavigate(attempts) || attempts >= maxAttempts) {
         clearInterval(interval);
         if (attempts >= maxAttempts) {
+          setDebugInfo("Timeout! Forcing navigation...");
           logger.error("[AuthCallback] Timeout waiting for initialization, forcing navigation");
           window.location.href = redirectPath;
         }
@@ -133,11 +138,12 @@ function AuthCallback() {
   }, [authComplete, redirectPath, navigate]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
       <div className="flex items-center gap-3">
         <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         <span className="text-fg-subtle text-sm">Completing sign in...</span>
       </div>
+      <div className="text-fg-muted text-xs font-mono">{debugInfo}</div>
     </div>
   );
 }
