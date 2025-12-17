@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { getSupabaseAuthClient } from "@/shared/lib/supabase-client";
 import { logger } from "@/shared/lib/logger";
+import { useAppStore } from "@/shared/stores/app-store";
 
 export const Route = createFileRoute("/_layout/auth/callback")({
   component: AuthCallback,
@@ -11,10 +12,24 @@ export const Route = createFileRoute("/_layout/auth/callback")({
  * OAuth callback handler for Supabase
  * Handles the redirect from OAuth providers (Google, Discord, Apple)
  *
- * Note: Uses window.location.href instead of TanStack Router's navigate()
- * because navigate() may not work reliably in OAuth callback on iOS Chrome.
+ * Flow:
+ * 1. Process OAuth tokens/code from URL
+ * 2. Wait for app initialization to complete (isOfflineReady)
+ * 3. Navigate to destination using TanStack Router (no page reload)
+ *
+ * Why we wait for isOfflineReady:
+ * - OAuth redirect causes a full page reload, resetting isOfflineReady to false
+ * - main.tsx runs PGlite initialization in parallel
+ * - We wait for initialization to complete before navigating
+ * - This avoids triggering another page reload which can cause issues on iOS Chrome
  */
 function AuthCallback() {
+  const isOfflineReady = useAppStore.use.isOfflineReady();
+  const navigate = useNavigate();
+  const [authComplete, setAuthComplete] = useState(false);
+  const [redirectPath, setRedirectPath] = useState<string>("/");
+
+  // Step 1: Process OAuth callback (runs once on mount)
   useEffect(() => {
     const handleCallback = async () => {
       const supabase = getSupabaseAuthClient();
@@ -53,15 +68,16 @@ function AuthCallback() {
         const { data: { session } } = await supabase.auth.getSession();
 
         if (session) {
-          logger.debug("OAuth login successful");
+          logger.debug("OAuth login successful, waiting for app initialization...");
 
-          // Check if there's a stored redirect path (e.g., from play session login)
-          const redirectPath = localStorage.getItem("authRedirectPath");
-          if (redirectPath) {
+          // Get redirect path before marking auth complete
+          const storedPath = localStorage.getItem("authRedirectPath");
+          if (storedPath) {
             localStorage.removeItem("authRedirectPath");
+            setRedirectPath(storedPath);
           }
-          // Use window.location.href for full page reload to ensure proper app state
-          window.location.href = redirectPath || "/";
+
+          setAuthComplete(true);
         } else {
           logger.warn("No session after OAuth callback");
           window.location.href = "/sign-in";
@@ -74,6 +90,14 @@ function AuthCallback() {
 
     handleCallback();
   }, []);
+
+  // Step 2: Navigate after both auth and app initialization complete
+  useEffect(() => {
+    if (authComplete && isOfflineReady) {
+      logger.debug("App initialized, navigating to:", redirectPath);
+      navigate({ to: redirectPath, replace: true });
+    }
+  }, [authComplete, isOfflineReady, navigate, redirectPath]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
