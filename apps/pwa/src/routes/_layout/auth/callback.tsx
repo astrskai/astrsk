@@ -71,8 +71,11 @@ function AuthCallback() {
           logger.debug("OAuth login successful, redirecting to settings...");
           setStatus("Success! Redirecting...");
 
-          // Hard redirect to settings page - this ensures fresh page load
-          // and proper PGlite initialization on iOS Chrome
+          // Set flag to indicate we're coming from OAuth callback
+          // This allows main.tsx to defer PGlite initialization
+          sessionStorage.setItem("astrsk-oauth-redirect", "true");
+
+          // Hard redirect to settings page
           window.location.href = "/settings";
         } else {
           logger.warn("No session after OAuth callback");
