@@ -43,8 +43,11 @@ function App() {
     (state) => state.steps.some((step) => step.status === "error"),
   );
 
+  // Skip initialization UI for OAuth callback - it handles its own loading state
+  const isAuthCallback = window.location.pathname === "/auth/callback";
+
   // Show initialization UI while app is not ready
-  if (!isOfflineReady) {
+  if (!isOfflineReady && !isAuthCallback) {
     // Show detailed progress screen for first install, migrations, or errors
     if (showProgressScreen || hasError) {
       return <InitializationScreen />;
