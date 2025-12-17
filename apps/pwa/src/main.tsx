@@ -200,9 +200,8 @@ async function initializeApp() {
     }
 
     // Step 3: Init services (ALWAYS run - in-memory initialization, doesn't persist across refresh)
-    // In fast path, skip DB operations to avoid PGlite hang on iOS Chrome OAuth redirects
     logger.debug("🔧 Initializing services...");
-    await initServices(onProgress, { skipDbOperations: skipDbInit });
+    await initServices(onProgress);
 
     // Step 4: Init stores (skip in fast path - these require DB access)
     // In fast path, the stores will be initialized lazily when data is first accessed
