@@ -9,8 +9,13 @@ const PGLITE_DUMP_PATH = "/pglite/dump.txt";
 const PGLITE_INDEXEDDB_NAME = "/pglite/astrsk";
 const PGLITE_DATA_DIR = "idb://astrsk";
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+/**
+ * Creates a timeout promise that rejects after specified milliseconds
+ */
+function timeout(ms: number, message: string): Promise<never> {
+  return new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(message)), ms),
+  );
 }
 
 async function restoreDumpFiles() {
@@ -40,7 +45,7 @@ async function restoreDumpFiles() {
       continue;
     }
     const buffer = Base64.toUint8Array(assetDump);
-    await write(normalizedAssetPath, buffer);
+    await write(normalizedAssetPath, buffer.buffer as ArrayBuffer);
   }
 
   // Delete dump
@@ -107,23 +112,23 @@ export class Pglite {
         },
       );
 
-      // Wait for PGlite to load
-      let waitCount = 0;
-      while (true) {
-        await sleep(100);
-        waitCount += 1;
-        await Pglite._instance.query(`SELECT 1;`);
-        logger.debug(
-          `Check PGLite is ready (${waitCount}):`,
-          Pglite._instance.ready,
-        );
-        if (Pglite._instance.ready) {
-          break;
-        }
-        if (waitCount > 100) {
-          throw new Error("Fail to init PGLite");
-        }
-      }
+      // Wait for PGlite to be ready using waitReady (recommended by PGlite docs)
+      // Use Promise.race with timeout to prevent infinite hang on iOS
+      const PGLITE_INIT_TIMEOUT_MS = 15000; // 15 seconds
+
+      logger.debug("Waiting for PGlite to be ready...");
+      await Promise.race([
+        Pglite._instance.waitReady,
+        timeout(PGLITE_INIT_TIMEOUT_MS, `PGlite initialization timeout after ${PGLITE_INIT_TIMEOUT_MS}ms`),
+      ]);
+      logger.debug("PGlite is ready");
+
+      // Verify with a simple query (also with timeout)
+      await Promise.race([
+        Pglite._instance.query("SELECT 1;"),
+        timeout(5000, "PGlite query timeout after 5000ms"),
+      ]);
+      logger.debug("PGlite query test passed");
 
       // Restore dump
       if (dump) {
