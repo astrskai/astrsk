@@ -144,14 +144,13 @@ async function initializeApp() {
   }
 
   if (isOAuthRedirect) {
-    logger.debug("🔄 OAuth redirect detected - deferring PGlite initialization");
-    // Defer initialization to next tick to let browser settle
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
+    logger.debug("🔄 OAuth redirect detected - deferring PGlite initialization by 1 second");
     // Show loading state while waiting
     useAppStore.getState().setIsOfflineReady(false);
-    return;
+    // Defer initialization by 1 second to let browser fully settle after OAuth redirect
+    // This helps prevent PGlite Worker hang on iOS Chrome/Safari
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    logger.debug("🔄 OAuth redirect delay complete - proceeding with initialization");
   }
 
   // Progress callback for all initialization functions
