@@ -297,6 +297,7 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
           dataSchemaOrder: sessionData.data_schema_order ?? [],
           widgetLayout: sessionData.widget_layout ?? undefined,
           isPlaySession, // Set play session flag
+          config: { original_id: sessionData.id }, // Store original cloud ID
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -476,6 +477,7 @@ export class ImportSessionFromCloud implements UseCase<Command, Result<Session>>
           dataSchemaOrder: sessionData.data_schema_order ?? [],
           widgetLayout: sessionData.widget_layout ?? undefined,
           isPlaySession, // Set play session flag
+          config: { original_id: sessionData.id }, // Store original cloud ID
           createdAt: new Date(),
           updatedAt: new Date(),
         },

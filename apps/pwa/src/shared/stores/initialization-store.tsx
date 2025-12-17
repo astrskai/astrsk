@@ -83,6 +83,7 @@ interface InitializationState {
   steps: InitializationStep[];
   currentStepIndex: number;
   isInitialized: boolean;
+  showProgressScreen: boolean; // Whether to show detailed progress vs simple spinner
 
   // Actions
   initializeSteps: (steps: Omit<InitializationStep, "status">[]) => void;
@@ -91,6 +92,7 @@ interface InitializationState {
   warnStep: (stepId: string, error: string) => void;
   failStep: (stepId: string, error: string) => void;
   saveLog: (totalTime: number) => void;
+  setShowProgressScreen: (show: boolean) => void;
   reset: () => void;
 }
 
@@ -126,6 +128,7 @@ const useInitializationStoreBase = create<InitializationState>((set) => ({
   steps: [],
   currentStepIndex: 0,
   isInitialized: false,
+  showProgressScreen: false,
 
   initializeSteps: (steps) =>
     set({
@@ -234,11 +237,14 @@ const useInitializationStoreBase = create<InitializationState>((set) => ({
       return state;
     }),
 
+  setShowProgressScreen: (show) => set({ showProgressScreen: show }),
+
   reset: () =>
     set({
       steps: [],
       currentStepIndex: 0,
       isInitialized: false,
+      showProgressScreen: false,
     }),
 }));
 

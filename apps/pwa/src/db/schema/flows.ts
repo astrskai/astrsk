@@ -1,4 +1,4 @@
-import { boolean, jsonb, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, uuid, varchar } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 import { TableName } from "@/db/schema/table-name";
@@ -41,6 +41,9 @@ export const flows = pgTable(TableName.Flows, {
   session_id: uuid().references(() => sessions.id, {
     onDelete: "cascade", // Auto-delete when session is deleted
   }),
+
+  // Flexible config storage (e.g., harpy_hub_id, analytics metadata)
+  config: jsonb().$type<Record<string, unknown>>().notNull().default({}),
 
   ...timestamps,
 });

@@ -131,6 +131,9 @@ export interface FlowProps {
   // UniqueEntityID = local to specific session (hidden from global lists)
   sessionId?: UniqueEntityID;
 
+  // Flexible config storage (e.g., original_id from import)
+  config?: Record<string, unknown>;
+
   // Validation State
   readyState: ReadyState;
   validationIssues?: ValidationIssue[];

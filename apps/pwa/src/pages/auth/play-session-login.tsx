@@ -109,29 +109,31 @@ export function PlaySessionLoginPage() {
   );
 
   const handleOAuthSignIn = useCallback(
-    async (provider: "google" | "discord" | "apple") => {
+    (provider: "google" | "discord" | "apple") => {
       if (isAuthenticated) {
         toastInfo("You are already signed in");
         return;
       }
 
-      try {
-        setIsLoading(true);
-        const { error } = await signInWithOAuth(provider);
+      // IMPORTANT: Safari blocks popups/redirects that don't happen synchronously
+      // from a user gesture. We must call signInWithOAuth synchronously (no await before it).
+      setIsLoading(true);
 
-        if (error) {
+      signInWithOAuth(provider)
+        .then(({ error }) => {
+          if (error) {
+            setIsLoading(false);
+            toastError("Failed to sign in", { description: error });
+          }
+        })
+        .catch((error) => {
           setIsLoading(false);
-          toastError("Failed to sign in", { description: error });
-        }
-        // If successful, Supabase will redirect to OAuth provider
-      } catch (error) {
-        setIsLoading(false);
-        logger.error("OAuth sign in error:", error);
-        toastError("Failed to sign in", {
-          description:
-            "Please try again or contact support if the issue persists.",
+          logger.error("OAuth sign in error:", error);
+          toastError("Failed to sign in", {
+            description:
+              "Please try again or contact support if the issue persists.",
+          });
         });
-      }
     },
     [isAuthenticated],
   );
@@ -235,9 +237,9 @@ export function PlaySessionLoginPage() {
       </form>
 
       {/* Info text */}
-      <p className="text-fg-muted mt-6 text-center text-xs">
+      {/* <p className="text-fg-muted mt-6 text-center text-xs">
         New users will receive a confirmation email to verify their account.
-      </p>
+      </p> */}
 
       {/* ---- NEW SECONDARY OPTION ---- */}
       <div className="mt-8 pt-6 w-full border-t border-zinc-900 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">

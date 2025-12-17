@@ -10,10 +10,12 @@ import {
   Sliders,
   ShieldCheck,
   LogOut,
+  LogIn,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { Avatar } from "@astrsk/design-system";
 import { SvgIcon } from "@/shared/ui";
-import { IconDiscord } from "@/shared/assets/icons";
+import { IconDiscord, IconGithub } from "@/shared/assets/icons";
 import { toastError } from "@/shared/ui/toast";
 import { useAuth } from "@/shared/hooks/use-auth";
 
@@ -77,9 +79,10 @@ const SignInPromptCard = () => {
   return (
     <div className="border-border-default bg-surface-raised mb-8 flex items-center justify-between rounded-2xl border p-5">
       <div className="flex items-center gap-4">
-        <div className="border-border-muted bg-surface-overlay flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2">
-          <User size={24} className="text-fg-muted" />
-        </div>
+        <Avatar
+          size="lg"
+          fallback={<User size={20} className="text-fg-muted" />}
+        />
         <div>
           <h2 className="text-fg-default text-lg font-bold">Welcome</h2>
           <p className="text-fg-muted text-xs">
@@ -89,9 +92,11 @@ const SignInPromptCard = () => {
       </div>
       <Link
         to="/sign-in"
-        className="bg-brand-600 hover:bg-brand-500 active:bg-brand-700 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
+        className="bg-brand-600 hover:bg-brand-500 active:bg-brand-700 flex items-center justify-center rounded-lg text-sm font-medium text-white transition-colors md:px-4 md:py-2 p-2"
+        aria-label="Sign in"
       >
-        Sign in
+        <LogIn size={20} className="md:hidden" />
+        <span className="hidden md:inline">Sign in</span>
       </Link>
     </div>
   );
@@ -104,22 +109,12 @@ const UserProfileCard = () => {
   return (
     <div className="border-border-default bg-surface-raised mb-8 flex items-center justify-between rounded-2xl border p-5">
       <div className="flex items-center gap-4">
-        <div className="relative">
-          <div className="border-border-muted bg-surface-overlay h-14 w-14 overflow-hidden rounded-full border-2">
-            {user?.user_metadata?.avatar_url ? (
-              <img
-                src={user.user_metadata.avatar_url}
-                alt="User"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <User size={24} className="text-fg-muted" />
-              </div>
-            )}
-          </div>
-          <div className="border-surface-raised bg-brand-500 absolute right-0 bottom-0 h-4 w-4 rounded-full border-2" />
-        </div>
+        <Avatar
+          src={user?.user_metadata?.avatar_url}
+          alt={user?.user_metadata?.full_name || user?.user_metadata?.name || "User"}
+          size="lg"
+          fallback={<User size={20} className="text-fg-muted" />}
+        />
         <div>
           <h2 className="text-fg-default text-lg font-bold">
             {user?.user_metadata?.full_name || user?.user_metadata?.name || "User"}
@@ -215,6 +210,13 @@ export default function SettingsPage() {
             description="r/astrsk_ai discussion"
             type="external"
             onClick={() => openInNewTab("https://www.reddit.com/r/astrsk_ai/")}
+          />
+          <SettingsItem
+            icon={<IconGithub className="h-5 w-5" />}
+            label="View on GitHub"
+            description="Open source repository"
+            type="external"
+            onClick={() => openInNewTab("https://github.com/astrskai/astrsk")}
           />
         </div>
       </section>

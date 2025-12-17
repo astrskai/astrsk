@@ -237,5 +237,15 @@
     "bps": true,
     "folderMillis": 1765766835874,
     "hash": "e29baf943a613afa608f38cc87ee95f7d742059d549d76abfa4b722f8c90da2e"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"characters\" ADD COLUMN \"config\" jsonb DEFAULT '{}'::jsonb NOT NULL;",
+      "\nALTER TABLE \"flows\" ADD COLUMN \"config\" jsonb DEFAULT '{}'::jsonb NOT NULL;",
+      "\nALTER TABLE \"scenarios\" ADD COLUMN \"config\" jsonb DEFAULT '{}'::jsonb NOT NULL;"
+    ],
+    "bps": true,
+    "folderMillis": 1765862724636,
+    "hash": "9c8940cb86734f60821f4c790eaf404d462f29c4c11c2ae8b1939b6f0e6614ad"
   }
 ]

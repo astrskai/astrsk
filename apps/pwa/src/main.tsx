@@ -2,7 +2,6 @@ import { initServices } from "@/app/services/init-services.ts";
 import { useAppStore } from "@/shared/stores/app-store.tsx";
 import { initStores } from "@/shared/stores/init-stores.ts";
 import { useInitializationStore, loadInitializationLog } from "@/shared/stores/initialization-store.tsx";
-import { InitializationScreen } from "@/shared/ui/initialization-screen";
 import { PwaRegister } from "@/app/providers/pwa-register";
 import { AuthProvider } from "@/app/providers/auth-provider";
 import { runUnifiedMigrations, hasPendingMigrations } from "@/db/migrations";
@@ -50,16 +49,30 @@ function ConvexWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Initialize the application
+ *
+ * Key design: We render App ONCE and let it handle initialization UI internally.
+ * This prevents HMR conflicts that occur when root.render() is called multiple times
+ * with different component trees.
+ */
 async function initializeApp() {
-  // Create root
-  const root = createRoot(document.getElementById("root")!);
-
   // Track initialization time
   const startTime = performance.now();
 
-  // Initialize steps in the store
-  const { initializeSteps, startStep, completeStep, warnStep, failStep, saveLog } =
+  // Initialize steps in the store BEFORE rendering
+  const { initializeSteps, startStep, completeStep, warnStep, failStep, saveLog, setShowProgressScreen } =
     useInitializationStore.getState();
+
+  // Check previous initialization log
+  const previousLog = loadInitializationLog();
+  const isFirstInstall = !previousLog;
+  const previousInitSuccessful = previousLog && !previousLog.hasError;
+
+  // First install: show detailed progress screen immediately
+  if (isFirstInstall) {
+    setShowProgressScreen(true);
+  }
 
   // Define all initialization steps
   initializeSteps([
@@ -81,42 +94,36 @@ async function initializeApp() {
     { id: "free-provider", label: "Setup free AI provider (if needed)" },
     { id: "default-models", label: "Configure default models" },
     { id: "check-sessions", label: "Check existing sessions" },
+    { id: "migrate-play-sessions", label: "Migrate play sessions" },
     { id: "default-sessions", label: "Import default sessions (new users)" },
-    { id: "backgrounds", label: "Load background assets" },
   ]);
 
-  // Initialization overlay component (blocks interaction during init)
-  const InitOverlay = ({ showProgressScreen }: { showProgressScreen: boolean }) => {
-    if (showProgressScreen) {
-      return <InitializationScreen />;
-    }
+  // Create root and render App AFTER store is initialized
+  const root = createRoot(document.getElementById("root")!);
 
-    return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-        <div className="flex items-center gap-3 rounded-full bg-canvas px-5 py-3 shadow-lg">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span className="text-text-secondary text-sm">Initializing...</span>
-        </div>
-      </div>
-    );
-  };
+  // Render app once - App component handles showing InitializationScreen vs actual app
+  root.render(
+    <StrictMode>
+      <AuthProvider>
+        <ConvexWrapper>
+          <PwaRegister />
+          <App />
+        </ConvexWrapper>
+      </AuthProvider>
+    </StrictMode>,
+  );
 
-  // Check if this is the first install (no previous initialization log)
-  const isFirstInstall = !loadInitializationLog();
-
-  // Track whether to show detailed progress screen or simple spinner
-  // First install: show progress screen immediately
-  // Subsequent loads: show simple spinner, upgrade to progress screen if needed
-  let showProgressScreen = isFirstInstall;
-
-  // Helper function to render initialization overlay (without App)
-  const renderInitOverlay = () => {
-    root.render(
-      <StrictMode>
-        <InitOverlay showProgressScreen={showProgressScreen} />
-      </StrictMode>,
-    );
-  };
+  // Fast path: Skip DB re-initialization if already initialized in this browser session.
+  // This handles OAuth redirects on iOS Chrome where PGlite re-initialization can hang.
+  // We use sessionStorage (cleared on tab close) to track initialization within a session.
+  // On cold start (new tab), full initialization runs including migration checks.
+  //
+  // IMPORTANT: We still need to initialize services (SessionService, etc.) because
+  // they are in-memory objects that don't persist across page refreshes.
+  // Only the DB initialization (PGlite) can be skipped.
+  const SESSION_INIT_KEY = "astrsk-session-initialized";
+  const sessionInitialized = sessionStorage.getItem(SESSION_INIT_KEY) === "true";
+  const skipDbInit = sessionInitialized && !!previousInitSuccessful;
 
   // Progress callback for all initialization functions
   const onProgress = (
@@ -133,45 +140,20 @@ async function initializeApp() {
     } else if (status === "error") {
       failStep(stepId, error || "Unknown error");
     }
-    // No need to re-render: InitializationScreen subscribes to store changes via Zustand
+    // App component subscribes to store changes via Zustand - no re-render needed
   };
 
   // Variable to track if migrations were needed (for logging)
   let needsMigration = false;
 
   try {
-    // Step 1: Initialize database engine (PGlite)
-    // This can take ~2 seconds on first load (PGlite initialization polling)
-    onProgress("database-engine", "start");
+    // Fast path: Skip only DB initialization, but still init services
+    if (skipDbInit) {
+      logger.debug("⚡ Fast path: Skipping DB init, but initializing services...");
 
-    // Show loading overlay before DB check
-    // - First install: full progress screen
-    // - Normal loads: simple spinner during DB initialization
-    renderInitOverlay();
-
-    const dbCheckStart = performance.now();
-    needsMigration = await hasPendingMigrations();
-    const dbCheckDuration = performance.now() - dbCheckStart;
-
-    logger.debug(`⏱️ DB initialization took ${Math.round(dbCheckDuration)}ms`);
-    onProgress("database-engine", "success");
-
-    if (needsMigration && !showProgressScreen) {
-      // App update with new migrations: upgrade to progress screen
-      showProgressScreen = true;
-      renderInitOverlay();
-    }
-    // Otherwise: keep current overlay (progress screen or simple spinner)
-
-    logger.debug(`🔍 Pending migrations: ${needsMigration}`);
-
-    // Step 2: Migrate database (only if there are pending migrations)
-    if (needsMigration) {
-      logger.debug("🔨 Running database migrations...");
-      await runUnifiedMigrations(onProgress);
-    } else {
-      logger.debug("⏭️ No pending migrations, skipping migration steps");
-      // Mark migration steps as success immediately
+      // Mark DB steps as skipped
+      onProgress("database-engine", "start");
+      onProgress("database-engine", "success");
       onProgress("database-init", "start");
       onProgress("database-init", "success");
       onProgress("migration-schema", "start");
@@ -180,27 +162,77 @@ async function initializeApp() {
       onProgress("check-migrations", "success");
       onProgress("run-migrations", "start");
       onProgress("run-migrations", "success");
+    } else {
+      // Step 1: Initialize database engine (PGlite)
+      // This can take ~2 seconds on first load (PGlite initialization polling)
+      onProgress("database-engine", "start");
+
+      const dbCheckStart = performance.now();
+      needsMigration = await hasPendingMigrations();
+      const dbCheckDuration = performance.now() - dbCheckStart;
+
+      logger.debug(`⏱️ DB initialization took ${Math.round(dbCheckDuration)}ms`);
+      onProgress("database-engine", "success");
+
+      // App update with new migrations: upgrade to progress screen
+      if (needsMigration && !isFirstInstall) {
+        setShowProgressScreen(true);
+      }
+
+      logger.debug(`🔍 Pending migrations: ${needsMigration}`);
+
+      // Step 2: Migrate database (only if there are pending migrations)
+      if (needsMigration) {
+        logger.debug("🔨 Running database migrations...");
+        await runUnifiedMigrations(onProgress);
+      } else {
+        logger.debug("⏭️ No pending migrations, skipping migration steps");
+        // Mark migration steps as success immediately
+        onProgress("database-init", "start");
+        onProgress("database-init", "success");
+        onProgress("migration-schema", "start");
+        onProgress("migration-schema", "success");
+        onProgress("check-migrations", "start");
+        onProgress("check-migrations", "success");
+        onProgress("run-migrations", "start");
+        onProgress("run-migrations", "success");
+      }
     }
 
-    // Step 3: Init services (ALWAYS run - in-memory initialization)
+    // Step 3: Init services (ALWAYS run - in-memory initialization, doesn't persist across refresh)
     logger.debug("🔧 Initializing services...");
     await initServices(onProgress);
 
-    // Step 4: Init stores (ALWAYS run - loads data into memory)
-    logger.debug("📦 Initializing stores...");
-    await initStores(onProgress);
+    // Step 4: Init stores (skip in fast path - these require DB access)
+    // In fast path, the stores will be initialized lazily when data is first accessed
+    if (!skipDbInit) {
+      logger.debug("📦 Initializing stores...");
+      await initStores(onProgress);
+    } else {
+      logger.debug("⚡ Fast path: Skipping store initialization (will init lazily)");
+      // Mark store-related steps as skipped
+      onProgress("api-connections", "start");
+      onProgress("api-connections", "success");
+      onProgress("free-provider", "start");
+      onProgress("free-provider", "success");
+      onProgress("default-models", "start");
+      onProgress("default-models", "success");
+      onProgress("check-sessions", "start");
+      onProgress("check-sessions", "success");
+      onProgress("migrate-play-sessions", "start");
+      onProgress("migrate-play-sessions", "success");
+      onProgress("default-sessions", "start");
+      onProgress("default-sessions", "success");
+    }
 
     // Calculate initialization time
     const initTime = performance.now() - startTime;
     logger.debug(`✅ Initialization completed in ${Math.round(initTime)}ms`);
 
-    // Save initialization log only when migrations were executed (first run or app update)
-    if (needsMigration) {
+    // Save initialization log on first install or when migrations were executed
+    if (isFirstInstall || needsMigration) {
       saveLog(Math.round(initTime));
     }
-
-    // Mark app as ready
-    useAppStore.getState().setIsOfflineReady(true);
 
     // Navigate to home on first install (before router initializes)
     // This ensures users start from "/" after initial setup, regardless of URL
@@ -208,29 +240,22 @@ async function initializeApp() {
       window.history.replaceState(null, "", "/");
     }
 
-    // Render final app with providers
-    root.render(
-      <StrictMode>
-        <AuthProvider>
-          <ConvexWrapper>
-            <PwaRegister />
-            <App />
-          </ConvexWrapper>
-        </AuthProvider>
-      </StrictMode>,
-    );
+    // Mark app as ready - App component will switch from InitializationScreen to actual app
+    useAppStore.getState().setIsOfflineReady(true);
+
+    // Mark session as initialized (for fast path on OAuth redirects)
+    sessionStorage.setItem(SESSION_INIT_KEY, "true");
   } catch (error) {
     logger.error("Failed to initialize app:", error);
 
-    // On failure, persist the current step states as a log (when migrations were attempted)
-    if (needsMigration) {
+    // On failure, persist the current step states as a log
+    if (isFirstInstall || needsMigration) {
       const initTime = performance.now() - startTime;
       saveLog(Math.round(initTime));
     }
 
     // Show progress screen with error state
-    showProgressScreen = true;
-    renderInitOverlay();
+    setShowProgressScreen(true);
   }
 }
 initializeApp();

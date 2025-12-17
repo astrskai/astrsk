@@ -11,9 +11,10 @@ import { IfNodeService } from "@/app/services/if-node-service";
 import { VibeSessionService } from "@/app/services/vibe-session-service";
 import { initializeExtensions } from "@/features/extensions/bootstrap";
 import { cleanupStaleGeneratingSessions } from "@/entities/session/api/cleanup-stale-sessions";
+import { logger } from "@/shared/lib/logger";
 
 export async function initServices(
-  onProgress?: (service: string, status: "start" | "success" | "error", error?: string) => void,
+  onProgress?: (service: string, status: "start" | "success" | "warning" | "error", error?: string) => void,
 ): Promise<void> {
   let currentService: string | undefined;
   try {
@@ -124,7 +125,7 @@ export async function initServices(
     onProgress?.(currentService, "start");
     const cleanedCount = await cleanupStaleGeneratingSessions();
     if (cleanedCount > 0) {
-      console.log(`[init-services] Cleaned up ${cleanedCount} interrupted session(s)`);
+      logger.info(`[init-services] Cleaned up ${cleanedCount} interrupted session(s)`);
     }
     onProgress?.(currentService, "success");
 

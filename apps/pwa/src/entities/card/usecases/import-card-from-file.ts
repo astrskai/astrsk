@@ -59,6 +59,12 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
       }
     }
 
+    // Store file's id as original_id for tracking
+    const config = json.data.config || {};
+    if (json.id && !config.original_id) {
+      config.original_id = json.id;
+    }
+
     const cardOrError = CharacterCard.create(
       {
         iconAssetId: json.data.iconAssetId ? new UniqueEntityID(json.data.iconAssetId) : undefined,
@@ -93,6 +99,7 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
         scenario: json.data.scenario || undefined,
         firstMessages,
         sessionId, // Add sessionId if provided (creates session-local card)
+        config, // Store original_id from file's id field
         createdAt: new Date(), // Always use current timestamp on import
         updatedAt: new Date(), // Always use current timestamp on import
       },
@@ -111,6 +118,12 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
   }
 
   private async importScenarioCard(json: any, sessionId?: UniqueEntityID): Promise<Result<ScenarioCard>> {
+    // Store file's id as original_id for tracking
+    const config = json.data.config || {};
+    if (json.id && !config.original_id) {
+      config.original_id = json.id;
+    }
+
     const cardOrError = ScenarioCard.create(
       {
         iconAssetId: json.data.iconAssetId ? new UniqueEntityID(json.data.iconAssetId) : undefined,
@@ -138,6 +151,7 @@ export class ImportCardFromFile implements UseCase<ImportCardCommand, Result<Car
           }).getValue()
           : undefined,
         sessionId, // Add sessionId if provided (creates session-local card)
+        config, // Store original_id from file's id field
         createdAt: new Date(), // Always use current timestamp on import
         updatedAt: new Date(), // Always use current timestamp on import
       },

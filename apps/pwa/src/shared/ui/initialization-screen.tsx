@@ -1,4 +1,4 @@
-import { CheckCircle2, Loader2, XCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle, AlertTriangle, Copy, Check, RotateCcw, Trash2 } from "lucide-react";
 import {
   useInitializationStore,
   type InitializationStep,
@@ -7,6 +7,10 @@ import {
 import { SvgIcon } from "@/shared/ui";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { useState, useEffect } from "react";
+import {
+  getLastMigrationError,
+  type MigrationErrorDetails,
+} from "@/db/migrations";
 
 export const InitializationScreen = () => {
   const steps = useInitializationStore.use.steps();
@@ -42,12 +46,25 @@ export const InitializationScreen = () => {
     isIncognito: boolean;
   } | null>(null);
 
+  // Migration error details
+  const [migrationError, setMigrationError] = useState<MigrationErrorDetails | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
   useEffect(() => {
     // Check storage quota and incognito mode when error occurs
     if (hasError && isStorageError) {
       checkStorageQuota();
     }
   }, [hasError, isStorageError]);
+
+  useEffect(() => {
+    // Get migration error details when error occurs
+    if (hasError) {
+      const error = getLastMigrationError();
+      setMigrationError(error);
+    }
+  }, [hasError]);
 
   const checkStorageQuota = async () => {
     try {
@@ -80,6 +97,87 @@ export const InitializationScreen = () => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  // Copy error details to clipboard
+  const copyErrorDetails = async () => {
+    if (migrationError) {
+      const details = [
+        `=== Migration Error Details ===`,
+        `Type: ${migrationError.migrationType.toUpperCase()} Migration`,
+        `File: ${migrationError.migrationFilename}`,
+        migrationError.migrationHash ? `Hash: ${migrationError.migrationHash}` : null,
+        `Timestamp: ${migrationError.timestamp}`,
+        ``,
+        `Error: ${migrationError.errorMessage}`,
+        ``,
+        migrationError.failedQuery ? `Failed Query:\n${migrationError.failedQuery}` : null,
+        ``,
+        migrationError.errorStack ? `Stack Trace:\n${migrationError.errorStack}` : null,
+      ].filter(Boolean).join('\n');
+
+      await navigator.clipboard.writeText(details);
+    } else {
+      const problemDetails = problemSteps
+        .map((s: InitializationStep) => `${s.label}: ${s.error}`)
+        .join("\n");
+      await navigator.clipboard.writeText(problemDetails);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Reset database completely
+  const handleResetDatabase = async () => {
+    if (!confirm('This will delete all local data. Are you sure you want to continue?')) {
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      // Clear localStorage first (fast, no async issues)
+      localStorage.clear();
+
+      // Clear caches
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map(name => caches.delete(name)));
+      }
+
+      // Clear IndexedDB databases with timeout
+      // Note: deleteDatabase can block if connections are open (e.g., PGlite)
+      // We use a timeout and force reload regardless
+      if ('databases' in indexedDB) {
+        const dbs = await indexedDB.databases();
+        const deletePromises = dbs.map(db =>
+          new Promise<void>(resolve => {
+            if (db.name) {
+              const req = indexedDB.deleteDatabase(db.name);
+              req.onsuccess = () => resolve();
+              req.onerror = () => resolve();
+              req.onblocked = () => {
+                console.warn(`IndexedDB ${db.name} is blocked, will be deleted on reload`);
+                resolve(); // Don't wait, reload will clear it
+              };
+            } else {
+              resolve();
+            }
+          })
+        );
+
+        // Wait max 2 seconds for DB deletion, then reload anyway
+        await Promise.race([
+          Promise.all(deletePromises),
+          new Promise(resolve => setTimeout(resolve, 2000)),
+        ]);
+      }
+
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to reset database:', error);
+      // Force reload even on error - the reload will clear blocked connections
+      window.location.reload();
+    }
   };
 
   // Calculate group status
@@ -302,68 +400,98 @@ export const InitializationScreen = () => {
           </div>
         )}
 
+        {/* Migration Error Details */}
+        {hasError && migrationError && (
+          <div className="w-full space-y-3">
+            <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3">
+              <div className="flex items-start gap-3">
+                <XCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-red-300 text-sm font-medium mb-2">
+                    Database Migration Failed
+                  </p>
+
+                  {/* Error Summary */}
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex gap-2">
+                      <span className="text-red-400/70 flex-shrink-0">Type:</span>
+                      <span className="text-red-200">{migrationError.migrationType.toUpperCase()}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-red-400/70 flex-shrink-0">File:</span>
+                      <span className="text-red-200 font-mono break-all">{migrationError.migrationFilename}</span>
+                    </div>
+                    {migrationError.migrationHash && (
+                      <div className="flex gap-2">
+                        <span className="text-red-400/70 flex-shrink-0">Hash:</span>
+                        <span className="text-red-200 font-mono">{migrationError.migrationHash}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Error Message */}
+                  <div className="mt-3 rounded bg-red-900/30 px-3 py-2">
+                    <p className="text-red-200 text-xs font-mono break-all">
+                      {migrationError.errorMessage}
+                    </p>
+                  </div>
+
+                  {/* Failed Query (if SQL) */}
+                  {migrationError.failedQuery && (
+                    <div className="mt-2">
+                      <p className="text-red-400/70 text-xs mb-1">Failed Query:</p>
+                      <div className="rounded bg-gray-900/50 px-3 py-2 max-h-32 overflow-auto">
+                        <pre className="text-gray-300 text-xs font-mono whitespace-pre-wrap break-all">
+                          {migrationError.failedQuery}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Error/Warning Actions */}
         {(hasError || hasWarning) && (
-          <div className="flex gap-3">
-            <button
-              onClick={async () => {
-                if (isStorageError && storageInfo?.isIncognito) {
-                  // Incognito mode: Clear all storage and try hard reload
-                  try {
-                    // Clear caches
-                    if ('caches' in window) {
-                      const names = await caches.keys();
-                      await Promise.all(names.map(name => caches.delete(name)));
-                    }
+          <div className="w-full space-y-3">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              {/* Retry Button */}
+              <button
+                onClick={() => window.location.reload()}
+                disabled={isResetting}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Retry
+              </button>
 
-                    // Clear IndexedDB databases
-                    if ('databases' in indexedDB) {
-                      const dbs = await indexedDB.databases();
-                      await Promise.all(dbs.map(db =>
-                        new Promise<void>(resolve => {
-                          if (db.name) {
-                            const req = indexedDB.deleteDatabase(db.name);
-                            req.onsuccess = () => resolve();
-                            req.onerror = () => resolve();
-                          } else {
-                            resolve();
-                          }
-                        })
-                      ));
-                    }
+              {/* Copy Details Button */}
+              <button
+                onClick={copyErrorDetails}
+                className="flex items-center gap-2 rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-700"
+              >
+                {copied ? <Check className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+                {copied ? 'Copied!' : 'Copy Details'}
+              </button>
 
-                    // Clear localStorage
-                    localStorage.clear();
-
-                    // Hard reload with cache bypass
-                    window.location.reload();
-                  } catch (err) {
-                    console.error('Failed to clear storage:', err);
-                    // Fallback to normal reload
-                    window.location.reload();
-                  }
-                } else {
-                  // Normal error: simple reload
-                  window.location.reload();
-                }
-              }}
-              className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              {isStorageError && storageInfo?.isIncognito
-                ? 'Clear Storage & Retry'
-                : 'Retry Initialization'}
-            </button>
-            <button
-              onClick={() => {
-                const problemDetails = problemSteps
-                  .map((s: InitializationStep) => `${s.label}: ${s.error}`)
-                  .join("\n");
-                navigator.clipboard.writeText(problemDetails);
-              }}
-              className="rounded-lg border border-gray-600 bg-gray-800 px-6 py-2.5 text-sm font-medium text-gray-200 transition-colors hover:bg-gray-700"
-            >
-              Copy Details
-            </button>
+              {/* Reset Database Button */}
+              <button
+                onClick={handleResetDatabase}
+                disabled={isResetting}
+                className="flex items-center gap-2 rounded-lg border border-red-600/50 bg-red-900/20 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-900/40 disabled:opacity-50"
+                title="Delete all local data and start fresh"
+              >
+                {isResetting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                Reset Database
+              </button>
+            </div>
           </div>
         )}
       </div>

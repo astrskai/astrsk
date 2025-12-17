@@ -43,6 +43,9 @@ export const characters = pgTable(TableName.Characters, {
     onDelete: "cascade", // Auto-delete when session is deleted
   }),
 
+  // Flexible config storage (e.g., harpy_hub_id, analytics metadata)
+  config: jsonb().$type<Record<string, unknown>>().notNull().default({}),
+
   ...timestamps,
 });
 

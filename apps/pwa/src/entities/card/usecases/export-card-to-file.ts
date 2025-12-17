@@ -268,6 +268,8 @@ export class ExportCardToFile
       updatedAt: card.props.updatedAt?.toISOString(),
       // Marker indicating if the embedded image is a generated placeholder
       isPlaceholderImage: !card.props.iconAssetId,
+      // Export config for future extensibility (includes original_id if present)
+      ...card.props.config,
     };
   }
 

@@ -130,13 +130,14 @@ export async function migrateCardsData() {
 
     console.log("  ✓ All counts match!");
 
-    // Step 6: Drop old tables (OPTIONAL - comment out to keep as backup)
-    console.log("Step 6: Dropping old tables...");
-    // PGlite requires separate execute calls for each statement
-    await tx.execute(sql`DROP TABLE IF EXISTS character_cards`);
-    await tx.execute(sql`DROP TABLE IF EXISTS plot_cards`);
-    await tx.execute(sql`DROP TABLE IF EXISTS cards`);
-    console.log("  ✓ Old tables dropped");
+    // Step 6: Keep old tables as backup (IMPORTANT for recovery tool)
+    // These tables are preserved to enable Character & Scenario Recovery
+    // Users can recover data even after successful migration if needed
+    console.log("Step 6: Keeping old tables as backup for recovery...");
+    // await tx.execute(sql`DROP TABLE IF EXISTS character_cards`);
+    // await tx.execute(sql`DROP TABLE IF EXISTS plot_cards`);
+    // await tx.execute(sql`DROP TABLE IF EXISTS cards`);
+    console.log("  ✓ Old tables preserved as backup");
 
     console.log("✅ Migration completed successfully!");
   });
