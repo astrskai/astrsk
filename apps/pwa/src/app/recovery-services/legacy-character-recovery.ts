@@ -1,0 +1,660 @@
+import { Drizzle } from "@/db/drizzle";
+import { sql } from "drizzle-orm";
+
+/**
+ * Legacy Character Recovery Service
+ *
+ * This service helps users recover character data from old deprecated tables
+ * (character_cards, plot_cards, cards) if migration failed.
+ *
+ * Use this for users who report missing characters after upgrade.
+ *
+ * Usage:
+ * ```typescript
+ * import { LegacyCharacterRecovery } from "@/app/recovery-services/legacy-character-recovery";
+ *
+ * // In browser console or recovery UI:
+ * const recovery = new LegacyCharacterRecovery();
+ * await recovery.checkLegacyData();
+ * await recovery.recoverAll();
+ * await recovery.exportBackup(); // Optional: download backup file
+ * ```
+ */
+
+interface RecoveryReport {
+  hasLegacyTables: boolean;
+  legacyCharacterCount: number;
+  currentCharacterCount: number;
+  legacyScenarioCount: number;
+  currentScenarioCount: number;
+  missingCharacters: number;
+  missingScenarios: number;
+  canRecover: boolean;
+}
+
+interface LegacyCharacterData {
+  id: string;
+  title: string;
+  icon_asset_id: string | null;
+  tags: any;
+  creator: string | null;
+  card_summary: string | null;
+  version: string | null;
+  conceptual_origin: string | null;
+  vibe_session_id: string | null;
+  image_prompt: string | null;
+  name: string;
+  description: string | null;
+  example_dialogue: string | null;
+  lorebook: any | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface LegacyScenarioData {
+  id: string;
+  title: string;
+  icon_asset_id: string | null;
+  tags: any;
+  creator: string | null;
+  card_summary: string | null;
+  version: string | null;
+  conceptual_origin: string | null;
+  vibe_session_id: string | null;
+  image_prompt: string | null;
+  description: string | null;
+  first_messages: any | null;
+  lorebook: any | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export class LegacyCharacterRecovery {
+  private logCallback?: (message: string) => void;
+
+  /**
+   * Set callback to capture logs for UI display
+   */
+  setLogCallback(callback: (message: string) => void) {
+    this.logCallback = callback;
+  }
+
+  /**
+   * Log message to both console and callback
+   */
+  private log(message: string) {
+    console.log(message);
+    if (this.logCallback) {
+      this.logCallback(message);
+    }
+  }
+
+  /**
+   * Step 1: Check if legacy tables exist and compare counts
+   */
+  async checkLegacyData(): Promise<RecoveryReport> {
+    this.log("🔍 Checking for legacy character data...");
+
+    const db = await Drizzle.getInstance();
+
+    // Check if old tables exist
+    const tableCheck = await db.execute(sql`
+      SELECT
+        EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'character_cards') as has_character_cards,
+        EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'plot_cards') as has_plot_cards,
+        EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'cards') as has_cards
+    `);
+
+    const hasCharacterCards = tableCheck.rows[0].has_character_cards;
+    const hasPlotCards = tableCheck.rows[0].has_plot_cards;
+    const hasCards = tableCheck.rows[0].has_cards;
+
+    this.log("📊 Legacy tables status:");
+    this.log(`  character_cards: ${hasCharacterCards ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+    this.log(`  plot_cards: ${hasPlotCards ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+    this.log(`  cards: ${hasCards ? '✅ EXISTS' : '❌ NOT FOUND'}`);
+
+    if (!hasCharacterCards && !hasPlotCards && !hasCards) {
+      this.log("\n✅ No legacy tables found. Your data has been migrated.");
+      return {
+        hasLegacyTables: false,
+        legacyCharacterCount: 0,
+        currentCharacterCount: 0,
+        legacyScenarioCount: 0,
+        currentScenarioCount: 0,
+        missingCharacters: 0,
+        missingScenarios: 0,
+        canRecover: false,
+      };
+    }
+
+    // Count data in old vs new tables
+    let oldCharacterCount = 0;
+    let newCharacterCount = 0;
+    let oldPlotCount = 0;
+    let newScenarioCount = 0;
+
+    if (hasCards && hasCharacterCards) {
+      const oldCount = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM cards c
+        INNER JOIN character_cards cc ON c.id = cc.id
+        WHERE c.type = 'character'
+      `);
+      oldCharacterCount = Number(oldCount.rows[0].count);
+    }
+
+    const newCount = await db.execute(sql`SELECT COUNT(*) as count FROM characters`);
+    newCharacterCount = Number(newCount.rows[0].count);
+
+    if (hasCards && hasPlotCards) {
+      const oldPlot = await db.execute(sql`
+        SELECT COUNT(*) as count
+        FROM cards c
+        INNER JOIN plot_cards pc ON c.id = pc.id
+        WHERE c.type = 'plot'
+      `);
+      oldPlotCount = Number(oldPlot.rows[0].count);
+    }
+
+    const newScen = await db.execute(sql`SELECT COUNT(*) as count FROM scenarios`);
+    newScenarioCount = Number(newScen.rows[0].count);
+
+    const missingChars = Math.max(0, oldCharacterCount - newCharacterCount);
+    const missingScens = Math.max(0, oldPlotCount - newScenarioCount);
+
+    this.log("\n📊 Data comparison:");
+    this.log(`  Legacy characters (in character_cards): ${oldCharacterCount}`);
+    this.log(`  Current characters: ${newCharacterCount}`);
+    this.log(`  Missing characters: ${missingChars} ${missingChars > 0 ? '⚠️' : '✅'}`);
+    this.log(`  Legacy plot cards (in plot_cards): ${oldPlotCount}`);
+    this.log(`  Current scenarios: ${newScenarioCount}`);
+    this.log(`  Missing scenarios: ${missingScens} ${missingScens > 0 ? '⚠️' : '✅'}`);
+
+    const canRecover = missingChars > 0 || missingScens > 0;
+
+    if (canRecover) {
+      this.log("\n⚠️  DATA LOSS DETECTED! You can recover your missing characters.");
+    } else {
+      this.log("\n✅ All data migrated successfully. No recovery needed.");
+    }
+
+    return {
+      hasLegacyTables: true,
+      legacyCharacterCount: oldCharacterCount,
+      currentCharacterCount: newCharacterCount,
+      legacyScenarioCount: oldPlotCount,
+      currentScenarioCount: newScenarioCount,
+      missingCharacters: missingChars,
+      missingScenarios: missingScens,
+      canRecover,
+    };
+  }
+
+  /**
+   * Step 2: Get list of missing characters
+   */
+  async getMissingCharacters(): Promise<LegacyCharacterData[]> {
+    this.log("🔍 Finding missing characters...");
+
+    try {
+      this.log("  Getting database instance...");
+      const db = await Drizzle.getInstance();
+
+      this.log("  Executing query...");
+
+      // First, let's try a simpler query to see if it works
+      this.log("  Step 1: Getting all cards...");
+      const allCards = await db.execute(sql`SELECT id, type FROM cards`);
+      this.log(`  Found ${allCards.rows.length} cards`);
+
+      this.log("  Step 2: Getting all character_cards...");
+      const allCharCards = await db.execute(sql`SELECT id FROM character_cards`);
+      this.log(`  Found ${allCharCards.rows.length} character_cards`);
+
+      this.log("  Step 3: Getting current characters...");
+      const currentChars = await db.execute(sql`SELECT id FROM characters`);
+      this.log(`  Found ${currentChars.rows.length} current characters`);
+
+      this.log("  Step 4: Executing full query...");
+
+      // Get all legacy characters (from cards + character_cards)
+      const legacyChars = await db.execute(sql`
+        SELECT
+          c.id, c.title, c.icon_asset_id, c.tags, c.creator, c.card_summary,
+          c.version, c.conceptual_origin, c.vibe_session_id, c.image_prompt,
+          cc.name, cc.description, cc.example_dialogue, cc.lorebook,
+          c.created_at, c.updated_at
+        FROM cards c
+        INNER JOIN character_cards cc ON c.id = cc.id
+        WHERE c.type = 'character'
+      `);
+
+      this.log(`  Found ${legacyChars.rows.length} legacy characters`);
+
+      // Filter out ones that already exist in characters table
+      const currentCharIds = new Set(currentChars.rows.map((r: any) => r.id));
+      const missingCharsData = legacyChars.rows.filter((char: any) => !currentCharIds.has(char.id));
+
+      this.log(`  Filtered to ${missingCharsData.length} missing characters`);
+
+      const missingChars = { rows: missingCharsData };
+
+      this.log("  Query completed, processing results...");
+      const characters = missingChars.rows as any as LegacyCharacterData[];
+
+      this.log(`  Found ${characters.length} missing characters`);
+      characters.forEach((char, i) => {
+        this.log(`    ${i + 1}. ${char.name} (${char.id})`);
+      });
+
+      return characters;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.log(`  ❌ Error finding missing characters: ${errorMessage}`);
+      console.error("Error in getMissingCharacters:", error);
+      console.error("Error details:", { message: errorMessage, stack: errorStack });
+
+      // Try to get more details about what went wrong
+      if (errorMessage.includes('Failed query')) {
+        this.log("  💡 Query failed - checking if tables exist...");
+        try {
+          const db = await Drizzle.getInstance();
+          const tableCheck = await db.execute(sql`
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_name IN ('cards', 'character_cards', 'characters')
+          `);
+          this.log(`  Tables found: ${tableCheck.rows.map((r: any) => r.table_name).join(', ')}`);
+        } catch (checkError) {
+          this.log(`  Failed to check tables: ${checkError}`);
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Step 3: Get list of missing scenarios
+   */
+  async getMissingScenarios(): Promise<LegacyScenarioData[]> {
+    this.log("🔍 Finding missing scenarios...");
+
+    try {
+      const db = await Drizzle.getInstance();
+
+      // Get current scenarios
+      const currentScens = await db.execute(sql`SELECT id FROM scenarios`);
+      this.log(`  Found ${currentScens.rows.length} current scenarios`);
+
+      // Get all legacy scenarios (from cards + plot_cards)
+      const legacyScens = await db.execute(sql`
+        SELECT
+          c.id, c.title, c.icon_asset_id, c.tags, c.creator, c.card_summary,
+          c.version, c.conceptual_origin, c.vibe_session_id, c.image_prompt,
+          pc.description, pc.scenarios as first_messages, pc.lorebook,
+          c.created_at, c.updated_at
+        FROM cards c
+        INNER JOIN plot_cards pc ON c.id = pc.id
+        WHERE c.type = 'plot'
+      `);
+
+      this.log(`  Found ${legacyScens.rows.length} legacy scenarios`);
+
+      // Filter out ones that already exist in scenarios table
+      const currentScenIds = new Set(currentScens.rows.map((r: any) => r.id));
+      const missingScenariosData = legacyScens.rows.filter((scen: any) => !currentScenIds.has(scen.id));
+
+      this.log(`  Filtered to ${missingScenariosData.length} missing scenarios`);
+
+      const scenarios = missingScenariosData as any as LegacyScenarioData[];
+
+      this.log(`  Found ${scenarios.length} missing scenarios`);
+      scenarios.forEach((scen, i) => {
+        this.log(`    ${i + 1}. ${scen.title} (${scen.id})`);
+      });
+
+      return scenarios;
+    } catch (error) {
+      this.log(`  ❌ Error finding missing scenarios: ${error}`);
+      console.error("Error in getMissingScenarios:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Helper: Check if a column exists in a table
+   */
+  private async columnExists(tableName: string, columnName: string): Promise<boolean> {
+    const db = await Drizzle.getInstance();
+    const result = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns
+        WHERE table_name = ${tableName}
+        AND column_name = ${columnName}
+      ) as exists
+    `);
+    return Boolean(result.rows[0].exists);
+  }
+
+  /**
+   * Step 4: Recover missing characters
+   */
+  async recoverCharacters(): Promise<{ recovered: number; failed: number }> {
+    this.log("🔧 Starting character recovery...");
+
+    const missingChars = await this.getMissingCharacters();
+
+    if (missingChars.length === 0) {
+      this.log("  ✅ No missing characters to recover");
+      return { recovered: 0, failed: 0 };
+    }
+
+    const db = await Drizzle.getInstance();
+
+    // Check which fields exist in current schema
+    const hasScenarioField = await this.columnExists('characters', 'scenario');
+    const hasFirstMessagesField = await this.columnExists('characters', 'first_messages');
+    const hasConfigField = await this.columnExists('characters', 'config');
+
+    this.log(`  Schema detection:`);
+    this.log(`    - scenario field: ${hasScenarioField ? '✅' : '❌'}`);
+    this.log(`    - first_messages field: ${hasFirstMessagesField ? '✅' : '❌'}`);
+    this.log(`    - config field: ${hasConfigField ? '✅' : '❌'}`);
+
+    let recovered = 0;
+    let failed = 0;
+
+    for (const char of missingChars) {
+      try {
+        // Convert tags from JSONB to array
+        let tagsArray: string[] = [];
+        if (char.tags) {
+          if (typeof char.tags === 'string') {
+            tagsArray = JSON.parse(char.tags);
+          } else if (Array.isArray(char.tags)) {
+            tagsArray = char.tags;
+          }
+        }
+
+        // Convert tags array to PostgreSQL array literal
+        const tagsLiteral = `{${tagsArray.map(tag => `"${tag.replace(/"/g, '\\"')}"`).join(',')}}`;
+
+        // Build INSERT query dynamically based on schema version
+        // Old schema (current users): no scenario, first_messages, config
+        // New schema (future): has scenario, first_messages, config
+        const columns = ['id', 'title', 'icon_asset_id', 'tags', 'creator', 'card_summary', 'version',
+                         'conceptual_origin', 'vibe_session_id', 'image_prompt',
+                         'name', 'description', 'example_dialogue', 'lorebook'];
+
+        const values: string[] = [
+          `'${char.id}'`,
+          char.title ? `'${char.title.replace(/'/g, "''")}'` : 'NULL',
+          char.icon_asset_id ? `'${char.icon_asset_id}'` : 'NULL',
+          `'${tagsLiteral}'::text[]`,
+          char.creator ? `'${char.creator.replace(/'/g, "''")}'` : 'NULL',
+          char.card_summary ? `'${char.card_summary.replace(/'/g, "''")}'` : 'NULL',
+          char.version ? `'${char.version.replace(/'/g, "''")}'` : 'NULL',
+          char.conceptual_origin ? `'${char.conceptual_origin.replace(/'/g, "''")}'` : 'NULL',
+          char.vibe_session_id ? `'${char.vibe_session_id}'` : 'NULL',
+          char.image_prompt ? `'${char.image_prompt.replace(/'/g, "''")}'` : 'NULL',
+          `'${char.name.replace(/'/g, "''")}'`,
+          char.description ? `'${char.description.replace(/'/g, "''")}'` : 'NULL',
+          char.example_dialogue ? `'${char.example_dialogue.replace(/'/g, "''")}'` : 'NULL',
+          char.lorebook ? `'${JSON.stringify(char.lorebook).replace(/'/g, "''")}'::jsonb` : 'NULL',
+        ];
+
+        // Add new fields only if they exist in current schema
+        if (hasScenarioField) {
+          columns.push('scenario');
+          values.push('NULL');
+        }
+        if (hasFirstMessagesField) {
+          columns.push('first_messages');
+          values.push('NULL');
+        }
+        if (hasConfigField) {
+          columns.push('config');
+          values.push(`'{}'::jsonb`);
+        }
+
+        // Always add these at the end
+        columns.push('session_id', 'created_at', 'updated_at');
+        values.push(
+          'NULL',
+          `'${new Date(char.created_at).toISOString()}'`,
+          `'${new Date(char.updated_at).toISOString()}'`
+        );
+
+        await db.execute(sql.raw(`
+          INSERT INTO characters (${columns.join(', ')})
+          VALUES (${values.join(', ')})
+          ON CONFLICT (id) DO NOTHING
+        `));
+
+        recovered++;
+        this.log(`  ✅ Recovered: ${char.name} (${char.id})`);
+      } catch (error) {
+        failed++;
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        this.log(`  ❌ Failed to recover ${char.name} (${char.id}): ${errorMsg}`);
+        console.error(`  ❌ Failed to recover ${char.name} (${char.id}):`, error);
+      }
+    }
+
+    this.log(`\n📊 Recovery complete: ${recovered} recovered, ${failed} failed`);
+
+    return { recovered, failed };
+  }
+
+  /**
+   * Step 5: Recover missing scenarios
+   */
+  async recoverScenarios(): Promise<{ recovered: number; failed: number }> {
+    this.log("🔧 Starting scenario recovery...");
+
+    const missingScens = await this.getMissingScenarios();
+
+    if (missingScens.length === 0) {
+      this.log("  ✅ No missing scenarios to recover");
+      return { recovered: 0, failed: 0 };
+    }
+
+    const db = await Drizzle.getInstance();
+
+    // Check if config field exists in current schema
+    const hasConfigField = await this.columnExists('scenarios', 'config');
+
+    this.log(`  Schema detection:`);
+    this.log(`    - config field: ${hasConfigField ? '✅' : '❌'}`);
+
+    let recovered = 0;
+    let failed = 0;
+
+    for (const scen of missingScens) {
+      try {
+        let tagsArray: string[] = [];
+        if (scen.tags) {
+          if (typeof scen.tags === 'string') {
+            tagsArray = JSON.parse(scen.tags);
+          } else if (Array.isArray(scen.tags)) {
+            tagsArray = scen.tags;
+          }
+        }
+
+        // Convert tags array to PostgreSQL array literal
+        const tagsLiteral = `{${tagsArray.map(tag => `"${tag.replace(/'/g, "''").replace(/"/g, '\\"')}"`).join(',')}}`;
+
+        // Build INSERT query dynamically based on schema version
+        const columns = ['id', 'title', 'icon_asset_id', 'tags', 'creator', 'card_summary', 'version',
+                         'conceptual_origin', 'vibe_session_id', 'image_prompt',
+                         'name', 'description', 'first_messages', 'lorebook'];
+
+        const values: string[] = [
+          `'${scen.id}'`,
+          scen.title ? `'${scen.title.replace(/'/g, "''")}'` : 'NULL',
+          scen.icon_asset_id ? `'${scen.icon_asset_id}'` : 'NULL',
+          `'${tagsLiteral}'::text[]`,
+          scen.creator ? `'${scen.creator.replace(/'/g, "''")}'` : 'NULL',
+          scen.card_summary ? `'${scen.card_summary.replace(/'/g, "''")}'` : 'NULL',
+          scen.version ? `'${scen.version.replace(/'/g, "''")}'` : 'NULL',
+          scen.conceptual_origin ? `'${scen.conceptual_origin.replace(/'/g, "''")}'` : 'NULL',
+          scen.vibe_session_id ? `'${scen.vibe_session_id}'` : 'NULL',
+          scen.image_prompt ? `'${scen.image_prompt.replace(/'/g, "''")}'` : 'NULL',
+          `'${scen.title.replace(/'/g, "''")}'`,
+          scen.description ? `'${scen.description.replace(/'/g, "''")}'` : 'NULL',
+          scen.first_messages ? `'${JSON.stringify(scen.first_messages).replace(/'/g, "''")}'::jsonb` : 'NULL',
+          scen.lorebook ? `'${JSON.stringify(scen.lorebook).replace(/'/g, "''")}'::jsonb` : 'NULL',
+        ];
+
+        // Add config field only if it exists in current schema
+        if (hasConfigField) {
+          columns.push('config');
+          values.push(`'{}'::jsonb`);
+        }
+
+        // Always add these at the end
+        columns.push('session_id', 'created_at', 'updated_at');
+        values.push(
+          'NULL',
+          `'${new Date(scen.created_at).toISOString()}'`,
+          `'${new Date(scen.updated_at).toISOString()}'`
+        );
+
+        await db.execute(sql.raw(`
+          INSERT INTO scenarios (${columns.join(', ')})
+          VALUES (${values.join(', ')})
+          ON CONFLICT (id) DO NOTHING
+        `));
+
+        recovered++;
+        this.log(`  ✅ Recovered: ${scen.title} (${scen.id})`);
+      } catch (error) {
+        failed++;
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        this.log(`  ❌ Failed to recover ${scen.title} (${scen.id}): ${errorMsg}`);
+        console.error(`  ❌ Failed to recover ${scen.title} (${scen.id}):`, error);
+      }
+    }
+
+    this.log(`\n📊 Recovery complete: ${recovered} recovered, ${failed} failed`);
+
+    return { recovered, failed };
+  }
+
+  /**
+   * Step 6: Recover everything (characters + scenarios)
+   */
+  async recoverAll(): Promise<{
+    characters: { recovered: number; failed: number };
+    scenarios: { recovered: number; failed: number };
+  }> {
+    this.log("🚀 Starting full recovery...\n");
+
+    const report = await this.checkLegacyData();
+
+    if (!report.canRecover) {
+      this.log("✅ Nothing to recover!");
+      return {
+        characters: { recovered: 0, failed: 0 },
+        scenarios: { recovered: 0, failed: 0 },
+      };
+    }
+
+    const charResult = await this.recoverCharacters();
+    const scenResult = await this.recoverScenarios();
+
+    this.log("\n✅ RECOVERY COMPLETE!");
+    this.log(`  Characters: ${charResult.recovered} recovered, ${charResult.failed} failed`);
+    this.log(`  Scenarios: ${scenResult.recovered} recovered, ${scenResult.failed} failed`);
+
+    return {
+      characters: charResult,
+      scenarios: scenResult,
+    };
+  }
+
+  /**
+   * Step 7: Export backup of all legacy data (for manual import)
+   */
+  async exportBackup(): Promise<Blob> {
+    this.log("📦 Creating backup file...");
+
+    const db = await Drizzle.getInstance();
+
+    // Get all legacy data
+    const allLegacyChars = await db.execute(sql`
+      SELECT
+        c.id, c.title, c.icon_asset_id, c.tags, c.creator, c.card_summary,
+        c.version, c.conceptual_origin, c.vibe_session_id, c.image_prompt,
+        cc.name, cc.description, cc.example_dialogue, cc.lorebook,
+        c.created_at, c.updated_at, c.type
+      FROM cards c
+      INNER JOIN character_cards cc ON c.id = cc.id
+      WHERE c.type = 'character'
+    `);
+
+    const allLegacyPlots = await db.execute(sql`
+      SELECT
+        c.id, c.title, c.icon_asset_id, c.tags, c.creator, c.card_summary,
+        c.version, c.conceptual_origin, c.vibe_session_id, c.image_prompt,
+        pc.description, pc.scenarios as first_messages, pc.lorebook,
+        c.created_at, c.updated_at, c.type
+      FROM cards c
+      INNER JOIN plot_cards pc ON c.id = pc.id
+      WHERE c.type = 'plot'
+    `);
+
+    const backupData = {
+      exportedAt: new Date().toISOString(),
+      version: "1.0.0",
+      characters: allLegacyChars.rows,
+      scenarios: allLegacyPlots.rows,
+      summary: {
+        totalCharacters: allLegacyChars.rows.length,
+        totalScenarios: allLegacyPlots.rows.length,
+      },
+    };
+
+    const jsonString = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+
+    this.log(`  ✅ Backup created: ${backupData.summary.totalCharacters} characters, ${backupData.summary.totalScenarios} scenarios`);
+
+    return blob;
+  }
+
+  /**
+   * Helper: Download backup file
+   */
+  async downloadBackup(): Promise<void> {
+    const blob = await this.exportBackup();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `astrsk-legacy-backup-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.log("✅ Backup file downloaded!");
+  }
+}
+
+/**
+ * Quick usage examples for browser console:
+ *
+ * // Check if you have missing data:
+ * const recovery = new LegacyCharacterRecovery();
+ * await recovery.checkLegacyData();
+ *
+ * // Recover everything:
+ * await recovery.recoverAll();
+ *
+ * // Download backup file:
+ * await recovery.downloadBackup();
+ */
