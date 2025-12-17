@@ -95,7 +95,7 @@
     "jszip": "^3.10.1",
     "license-checker": "^25.0.1",
     "lodash-es": "^4.17.21",
-    "lucide-react": "^0.503.0",
+    "lucide-react": "^0.561.0",
     "minijinja-js": "^2.12.0",
     "monaco-editor": "^0.52.2",
     "motion": "^12.23.25",

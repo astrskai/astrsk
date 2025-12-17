@@ -12,3 +12,4 @@ export { default as IconHarpyLogo } from "./harpy-logo.svg?react";
 export { default as IconGoogle } from "./google.svg?react";
 export { default as IconDiscord } from "./discord.svg?react";
 export { default as IconApple } from "./apple.svg?react";
+export { default as IconGithub } from "./github.svg?react";
