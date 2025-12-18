@@ -33,7 +33,8 @@ const SelectScenarioDialog = ({
     if (open) {
       onRenderScenarios();
     }
-  }, [open, scenarioCardId, onRenderScenarios]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, scenarioCardId]);
 
   // Reset selected index when sessionId or scenarioCardId changes
   useEffect(() => {

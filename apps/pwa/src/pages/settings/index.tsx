@@ -77,7 +77,10 @@ const SettingsItem = ({
 };
 
 const SignInPromptCard = () => {
-  return (
+  // COMMENTED OUT: Temporarily removed welcome/sign-in prompt
+  return null;
+
+  /* return (
     <div className="border-border-default bg-surface-raised mb-8 flex items-center justify-between rounded-2xl border p-5">
       <div className="flex items-center gap-4">
         <Avatar
@@ -100,7 +103,7 @@ const SignInPromptCard = () => {
         <span className="hidden md:inline">Sign in</span>
       </Link>
     </div>
-  );
+  ); */
 };
 
 const UserProfileCard = () => {

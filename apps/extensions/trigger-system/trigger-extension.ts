@@ -114,45 +114,50 @@ export class TriggerSystemExtension implements IExtension {
         const { useQuery } = hooks;
         const { sessionQueries, CardType } = queries;
 
-        // Reactively query session to get allCards
-        // When session cards change, button automatically re-renders
-        const { data: session } = useQuery(sessionQueries.detail(sessionId));
+        // This is now a proper React component where hooks can be called
+        const TriggerButton = () => {
+          // Reactively query session to get allCards
+          // When session cards change, button automatically re-renders
+          const { data: session } = useQuery(sessionQueries.detail(sessionId));
 
-        // Find plot/scenario card from session.allCards
-        // Check for both CardType.Plot (deprecated) and CardType.Scenario (preferred)
-        const plotCardListItem = session?.allCards?.find(
-          (card: any) => card.type === CardType.Plot || card.type === CardType.Scenario
-        );
+          // Find plot/scenario card from session.allCards
+          // Check for both CardType.Plot (deprecated) and CardType.Scenario (preferred)
+          const plotCardListItem = session?.allCards?.find(
+            (card: any) => card.type === CardType.Plot || card.type === CardType.Scenario
+          );
 
-        // If no plot card defined, don't show button
-        if (!plotCardListItem) {
-          return null;
-        }
+          // If no plot card defined, don't show button
+          if (!plotCardListItem) {
+            return null;
+          }
 
-        const plotCardId = plotCardListItem.id;
+          const plotCardId = plotCardListItem.id;
 
-        // Render button with hexagon avatar and "Scenario" label
-        // Use astrsk logo instead of the plot/scenario card's icon
-        return React.createElement(UserInputCharacterButton, {
-          characterCardId: plotCardId,
-          iconSrc: this.ASTRSK_LOGO_SVG, // Embedded astrsk logo
-          onClick: () => {
-            // Don't trigger during inference
-            if (context.disabled) return;
-            // Execute scenario flow from scenario start node
-            // Pass trigger type from extension's trigger types array
-            context.generateCharacterMessage?.(
-              plotCardId,
-              undefined,
-              this.triggerTypes[0] // "scenario"
-            );
-            context.onCharacterButtonClicked?.();
-          },
-          isDisabled: context.disabled,
-          showName: false, // Hide card name, use label instead
-          label: "Scenario", // Show "Scenario" as label
-          shape: "hexagon", // Hexagon shape for scenario
-        });
+          // Render button with hexagon avatar and "Scenario" label
+          // Use astrsk logo instead of the plot/scenario card's icon
+          return React.createElement(UserInputCharacterButton, {
+            characterCardId: plotCardId,
+            iconSrc: this.ASTRSK_LOGO_SVG, // Embedded astrsk logo
+            onClick: () => {
+              // Don't trigger during inference
+              if (context.disabled) return;
+              // Execute scenario flow from scenario start node
+              // Pass trigger type from extension's trigger types array
+              context.generateCharacterMessage?.(
+                plotCardId,
+                undefined,
+                this.triggerTypes[0] // "scenario"
+              );
+              context.onCharacterButtonClicked?.();
+            },
+            isDisabled: context.disabled,
+            showName: false, // Hide card name, use label instead
+            label: "Scenario", // Show "Scenario" as label
+            shape: "hexagon", // Hexagon shape for scenario
+          });
+        };
+
+        return React.createElement(TriggerButton);
       },
     });
   }

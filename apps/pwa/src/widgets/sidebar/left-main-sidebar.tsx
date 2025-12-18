@@ -418,7 +418,10 @@ const UserProfile = ({
     }
   };
 
-  return (
+  // COMMENTED OUT: Removed entire user profile section from navigation
+  return null;
+
+  /* return (
     <div className="border-t border-zinc-800 p-4">
       <div
         className={cn(
@@ -483,7 +486,7 @@ const UserProfile = ({
         )}
       </div>
     </div>
-  );
+  ); */
 };
 
 // --- Left Main Sidebar ---

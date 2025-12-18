@@ -25,8 +25,9 @@ import { DataStoreSavedField } from "@/entities/turn/domain/option";
 import { AutoReply } from "@/shared/stores/session-store";
 import { useSaveSession } from "@/entities/session/api/mutations";
 import { useSessionConfig } from "@/shared/hooks/use-session-config";
-import { usePlaySessionAuth } from "@/shared/hooks/use-play-session-auth";
-import { PlaySessionLoginPage } from "@/pages/auth/play-session-login";
+// COMMENTED OUT: Removed login requirement for play sessions
+// import { usePlaySessionAuth } from "@/shared/hooks/use-play-session-auth";
+// import { PlaySessionLoginPage } from "@/pages/auth/play-session-login";
 
 export default function ChatPage() {
   const saveSessionMutation = useSaveSession();
@@ -35,7 +36,8 @@ export default function ChatPage() {
   const sessionIdEntity = sessionId ? new UniqueEntityID(sessionId) : undefined;
 
   // Check if user needs authentication for play session
-  const playSessionAuth = usePlaySessionAuth(sessionIdEntity);
+  // COMMENTED OUT: Removed login requirement for play sessions
+  // const playSessionAuth = usePlaySessionAuth(sessionIdEntity);
 
   const { data: session, isLoading } = useQuery(
     sessionQueries.detail(sessionIdEntity),
@@ -189,13 +191,19 @@ export default function ChatPage() {
   );
 
   // Show loading while checking auth or loading session
-  if (isLoading || playSessionAuth.isLoading) {
-    return <Loading />;
-  }
+  // COMMENTED OUT: Removed login requirement for play sessions
+  // if (isLoading || playSessionAuth.isLoading) {
+  //   return <Loading />;
+  // }
 
-  // Show login page if user needs authentication
-  if (playSessionAuth.needsAuth) {
-    return <PlaySessionLoginPage />;
+  // // Show login page if user needs authentication
+  // if (playSessionAuth.needsAuth) {
+  //   return <PlaySessionLoginPage />;
+  // }
+
+  // Show loading only for session data
+  if (isLoading) {
+    return <Loading />;
   }
 
   return session ? (

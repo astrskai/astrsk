@@ -1745,7 +1745,10 @@ async function generateStructuredOutput({
     // Gemini uses non-streaming generateWithToolFallback (Vertex AI streaming incompatible with streamObject)
     const isGoogleProvider = apiConnection.source === ApiSource.AstrskAi &&
       parsedModelId.startsWith("google/gemini-");
-    if (isGoogleProvider) {
+    const isFriendliProvider = apiConnection.source === ApiSource.AstrskAi &&
+      parsedModelId.startsWith("zai-org/");
+    console.log(isFriendliProvider, "Is friendli")
+    if (isGoogleProvider || isFriendliProvider) {
 
       const partialObjectStream = (async function* () {
         const result = await generateWithToolFallback({

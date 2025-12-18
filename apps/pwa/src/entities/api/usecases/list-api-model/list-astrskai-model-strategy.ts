@@ -15,6 +15,10 @@ const ASTRSK_CLOUD_MODELS = [
     name: "Gemini 2.5 Flash",
   },
   {
+    id: "openai-compatible:google/gemini-3-flash",
+    name: "Gemini 3 Flash",
+  },
+  {
     id: "openai-compatible:zai-org/GLM-4.6",
     name: "GLM-4.6",
   },

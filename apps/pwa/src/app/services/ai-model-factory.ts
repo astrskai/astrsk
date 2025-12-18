@@ -17,7 +17,8 @@ import {
   createOpenRouter,
   type OpenRouterProviderSettings,
 } from "@openrouter/ai-sdk-provider";
-import { type LanguageModel, type JSONValue, generateText, streamText, tool, parsePartialJson, isDeepEqualData } from "ai";
+import { createFriendli } from "@friendliai/ai-provider";
+import { type LanguageModel, type JSONValue, generateText, generateObject, streamText, tool, parsePartialJson, isDeepEqualData } from "ai";
 import { merge } from "lodash-es";
 import { z } from "zod";
 import { JSONSchema7 } from "json-schema";
@@ -25,6 +26,7 @@ import { JSONSchema7 } from "json-schema";
 import { ApiSource, OpenrouterProviderSort } from "@/entities/api/domain";
 import { getAISDKFetch } from "@/shared/infra/fetch-helper";
 import { logger } from "@/shared/lib/logger";
+import { useAppStore } from "@/shared/stores";
 
 // Provider-specific default base URLs
 const OLLAMA_DEFAULT_BASE_URL = "http://localhost:11434";
@@ -226,15 +228,18 @@ export function createProvider({
         throw new Error("VITE_CLOUD_LLM_URL is not configured");
       }
 
-      // Check if this is a Gemini model (google/gemini-*)
+      // Check model type (Gemini or Friendli)
       // Parse modelId to extract the actual model name (strip "openai-compatible:" prefix if present)
       const parsedModelId = modelId?.includes(":") ? modelId.split(":")[1] : modelId;
       const isGeminiModel = parsedModelId?.startsWith("google/gemini-");
+      // For now, only GLM models use Friendli provider
+      const isFriendliModel = parsedModelId?.toLowerCase().includes("glm");
 
       logger.info(`[createProvider] AstrskAi model detection`, {
         originalModelId: modelId,
         parsedModelId,
         isGeminiModel,
+        isFriendliModel,
       });
 
       // Create custom fetch wrapper to add x-dev-key header (only in development)
@@ -252,6 +257,15 @@ export function createProvider({
       if (isGeminiModel) {
         // For Gemini models: use Google Generative AI provider with custom fetch
         provider = createGoogleGenerativeAI({
+          apiKey: "", // No API key needed for AstrskAi proxy
+          baseURL: astrskBaseUrl,
+          fetch: astrskFetch,
+        });
+      } else if (isFriendliModel) {
+        // For GLM models: use native Friendli provider with custom fetch
+        // This enables proper structured output support (JSON schema mode instead of tool calling)
+        // Fixes Python dict string issue by using Friendli's native JSON schema support
+        provider = createFriendli({
           apiKey: "", // No API key needed for AstrskAi proxy
           baseURL: astrskBaseUrl,
           fetch: astrskFetch,
@@ -540,7 +554,7 @@ export function getStructuredOutputMode(
   if (apiSource === ApiSource.AstrskAi) {
     // Extract the model ID after "openai-compatible:" prefix if present
     const parsedModelId = modelId.includes(":") ? modelId.split(":")[1] : modelId;
-    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/") || parsedModelId.startsWith("zai-org/");
+    const isFriendliModel = parsedModelId.startsWith("deepseek-ai/");
 
     // Only Friendli models use json mode; all others use tool mode
     const mode = isFriendliModel ? "json" : "tool";
@@ -579,7 +593,7 @@ export function getStructuredOutputMode(
  */
 export function shouldUseToolFallback(apiSource: ApiSource, modelId: string): boolean {
   const modelIdLower = modelId.toLowerCase();
-
+  console.log(modelId, "Model id lower");
   // GLM models support tool calling but not json_schema response_format
   if (modelIdLower.includes("glm")) {
     logger.info(`[StructuredOutput] GLM model detected (${modelId}) - using generateText with tool fallback`);
@@ -731,6 +745,79 @@ export interface GenerateWithToolFallbackOptions {
 }
 
 /**
+ * Escape unescaped double quotes inside JSON string values.
+ * GLM returns JSON with internal quotes like: {"text": "*narrative* "dialogue" *more*"}
+ * This function escapes them to: {"text": "*narrative* \"dialogue\" *more*"}
+ */
+function escapeInternalQuotes(jsonString: string): string {
+  let result = '';
+  let inString = false; // Are we inside a JSON string?
+  let inValue = false; // Are we in a value string (vs a key string)?
+  let afterColon = false;
+
+  for (let i = 0; i < jsonString.length; i++) {
+    const char = jsonString[i];
+    const prevChar = i > 0 ? jsonString[i - 1] : '';
+
+    // Track when we're after a colon (next string will be a value)
+    if (char === ':' && !inString) {
+      afterColon = true;
+      result += char;
+      continue;
+    }
+
+    // Comma resets state for next key-value pair
+    if (char === ',' && !inString) {
+      afterColon = false;
+      inValue = false;
+      result += char;
+      continue;
+    }
+
+    // Double quote handling
+    if (char === '"' && prevChar !== '\\') {
+      // Starting a string
+      if (!inString) {
+        inString = true;
+        inValue = afterColon;
+        afterColon = false;
+        result += char;
+        continue;
+      }
+
+      // We're inside a string and hit another quote
+      // Check if this is the closing quote by looking ahead
+      const remaining = jsonString.substring(i + 1).trimStart();
+      const isClosingQuote = remaining.startsWith(',') || remaining.startsWith('}') || remaining.startsWith(':');
+
+      if (isClosingQuote) {
+        // This is the closing quote of the string
+        inString = false;
+        inValue = false;
+        result += char;
+        continue;
+      }
+
+      // Otherwise, it's an internal quote
+      // Only escape if we're in a VALUE string (not a key string)
+      if (inValue && inString) {
+        result += '\\"';
+        continue;
+      }
+
+      // If we're in a key string with an internal quote, something is wrong
+      // Just keep the quote and hope for the best
+      result += char;
+      continue;
+    }
+
+    result += char;
+  }
+
+  return result;
+}
+
+/**
  * Generate structured output using generateText with a tool call.
  * This is a fallback for models that support tool calling but not json_schema response_format.
  *
@@ -799,7 +886,50 @@ export async function generateWithToolFallback<T>({
   }
 
   // AI SDK uses 'input' property for tool call parameters (not 'args')
-  return (outputCall as unknown as { input: T }).input;
+  let toolInput = (outputCall as unknown as { input: T }).input;
+
+  logger.debug(`[ToolFallback Non-Streaming] Tool call input:`, {
+    toolInput: toolInput,
+    type: typeof toolInput,
+    isString: typeof toolInput === 'string',
+    modelId: modelId,
+  });
+
+  // WORKAROUND: Friendli GLM provider returns arguments as a JSON string with escaped single quotes
+  // The string structure is already valid JSON (uses double quotes), but contains \' sequences
+  // that need to be converted to plain apostrophes
+  if (typeof toolInput === 'string') {
+    const inputStr = toolInput as string;
+    const looksLikeJSON = inputStr.trim().startsWith('{');
+
+    if (looksLikeJSON) {
+      logger.warn(`[ToolFallback Non-Streaming] Tool input is a string, attempting to parse`, {
+        modelId: modelId,
+        preview: inputStr.substring(0, 100),
+      });
+
+      try {
+        // Escape internal quotes in the JSON string
+        const result = escapeInternalQuotes(inputStr);
+
+        logger.debug(`[ToolFallback Non-Streaming] After escaping`, {
+          original: inputStr.substring(0, 100),
+          escaped: result.substring(0, 100)
+        });
+
+        toolInput = JSON.parse(result) as T;
+        logger.debug(`[ToolFallback Non-Streaming] Successfully parsed tool input from string:`, toolInput);
+      } catch (error) {
+        logger.error(`[ToolFallback Non-Streaming] Failed to parse tool input string:`, {
+          error: error,
+          modelId: modelId,
+        });
+        // Keep original - will likely fail validation
+      }
+    }
+  }
+
+  return toolInput;
 }
 
 /**
