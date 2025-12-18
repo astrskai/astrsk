@@ -50,6 +50,10 @@ export default function SharedFlowPage() {
 
     const importFlow = async () => {
       try {
+        // Wait a moment to ensure services are fully initialized
+        // This prevents "Cannot read properties of undefined (reading 'execute')" errors
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         console.log("[SharedFlowPage] Calling importFlowMutation.mutateAsync");
         const flow = await importFlowMutation.mutateAsync({
           flowId: uuid,
@@ -81,9 +85,13 @@ export default function SharedFlowPage() {
     importFlow();
   }, [uuid]);
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setImportState("loading");
     setErrorMessage("");
+
+    // Wait a moment to ensure services are fully initialized
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     importFlowMutation.mutate(
       { flowId: uuid },
       {

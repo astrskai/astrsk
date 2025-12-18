@@ -48,6 +48,10 @@ export default function SharedSessionPage() {
 
     const importSession = async () => {
       try {
+        // Wait a moment to ensure services are fully initialized
+        // This prevents "Cannot read properties of undefined (reading 'execute')" errors
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         const session = await importSessionMutation.mutateAsync({
           sessionId: uuid,
         });
@@ -72,10 +76,13 @@ export default function SharedSessionPage() {
     importSession();
   }, [uuid, importSessionMutation, selectSession, navigate]);
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setImportState("loading");
     setErrorMessage("");
-    importStartedRef.current = false;
+
+    // Wait a moment to ensure services are fully initialized
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     importSessionMutation.mutate(
       { sessionId: uuid },
       {

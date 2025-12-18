@@ -46,6 +46,10 @@ export default function SharedCharacterPage() {
 
     const importCharacter = async () => {
       try {
+        // Wait a moment to ensure services are fully initialized
+        // This prevents "Cannot read properties of undefined (reading 'execute')" errors
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         const result = await importCharacterMutation.mutateAsync({
           characterId: uuid,
         });
@@ -71,10 +75,13 @@ export default function SharedCharacterPage() {
     importCharacter();
   }, [uuid, importCharacterMutation, navigate]);
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setImportState("loading");
     setErrorMessage("");
-    importStartedRef.current = false;
+
+    // Wait a moment to ensure services are fully initialized
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     importCharacterMutation.mutate(
       { characterId: uuid },
       {
