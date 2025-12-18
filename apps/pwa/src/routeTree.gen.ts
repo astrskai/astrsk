@@ -26,6 +26,7 @@ import { Route as SharedScenarioUuidRouteImport } from './routes/shared/scenario
 import { Route as SharedFlowUuidRouteImport } from './routes/shared/flow/$uuid'
 import { Route as SharedCharacterUuidRouteImport } from './routes/shared/character/$uuid'
 import { Route as LayoutSettingsProvidersRouteImport } from './routes/_layout/settings/providers'
+import { Route as LayoutSettingsDesktopRouteImport } from './routes/_layout/settings/desktop'
 import { Route as LayoutSessionsNewRouteImport } from './routes/_layout/sessions/new'
 import { Route as LayoutSessionsSessionIdRouteImport } from './routes/_layout/sessions/$sessionId'
 import { Route as LayoutAuthHubCallbackRouteImport } from './routes/_layout/auth/hub-callback'
@@ -134,6 +135,11 @@ const SharedCharacterUuidRoute = SharedCharacterUuidRouteImport.update({
 const LayoutSettingsProvidersRoute = LayoutSettingsProvidersRouteImport.update({
   id: '/providers',
   path: '/providers',
+  getParentRoute: () => LayoutSettingsRoute,
+} as any)
+const LayoutSettingsDesktopRoute = LayoutSettingsDesktopRouteImport.update({
+  id: '/desktop',
+  path: '/desktop',
   getParentRoute: () => LayoutSettingsRoute,
 } as any)
 const LayoutSessionsNewRoute = LayoutSessionsNewRouteImport.update({
@@ -296,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/auth/hub-callback': typeof LayoutAuthHubCallbackRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions/new': typeof LayoutSessionsNewRoute
+  '/settings/desktop': typeof LayoutSettingsDesktopRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
   '/shared/character/$uuid': typeof SharedCharacterUuidRoute
   '/shared/flow/$uuid': typeof SharedFlowUuidRoute
@@ -338,6 +345,7 @@ export interface FileRoutesByTo {
   '/auth/hub-callback': typeof LayoutAuthHubCallbackRoute
   '/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/sessions/new': typeof LayoutSessionsNewRoute
+  '/settings/desktop': typeof LayoutSettingsDesktopRoute
   '/settings/providers': typeof LayoutSettingsProvidersRoute
   '/shared/character/$uuid': typeof SharedCharacterUuidRoute
   '/shared/flow/$uuid': typeof SharedFlowUuidRoute
@@ -383,6 +391,7 @@ export interface FileRoutesById {
   '/_layout/auth/hub-callback': typeof LayoutAuthHubCallbackRoute
   '/_layout/sessions/$sessionId': typeof LayoutSessionsSessionIdRoute
   '/_layout/sessions/new': typeof LayoutSessionsNewRoute
+  '/_layout/settings/desktop': typeof LayoutSettingsDesktopRoute
   '/_layout/settings/providers': typeof LayoutSettingsProvidersRoute
   '/shared/character/$uuid': typeof SharedCharacterUuidRoute
   '/shared/flow/$uuid': typeof SharedFlowUuidRoute
@@ -428,6 +437,7 @@ export interface FileRouteTypes {
     | '/auth/hub-callback'
     | '/sessions/$sessionId'
     | '/sessions/new'
+    | '/settings/desktop'
     | '/settings/providers'
     | '/shared/character/$uuid'
     | '/shared/flow/$uuid'
@@ -470,6 +480,7 @@ export interface FileRouteTypes {
     | '/auth/hub-callback'
     | '/sessions/$sessionId'
     | '/sessions/new'
+    | '/settings/desktop'
     | '/settings/providers'
     | '/shared/character/$uuid'
     | '/shared/flow/$uuid'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/_layout/auth/hub-callback'
     | '/_layout/sessions/$sessionId'
     | '/_layout/sessions/new'
+    | '/_layout/settings/desktop'
     | '/_layout/settings/providers'
     | '/shared/character/$uuid'
     | '/shared/flow/$uuid'
@@ -672,6 +684,13 @@ declare module '@tanstack/react-router' {
       path: '/providers'
       fullPath: '/settings/providers'
       preLoaderRoute: typeof LayoutSettingsProvidersRouteImport
+      parentRoute: typeof LayoutSettingsRoute
+    }
+    '/_layout/settings/desktop': {
+      id: '/_layout/settings/desktop'
+      path: '/desktop'
+      fullPath: '/settings/desktop'
+      preLoaderRoute: typeof LayoutSettingsDesktopRouteImport
       parentRoute: typeof LayoutSettingsRoute
     }
     '/_layout/sessions/new': {
@@ -853,6 +872,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface LayoutSettingsRouteChildren {
+  LayoutSettingsDesktopRoute: typeof LayoutSettingsDesktopRoute
   LayoutSettingsProvidersRoute: typeof LayoutSettingsProvidersRoute
   LayoutSettingsIndexRoute: typeof LayoutSettingsIndexRoute
   LayoutSettingsAccountCreditUsageRoute: typeof LayoutSettingsAccountCreditUsageRoute
@@ -872,6 +892,7 @@ interface LayoutSettingsRouteChildren {
 }
 
 const LayoutSettingsRouteChildren: LayoutSettingsRouteChildren = {
+  LayoutSettingsDesktopRoute: LayoutSettingsDesktopRoute,
   LayoutSettingsProvidersRoute: LayoutSettingsProvidersRoute,
   LayoutSettingsIndexRoute: LayoutSettingsIndexRoute,
   LayoutSettingsAccountCreditUsageRoute: LayoutSettingsAccountCreditUsageRoute,
