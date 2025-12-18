@@ -11,3 +11,8 @@ export {
   SessionCardSkeleton,
   type SessionCardSkeletonProps,
 } from './SessionCardSkeleton';
+export {
+  CharacterAvatarImage,
+  CharacterAvatarSkeleton,
+  type CharacterAvatarProps,
+} from './CharacterAvatar';

@@ -14,6 +14,11 @@ import {
 } from '../Card';
 import { type ImageComponentProps } from '../../provider';
 import { useImageRenderer } from '../../hooks';
+import {
+  CharacterAvatarImage,
+  CharacterAvatarSkeleton,
+  type CharacterAvatarProps,
+} from './CharacterAvatar';
 
 /**
  * Custom class names for internal elements of SessionCard.
@@ -32,17 +37,8 @@ export interface SessionCardClassNames {
   tagsContainer?: string;
 }
 
-export interface CharacterAvatar {
-  /** Character name */
-  name: string;
-  /** Character avatar image URL */
-  avatarUrl?: string;
-  /**
-   * Loading strategy for the avatar image.
-   * @default 'lazy'
-   */
-  loading?: 'lazy' | 'eager';
-}
+/** @deprecated Use CharacterAvatarProps instead */
+export type CharacterAvatar = CharacterAvatarProps;
 
 export interface SessionCardProps {
   /** Session title */
@@ -151,54 +147,6 @@ export interface SessionCardProps {
    * ```
    */
   footerActions?: React.ReactNode;
-}
-
-/**
- * Character Avatar Component (Internal)
- */
-function CharacterAvatarImage({
-  name,
-  avatarUrl,
-  loading = 'lazy',
-}: CharacterAvatar) {
-  const [imageError, setImageError] = useState(false);
-
-  // Reset error state when avatarUrl changes
-  useEffect(() => {
-    setImageError(false);
-  }, [avatarUrl]);
-
-  const shouldShowImage = avatarUrl && !imageError;
-
-  return (
-    <div
-      className='flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-900 bg-zinc-700'
-      title={name}
-    >
-      {shouldShowImage ? (
-        <img
-          src={avatarUrl}
-          alt={name}
-          className='h-full w-full object-cover'
-          loading={loading}
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        <span className='text-[10px] text-zinc-400'>
-          {name.charAt(0).toUpperCase() || '?'}
-        </span>
-      )}
-    </div>
-  );
-}
-
-/**
- * Character Avatar Skeleton Component (Internal)
- */
-function CharacterAvatarSkeleton() {
-  return (
-    <div className='h-8 w-8 animate-pulse rounded-full border-2 border-zinc-900 bg-zinc-700' />
-  );
 }
 
 /* Message Icon Component (Internal) - temporarily hidden
