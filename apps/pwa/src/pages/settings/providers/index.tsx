@@ -635,10 +635,10 @@ export default function ProvidersPage() {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {apiConnections
               ?.filter((apiConnection: ApiConnection) => {
-                // Hide AstrskAi for non-authenticated users
-                if (apiConnection.source === ApiSource.AstrskAi && !isAuthenticated) {
-                  return false;
-                }
+                // COMMENTED OUT: Show AstrskAi for all users (authentication check removed)
+                // if (apiConnection.source === ApiSource.AstrskAi && !isAuthenticated) {
+                //   return false;
+                // }
                 return true;
               })
               .map((apiConnection: ApiConnection) =>
@@ -663,10 +663,10 @@ export default function ProvidersPage() {
                 return null;
               }
 
-              // Skip AstrskAi for non-authenticated users
-              if (apiSource === ApiSource.AstrskAi && !isAuthenticated) {
-                return null;
-              }
+              // COMMENTED OUT: Show AstrskAi for all users (authentication check removed)
+              // if (apiSource === ApiSource.AstrskAi && !isAuthenticated) {
+              //   return null;
+              // }
 
               return renderProviderListItem({
                 apiSource,

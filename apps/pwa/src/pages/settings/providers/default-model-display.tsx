@@ -80,10 +80,11 @@ const DefaultModelDisplay = ({
     apiConnectionQueries.listWithModels(),
   );
 
-  // Filter out AstrskAi models for non-authenticated users
-  const filteredConnections = (apiConnectionsWithModels ?? []).filter(
-    (conn: ApiConnectionWithModels) => conn.apiConnection.source !== ApiSource.AstrskAi || isAuthenticated
-  );
+  // COMMENTED OUT: Show AstrskAi models for all users (authentication check removed)
+  // const filteredConnections = (apiConnectionsWithModels ?? []).filter(
+  //   (conn: ApiConnectionWithModels) => conn.apiConnection.source !== ApiSource.AstrskAi || isAuthenticated
+  // );
+  const filteredConnections = apiConnectionsWithModels ?? [];
 
   const options = buildModelOptions(filteredConnections);
 
