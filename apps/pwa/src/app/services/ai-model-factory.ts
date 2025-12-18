@@ -265,7 +265,6 @@ export function createProvider({
         // For GLM models: use native Friendli provider with custom fetch
         // This enables proper structured output support (JSON schema mode instead of tool calling)
         // Fixes Python dict string issue by using Friendli's native JSON schema support
-        console.log("Friendli model detected")
         provider = createFriendli({
           apiKey: "", // No API key needed for AstrskAi proxy
           baseURL: astrskBaseUrl,

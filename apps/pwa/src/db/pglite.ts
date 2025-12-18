@@ -59,7 +59,6 @@ export class Pglite {
   private static _initPromise: Promise<PGliteInterface> | null = null;
 
   public static async getInstance() {
-    debugger;
     // Check instance exists
     if (Pglite._instance) {
       return Pglite._instance;
