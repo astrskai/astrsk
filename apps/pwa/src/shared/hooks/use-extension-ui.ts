@@ -6,7 +6,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { extensionRegistry } from "@/features/extensions/core/extension-registry";
-import { UserInputCharacterButton } from "@/pages/sessions/ui/chat/user-inputs";
+import { UserInputCharacterButton } from "@/pages/sessions/ui/chat/user-input-character-button";
 import { sessionQueries } from "@/entities/session/api/query-factory";
 import { CardType } from "@/entities/card/domain/card";
 

@@ -10,7 +10,7 @@ import { cn } from "@/shared/lib";
 import { AutoReply } from "@/shared/stores/session-store";
 import ChatStatsButton from "./chat-stats-button";
 import { useExtensionUI } from "@/shared/hooks/use-extension-ui";
-import { UserInputCharacterButton } from "./user-inputs";
+import { UserInputCharacterButton } from "./user-input-character-button";
 
 interface ChatInputProps {
   sessionId: UniqueEntityID;

@@ -433,7 +433,7 @@ export function SessionCard({
                   />
                 ))}
                 {characterAvatars.length > 3 && (
-                  <div className='flex h-8 w-8 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-[10px] text-zinc-400'>
+                  <div className='flex h-10 w-10 items-center justify-center rounded-full border-2 border-zinc-900 bg-zinc-800 text-xs text-zinc-400'>
                     +{characterAvatars.length - 3}
                   </div>
                 )}

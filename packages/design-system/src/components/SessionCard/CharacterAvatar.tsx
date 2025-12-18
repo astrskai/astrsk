@@ -32,7 +32,7 @@ export function CharacterAvatarImage({
 
   return (
     <div
-      className='flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-900 bg-zinc-700'
+      className='flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-900 bg-zinc-700'
       title={name}
     >
       {shouldShowImage ? (
@@ -44,7 +44,7 @@ export function CharacterAvatarImage({
           onError={() => setImageError(true)}
         />
       ) : (
-        <span className='text-[10px] text-zinc-400'>
+        <span className='text-xs text-zinc-400'>
           {name.charAt(0).toUpperCase() || '?'}
         </span>
       )}
@@ -58,6 +58,6 @@ export function CharacterAvatarImage({
  */
 export function CharacterAvatarSkeleton() {
   return (
-    <div className='h-8 w-8 animate-pulse rounded-full border-2 border-zinc-900 bg-zinc-700' />
+    <div className='h-10 w-10 animate-pulse rounded-full border-2 border-zinc-900 bg-zinc-700' />
   );
 }
