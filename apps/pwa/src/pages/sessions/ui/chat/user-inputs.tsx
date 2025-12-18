@@ -426,7 +426,7 @@ const UserInputs = ({
                   )}
                 >
                   {extensionButtons.map((component) => (
-                    <div key={component.id}>{component.render()}</div>
+                    <div key={component.id}>{component.element}</div>
                   ))}
                   {userCharacterCardId && (
                     <UserInputCharacterButton
