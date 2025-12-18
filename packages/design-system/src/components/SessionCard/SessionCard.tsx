@@ -14,6 +14,11 @@ import {
 } from '../Card';
 import { type ImageComponentProps } from '../../provider';
 import { useImageRenderer } from '../../hooks';
+import {
+  CharacterAvatarImage,
+  CharacterAvatarSkeleton,
+  type CharacterAvatarProps,
+} from './CharacterAvatar';
 
 /**
  * Custom class names for internal elements of SessionCard.
@@ -32,17 +37,8 @@ export interface SessionCardClassNames {
   tagsContainer?: string;
 }
 
-export interface CharacterAvatar {
-  /** Character name */
-  name: string;
-  /** Character avatar image URL */
-  avatarUrl?: string;
-  /**
-   * Loading strategy for the avatar image.
-   * @default 'lazy'
-   */
-  loading?: 'lazy' | 'eager';
-}
+/** @deprecated Use CharacterAvatarProps instead */
+export type CharacterAvatar = CharacterAvatarProps;
 
 export interface SessionCardProps {
   /** Session title */
@@ -134,54 +130,23 @@ export interface SessionCardProps {
    * ```
    */
   classNames?: SessionCardClassNames;
-}
-
-/**
- * Character Avatar Component (Internal)
- */
-function CharacterAvatarImage({
-  name,
-  avatarUrl,
-  loading = 'lazy',
-}: CharacterAvatar) {
-  const [imageError, setImageError] = useState(false);
-
-  // Reset error state when avatarUrl changes
-  useEffect(() => {
-    setImageError(false);
-  }, [avatarUrl]);
-
-  const shouldShowImage = avatarUrl && !imageError;
-
-  return (
-    <div
-      className='flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-zinc-900 bg-zinc-700'
-      title={name}
-    >
-      {shouldShowImage ? (
-        <img
-          src={avatarUrl}
-          alt={name}
-          className='h-full w-full object-cover'
-          loading={loading}
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        <span className='text-[10px] text-zinc-400'>
-          {name.charAt(0).toUpperCase() || '?'}
-        </span>
-      )}
-    </div>
-  );
-}
-
-/**
- * Character Avatar Skeleton Component (Internal)
- */
-function CharacterAvatarSkeleton() {
-  return (
-    <div className='h-8 w-8 animate-pulse rounded-full border-2 border-zinc-900 bg-zinc-700' />
-  );
+  /**
+   * Custom footer actions to display at the bottom of the card.
+   * Renders below the content area with a top border separator.
+   * Useful for action buttons like "Continue", "Delete", etc.
+   * @example
+   * ```tsx
+   * <SessionCard
+   *   footerActions={
+   *     <>
+   *       <button className="flex-1 py-2">Continue</button>
+   *       <button className="flex-1 py-2">Delete</button>
+   *     </>
+   *   }
+   * />
+   * ```
+   */
+  footerActions?: React.ReactNode;
 }
 
 /* Message Icon Component (Internal) - temporarily hidden
@@ -249,6 +214,7 @@ export function SessionCard({
   priority = false,
   renderImage,
   classNames,
+  footerActions,
 }: SessionCardProps) {
   const [imageError, setImageError] = useState(false);
   const renderImageWithProvider = useImageRenderer({ renderImage });
@@ -476,6 +442,13 @@ export function SessionCard({
           </div>
         )}
       </div>
+
+      {/* Footer Actions */}
+      {footerActions && (
+        <div className='mt-auto flex border-t border-zinc-800'>
+          {footerActions}
+        </div>
+      )}
     </BaseCard>
   );
 }
