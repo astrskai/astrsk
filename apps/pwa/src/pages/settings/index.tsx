@@ -5,12 +5,12 @@ import {
   ChevronRight,
   ExternalLink,
   BookOpen,
-  Info,
   Scale,
   Sliders,
   ShieldCheck,
   LogOut,
   LogIn,
+  Monitor,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Avatar } from "@astrsk/design-system";
@@ -18,6 +18,7 @@ import { SvgIcon } from "@/shared/ui";
 import { IconDiscord, IconGithub } from "@/shared/assets/icons";
 import { toastError } from "@/shared/ui/toast";
 import { useAuth } from "@/shared/hooks/use-auth";
+import { isElectronEnvironment } from "@/shared/lib/environment";
 
 // --- Helper ---
 function openInNewTab(url: string) {
@@ -233,18 +234,19 @@ export default function SettingsPage() {
             onClick={() => openInNewTab("https://docs.astrsk.ai/")}
           />
           <SettingsItem
-            icon={<Info size={18} />}
-            label="About astrsk.ai"
-            description={`Version ${__APP_VERSION__}`}
-            type="external"
-            onClick={() => openInNewTab("https://about.astrsk.ai")}
-          />
-          <SettingsItem
             icon={<Scale size={18} />}
             label="Legal"
             description="Privacy policy and terms of service"
             onClick={() => navigate({ to: "/settings/legal" })}
           />
+          {!isElectronEnvironment() && (
+            <SettingsItem
+              icon={<Monitor size={18} />}
+              label="Download Desktop App"
+              description={`Mac / Windows · v${__APP_VERSION__}`}
+              onClick={() => navigate({ to: "/settings/desktop" })}
+            />
+          )}
         </div>
       </section>
 
