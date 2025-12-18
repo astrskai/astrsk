@@ -58,6 +58,7 @@ function ConvexWrapper({ children }: { children: React.ReactNode }) {
  */
 async function initializeApp() {
   // Track initialization time
+  debugger;
   const startTime = performance.now();
 
   // Initialize steps in the store BEFORE rendering

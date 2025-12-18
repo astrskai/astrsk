@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Send, StopCircle } from "lucide-react";
 
 import ChatCharacterButton from "./chat-character-button";
@@ -48,13 +48,24 @@ export default function ChatInput({
   const [messageContent, setMessageContent] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Memoize callback to prevent infinite re-renders
+  const handleCharacterButtonClicked = useCallback(() => {
+    setIsOpenGuide(false);
+  }, []);
+
+  // Memoize context object to prevent infinite re-renders
+  const extensionContext = useMemo(
+    () => ({
+      sessionId,
+      disabled: !!streamingMessageId,
+      generateCharacterMessage,
+      onCharacterButtonClicked: handleCharacterButtonClicked,
+    }),
+    [sessionId, streamingMessageId, generateCharacterMessage, handleCharacterButtonClicked]
+  );
+
   // Get extension UI components for the session input buttons slot
-  const extensionButtons = useExtensionUI("session-input-buttons", {
-    sessionId,
-    disabled: !!streamingMessageId,
-    generateCharacterMessage,
-    onCharacterButtonClicked: () => setIsOpenGuide(false),
-  });
+  const extensionButtons = useExtensionUI("session-input-buttons", extensionContext);
   // const shouldShowTooltip =
   // !disabled && (isOpenGuide || !sessionOnboardingSteps.inferenceButton);
 
@@ -85,7 +96,7 @@ export default function ChatInput({
         <div className="flex flex-row gap-4 overflow-x-auto">
           {/* Extension buttons (e.g., scenario trigger) */}
           {extensionButtons.map((button) => (
-            <div key={button.id}>{button.render()}</div>
+            <div key={button.id}>{button.element}</div>
           ))}
 
           {userCharacterId && (

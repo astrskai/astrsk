@@ -21,31 +21,46 @@ export function useExtensionUI(slot: string, context?: any) {
   const components = extensionRegistry.getUIComponentsForSlot(slot);
 
   // Slot-specific context (React, components, disabled, callbacks, etc.)
-  const renderContext = {
-    ...context,
-    React,
-    components: {
-      UserInputCharacterButton,
-      // Future components can be added here
-    },
-  };
+  const renderContext = React.useMemo(
+    () => ({
+      ...context,
+      React,
+      components: {
+        UserInputCharacterButton,
+        // Future components can be added here
+      },
+    }),
+    [context]
+  );
 
   // React hooks for reactive data
-  const hooks = {
-    useQuery,
-    // Future hooks can be added here (useMutation, etc.)
-  };
+  const hooks = React.useMemo(
+    () => ({
+      useQuery,
+      // Future hooks can be added here (useMutation, etc.)
+    }),
+    []
+  );
 
   // Query factories for reactive data access (shares app's cache)
-  const queries = {
-    sessionQueries,
-    CardType, // Enum for filtering cards by type
-    // Future query factories can be added here (flowQueries, etc.)
-  };
+  const queries = React.useMemo(
+    () => ({
+      sessionQueries,
+      CardType, // Enum for filtering cards by type
+      // Future query factories can be added here (flowQueries, etc.)
+    }),
+    []
+  );
 
-  return components.map((component) => ({
-    id: component.id,
-    extensionId: component.extensionId,
-    render: () => component.render(renderContext, hooks, queries),
-  }));
+  // Memoize the component elements to prevent hook order changes
+  return React.useMemo(
+    () =>
+      components.map((component) => ({
+        id: component.id,
+        extensionId: component.extensionId,
+        // Call render once and memoize the result
+        element: component.render(renderContext, hooks, queries),
+      })),
+    [components, renderContext, hooks, queries]
+  );
 }
