@@ -10,6 +10,7 @@ import { cn } from "@/shared/lib";
 import { AutoReply } from "@/shared/stores/session-store";
 import ChatStatsButton from "./chat-stats-button";
 import { useExtensionUI } from "@/shared/hooks/use-extension-ui";
+import { UserInputCharacterButton } from "./user-inputs";
 
 interface ChatInputProps {
   sessionId: UniqueEntityID;
@@ -44,14 +45,8 @@ export default function ChatInput({
   generateCharacterMessage,
   className,
 }: ChatInputProps) {
-  const [isOpenGuide, setIsOpenGuide] = useState<boolean>(false);
   const [messageContent, setMessageContent] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Memoize callback to prevent infinite re-renders
-  const handleCharacterButtonClicked = useCallback(() => {
-    setIsOpenGuide(false);
-  }, []);
 
   // Memoize context object to prevent infinite re-renders
   const extensionContext = useMemo(
@@ -59,15 +54,12 @@ export default function ChatInput({
       sessionId,
       disabled: !!streamingMessageId,
       generateCharacterMessage,
-      onCharacterButtonClicked: handleCharacterButtonClicked,
     }),
-    [sessionId, streamingMessageId, generateCharacterMessage, handleCharacterButtonClicked]
+    [sessionId, streamingMessageId, generateCharacterMessage]
   );
 
   // Get extension UI components for the session input buttons slot
   const extensionButtons = useExtensionUI("session-input-buttons", extensionContext);
-  // const shouldShowTooltip =
-  // !disabled && (isOpenGuide || !sessionOnboardingSteps.inferenceButton);
 
   const handleShuffle = useCallback(() => {
     const characterCardIds = [userCharacterId, ...aiCharacterIds];
@@ -79,10 +71,7 @@ export default function ChatInput({
   }, [aiCharacterIds, generateCharacterMessage, userCharacterId]);
 
   const onCharacterButtonClicked = useCallback(() => {
-    setIsOpenGuide(false);
-    // setIsGroupButtonDonNotShowAgain(true);
-    // Mark inference button onboarding step as completed
-    // setSessionOnboardingStep("inferenceButton", true);
+    // Character button clicked - can be used for analytics/tracking
   }, []);
 
   return (
@@ -95,9 +84,18 @@ export default function ChatInput({
       <div className="flex flex-row items-start justify-between gap-1">
         <div className="flex flex-row gap-4 overflow-x-auto">
           {/* Extension buttons (e.g., scenario trigger) */}
-          {extensionButtons.map((button) => (
-            <div key={button.id}>{button.element}</div>
-          ))}
+          {extensionButtons.map((button) => {
+            const buttonProps = button.render();
+            // If extension returns null or no props, skip rendering
+            if (!buttonProps) return null;
+            // Render UserInputCharacterButton with props from extension
+            return (
+              <UserInputCharacterButton
+                key={button.id}
+                {...buttonProps}
+              />
+            );
+          })}
 
           {userCharacterId && (
             <ChatCharacterButton

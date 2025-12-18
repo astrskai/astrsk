@@ -52,14 +52,14 @@ export function useExtensionUI(slot: string, context?: any) {
     []
   );
 
-  // Memoize the component elements to prevent hook order changes
+  // Return render functions instead of elements to prevent re-render issues
   return React.useMemo(
     () =>
       components.map((component) => ({
         id: component.id,
         extensionId: component.extensionId,
-        // Call render once and memoize the result
-        element: component.render(renderContext, hooks, queries),
+        // Return the render function, don't call it yet
+        render: () => component.render(renderContext, hooks, queries),
       })),
     [components, renderContext, hooks, queries]
   );
