@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Copy, Download, Edit, Trash2, Layers, Clock, Users, Star, Lock, User } from 'lucide-react';
+import { Copy, Download, Edit, Trash2, Layers, Clock, Users, Star, Lock, User, Play } from 'lucide-react';
 import { SessionCard, MetadataContainer, MetadataItem } from './SessionCard';
 import { SessionCardSkeleton } from './SessionCardSkeleton';
 
@@ -841,5 +841,119 @@ export const LikeButtonHidesRightBadge: Story = {
         story: 'When `likeButton` is provided, right-positioned badges are automatically hidden to prevent visual overlap. Use left-positioned badges instead when using likeButton.',
       },
     },
+  },
+};
+
+// With footer actions
+export const WithFooterActions: Story = {
+  args: {
+    ...Default.args,
+    footerActions: (
+      <>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+          onClick={() => console.log('Continue clicked')}
+        >
+          <Play size={16} />
+          Continue
+        </button>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-red-400"
+          onClick={() => console.log('Delete clicked')}
+        >
+          <Trash2 size={16} />
+          Delete
+        </button>
+      </>
+    ),
+  },
+};
+
+// Footer actions with single button
+export const FooterActionsSingleButton: Story = {
+  args: {
+    ...Default.args,
+    footerActions: (
+      <button
+        className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+        onClick={() => console.log('Continue clicked')}
+      >
+        <Play size={16} />
+        Continue Session
+      </button>
+    ),
+  },
+};
+
+// Footer actions with three buttons
+export const FooterActionsThreeButtons: Story = {
+  args: {
+    ...Default.args,
+    footerActions: (
+      <>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+          onClick={() => console.log('Continue clicked')}
+        >
+          <Play size={16} />
+        </button>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+          onClick={() => console.log('Edit clicked')}
+        >
+          <Edit size={16} />
+        </button>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-red-400"
+          onClick={() => console.log('Delete clicked')}
+        >
+          <Trash2 size={16} />
+        </button>
+      </>
+    ),
+  },
+};
+
+// Full featured with footer actions
+export const FullFeaturedWithFooter: Story = {
+  args: {
+    title: 'Epic Adventure Campaign',
+    imageUrl: SAMPLE_COVER,
+    messageCount: 1523,
+    tags: ['Fantasy', 'Adventure', 'Epic'],
+    summary:
+      'An immersive fantasy adventure where heroes embark on a dangerous journey to save the kingdom.',
+    badges: [
+      { label: 'SESSION', icon: <Layers size={12} /> },
+    ],
+    characterAvatars: [
+      { name: 'Alice', avatarUrl: SAMPLE_AVATAR_1 },
+      { name: 'Bob', avatarUrl: SAMPLE_AVATAR_2 },
+      { name: 'Charlie', avatarUrl: SAMPLE_AVATAR_3 },
+    ],
+    likeButton: {
+      isLiked: true,
+      onClick: () => console.log('Unlike clicked'),
+    },
+    likeCount: 2847,
+    downloadCount: 15230,
+    footerActions: (
+      <>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+          onClick={() => console.log('Continue clicked')}
+        >
+          <Play size={16} />
+          Continue
+        </button>
+        <button
+          className="flex flex-1 items-center justify-center gap-2 py-3 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-red-400"
+          onClick={() => console.log('Delete clicked')}
+        >
+          <Trash2 size={16} />
+          Delete
+        </button>
+      </>
+    ),
   },
 };

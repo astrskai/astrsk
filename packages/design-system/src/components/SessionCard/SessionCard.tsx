@@ -134,6 +134,23 @@ export interface SessionCardProps {
    * ```
    */
   classNames?: SessionCardClassNames;
+  /**
+   * Custom footer actions to display at the bottom of the card.
+   * Renders below the content area with a top border separator.
+   * Useful for action buttons like "Continue", "Delete", etc.
+   * @example
+   * ```tsx
+   * <SessionCard
+   *   footerActions={
+   *     <>
+   *       <button className="flex-1 py-2">Continue</button>
+   *       <button className="flex-1 py-2">Delete</button>
+   *     </>
+   *   }
+   * />
+   * ```
+   */
+  footerActions?: React.ReactNode;
 }
 
 /**
@@ -249,6 +266,7 @@ export function SessionCard({
   priority = false,
   renderImage,
   classNames,
+  footerActions,
 }: SessionCardProps) {
   const [imageError, setImageError] = useState(false);
   const renderImageWithProvider = useImageRenderer({ renderImage });
@@ -476,6 +494,13 @@ export function SessionCard({
           </div>
         )}
       </div>
+
+      {/* Footer Actions */}
+      {footerActions && (
+        <div className='mt-auto flex border-t border-zinc-800'>
+          {footerActions}
+        </div>
+      )}
     </BaseCard>
   );
 }
