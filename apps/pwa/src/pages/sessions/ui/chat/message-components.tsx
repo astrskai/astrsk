@@ -20,26 +20,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
-import { toastError, toastSuccess } from "@/shared/ui/toast";
 
 import { UniqueEntityID } from "@/shared/domain";
 
 import { useAsset } from "@/shared/hooks/use-asset";
 
 import { useCard } from "@/shared/hooks/use-card";
-import { generatedImageQueries } from "@/entities/generated-image/api/query-factory";
-
-import {
-  fetchTurn,
-  turnQueries,
-  useUpdateTurn,
-} from "@/entities/turn/api/turn-queries";
-
-import { TurnService } from "@/app/services/turn-service";
 
 import { cn } from "@/shared/lib";
-
-import { MediaPlaceholderMessage } from "./media-placeholder-message";
 
 import { SvgIcon } from "@/shared/ui";
 import {
@@ -49,13 +37,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { CharacterCard } from "@/entities/card/domain";
-import { TranslationConfig } from "@/entities/session/domain/translation-config";
 import { DataStoreSavedField } from "@/entities/turn/domain/option";
-
-import { PlaceholderType } from "@/entities/turn/domain/placeholder-type";
-
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import ScenarioMessage from "./scenario-message";
 
 const MessageAvatar = ({
   characterCard,
@@ -611,248 +593,6 @@ const MessageItemInternal = ({
   );
 };
 
-const MessageItem = ({
-  messageId,
-  userCharacterCardId,
-  translationConfig,
-  disabled,
-  streaming,
-  dataSchemaOrder,
-  editMessage,
-  deleteMessage,
-  selectOption,
-  generateOption,
-  onGenerateVideoFromImage,
-}: {
-  messageId: UniqueEntityID;
-  userCharacterCardId?: UniqueEntityID;
-  translationConfig?: TranslationConfig;
-  disabled?: boolean;
-  streaming?: {
-    agentName?: string;
-    modelName?: string;
-  };
-  isLastMessage?: boolean;
-  dataSchemaOrder?: string[];
-  editMessage: (messageId: UniqueEntityID, content: string) => Promise<void>;
-  deleteMessage: (messageId: UniqueEntityID) => Promise<void>;
-  selectOption: (
-    messageId: UniqueEntityID,
-    prevOrNext: "prev" | "next",
-  ) => Promise<void>;
-  generateOption: (messageId: UniqueEntityID) => Promise<void>;
-  onGenerateVideoFromImage?: (
-    messageId: UniqueEntityID,
-    imageUrl: string,
-    prompt: string,
-    userPrompt: string,
-  ) => Promise<void>;
-}) => {
-  const queryClient = useQueryClient();
-  const { data: message } = useQuery(turnQueries.detail(messageId));
-  const selectedOption = message?.options[message.selectedOptionIndex];
-
-  // Mutations
-  const updateTurnMutation = useUpdateTurn();
-
-  // Display language
-  const content = selectedOption?.content;
-  const language = translationConfig?.displayLanguage ?? "none";
-  const translation = selectedOption?.translations.get(language);
-
-  // Sort dataStoreFields according to dataSchemaOrder
-  const sortedDataStoreFields = useMemo(() => {
-    const fields = selectedOption?.dataStore;
-    if (!fields) return undefined;
-
-    const order = dataSchemaOrder || [];
-    return [
-      // Fields in dataSchemaOrder come first, in order
-      ...order
-        .map((name: string) =>
-          fields.find((f: DataStoreSavedField) => f.name === name),
-        )
-        .filter(
-          (f: DataStoreSavedField | undefined): f is NonNullable<typeof f> =>
-            f !== undefined,
-        ),
-      // Fields not in dataSchemaOrder come after, in original order
-      ...fields.filter((f: DataStoreSavedField) => !order.includes(f.name)),
-    ];
-  }, [selectedOption?.dataStore, dataSchemaOrder]);
-
-  // State for video generation from image - must be before any returns
-  const [isGeneratingVideoFromImage, setIsGeneratingVideoFromImage] =
-    useState(false);
-
-  // Get asset URL for the generated image (using existing selectedOption variable)
-  const [assetUrl, assetIsVideo] = useAsset(
-    selectedOption?.assetId
-      ? new UniqueEntityID(selectedOption.assetId)
-      : undefined,
-  );
-
-  // Get thumbnail for video (original image)
-  const { data: generatedImageData } = useQuery({
-    ...generatedImageQueries.list(),
-    enabled: assetIsVideo && !!selectedOption?.assetId,
-    select: (images) => {
-      if (!images || !Array.isArray(images)) return null;
-      // Find the generated image with matching assetId
-      return (
-        images.find((img: any) => img.asset_id === selectedOption?.assetId) ||
-        null
-      );
-    },
-  });
-
-  // Get thumbnail URL if it's a video, otherwise use the image URL
-  const [thumbnailUrl] = useAsset(
-    assetIsVideo && generatedImageData?.thumbnail_asset_id
-      ? new UniqueEntityID(generatedImageData.thumbnail_asset_id)
-      : undefined,
-  );
-
-  // For video generation, use thumbnail if available (for videos), otherwise use the asset URL (for images)
-  const imageUrlForVideoGeneration = thumbnailUrl || assetUrl;
-
-  if (!message) {
-    return null;
-  }
-
-  // Check if it's a media placeholder message using the TurnService helper
-  const isMediaPlaceholder = TurnService.isPlaceholderTurn(message);
-  const placeholderType = isMediaPlaceholder
-    ? TurnService.getPlaceholderType(message)
-    : null;
-
-  // Media placeholder message (image or video generation)
-  if (isMediaPlaceholder && placeholderType) {
-    const isVideo = placeholderType === PlaceholderType.VIDEO;
-
-    // Video generation from existing image or regeneration from video
-    const handleGenerateVideoFromImage = async () => {
-      if (
-        !selectedOption?.assetId ||
-        !imageUrlForVideoGeneration ||
-        isGeneratingVideoFromImage ||
-        !onGenerateVideoFromImage
-      )
-        return;
-
-      setIsGeneratingVideoFromImage(true);
-
-      try {
-        // Call the parent's video generation function
-        // Use thumbnail for videos (regeneration) or original image for first generation
-        await onGenerateVideoFromImage(
-          messageId,
-          imageUrlForVideoGeneration,
-          content || "",
-          content || "",
-        );
-
-        toastSuccess("Video generated successfully!");
-      } catch (error) {
-        console.error("[VIDEO FROM IMAGE] Failed to generate video:", error);
-        toastError("Failed to generate video from image");
-        // On failure, we keep the original image (no changes needed)
-      } finally {
-        setIsGeneratingVideoFromImage(false);
-      }
-    };
-
-    return (
-      <MediaPlaceholderMessage
-        content={content || ""}
-        assetId={selectedOption?.assetId}
-        isVideo={isVideo}
-        onDelete={() => deleteMessage(messageId)}
-        onGenerateVideo={handleGenerateVideoFromImage} // Always show button for regeneration
-        isGeneratingVideo={isGeneratingVideoFromImage}
-      />
-    );
-  }
-
-  // Scenario message (regular scenario without media)
-  if (
-    typeof message.characterCardId === "undefined" &&
-    typeof message.characterName === "undefined"
-  ) {
-    return (
-      <ScenarioMessage
-        content={content}
-        onEdit={(content) => editMessage(messageId, content)}
-        onDelete={() => deleteMessage(messageId)}
-      />
-    );
-  }
-
-  const isUser = userCharacterCardId
-    ? userCharacterCardId.equals(message.characterCardId)
-    : typeof message.characterCardId === "undefined";
-
-  return (
-    <MessageItemInternal
-      messageId={messageId}
-      sessionId={message.sessionId}
-      characterCardId={message.characterCardId}
-      isUser={isUser}
-      content={content}
-      translation={translation}
-      selectedOptionIndex={message.selectedOptionIndex}
-      optionsLength={message.options.length}
-      disabled={disabled}
-      streaming={typeof streaming !== "undefined"}
-      streamingAgentName={streaming?.agentName}
-      streamingModelName={streaming?.modelName}
-      assetId={selectedOption?.assetId}
-      dataStoreFields={sortedDataStoreFields}
-      onEdit={(content) => editMessage(messageId, content)}
-      onDelete={() => deleteMessage(messageId)}
-      onPrevOption={() => selectOption(messageId, "prev")}
-      onNextOption={() => selectOption(messageId, "next")}
-      onRegenerate={() => generateOption(messageId)}
-      onUpdateAssetId={async (assetId) => {
-        // Update the option with the new assetId
-        try {
-          const turn = await fetchTurn(messageId);
-
-          // Update the selected option with the new assetId
-          turn.setAssetId(assetId);
-
-          // Save the updated turn
-          const result = await updateTurnMutation.mutateAsync({
-            turn: turn,
-          });
-          if (result.isFailure) {
-            console.error("Failed to update turn:", result.getError());
-          } else {
-            // Invalidate the turn query to trigger re-render
-            await queryClient.invalidateQueries({
-              queryKey: turnQueries.detail(messageId).queryKey,
-            });
-          }
-        } catch (error) {
-          console.error("Failed to update asset ID:", error);
-        }
-      }}
-      onGenerateVideoFromImage={
-        onGenerateVideoFromImage
-          ? async (imageUrl: string, prompt: string, userPrompt: string) => {
-              await onGenerateVideoFromImage(
-                messageId,
-                imageUrl,
-                prompt,
-                userPrompt,
-              );
-            }
-          : undefined
-      }
-    />
-  );
-};
-
 const getSchemaTypeIcon = (type: string) => {
   switch (type) {
     case "string":
@@ -1047,4 +787,4 @@ const SortableDataSchemaFieldItem = ({
   );
 };
 
-export { MessageItem, MessageItemInternal, SortableDataSchemaFieldItem };
+export { MessageItemInternal, SortableDataSchemaFieldItem };
