@@ -28,7 +28,15 @@ function openInNewTab(url: string) {
 async function fetchLatestRelease(): Promise<ReleaseInfo | null> {
   try {
     const response = await fetch(GITHUB_API_LATEST);
-    if (!response.ok) return null;
+
+    if (!response.ok) {
+      if (response.status === 403) {
+        toastError("Rate limit exceeded. Please try again later.");
+      } else {
+        toastError("Failed to check for updates. Please try again.");
+      }
+      return null;
+    }
 
     const data = await response.json();
     const version = data.tag_name?.replace("v", "") || null;
@@ -40,6 +48,7 @@ async function fetchLatestRelease(): Promise<ReleaseInfo | null> {
       isCurrentVersion: version === __APP_VERSION__,
     };
   } catch {
+    toastError("Network error. Please check your connection.");
     return null;
   }
 }
