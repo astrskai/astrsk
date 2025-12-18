@@ -49,6 +49,10 @@ export default function SharedScenarioPage() {
 
     const importScenario = async () => {
       try {
+        // Wait a moment to ensure services are fully initialized
+        // This prevents "Cannot read properties of undefined (reading 'execute')" errors
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         console.log("[SharedScenarioPage] Calling importScenarioMutation.mutateAsync");
         const scenario = await importScenarioMutation.mutateAsync({
           scenarioId: uuid,
@@ -80,9 +84,13 @@ export default function SharedScenarioPage() {
     importScenario();
   }, [uuid]);
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setImportState("loading");
     setErrorMessage("");
+
+    // Wait a moment to ensure services are fully initialized
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     importScenarioMutation.mutate(
       { scenarioId: uuid },
       {

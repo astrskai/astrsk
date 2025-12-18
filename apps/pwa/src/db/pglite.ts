@@ -4,6 +4,7 @@ import { PGliteInterface } from "@electric-sql/pglite";
 import { PGliteWorker } from "@electric-sql/pglite/worker";
 import { Base64 } from "js-base64";
 import { file, write } from "opfs-tools";
+import { PGlite as PGliteClass } from "@electric-sql/pglite";
 
 const PGLITE_DUMP_PATH = "/pglite/dump.txt";
 const PGLITE_INDEXEDDB_NAME = "/pglite/astrsk";
@@ -137,7 +138,6 @@ export class Pglite {
       } else {
         // Fallback to direct PGlite (Safari, mobile, or browsers without Web Locks)
         logger.debug("🔵 [PGlite.init] Using direct PGlite (single-tab mode)");
-        const { PGlite: PGliteClass } = await import("@electric-sql/pglite");
         const instance = new PGliteClass({
           dataDir: PGLITE_DATA_DIR,
           relaxedDurability: true,

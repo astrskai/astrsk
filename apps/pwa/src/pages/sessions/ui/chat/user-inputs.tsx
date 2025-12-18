@@ -1,5 +1,5 @@
 import { Shuffle, Send, ChartNoAxesColumnIncreasing } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import TextareaAutosize from "@mui/material/TextareaAutosize";
 
 import { UniqueEntityID } from "@/shared/domain";
@@ -21,7 +21,7 @@ import {
 } from "@/shared/ui";
 import { CharacterCard } from "@/entities/card/domain";
 
-export const UserInputCharacterButton = ({
+export const UserInputCharacterButton = React.memo(({
   characterCardId,
   icon,
   iconSrc,
@@ -217,7 +217,7 @@ export const UserInputCharacterButton = ({
       )}
     </div>
   );
-};
+});
 
 const UserInputAutoReplyButton = ({
   autoReply,
@@ -386,12 +386,16 @@ const UserInputs = ({
   // Extension UI components for session input buttons
   // Pass isInferencing so extension buttons can disable during generation
   const isInferencing = !!streamingMessageId;
-  const extensionButtons = useExtensionUI("session-input-buttons", {
-    sessionId,
-    disabled: disabled || isInferencing,
-    onCharacterButtonClicked,
-    generateCharacterMessage,
-  });
+  const extensionContext = useMemo(
+    () => ({
+      sessionId,
+      disabled: disabled || isInferencing,
+      onCharacterButtonClicked,
+      generateCharacterMessage,
+    }),
+    [sessionId, disabled, isInferencing, onCharacterButtonClicked, generateCharacterMessage]
+  );
+  const extensionButtons = useExtensionUI("session-input-buttons", extensionContext);
 
   return (
     <div

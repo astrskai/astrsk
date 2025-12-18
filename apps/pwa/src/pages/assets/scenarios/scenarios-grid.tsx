@@ -1,5 +1,6 @@
 import { Upload, Copy, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
 
 import { CardType, ScenarioCard } from "@/entities/card/domain";
 import { IconHarpyLogo } from "@/shared/assets/icons";
@@ -114,12 +115,13 @@ export function ScenariosGrid({ scenarios }: ScenariosGridProps) {
     closeExportDialog,
   } = useCardActions({ entityType: CardType.Scenario });
 
-  const handleScenarioClick = (plotId: string) => {
+  const handleScenarioClick = useCallback((plotId: string) => {
+    console.log('[ScenariosGrid] Scenario clicked:', plotId);
     navigate({
       to: "/assets/scenarios/{-$scenarioId}",
       params: { scenarioId: plotId },
     });
-  };
+  }, [navigate]);
 
   return (
     <>
