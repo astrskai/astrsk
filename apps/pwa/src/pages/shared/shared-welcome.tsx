@@ -12,8 +12,8 @@ const HarpyLogo = () => (
       <IconHarpyLogo className="h-[60%] w-[60%] text-white" />
     </div>
     <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-60 transition-opacity duration-300 group-hover:opacity-100 md:-bottom-12">
-      <p className="font-mono text-[10px] font-medium uppercase tracking-[0.3em] text-gray-500 transition-colors group-hover:text-gray-300 md:text-xs">
-        Harpy
+      <p className="text-[10px] font-medium tracking-[0.3em] text-gray-500 transition-colors group-hover:text-gray-300 md:text-xs">
+        harpy.chat
       </p>
     </div>
   </div>
@@ -26,8 +26,8 @@ const AstrskLogo = () => (
       <AstrskPwaIcon className="h-full w-full" />
     </div>
     <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-80 transition-opacity duration-300 group-hover:opacity-100 md:-bottom-12">
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-white md:text-xs">
-        Astrsk
+      <p className="text-[10px] font-bold tracking-[0.3em] text-white md:text-xs">
+        astrsk.ai
       </p>
     </div>
   </div>
@@ -46,11 +46,8 @@ export function SharedWelcome({ onEnter }: SharedWelcomeProps) {
       </div>
 
       {/* Content Area */}
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col items-center px-6 py-12 text-center md:justify-center md:px-12">
-        {/* Mobile: Spacer to center middle content */}
-        <div className="flex-1 md:hidden" />
-
-        {/* Middle Content Group - Centered on mobile, stacked with button on desktop */}
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-6 py-12 text-center md:px-12">
+        {/* Content Group - Centered vertically */}
         <div className="flex flex-col items-center">
           {/* Transition Visual Group */}
           <div className="mb-12 flex w-full items-center justify-center gap-4 md:mb-20 md:gap-12">
@@ -95,32 +92,17 @@ export function SharedWelcome({ onEnter }: SharedWelcomeProps) {
             .
           </p>
 
-          {/* Enter Button - Part of stack on desktop */}
-          <div className="hidden w-auto md:block">
+          {/* Enter Button - Below text on both mobile and desktop */}
+          <div className="w-full md:w-auto">
             <button
               onClick={onEnter}
-              className="group flex h-20 w-[320px] cursor-pointer items-center justify-center rounded-2xl bg-white font-bold text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.1)] transition-all duration-300 hover:bg-gray-200 active:scale-[0.98]"
+              className="group flex h-16 w-full cursor-pointer items-center justify-center rounded-xl bg-white font-bold text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.1)] transition-all duration-300 hover:bg-gray-200 active:scale-[0.98] md:h-20 md:w-[320px] md:rounded-2xl"
             >
-              <span className="relative z-10 flex items-center text-lg font-bold uppercase tracking-[0.2em]">
+              <span className="relative z-10 flex items-center text-base font-bold uppercase tracking-[0.2em] md:text-lg">
                 ENTER WORLD
               </span>
             </button>
           </div>
-        </div>
-
-        {/* Mobile: Spacer to push button to bottom */}
-        <div className="flex-1 md:hidden" />
-
-        {/* Enter Button - Bottom on mobile */}
-        <div className="z-10 w-full md:hidden">
-          <button
-            onClick={onEnter}
-            className="group flex h-16 w-full cursor-pointer items-center justify-center rounded-xl bg-white font-bold text-black shadow-[0_0_40px_-10px_rgba(255,255,255,0.1)] transition-all duration-300 hover:bg-gray-200 active:scale-[0.98]"
-          >
-            <span className="relative z-10 flex items-center text-base font-bold uppercase tracking-[0.2em]">
-              ENTER WORLD
-            </span>
-          </button>
         </div>
       </div>
 
