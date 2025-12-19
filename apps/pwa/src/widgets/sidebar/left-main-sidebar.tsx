@@ -677,8 +677,8 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
         />
       </div>
 
-      {/* Right: Avatar */}
-      <div
+      {/* Right: Avatar - Hidden on mobile */}
+      {/* <div
         className="ml-auto h-8 w-8 cursor-pointer overflow-hidden rounded-full border border-zinc-700 bg-zinc-800 hover:border-zinc-500"
         onClick={handleAvatarClick}
       >
@@ -692,7 +692,7 @@ export function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
         ) : (
           <div className="h-full w-full bg-[url(/img/placeholder/avatar.png)] bg-size-[60px] bg-center" />
         )}
-      </div>
+      </div> */}
     </header>
   );
 }
