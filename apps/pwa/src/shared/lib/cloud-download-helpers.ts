@@ -64,6 +64,8 @@ export function getStorageUrl(filePath: string): string {
 
 /**
  * Asset data from cloud
+ * Note: All reverse FK references (session_id, character_id, scenario_id) have been removed.
+ * Assets are now referenced only via forward FK from parent tables (e.g., character.icon_asset_id).
  */
 export interface AssetCloudData {
   id: string;
@@ -72,9 +74,6 @@ export interface AssetCloudData {
   size_byte: number;
   mime_type: string;
   file_path: string;
-  session_id: string | null;
-  character_id: string | null;
-  scenario_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -306,14 +305,37 @@ export async function fetchSessionFromCloud(
       return Result.fail(`Failed to fetch scenarios: ${scenariosError.message}`);
     }
 
-    // Fetch assets belonging to this session
-    const { data: assetsData, error: assetsError } = await supabaseClient
-      .from("astrsk_assets")
-      .select("*")
-      .eq("session_id", sessionId);
+    // Collect asset IDs from forward FK references (no longer using astrsk_assets.session_id)
+    const assetIds: Set<string> = new Set();
 
-    if (assetsError) {
-      return Result.fail(`Failed to fetch assets: ${assetsError.message}`);
+    // Session-level assets: cover_id, background_id
+    if (sessionData.cover_id) assetIds.add(sessionData.cover_id);
+    if (sessionData.background_id) assetIds.add(sessionData.background_id);
+
+    // Character assets: icon_asset_id
+    for (const char of charactersData ?? []) {
+      if (char.icon_asset_id) assetIds.add(char.icon_asset_id);
+    }
+
+    // Scenario assets: icon_asset_id (scenarios use same field name)
+    for (const scenario of scenariosData ?? []) {
+      if (scenario.icon_asset_id) assetIds.add(scenario.icon_asset_id);
+    }
+
+    // Fetch assets by their IDs (only if there are any)
+    let assetsData: AssetCloudData[] = [];
+    if (assetIds.size > 0) {
+      const { data: fetchedAssets, error: assetsError } = await supabaseClient
+        .from("astrsk_assets")
+        .select("*")
+        .in("id", Array.from(assetIds));
+
+      if (assetsError) {
+        // Non-fatal: log warning and continue with empty assets
+        console.warn(`Failed to fetch assets: ${assetsError.message}`);
+      } else {
+        assetsData = (fetchedAssets ?? []) as AssetCloudData[];
+      }
     }
 
     // Initialize flow-related data
@@ -366,7 +388,7 @@ export async function fetchSessionFromCloud(
       agents,
       dataStoreNodes,
       ifNodes,
-      assets: (assetsData ?? []) as AssetCloudData[],
+      assets: assetsData,
     });
   } catch (error) {
     return Result.fail(`Unexpected error fetching session: ${error}`);

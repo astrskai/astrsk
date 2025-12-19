@@ -10,31 +10,43 @@ import {
 } from "@/shared/ui";
 import { CharacterCard } from "@/entities/card/domain";
 
+/** Visual state configuration for the button */
+interface ButtonStateProps {
+  isUser?: boolean;
+  isHighLighted?: boolean;
+  isSubscribeBadge?: boolean;
+  isDisabled?: boolean;
+}
+
+/** Display configuration for the button */
+interface ButtonDisplayProps {
+  showName?: boolean;
+  shape?: "circle" | "hexagon";
+}
+
+export interface UserInputCharacterButtonProps extends ButtonStateProps, ButtonDisplayProps {
+  characterCardId?: UniqueEntityID;
+  icon?: React.ReactNode;
+  iconSrc?: string;
+  label?: string | React.ReactNode;
+  onClick?: () => void;
+}
+
 export const UserInputCharacterButton = React.memo(({
   characterCardId,
   icon,
   iconSrc,
   label,
-  isUser = false,
   onClick = () => {},
+  // State props
+  isUser = false,
   isHighLighted = false,
   isSubscribeBadge = false,
   isDisabled = false,
+  // Display props
   showName = true,
   shape = "circle",
-}: {
-  characterCardId?: UniqueEntityID;
-  icon?: React.ReactNode;
-  iconSrc?: string; // Custom icon source URL (overrides card's icon)
-  label?: string | React.ReactNode;
-  isUser?: boolean;
-  onClick?: () => void;
-  isHighLighted?: boolean;
-  isSubscribeBadge?: boolean;
-  isDisabled?: boolean;
-  showName?: boolean;
-  shape?: "circle" | "hexagon";
-}) => {
+}: UserInputCharacterButtonProps) => {
   const [characterCard] = useCard<CharacterCard>(characterCardId);
   const [characterIcon, characterIconIsVideo] = useAssetShared(
     characterCard?.props.iconAssetId,
@@ -159,7 +171,7 @@ export const UserInputCharacterButton = React.memo(({
             className={cn(
               "text-text-primary grid size-[36px] place-items-center md:hidden",
               isHexagon ? "" : "rounded-full",
-              "bg-background-surface-4 group-hover:bg-background-surface-5 border-border-normal border-1 transition-colors duration-300 ease-out",
+              "bg-background-surface-4 group-hover:bg-background-surface-5 border-border-normal border transition-colors duration-300 ease-out",
               isHighLighted &&
                 "border-primary-normal border-2 shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)]",
             )}
@@ -179,7 +191,7 @@ export const UserInputCharacterButton = React.memo(({
             className={cn(
               "text-text-primary hidden size-[48px] place-items-center md:grid",
               isHexagon ? "" : "rounded-full",
-              "bg-background-surface-4 group-hover:bg-background-surface-5 border-border-normal border-1 transition-colors duration-300 ease-out",
+              "bg-background-surface-4 group-hover:bg-background-surface-5 border-border-normal border transition-colors duration-300 ease-out",
               isHighLighted &&
                 "border-primary-normal border-2 shadow-[0px_0px_10px_0px_rgba(152,215,249,1.00)]",
             )}
