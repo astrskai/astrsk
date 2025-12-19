@@ -23,6 +23,7 @@ import { useFlow } from "@/shared/hooks/use-flow";
 import { useCard } from "@/shared/hooks/use-card";
 import { useSessionSettingsHandlers } from "@/shared/hooks/use-session-settings-handlers";
 import { useSessionStore } from "@/shared/stores/session-store";
+import { useIsTouchDevice } from "@/shared/hooks/use-is-touch-device";
 import { UniqueEntityID } from "@/shared/domain";
 import { fetchSession, useSaveSession } from "@/entities/session/api";
 import { CardTab } from "@/features/session/create-session/step-cards";
@@ -361,6 +362,9 @@ export const SessionSettings = ({
   const { data: flow } = useFlow(session?.flowId);
   const saveSessionMutation = useSaveSession();
 
+  // Touch device detection for always-visible action buttons
+  const isTouchDevice = useIsTouchDevice();
+
   // Fetch plot card data
   const [plotCard] = useCard(session?.plotCard?.id);
 
@@ -593,7 +597,10 @@ export const SessionSettings = ({
                 </h1>
                 <button
                   onClick={handleStartEditTitle}
-                  className="text-fg-muted hover:text-fg-default flex-shrink-0 rounded-lg p-1 opacity-0 transition-all group-hover:opacity-100 hover:bg-white/5 md:p-1.5"
+                  className={cn(
+                    "text-fg-muted hover:text-fg-default flex-shrink-0 rounded-lg p-1 transition-all hover:bg-white/5 md:p-1.5",
+                    isTouchDevice ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  )}
                   aria-label="Edit name"
                 >
                   <Pencil className="h-4 w-4" />
@@ -790,10 +797,13 @@ export const SessionSettings = ({
                     alt="Cover image"
                     className="h-full w-full object-cover"
                   />
-                  {/* Delete button on hover */}
+                  {/* Delete button on hover (always visible on touch devices) */}
                   <button
                     onClick={handleDeleteCoverImage}
-                    className="absolute top-2 right-2 z-10 rounded-full bg-black/60 p-1.5 text-white opacity-0 shadow-lg transition-all group-hover:opacity-100 hover:bg-red-500/80 md:p-2"
+                    className={cn(
+                      "absolute top-2 right-2 z-10 rounded-full bg-black/60 p-1.5 text-white shadow-lg transition-all hover:bg-red-500/80 md:p-2",
+                      isTouchDevice ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    )}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

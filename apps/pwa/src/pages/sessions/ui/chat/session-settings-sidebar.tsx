@@ -576,6 +576,45 @@ const SessionSettingsSidebar = ({
       </div>
 
       <div className="flex-1 space-y-4 overflow-y-auto p-4 [&>section]:flex [&>section]:flex-col [&>section]:gap-2">
+        
+        <section>
+          <h3 className="font-semibold">User character</h3>
+          <div className="space-y-2">
+            {session.userCharacterCardId ? (
+              <PersonaItem
+                key={`user-character-${session.userCharacterCardId.toString()}`}
+                characterId={session.userCharacterCardId}
+                isEnabled={true}
+                onClick={() => {
+                  navigate({
+                    to: "/assets/characters/{-$characterId}",
+                    params: {
+                      characterId:
+                        session.userCharacterCardId?.toString() ?? "",
+                    },
+                    search: { mode: "edit" },
+                  });
+                }}
+              />
+            ) : (
+              <div className="group flex h-[64px] overflow-hidden rounded-lg border border-border-subtle">
+                <div className="relative w-[25%]">
+                  <img
+                    className="h-full w-full object-cover"
+                    src="/img/placeholder/character-placeholder.png"
+                    alt="No Persona"
+                  />
+                </div>
+                <div className="flex w-[75%] items-center justify-between gap-2 p-4">
+                  <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-fg-default">
+                    No persona
+                  </h3>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
         <section>
           <h3 className="font-semibold">AI characters</h3>
           <div className="space-y-2">
@@ -632,43 +671,6 @@ const SessionSettingsSidebar = ({
           />
         </section>
 
-        <section>
-          <h3 className="font-semibold">User character</h3>
-          <div className="space-y-2">
-            {session.userCharacterCardId ? (
-              <PersonaItem
-                key={`user-character-${session.userCharacterCardId.toString()}`}
-                characterId={session.userCharacterCardId}
-                isEnabled={true}
-                onClick={() => {
-                  navigate({
-                    to: "/assets/characters/{-$characterId}",
-                    params: {
-                      characterId:
-                        session.userCharacterCardId?.toString() ?? "",
-                    },
-                    search: { mode: "edit" },
-                  });
-                }}
-              />
-            ) : (
-              <div className="group flex h-[64px] overflow-hidden rounded-lg border border-border-subtle">
-                <div className="relative w-[25%]">
-                  <img
-                    className="h-full w-full object-cover"
-                    src="/img/placeholder/character-placeholder.png"
-                    alt="No Persona"
-                  />
-                </div>
-                <div className="flex w-[75%] items-center justify-between gap-2 p-4">
-                  <h3 className="line-clamp-2 text-base font-semibold text-ellipsis text-fg-default">
-                    No persona
-                  </h3>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
 
         <section>
           <h3 className="font-semibold">Story setting</h3>
@@ -676,6 +678,7 @@ const SessionSettingsSidebar = ({
             <StorySettingItem
               icon={BookOpen}
               title="Scenario"
+              disabled={!session.plotCard}
               onClick={() => {
                 if (session.plotCard) {
                   navigate({
@@ -684,8 +687,6 @@ const SessionSettingsSidebar = ({
                       scenarioId: session.plotCard?.id.toString() ?? "",
                     },
                   });
-                } else {
-                  handleAddScenario();
                 }
               }}
             />
