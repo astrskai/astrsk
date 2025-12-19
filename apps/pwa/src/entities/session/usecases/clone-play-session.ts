@@ -3,7 +3,7 @@ import { UniqueEntityID } from "@/shared/domain";
 import { formatFail } from "@/shared/lib";
 import { Session } from "@/entities/session/domain/session";
 import { CloneSession } from "./clone-session";
-import { LoadSessionRepo } from "@/entities/session/repos";
+import { LoadSessionRepo, SaveSessionRepo } from "@/entities/session/repos";
 
 type Command = {
   /** The template session to clone */
@@ -24,6 +24,7 @@ export class ClonePlaySession implements UseCase<Command, Result<Session>> {
   constructor(
     private cloneSession: CloneSession,
     private loadSessionRepo: LoadSessionRepo,
+    private saveSessionRepo: SaveSessionRepo,
   ) {}
 
   async execute({
@@ -68,6 +69,15 @@ export class ClonePlaySession implements UseCase<Command, Result<Session>> {
       return formatFail(
         "Failed to update cloned session",
         updateResult.getError(),
+      );
+    }
+
+    // Save the updated session to the database
+    const saveResult = await this.saveSessionRepo.saveSession(clonedSession);
+    if (saveResult.isFailure) {
+      return formatFail(
+        "Failed to save play session",
+        saveResult.getError(),
       );
     }
 

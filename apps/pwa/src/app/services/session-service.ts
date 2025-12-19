@@ -138,6 +138,7 @@ export class SessionService {
     this.clonePlaySession = new ClonePlaySession(
       this.cloneSession,
       this.sessionRepo,
+      this.sessionRepo,
     );
     this.cloneTemplateSession = new CloneTemplateSession(
       this.cloneSession,

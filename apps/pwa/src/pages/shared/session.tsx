@@ -8,6 +8,9 @@ import { toastError, toastSuccess } from "@/shared/ui/toast";
 import { useSessionStore } from "@/shared/stores/session-store";
 import { fetchSessionFromCloud, type SessionCloudBundle } from "@/shared/lib/cloud-download-helpers";
 import { SharedWelcome } from "./shared-welcome";
+import { SessionService } from "@/app/services/session-service";
+import { useQueryClient } from "@tanstack/react-query";
+import { sessionQueries } from "@/entities/session/api/query-factory";
 
 type ImportState = "welcome" | "fetching" | "importing" | "error";
 
@@ -17,6 +20,7 @@ const LOADING_TIMEOUT = 30000;
 
 export default function SharedSessionPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const selectSession = useSessionStore.use.selectSession();
   const { uuid } = Route.useParams();
   const [importState, setImportState] = useState<ImportState>("welcome");
@@ -89,17 +93,53 @@ export default function SharedSessionPage() {
     // Wait a moment to ensure services are fully initialized
     await new Promise(resolve => setTimeout(resolve, 500));
 
+    // Step 1: Import as template session (isPlaySession: false)
     importSessionMutation.mutate(
-      { sessionId: uuid, isPlaySession: true },
+      { sessionId: uuid, isPlaySession: false },
       {
-        onSuccess: async (session) => {
-          toastSuccess("Session started!", {
-            description: `Started a chat in ${session.props.name}`,
+        onSuccess: async (templateSession) => {
+          console.log("[SharedSession] Template session imported:", {
+            id: templateSession.id.toString(),
+            name: templateSession.props.name,
+            isPlaySession: templateSession.props.isPlaySession,
           });
-          selectSession(session.id, session.props.name);
+
+          // Step 2: Clone the template to create a play session
+          const clonedPlaySessionResult = await SessionService.clonePlaySession.execute({
+            sessionId: templateSession.id,
+            includeHistory: false,
+          });
+
+          if (clonedPlaySessionResult.isFailure) {
+            setImportState("error");
+            const message = clonedPlaySessionResult.getError();
+            setErrorMessage(message);
+            toastError("Failed to create play session", { description: message });
+            return;
+          }
+
+          const playSession = clonedPlaySessionResult.getValue();
+
+          console.log("[SharedSession] Play session cloned:", {
+            id: playSession.id.toString(),
+            name: playSession.props.name,
+            isPlaySession: playSession.props.isPlaySession,
+          });
+
+          // Manually invalidate cache after cloning (SessionService.clonePlaySession doesn't use mutation hook)
+          queryClient.invalidateQueries({
+            queryKey: sessionQueries.lists(),
+          });
+
+          console.log("[SharedSession] Cache invalidated for session lists");
+
+          toastSuccess("Session started!", {
+            description: `Started a chat in ${playSession.props.name}`,
+          });
+          selectSession(playSession.id, playSession.props.name);
           navigate({
             to: "/sessions/$sessionId",
-            params: { sessionId: session.id.toString() },
+            params: { sessionId: playSession.id.toString() },
             replace: true,
           });
         },
