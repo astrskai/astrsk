@@ -11,10 +11,12 @@ const SKELETON_PATH = "/img/skeleton.svg";
 
 const useOpfsFile = (filePath?: string | null) => {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     if (!filePath) {
       setObjectUrl(null);
+      setError(null);
       return;
     }
 
@@ -26,8 +28,12 @@ const useOpfsFile = (filePath?: string | null) => {
         // Get OPFS file
         const opfsFile = await file(filePath).getOriginFile();
         if (!opfsFile) {
+          // File doesn't exist in OPFS - this is not an error, just missing data
           // TODO: get file from cloud or p2p
-          if (mounted) setObjectUrl(null);
+          if (mounted) {
+            setObjectUrl(null);
+            setError(null);
+          }
           return;
         }
 
@@ -36,17 +42,29 @@ const useOpfsFile = (filePath?: string | null) => {
         currentUrl = url; // Store URL for cleanup
         if (mounted) {
           setObjectUrl(url);
+          setError(null);
         } else {
           // If unmounted before setting, revoke immediately
           URL.revokeObjectURL(url);
         }
       } catch (error) {
-        logger.error("Failed to load OPFS file:", error);
-        if (mounted) setObjectUrl(null);
+        // Log error but don't throw - allow UI to continue rendering
+        logger.error(`Failed to load OPFS file "${filePath}":`, error);
+        if (mounted) {
+          setObjectUrl(null);
+          setError(error instanceof Error ? error : new Error(String(error)));
+        }
       }
     };
 
-    loadFile();
+    loadFile().catch((err) => {
+      // Catch any unhandled promise rejections
+      logger.error(`Unhandled error loading OPFS file "${filePath}":`, err);
+      if (mounted) {
+        setObjectUrl(null);
+        setError(err instanceof Error ? err : new Error(String(err)));
+      }
+    });
 
     // Cleanup: revoke the URL when component unmounts or filePath changes
     return () => {
@@ -56,10 +74,11 @@ const useOpfsFile = (filePath?: string | null) => {
         currentUrl = null;
       }
       setObjectUrl(null);
+      setError(null);
     };
   }, [filePath]);
 
-  return { data: objectUrl } as const;
+  return { data: objectUrl, error } as const;
 };
 
 const useAsset = (assetId?: UniqueEntityID) => {

@@ -109,6 +109,14 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastInitializedAgentId = useRef<string | null>(null);
 
+  // Store mutations in refs to avoid recreating debounce
+  const updatePromptMessagesRef = useRef(updatePromptMessages);
+  const updateTextPromptRef = useRef(updateTextPrompt);
+  useEffect(() => {
+    updatePromptMessagesRef.current = updatePromptMessages;
+    updateTextPromptRef.current = updateTextPrompt;
+  }, [updatePromptMessages, updateTextPrompt]);
+
   // 5. Initialize state when agent changes
   useEffect(() => {
     if (agentId && agentId !== lastInitializedAgentId.current && promptData) {
@@ -179,7 +187,7 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
     updatePromptMessages.hasCursor,
     updateTextPrompt.hasCursor,
   ]);
-  // 7. Debounced save for chat messages - only recreate when target changes
+  // 7. Debounced save for chat messages - use ref to avoid recreating debounce
   const debouncedSaveMessages = useMemo(
     () =>
       debounce(async (items: PromptItem[]) => {
@@ -187,20 +195,20 @@ export function PromptPanel({ flowId, agentId }: PromptPanelProps) {
 
         // Convert items to the format expected by the agent
         const promptMessages = convertItemsToPromptMessages(items);
-        updatePromptMessages.mutate(promptMessages);
+        updatePromptMessagesRef.current.mutate(promptMessages);
       }, 300),
-    [agentId, updatePromptMessages],
+    [agentId],
   );
 
-  // 8. Debounced save for text prompt - only recreate when target changes
+  // 8. Debounced save for text prompt - use ref to avoid recreating debounce
   const debouncedSaveText = useMemo(
     () =>
       debounce(async (text: string) => {
         if (!agentId) return;
 
-        updateTextPrompt.mutate(text);
+        updateTextPromptRef.current.mutate(text);
       }, 300),
-    [agentId, updateTextPrompt],
+    [agentId],
   );
 
   // 9. DnD sensors

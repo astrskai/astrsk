@@ -55,6 +55,12 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
     hasCursorRef.current = updateResponseTemplate.hasCursor;
   }, [updateResponseTemplate.isEditing, updateResponseTemplate.hasCursor]);
 
+  // Store mutation in ref to avoid recreating debounce
+  const updateResponseTemplateRef = useRef(updateResponseTemplate);
+  useEffect(() => {
+    updateResponseTemplateRef.current = updateResponseTemplate;
+  }, [updateResponseTemplate]);
+
   // Initialize and sync template
   useEffect(() => {
     // Don't sync while editing OR while cursor is active
@@ -73,10 +79,10 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
     }
   }, [flowId, responseTemplate, updateResponseTemplate.isEditing, updateResponseTemplate.hasCursor]);
 
-  // Debounced save - only recreate when target changes
+  // Debounced save - use ref to avoid recreating debounce
   const debouncedSave = useMemo(
     () => debounce((template: string) => {
-      updateResponseTemplate.mutate(template, {
+      updateResponseTemplateRef.current.mutate(template, {
         onError: (error) => {
           toastError("Failed to save response template", {
             description: error instanceof Error ? error.message : "Unknown error",
@@ -84,7 +90,7 @@ export function ResponseDesignPanel({ flowId }: ResponseDesignPanelProps) {
         }
       });
     }, 1000),
-    [updateResponseTemplate]
+    [] // No dependencies - stable debounce function
   );
 
   // Handle template change

@@ -223,29 +223,48 @@ export function OutputPanel({ flowId, agentId }: OutputPanelProps) {
     fieldsRef.current = displayFields;
   }, [displayFields]);
 
+  // Store mutation in ref to avoid recreating debounce
+  const updateSchemaFieldsRef = useRef(updateSchemaFields);
+  useEffect(() => {
+    updateSchemaFieldsRef.current = updateSchemaFields;
+  }, [updateSchemaFields]);
+
   // Debounced field update for description changes with stable reference
-  const debouncedUpdateFieldDescription = useMemo(() => 
+  const debouncedUpdateFieldDescription = useMemo(() =>
     debounce((fieldId: string, description: string) => {
       // Set flags for blocking and sync prevention
       pendingSaveRef.current = true;
-      
+
       hasRecentlyEditedRef.current = true;
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
       syncTimeoutRef.current = setTimeout(() => {
         hasRecentlyEditedRef.current = false;
       }, 1000);
-      
+
       // Use ref to get current fields without causing re-render
-      const updatedFields = fieldsRef.current.map(field => 
+      const updatedFields = fieldsRef.current.map(field =>
         field.id === fieldId ? { ...field, description } : field
       );
       fieldsRef.current = updatedFields; // Update ref
-      
-      saveSchemaFields(updatedFields); // Save to database - this will trigger the mutation's isPending state
-      
+
+      // Convert SchemaFieldItem[] to SchemaField[] and save using ref
+      const schemaFields: SchemaField[] = updatedFields.map(field => ({
+        name: field.name,
+        description: field.description || undefined,
+        type: field.type,
+        required: field.required,
+        array: field.array,
+        minimum: field.minimum,
+        maximum: field.maximum,
+        pattern: field.pattern,
+        enum: field.enum,
+      }));
+
+      updateSchemaFieldsRef.current.mutate(schemaFields);
+
       // Don't call setDisplayFields here to avoid re-render/jittering
     }, 300),
-    [saveSchemaFields] // saveSchemaFields now has stable reference
+    [] // No dependencies - stable debounce function
   );
 
   // Handle field selection with blocking logic

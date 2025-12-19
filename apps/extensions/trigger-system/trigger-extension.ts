@@ -108,17 +108,18 @@ export class TriggerSystemExtension implements IExtension {
       id: "trigger-button",
       slot: "session-input-buttons",
       order: 0, // Display first, before user character button
-      render: (context, hooks, queries) => {
-        const { sessionId } = context;
-        const { useQuery } = hooks;
-        const { sessionQueries, CardType } = queries;
+      render: (context) => {
+        // Session data is fetched by ChatInput and passed via context
+        const { session, CardType } = context;
 
-        // Return button data/props instead of rendering the component
-        const { data: session } = useQuery(sessionQueries.detail(sessionId));
+        // If no session data yet, return null
+        if (!session) {
+          return null;
+        }
 
         // Find plot/scenario card from session.allCards
-        const plotCardListItem = session?.allCards?.find(
-          (card: any) => card.type === CardType.Plot || card.type === CardType.Scenario
+        const plotCardListItem = session.allCards?.find(
+          (card: any) => card.type === CardType?.Plot || card.type === CardType?.Scenario
         );
 
         // If no plot card defined, return null (no button data)

@@ -551,17 +551,13 @@ export function FlowPanelMain({ workflowId, className }: FlowPanelMainProps) {
         ? `${panelType}-${agentId}`
         : `${panelType}-standalone`;
 
-      console.log(`[openPanel] Panel ID: ${panelId}`);
 
       // Check if panel already exists
       const existingPanel = dockviewApi.getPanel(panelId);
       if (existingPanel) {
-        console.log(`[openPanel] Panel already exists, focusing it`);
         existingPanel.focus();
         return;
       }
-
-      console.log(`[openPanel] Panel doesn't exist, creating new panel`);
 
       // Get agent name, color, and inactive state if applicable
       let agentColor: string | undefined;
@@ -613,9 +609,7 @@ export function FlowPanelMain({ workflowId, className }: FlowPanelMainProps) {
         } else {
           nodeName = nodeData?.label || nodeData?.name || "Unnamed";
         }
-        console.log(`[openPanel] Node name for title: ${nodeName}`);
         title = getPanelTitle(panelType, nodeName);
-        console.log(`[openPanel] Panel title: ${title}`);
       }
       // Default case
       else {
@@ -730,14 +724,7 @@ export function FlowPanelMain({ workflowId, className }: FlowPanelMainProps) {
       }
 
       if (newPanel) {
-        console.log(
-          `[openPanel] Panel created successfully with ID: ${panelId}`,
-        );
-        console.log(`[openPanel] Panel component: ${panelType}`);
-        console.log(`[openPanel] Panel params:`, newPanel.params);
         debouncedSaveLayout(dockviewApi);
-      } else {
-        console.log(`[openPanel] Failed to create panel!`);
       }
     },
     [dockviewApi, workflowId, debouncedSaveLayout],
