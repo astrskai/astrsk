@@ -82,16 +82,13 @@ export class ExportScenarioToCloud
 
       // 3. Upload scenario icon asset FIRST (before scenario record)
       // Assets must exist before records that reference them via FK
-      // IMPORTANT: Pass scenario_id context so claim_shared_resource can find the asset
+      // Upload icon asset if present (linked via scenario.icon_asset_id forward FK)
       if (scenarioData.icon_asset_id) {
         const iconAsset = await this.loadAssetRepo.getAssetById(
           new UniqueEntityID(scenarioData.icon_asset_id)
         );
         if (iconAsset.isSuccess) {
-          const assetUploadResult = await uploadAssetToSupabase(
-            iconAsset.getValue(),
-            { scenarioId: clonedCardId.toString() } // Set scenario_id for RLS and claiming
-          );
+          const assetUploadResult = await uploadAssetToSupabase(iconAsset.getValue());
           if (assetUploadResult.isFailure) {
             return Result.fail<ShareLinkResult>(
               `Failed to upload scenario icon asset: ${assetUploadResult.getError()}`

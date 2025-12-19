@@ -4,6 +4,11 @@ import { Asset } from "@/entities/asset/domain/asset";
 import { Result } from "@/shared/core";
 import { maybeConvertToWebp } from "./webp-converter";
 
+/**
+ * Asset record for Supabase astrsk_assets table.
+ * Note: All reverse FK references (session_id, character_id, scenario_id) have been removed.
+ * Assets are now referenced only via forward FK from parent tables (e.g., character.icon_asset_id).
+ */
 export interface SupabaseAssetRecord {
   id: string;
   hash: string;
@@ -11,27 +16,16 @@ export interface SupabaseAssetRecord {
   size_byte: number;
   mime_type: string;
   file_path: string;
-  session_id: string | null;
-  character_id: string | null;
-  scenario_id: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface AssetUploadContext {
-  sessionId?: string | null;
-  characterId?: string | null;
-  scenarioId?: string | null;
 }
 
 /**
  * Upload an asset to Supabase Storage and insert metadata into astrsk_assets table
  * @param asset - The asset to upload
- * @param context - Optional foreign key context for cascade delete (sessionId, characterId, scenarioId)
  */
 export async function uploadAssetToSupabase(
   asset: Asset,
-  context?: AssetUploadContext,
 ): Promise<Result<SupabaseAssetRecord>> {
   try {
     // Check if file_path is an external URL or CDN path (e.g., default background)
@@ -95,9 +89,6 @@ export async function uploadAssetToSupabase(
       size_byte: asset.props.sizeByte,
       mime_type: asset.props.mimeType,
       file_path: storagePath, // Either full URL or relative path
-      session_id: context?.sessionId ?? null,
-      character_id: context?.characterId ?? null,
-      scenario_id: context?.scenarioId ?? null,
     };
 
     const { data: insertData, error: insertError } = await supabaseClient
