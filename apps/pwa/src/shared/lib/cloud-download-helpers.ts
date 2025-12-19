@@ -388,7 +388,7 @@ export async function fetchSessionFromCloud(
       agents,
       dataStoreNodes,
       ifNodes,
-      assets: (assetsData ?? []) as AssetCloudData[],
+      assets: assetsData,
     });
   } catch (error) {
     return Result.fail(`Unexpected error fetching session: ${error}`);
