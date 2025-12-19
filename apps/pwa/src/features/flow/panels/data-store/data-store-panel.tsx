@@ -60,14 +60,18 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   const { data: dataStoreNodeData, isLoading: dataStoreNodeLoading } = useQuery(
     {
       ...dataStoreNodeQueries.detail(nodeId),
-      enabled: !!flowId && !!nodeId && !updateNodeFields.isEditing,
+      enabled:
+        !!flowId &&
+        !!nodeId &&
+        !updateNodeFields.isEditing &&
+        !updateNodeFields.hasCursor,
     },
   );
 
   // Query for data store schema - panel-specific query
   const { data: schema, isLoading: schemaLoading } = useQuery({
     ...flowQueries.dataStoreSchema(flowId),
-    enabled: !!flowId && !updateNodeFields.isEditing,
+    enabled: !!flowId && !updateNodeFields.isEditing && !updateNodeFields.hasCursor,
   });
 
   const schemaFields = useMemo(() => schema?.fields || [], [schema?.fields]);
@@ -95,6 +99,12 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
   const hasRecentlyEditedRef = useRef(false);
   const syncTimeoutRef = useRef<NodeJS.Timeout>();
   const isFieldsPending = updateNodeFields.isPending;
+
+  // Store mutation in ref to avoid recreating debounce
+  const updateNodeFieldsRef = useRef(updateNodeFields);
+  useEffect(() => {
+    updateNodeFieldsRef.current = updateNodeFields;
+  }, [updateNodeFields]);
 
   // Initialize data store fields from node data
   useEffect(() => {
@@ -328,10 +338,14 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
             position,
           );
         }
+        // Mark cursor as active when editor is focused
+        updateNodeFields.setCursorActive(true);
       });
 
       editor.onDidBlurEditorWidget(() => {
         setLastMonacoEditor(null, null, null, null);
+        // Mark cursor as inactive when editor loses focus
+        updateNodeFields.setCursorActive(false);
       });
 
       editor.onDidChangeCursorPosition((e) => {
@@ -343,38 +357,35 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
         );
       });
     },
-    [nodeId, flowId, setLastMonacoEditor],
+    [nodeId, flowId, setLastMonacoEditor, updateNodeFields],
   );
 
   // Debounced save for logic with pending flag support
-  const debouncedSaveLogic = useMemo(
-    () =>
-      debounce((value: string) => {
-        // Set a flag that we have pending changes that will save soon
-        pendingSaveRef.current = true;
+  const debouncedSaveLogic = useMemo(() => {
+    return debounce((fieldId: string, value: string) => {
+      // Set a flag that we have pending changes that will save soon
+      pendingSaveRef.current = true;
 
-        // Set flag to prevent syncing for a while after editing
-        hasRecentlyEditedRef.current = true;
-        if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-        syncTimeoutRef.current = setTimeout(() => {
-          hasRecentlyEditedRef.current = false;
-        }, 1000); // Wait 1 second after last edit before allowing sync
+      // Set flag to prevent syncing for a while after editing
+      hasRecentlyEditedRef.current = true;
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = setTimeout(() => {
+        hasRecentlyEditedRef.current = false;
+      }, 1000); // Wait 1 second after last edit before allowing sync
 
-        // Save logic for current field
-        if (selectedFieldId) {
-          const updatedFields = fieldsRef.current.map((f) =>
-            f.schemaFieldId === selectedFieldId ? { ...f, logic: value } : f,
-          );
-          fieldsRef.current = updatedFields; // Update ref
+      // Save logic for current field using ref to get current fields
+      const updatedFields = fieldsRef.current.map((f) =>
+        f.schemaFieldId === fieldId ? { ...f, logic: value } : f,
+      );
+      fieldsRef.current = updatedFields; // Update ref
 
-          saveDataStoreFields(updatedFields); // Save to database - this will trigger the mutation's isPending state
+      // Call mutation directly using ref to avoid dependency issues
+      updateNodeFieldsRef.current.mutate(updatedFields);
 
-          // Reset editing flag after save
-          isEditingLogicRef.current = false;
-        }
-      }, 1000), // 1 second debounce like response design panel
-    [selectedFieldId, saveDataStoreFields],
-  );
+      // Reset editing flag after save
+      isEditingLogicRef.current = false;
+    }, 1000); // 1 second debounce
+  }, [nodeId]);
 
   // Get selected field and its schema
   const selectedField = useMemo(
@@ -620,7 +631,9 @@ export function DataStorePanel({ flowId, nodeId }: DataStorePanelProps) {
                       onChange={(value) => {
                         isEditingLogicRef.current = true;
                         setLocalLogic(value || "");
-                        debouncedSaveLogic(value || "");
+                        if (selectedFieldId) {
+                          debouncedSaveLogic(selectedFieldId, value || "");
+                        }
                       }}
                       language="javascript"
                       onMount={handleEditorMount}

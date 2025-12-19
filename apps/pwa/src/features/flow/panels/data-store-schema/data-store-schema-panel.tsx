@@ -93,15 +93,21 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
     }
   }, [selectedField?.id, selectedField?.initialValue]);
 
-  // 7. Debounced save for fields - only recreate when target changes
+  // Store mutation in ref to avoid recreating debounce
+  const updateDataStoreSchemaRef = useRef(updateDataStoreSchema);
+  useEffect(() => {
+    updateDataStoreSchemaRef.current = updateDataStoreSchema;
+  }, [updateDataStoreSchema]);
+
+  // 7. Debounced save for fields - use ref to avoid recreating debounce
   const debouncedSaveFields = useMemo(
     () => debounce((updatedFields: DataStoreSchemaField[]) => {
       const updatedSchema: DataStoreSchema = {
         fields: updatedFields
       };
-      
-      // Access mutation directly
-      updateDataStoreSchema.mutate(updatedSchema, {
+
+      // Access mutation using ref
+      updateDataStoreSchemaRef.current.mutate(updatedSchema, {
         onError: (error) => {
           toastError("Failed to save data store schema", {
             description: error instanceof Error ? error.message : "Unknown error",
@@ -109,7 +115,7 @@ export function DataStoreSchemaPanel({ flowId }: DataStoreSchemaProps) {
         }
       });
     }, 300),
-    [flowId] // Only recreate when save target changes
+    [] // No dependencies - stable debounce function
   );
   
   // Clean up debounced function on unmount

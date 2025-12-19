@@ -202,7 +202,8 @@ export interface ExtensionQueries {
 
 /**
  * Context provided to extension UI render functions
- * Slot-specific data only (React, components, disabled, callbacks, etc.)
+ * Includes all data extensions need (NO HOOKS - violates Rules of Hooks)
+ * Host component fetches data and passes it via context
  */
 export interface ExtensionUIRenderContext {
   /** React library for createElement, Fragment, etc. */
@@ -212,6 +213,10 @@ export interface ExtensionUIRenderContext {
     UserInputCharacterButton?: any;
     // Future components can be added here without breaking existing extensions
   };
+  /** Card type enum for filtering */
+  CardType?: any;
+  /** Session data (fetched by host component) */
+  session?: any;
   /** Generate character message (for trigger system) */
   generateCharacterMessage?: (
     characterCardId: any,
@@ -230,11 +235,8 @@ export interface ExtensionUIComponent {
   extensionId: string;
   slot: string; // e.g., "session-input-buttons"
   order?: number; // Display order (lower = first)
-  render: (
-    context: ExtensionUIRenderContext,
-    hooks: ExtensionHooks,
-    queries: ExtensionQueries
-  ) => any; // Returns React element
+  // NOTE: Extensions should NOT use hooks - data comes via context
+  render: (context: ExtensionUIRenderContext) => any; // Returns React element or props
 }
 
 /**

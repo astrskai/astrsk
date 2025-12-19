@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Send, StopCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import ChatCharacterButton from "./chat-character-button";
 import ChatAutoReplyButton from "./chat-auto-reply-button";
@@ -11,6 +12,7 @@ import { AutoReply } from "@/shared/stores/session-store";
 import ChatStatsButton from "./chat-stats-button";
 import { useExtensionUI } from "@/shared/hooks/use-extension-ui";
 import { UserInputCharacterButton } from "./user-input-character-button";
+import { sessionQueries } from "@/entities/session/api/query-factory";
 
 interface ChatInputProps {
   sessionId: UniqueEntityID;
@@ -48,14 +50,19 @@ export default function ChatInput({
   const [messageContent, setMessageContent] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch session data for extensions (at component level, not inside extension render)
+  const { data: session } = useQuery(sessionQueries.detail(sessionId));
+
   // Memoize context object to prevent infinite re-renders
+  // Include session data so extensions can access it without using hooks
   const extensionContext = useMemo(
     () => ({
       sessionId,
+      session, // Pass session data fetched by ChatInput
       disabled: !!streamingMessageId,
       generateCharacterMessage,
     }),
-    [sessionId, streamingMessageId, generateCharacterMessage]
+    [sessionId, session, streamingMessageId, generateCharacterMessage]
   );
 
   // Get extension UI components for the session input buttons slot

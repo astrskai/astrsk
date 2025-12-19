@@ -11,6 +11,7 @@ import { DataStoreField } from "@/entities/flow/domain/flow";
 export function useUpdateDataStoreNodeFields(flowId: string, nodeId: string) {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [hasCursor, setHasCursor] = useState(false);
   const editTimeoutRef = useRef<NodeJS.Timeout>();
 
   const startEditing = useCallback(() => {
@@ -29,6 +30,10 @@ export function useUpdateDataStoreNodeFields(flowId: string, nodeId: string) {
       setIsEditing(false);
     }, 500);
   }, []);
+
+  const setCursorActive = useCallback((active: boolean) => {
+    setHasCursor(active);
+  }, [nodeId]);
 
   const mutation = useMutation({
     mutationFn: async (fields: DataStoreField[]) => {
@@ -55,11 +60,12 @@ export function useUpdateDataStoreNodeFields(flowId: string, nodeId: string) {
       const previousFields = queryClient.getQueryData(
         dataStoreNodeKeys.fields(nodeId),
       );
+
       queryClient.setQueryData(dataStoreNodeKeys.fields(nodeId), { fields });
 
       return { previousFields };
     },
-    onError: (err, fields, context) => {
+    onError: (_err, _fields, context) => {
       // Revert optimistic update on error
       if (context?.previousFields) {
         queryClient.setQueryData(
@@ -90,8 +96,10 @@ export function useUpdateDataStoreNodeFields(flowId: string, nodeId: string) {
   return {
     ...mutation,
     isEditing,
+    hasCursor,
     setIsEditing,
     startEditing,
     endEditing,
+    setCursorActive,
   };
 }

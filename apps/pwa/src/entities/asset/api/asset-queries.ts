@@ -13,27 +13,36 @@ export const assetQueries = {
       queryKey: [...assetQueries.details(), id?.toString() ?? ""],
       queryFn: async () => {
         if (!id) return null;
-        const assetOrError = await AssetService.getAsset.execute(id);
-        if (assetOrError.isFailure) {
-          logger.error(
-            `Failed to get asset(${id.toString()})`,
-            assetOrError.getError(),
-          );
+
+        try {
+          const assetOrError = await AssetService.getAsset.execute(id);
+          if (assetOrError.isFailure) {
+            logger.error(
+              `Failed to get asset(${id.toString()})`,
+              assetOrError.getError(),
+            );
+            return null;
+          }
+          const asset = assetOrError.getValue();
+
+          // Transform to persistence format for storage
+          const persistedAsset = AssetDrizzleMapper.toPersistence(asset);
+
+          // Return OPFS file path (for asset hook, we only need the file path)
+          return persistedAsset.file_path;
+        } catch (error) {
+          // Catch any unexpected errors to prevent query from throwing
+          logger.error(`Unexpected error getting asset(${id.toString()}):`, error);
           return null;
         }
-        const asset = assetOrError.getValue();
-
-        // Transform to persistence format for storage
-        const persistedAsset = AssetDrizzleMapper.toPersistence(asset);
-
-        // Return OPFS file path (for asset hook, we only need the file path)
-        return persistedAsset.file_path;
       },
       select: (data) => {
         // For asset hook, we only need the file path, not the full domain object
         return data;
       },
       enabled: !!id,
+      // Prevent retries on error - if asset is missing, it's missing
+      retry: false,
     }),
     
   // New query that returns full asset metadata including mime type
@@ -42,23 +51,32 @@ export const assetQueries = {
       queryKey: [...assetQueries.details(), "full", id?.toString() ?? ""],
       queryFn: async () => {
         if (!id) return null;
-        const assetOrError = await AssetService.getAsset.execute(id);
-        if (assetOrError.isFailure) {
-          logger.error(
-            `Failed to get asset(${id.toString()})`,
-            assetOrError.getError(),
-          );
+
+        try {
+          const assetOrError = await AssetService.getAsset.execute(id);
+          if (assetOrError.isFailure) {
+            logger.error(
+              `Failed to get asset(${id.toString()})`,
+              assetOrError.getError(),
+            );
+            return null;
+          }
+          const asset = assetOrError.getValue();
+
+          // Return full asset with metadata
+          return {
+            filePath: asset.filePath,
+            mimeType: asset.mimeType,
+            name: asset.name
+          };
+        } catch (error) {
+          // Catch any unexpected errors to prevent query from throwing
+          logger.error(`Unexpected error getting full asset(${id.toString()}):`, error);
           return null;
         }
-        const asset = assetOrError.getValue();
-
-        // Return full asset with metadata
-        return {
-          filePath: asset.filePath,
-          mimeType: asset.mimeType,
-          name: asset.name
-        };
       },
       enabled: !!id,
+      // Prevent retries on error - if asset is missing, it's missing
+      retry: false,
     }),
 };
