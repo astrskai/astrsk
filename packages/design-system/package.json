@@ -1,6 +1,6 @@
 {
   "name": "@astrsk/design-system",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "astrsk Design System - Component library with Storybook",
   "type": "module",
   "main": "./dist/index.js",
@@ -70,7 +70,10 @@
       "types": "./dist/lib/utils.d.ts",
       "import": "./dist/lib/utils.js"
     },
-    "./styles": "./dist/index.css"
+    "./styles": {
+      "types": "./dist/styles.d.ts",
+      "default": "./dist/index.css"
+    }
   },
   "files": [
     "dist",
@@ -78,7 +81,7 @@
   ],
   "scripts": {
     "dev": "storybook dev -p 6006",
-    "build": "tsup && tailwindcss -i src/index.css -o dist/index.css --minify",
+    "build": "tsup && tailwindcss -i src/index.css -o dist/index.css --minify && cp src/styles.d.ts dist/",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "vitest",
