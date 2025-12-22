@@ -1,11 +1,4 @@
 {
-  "redirects": [
-    {
-      "source": "/ads.txt",
-      "destination": "https://monetumo.com/ads-txt/astrsk-ai",
-      "permanent": true
-    }
-  ],
   "headers": [
     {
       "source": "/(.*).html",
