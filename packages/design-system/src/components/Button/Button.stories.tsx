@@ -83,6 +83,13 @@ const meta = {
         defaultValue: { summary: 'default' },
       },
     },
+    round: {
+      control: 'boolean',
+      description: 'Apply rounded-full instead of default border radius',
+      table: {
+        defaultValue: { summary: 'false' },
+      },
+    },
     disabled: {
       control: 'boolean',
       description: 'Disable button',
@@ -124,6 +131,56 @@ export const Sizes: Story = {
       <Button size="sm">Small</Button>
       <Button size="default">Default</Button>
       <Button size="lg">Large</Button>
+    </div>
+  ),
+};
+
+// Round buttons
+export const Round: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div>
+        <h4 style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--fg-muted)' }}>
+          Round Text Buttons
+        </h4>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <Button round size="sm">Small</Button>
+          <Button round size="default">Default</Button>
+          <Button round size="lg">Large</Button>
+        </div>
+      </div>
+      <div>
+        <h4 style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--fg-muted)' }}>
+          Round Icon Buttons
+        </h4>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <Button round size="icon-sm" aria-label="Add"><PlusIcon /></Button>
+          <Button round size="icon" aria-label="Add"><PlusIcon /></Button>
+          <Button round size="icon-lg" aria-label="Add"><PlusIcon /></Button>
+        </div>
+      </div>
+      <div>
+        <h4 style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--fg-muted)' }}>
+          Round with Variants
+        </h4>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <Button round variant="default">Default</Button>
+          <Button round variant="secondary">Secondary</Button>
+          <Button round variant="outline">Outline</Button>
+          <Button round variant="ghost">Ghost</Button>
+          <Button round variant="destructive">Destructive</Button>
+        </div>
+      </div>
+      <div>
+        <h4 style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--fg-muted)' }}>
+          Round with Icons
+        </h4>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <Button round><PlusIcon /> Add New</Button>
+          <Button round variant="secondary"><DownloadIcon /> Download</Button>
+          <Button round variant="outline"><MailIcon /> Email</Button>
+        </div>
+      </div>
     </div>
   ),
 };
