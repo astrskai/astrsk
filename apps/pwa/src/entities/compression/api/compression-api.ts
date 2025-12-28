@@ -64,7 +64,7 @@ export interface CompressResponse {
         completion_tokens: number;
         total_tokens: number;
       };
-      toolCall: any;
+      toolCall: unknown;
     };
   };
 }
@@ -114,7 +114,7 @@ export interface RetrieveResponse {
         completion_tokens: number;
         total_tokens: number;
       };
-      toolCall: any;
+      toolCall: unknown;
     };
     filtering?: {
       totalAnchors: number;

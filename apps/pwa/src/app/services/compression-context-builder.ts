@@ -4,6 +4,14 @@ import { fetchSessionCharacterRegistry } from "@/entities/session/api/query-fact
 import { CompressionSystem } from "@/entities/compression";
 import { useCompressionStore } from "@/entities/compression/stores/compression-store";
 import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
+import { RenderContext } from "@/shared/prompt/domain";
+
+/**
+ * Context enriched with compression data for chat completion
+ */
+export interface ContextWithCompression extends RenderContext {
+  compressionContext?: string;
+}
 
 /**
  * Build compressed or uncompressed context for chat completion agents
@@ -21,10 +29,10 @@ import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
  */
 export async function buildCompressionContext(params: {
   sessionId: UniqueEntityID;
-  fullContext: any;
+  fullContext: RenderContext;
   userQuery?: string;
   characterName?: string;
-}): Promise<any> {
+}): Promise<ContextWithCompression> {
   const { sessionId, fullContext } = params;
   // Extract userQuery from last message in history (user's latest input)
   const userQuery = params.userQuery || fullContext.history?.[fullContext.history.length - 1]?.content;
