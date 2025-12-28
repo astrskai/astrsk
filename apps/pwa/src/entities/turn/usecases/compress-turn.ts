@@ -87,7 +87,7 @@ export async function compressTurn(params: {
 
     // Update ONLY the selected option with compression data
     // Keep all other options intact (important for regeneration feature)
-    const updatedOption = Option.create({
+    const updatedOptionResult = Option.create({
       content: turn.selectedOption.content,
       tokenSize: turn.selectedOption.tokenSize,
       variables: turn.selectedOption.variables,
@@ -96,14 +96,20 @@ export async function compressTurn(params: {
       translations: turn.selectedOption.translations,
       compressionSegments: compressionOutput.segments,
       compressedText: compressedText, // Store pre-built compressed XML
-    }).getValue();
+    });
+
+    if (updatedOptionResult.isFailure) {
+      return formatFail("Failed to create updated option with compression data", updatedOptionResult.getError());
+    }
+
+    const updatedOption = updatedOptionResult.getValue();
 
     // Replace only the selected option, keep all others
     const updatedOptions = [...turn.options];
     updatedOptions[turn.selectedOptionIndex] = updatedOption;
 
     // Create new turn with all options preserved
-    const updatedTurn = Turn.create({
+    const updatedTurnResult = Turn.create({
       sessionId: turn.sessionId,
       characterCardId: turn.characterCardId,
       characterName: turn.characterName,
@@ -111,7 +117,13 @@ export async function compressTurn(params: {
       selectedOptionIndex: turn.selectedOptionIndex,
       createdAt: turn.createdAt,
       updatedAt: new Date(), // Update timestamp
-    }, turn.id).getValue();
+    }, turn.id);
+
+    if (updatedTurnResult.isFailure) {
+      return formatFail("Failed to create updated turn with compression data", updatedTurnResult.getError());
+    }
+
+    const updatedTurn = updatedTurnResult.getValue();
 
     // Save updated turn
     const savedTurnResult = await saveTurnRepo.saveTurn(updatedTurn, tx);
