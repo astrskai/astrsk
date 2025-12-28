@@ -116,9 +116,10 @@ export class SessionService {
     this.sessionRepo = new DrizzleSessionRepo();
 
     this.addMessage = new AddMessage(
-      turnRepo,
-      this.sessionRepo,
-      this.sessionRepo,
+      turnRepo, // saveMessageRepo
+      turnRepo, // loadTurnRepo
+      this.sessionRepo, // loadSessionRepo
+      this.sessionRepo, // saveSessionRepo
     );
     this.bulkDeleteMessage = new BulkDeleteMessage(
       turnRepo,

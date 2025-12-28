@@ -247,5 +247,14 @@
     "bps": true,
     "folderMillis": 1765862724636,
     "hash": "9c8940cb86734f60821f4c790eaf404d462f29c4c11c2ae8b1939b6f0e6614ad"
+  },
+  {
+    "sql": [
+      "CREATE TABLE \"compression_anchors\" (\n\t\"session_id\" uuid NOT NULL,\n\t\"anchor\" varchar NOT NULL,\n\t\"text\" text NOT NULL,\n\t\"accessible_to\" text[] NOT NULL,\n\t\"starting_text\" varchar NOT NULL,\n\t\"character_name\" varchar,\n\t\"turn_id\" uuid NOT NULL,\n\t\"created_at\" timestamp DEFAULT now() NOT NULL,\n\t\"updated_at\" timestamp DEFAULT now() NOT NULL,\n\tCONSTRAINT \"compression_anchors_session_id_anchor_pk\" PRIMARY KEY(\"session_id\",\"anchor\")\n);\n",
+      "\nCREATE INDEX \"idx_compression_session_character\" ON \"compression_anchors\" USING btree (\"session_id\",\"character_name\");"
+    ],
+    "bps": true,
+    "folderMillis": 1766567148630,
+    "hash": "44817115375ef36bd8f59b6ccd138175f8c1df808615e63535bb2a5c57867f17"
   }
 ]

@@ -218,7 +218,9 @@ export class Session extends AggregateRoot<SessionProps> {
       dataSchemaOrder: props.dataSchemaOrder || [],
       widgetLayout: props.widgetLayout,
       isPlaySession: props.isPlaySession ?? false,
-      config: props.config ?? {},
+      config: props.config ?? {
+        characterRegistry: {},
+      },
       createdAt: props.createdAt || new Date(),
       updatedAt: props.updatedAt || new Date(),
     };

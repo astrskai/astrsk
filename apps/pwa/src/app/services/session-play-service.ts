@@ -41,6 +41,7 @@ import { fetchFlow } from "@/entities/flow/api/query-factory";
 import { fetchIfNode } from "@/entities/if-node/api/query-factory";
 import { fetchSession } from "@/entities/session/api";
 import { fetchTurn, fetchTurnOptional } from "@/entities/turn/api/turn-queries";
+import { buildCompressionContext } from "@/app/services/compression-context-builder";
 import { SessionService } from "@/app/services/session-service";
 import { TurnService } from "@/app/services/turn-service";
 import { useAppStore } from "@/shared/stores/app-store";
@@ -1966,11 +1967,13 @@ async function* executeAgentNode({
   fullContext,
   stopSignalByUser,
   creditLog,
+  sessionId,
 }: {
   agentId: UniqueEntityID;
   fullContext: any;
   stopSignalByUser?: AbortSignal;
   creditLog?: object;
+  sessionId?: UniqueEntityID;
 }): AsyncGenerator<AgentNodeResult, AgentNodeResult, void> {
   try {
     // Get agent
@@ -2120,12 +2123,66 @@ async function* executeAgentNode({
       throw new Error("No model ID available. Please configure a model for this agent or set a default model in Settings.");
     }
 
+    // Compression injection for chat completion agents (NOT structured output)
+    let contextWithCompression = fullContext;
+    let useCompressionContext = false;
+
+    if (!agent.props.enabledStructuredOutput && sessionId) {
+      contextWithCompression = await buildCompressionContext({
+        sessionId,
+        fullContext,
+        userQuery: undefined, // Will be used in Phase 6 for retrieval
+        characterName: undefined, // Will be used in Phase 6 for retrieval
+      });
+
+      // Check if compression context was added
+      useCompressionContext = !!contextWithCompression.compressionContext;
+    }
+
+    // If using compression, clear history array to prevent HistoryPromptMessage from rendering
+    // This effectively disables HistoryPromptMessage while preserving other context data
+    const contextForRendering = useCompressionContext
+      ? { ...contextWithCompression, history: [] }
+      : contextWithCompression;
+
     // Render messages
     const messages = await renderMessages({
       renderable: agent,
-      context: fullContext,
+      context: contextForRendering,
       parameters: agent.parameters,
     });
+
+    // Inject compression context as a user message after system message (or at beginning)
+    if (useCompressionContext) {
+      const systemMessageIndex = messages.findIndex(msg => msg.role === "system");
+      const insertIndex = systemMessageIndex !== -1 ? systemMessageIndex + 1 : 0;
+
+      messages.splice(insertIndex, 0, {
+        role: "user",
+        content: "The following context has been compressed to reduce the number of messages in the conversation history.\n\n" + contextWithCompression.compressionContext,
+      });
+
+      const position = systemMessageIndex !== -1 ? "after system message" : "at beginning";
+      console.log(`[Compression] Injected compression context as user message ${position} at index ${insertIndex} (HistoryPromptMessage disabled via empty history array)`);
+    }
+
+    // Emit agent context event for debug panel (shows exactly what goes into the agent)
+    // Only for chat completion agents (not structured output)
+    if (!agent.props.enabledStructuredOutput && sessionId) {
+      const agentContextEvent = new CustomEvent("agent-context-built", {
+        detail: {
+          sessionId: sessionId.toString(),
+          agentName: agent.props.name,
+          contextForRendering: contextForRendering,
+          fullContext: fullContext,
+          useCompressionContext: useCompressionContext,
+          messages: messages,
+          timestamp: new Date(),
+        },
+      });
+      window.dispatchEvent(agentContextEvent);
+    }
+
     const transformedMessages = transformMessagesForModel(messages, apiModelId);
     validateMessages(transformedMessages, apiConnection.source);
 
@@ -2630,6 +2687,7 @@ async function* executeFlow({
             session_id: sessionId.toString(),
             flow_id: flowId.toString(),
           },
+          sessionId: sessionId,
         });
 
         for await (const result of executeAgentNodeResult) {

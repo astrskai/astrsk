@@ -25,7 +25,8 @@ export const TableName = {
   Turns: "turns",
   Backgrounds: "backgrounds",
   GeneratedImages: "generated_images",
-  
+  CompressionAnchors: "compression_anchors",
+
   // Vibe Session
   VibeSessions: "vibe_sessions",
 } as const;

@@ -10,4 +10,8 @@ export interface LoadTurnRepo {
     tx?: Transaction,
   ): Promise<Result<Turn[]>>;
   getTurnById(id: UniqueEntityID, tx?: Transaction): Promise<Result<Turn>>;
+  getTurnsBySessionId(
+    sessionId: UniqueEntityID,
+    tx?: Transaction,
+  ): Promise<Result<Turn[]>>;
 }
