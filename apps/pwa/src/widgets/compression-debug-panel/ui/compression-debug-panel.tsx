@@ -424,7 +424,7 @@ export function CompressionDebugPanel() {
                     )}
 
                     {/* Input Parameters */}
-                    {log.data.input && (
+                    {/* {log.data.input && (
                       <div>
                         <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                           Input Parameters
@@ -433,7 +433,7 @@ export function CompressionDebugPanel() {
                           {JSON.stringify(log.data.input, null, 2)}
                         </pre>
                       </div>
-                    )}
+                    )} */}
 
                     {/* Output */}
                     {log.data.output && (
