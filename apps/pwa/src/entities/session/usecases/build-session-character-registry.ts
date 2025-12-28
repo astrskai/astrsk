@@ -7,6 +7,7 @@ import { getOneOrThrow } from "@/db/helpers/get-one-or-throw";
 import { sessions } from "@/db/schema/sessions";
 import { characters } from "@/db/schema/characters";
 import { eq, inArray } from "drizzle-orm";
+import { CardType } from "@/entities/card/domain/card";
 
 /**
  * Build character registry from session's character cards
@@ -42,7 +43,7 @@ export async function buildSessionCharacterRegistry(
     }>;
 
     const characterCardIds = allCards
-      .filter(card => card.type === 'character')
+      .filter(card => card.type === CardType.Character && card.enabled)
       .map(card => card.id);
 
     if (characterCardIds.length === 0) {

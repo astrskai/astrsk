@@ -17,6 +17,7 @@ export class DeleteMessage implements UseCase<Command, Result<void>> {
     private deleteMessageRepo: DeleteTurnRepo,
     private loadSessionRepo: LoadSessionRepo,
     private saveSessionRepo: SaveSessionRepo,
+    private compressionAnchorRepo: CompressionAnchorRepo,
   ) {}
 
   async execute(command: Command): Promise<Result<void>> {
@@ -36,8 +37,7 @@ export class DeleteMessage implements UseCase<Command, Result<void>> {
 
       // Delete compression anchors for this turn (if any exist)
       try {
-        const compressionRepo = new CompressionAnchorRepo();
-        await compressionRepo.deleteAnchorsByTurnId(messageId.toString());
+        await this.compressionAnchorRepo.deleteAnchorsByTurnId(messageId.toString());
         console.log(`[DeleteMessage] Deleted compression anchors for turn ${messageId.toString()}`);
       } catch (error) {
         // Log but don't fail - anchors might not exist

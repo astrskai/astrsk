@@ -56,6 +56,7 @@ import { LoadIfNodeRepo, SaveIfNodeRepo } from "@/entities/if-node/repos";
 // import { UpdateLocalSyncMetadata } from "@/entities/sync/usecases/update-local-sync-metadata";
 import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
 import { GetTurn } from "@/entities/turn/usecases/get-turn";
+import { CompressionAnchorRepo } from "@/entities/compression/repos";
 
 export class SessionService {
   public static sessionRepo: DrizzleSessionRepo;
@@ -121,10 +122,12 @@ export class SessionService {
       this.sessionRepo, // loadSessionRepo
       this.sessionRepo, // saveSessionRepo
     );
+    const compressionAnchorRepo = new CompressionAnchorRepo();
     this.bulkDeleteMessage = new BulkDeleteMessage(
       turnRepo,
       this.sessionRepo,
       this.sessionRepo,
+      compressionAnchorRepo,
     );
     this.cloneSession = new CloneSession(
       this.sessionRepo,
@@ -149,6 +152,7 @@ export class SessionService {
       turnRepo,
       this.sessionRepo,
       this.sessionRepo,
+      compressionAnchorRepo,
     );
     this.deleteSession = new DeleteSession(
       this.sessionRepo,

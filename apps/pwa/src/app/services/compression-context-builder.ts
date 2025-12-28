@@ -74,9 +74,9 @@ export async function buildCompressionContext(params: {
       const last4Uncompressed = last4Messages
         .map((msg: any) => {
           const rawName = msg.char_name || (msg.char_id ? 'user' : 'scenario');
-          const characterName = sanitizeToXmlTag(rawName);
+          const msgCharacterName = sanitizeToXmlTag(rawName);
           const content = msg.content || '';
-          return `<${characterName}>\n${content}\n</${characterName}>`;
+          return `<${msgCharacterName}>\n${content}\n</${msgCharacterName}>`;
         })
         .join('\n\n');
 
@@ -106,7 +106,7 @@ export async function buildCompressionContext(params: {
       console.log(`[Compression] Built hybrid context: ${compressedMessageCount} compressed (${hybridCompressedContext.length} chars) + 4 uncompressed (${last4Uncompressed.length} chars) = ${finalContext.length} total chars`);
 
       // Emit context event for debug panel
-      const contextEvent = new CustomEvent("compression-context-bu ilt", {
+      const contextEvent = new CustomEvent("compression-context-built", {
         detail: {
           sessionId: sessionId.toString(),
           messageCount,
@@ -145,9 +145,9 @@ export async function buildCompressionContext(params: {
       .map((msg: any) => {
         // Use char_name from history item, or 'user'/'scenario' based on char_id
         const rawName = msg.char_name || (msg.char_id ? 'user' : 'scenario');
-        const characterName = sanitizeToXmlTag(rawName);
+        const msgCharacterName = sanitizeToXmlTag(rawName);
         const content = msg.content || '';
-        return `<${characterName}>\n${content}\n</${characterName}>`;
+        return `<${msgCharacterName}>\n${content}\n</${msgCharacterName}>`;
       })
       .join('\n\n');
 

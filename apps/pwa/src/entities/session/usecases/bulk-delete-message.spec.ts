@@ -8,18 +8,21 @@ import { BulkDeleteMessage } from "@/entities/session/usecases";
 import { Option } from "@/entities/turn/domain/option";
 import { Turn } from "@/entities/turn/domain/turn";
 import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
+import { CompressionAnchorRepo } from "@/entities/compression/repos";
 
 describe("BulkDeleteMessage", () => {
   let target: BulkDeleteMessage;
 
   let turnRepo: DrizzleTurnRepo;
   let sessionRepo: DrizzleSessionRepo;
+  let compressionAnchorRepo: CompressionAnchorRepo;
 
   beforeEach(() => {
     turnRepo = new DrizzleTurnRepo();
     sessionRepo = new DrizzleSessionRepo();
+    compressionAnchorRepo = new CompressionAnchorRepo();
 
-    target = new BulkDeleteMessage(turnRepo, sessionRepo, sessionRepo);
+    target = new BulkDeleteMessage(turnRepo, sessionRepo, sessionRepo, compressionAnchorRepo);
   });
 
   const createMessage = ({

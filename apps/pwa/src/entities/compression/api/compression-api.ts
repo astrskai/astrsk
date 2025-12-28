@@ -157,9 +157,37 @@ export interface ChunkResponse {
  */
 export class CompressionApi {
   private baseUrl: string;
+  private readonly DEFAULT_TIMEOUT = 30000; // 30 seconds for LLM operations
 
   constructor() {
     this.baseUrl = getApiBaseUrl();
+  }
+
+  /**
+   * Create fetch request with timeout
+   */
+  private async fetchWithTimeout(
+    url: string,
+    options: RequestInit,
+    timeout: number = this.DEFAULT_TIMEOUT
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Request timeout after ${timeout}ms`);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -168,7 +196,7 @@ export class CompressionApi {
    */
   async compress(request: CompressRequest): Promise<CompressionOutput> {
     try {
-      const response = await fetch(`${this.baseUrl}/compress`, {
+      const response = await this.fetchWithTimeout(`${this.baseUrl}/compress`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -211,7 +239,7 @@ export class CompressionApi {
    */
   async retrieve(request: RetrieveRequest): Promise<RetrieveResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/retrieve`, {
+      const response = await this.fetchWithTimeout(`${this.baseUrl}/retrieve`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -253,7 +281,7 @@ export class CompressionApi {
    */
   async generateResponse(request: ResponseRequest): Promise<string> {
     try {
-      const response = await fetch(`${this.baseUrl}/response`, {
+      const response = await this.fetchWithTimeout(`${this.baseUrl}/response`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -289,7 +317,7 @@ export class CompressionApi {
         max_chunk_size: maxChunkSize,
       };
 
-      const response = await fetch(`${this.baseUrl}/chunk`, {
+      const response = await this.fetchWithTimeout(`${this.baseUrl}/chunk`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

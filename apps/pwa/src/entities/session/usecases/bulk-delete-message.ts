@@ -18,6 +18,7 @@ export class BulkDeleteMessage implements UseCase<Command, Result<Session>> {
     private deleteMessageRepo: DeleteTurnRepo,
     private loadSessionRepo: LoadSessionRepo,
     private saveSessionRepo: SaveSessionRepo,
+    private compressionAnchorRepo: CompressionAnchorRepo,
   ) {}
 
   async execute(command: Command): Promise<Result<Session>> {
@@ -39,9 +40,8 @@ export class BulkDeleteMessage implements UseCase<Command, Result<Session>> {
 
       // Delete compression anchors for these turns (if any exist)
       try {
-        const compressionRepo = new CompressionAnchorRepo();
         for (const messageId of messageIds) {
-          await compressionRepo.deleteAnchorsByTurnId(messageId.toString());
+          await this.compressionAnchorRepo.deleteAnchorsByTurnId(messageId.toString());
         }
         console.log(`[BulkDeleteMessage] Deleted compression anchors for ${messageIds.length} turns`);
       } catch (error) {

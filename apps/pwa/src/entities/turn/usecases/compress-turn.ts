@@ -123,9 +123,20 @@ export async function compressTurn(params: {
 
     return Result.ok(savedTurnResult.getValue());
   } catch (error) {
-    // Check if this is a network error (backend not running)
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (errorMessage.includes('404') || errorMessage.includes('Failed to fetch')) {
+    // Graceful degradation for network/availability errors
+    // Detect: fetch failures, 404 responses, timeout errors, connection refused
+    const isNetworkError =
+      error instanceof TypeError || // fetch() network errors
+      (error instanceof Error && (
+        error.message.includes('404') ||
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('timeout') ||
+        error.message.includes('NetworkError') ||
+        error.message.includes('Compression API error: 404') ||
+        error.message.includes('ECONNREFUSED')
+      ));
+
+    if (isNetworkError) {
       console.warn(
         '[Compression] Compression backend not available (is the server running on VITE_COMPRESSION_API_URL?). Turn saved without compression.',
       );
@@ -137,7 +148,7 @@ export async function compressTurn(params: {
       return Result.ok(turnResult.getValue());
     }
 
-    // For other errors, fail normally
+    // For other errors (e.g., validation, DB errors), fail normally
     return formatFail("Failed to compress turn", error);
   }
 }
