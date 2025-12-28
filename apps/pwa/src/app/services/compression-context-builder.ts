@@ -4,13 +4,28 @@ import { fetchSessionCharacterRegistry } from "@/entities/session/api/query-fact
 import { CompressionSystem } from "@/entities/compression";
 import { useCompressionStore } from "@/entities/compression/stores/compression-store";
 import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
-import { RenderContext } from "@/shared/prompt/domain";
+import { RenderContext, HistoryItem } from "@/shared/prompt/domain";
 
 /**
  * Context enriched with compression data for chat completion
  */
 export interface ContextWithCompression extends RenderContext {
   compressionContext?: string;
+}
+
+/**
+ * Convert history items to XML format
+ * Format: <characterName>\nmessage\n</characterName>\n\n
+ */
+function buildXmlFromHistory(messages: HistoryItem[]): string {
+  return messages
+    .map((msg) => {
+      const rawName = msg.char_name || (msg.char_id ? 'user' : 'scenario');
+      const msgCharacterName = sanitizeToXmlTag(rawName);
+      const content = msg.content || '';
+      return `<${msgCharacterName}>\n${content}\n</${msgCharacterName}>`;
+    })
+    .join('\n\n');
 }
 
 /**
@@ -79,14 +94,7 @@ export async function buildCompressionContext(params: {
 
       // Build uncompressed context for last 4 messages
       const last4Messages = fullContext.history.slice(-4);
-      const last4Uncompressed = last4Messages
-        .map((msg: any) => {
-          const rawName = msg.char_name || (msg.char_id ? 'user' : 'scenario');
-          const msgCharacterName = sanitizeToXmlTag(rawName);
-          const content = msg.content || '';
-          return `<${msgCharacterName}>\n${content}\n</${msgCharacterName}>`;
-        })
-        .join('\n\n');
+      const last4Uncompressed = buildXmlFromHistory(last4Messages);
 
       // Retrieve relevant anchors and decompress them inline (hybrid format)
       // Pass BOTH compressed context AND recent uncompressed messages to retrieval agent
@@ -144,20 +152,9 @@ export async function buildCompressionContext(params: {
     // Use last 4 uncompressed messages
     console.log(`[Compression] Session has ${messageCount} messages (≤4), using uncompressed context`);
 
-    // Take last 4 messages from history
+    // Take last 4 messages from history and build uncompressed XML context
     const last4Messages = fullContext.history.slice(-4);
-
-    // Build uncompressed context string in XML block format
-    // Format: <characterName>\nmessage\n</characterName>\n\n
-    const uncompressedContext = last4Messages
-      .map((msg: any) => {
-        // Use char_name from history item, or 'user'/'scenario' based on char_id
-        const rawName = msg.char_name || (msg.char_id ? 'user' : 'scenario');
-        const msgCharacterName = sanitizeToXmlTag(rawName);
-        const content = msg.content || '';
-        return `<${msgCharacterName}>\n${content}\n</${msgCharacterName}>`;
-      })
-      .join('\n\n');
+    const uncompressedContext = buildXmlFromHistory(last4Messages);
 
     // Inject as additional context
     const contextWithCompression = {
