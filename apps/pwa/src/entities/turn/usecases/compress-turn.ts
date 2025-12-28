@@ -62,6 +62,7 @@ export async function compressTurn(params: {
     compressionSystem.initialize({
       sessionId: sessionId.toString(),
       characterRegistry,
+      turnRepo: loadTurnRepo, // Needed for buildUncompressedContext() fallback
     });
 
     // Try to get compression context from store (set by buildCompressionContext)
