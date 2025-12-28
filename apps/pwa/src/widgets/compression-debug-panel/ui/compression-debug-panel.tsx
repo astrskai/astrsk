@@ -268,7 +268,7 @@ export function CompressionDebugPanel() {
       {/* Current Context */}
       {currentContext ? (
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
-          <div className="flex items-center justify-between mb-2">
+          {/* <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
               Current Context (Built by compression-context-builder)
             </h3>
@@ -278,7 +278,7 @@ export function CompressionDebugPanel() {
             >
               Clear
             </button>
-          </div>
+          </div> */}
           <div className="space-y-2">
             <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
               <span className={`px-2 py-1 rounded font-medium ${
