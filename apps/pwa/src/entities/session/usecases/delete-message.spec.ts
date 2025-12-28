@@ -8,18 +8,21 @@ import { DeleteMessage } from "@/entities/session/usecases";
 import { Option } from "@/entities/turn/domain/option";
 import { Turn } from "@/entities/turn/domain/turn";
 import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
+import { CompressionAnchorRepo } from "@/entities/compression/repos";
 
 describe("DeleteMessage", () => {
   let target: DeleteMessage;
 
   let turnRepo: DrizzleTurnRepo;
   let sessionRepo: DrizzleSessionRepo;
+  let compressionAnchorRepo: CompressionAnchorRepo;
 
   beforeEach(() => {
     turnRepo = new DrizzleTurnRepo();
     sessionRepo = new DrizzleSessionRepo();
+    compressionAnchorRepo = new CompressionAnchorRepo();
 
-    target = new DeleteMessage(turnRepo, sessionRepo, sessionRepo);
+    target = new DeleteMessage(turnRepo, sessionRepo, sessionRepo, compressionAnchorRepo);
   });
 
   const createMessage = ({

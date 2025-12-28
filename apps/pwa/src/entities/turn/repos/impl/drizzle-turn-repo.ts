@@ -92,6 +92,26 @@ export class DrizzleTurnRepo
     }
   }
 
+  async getTurnsBySessionId(
+    sessionId: UniqueEntityID,
+    tx?: Transaction,
+  ): Promise<Result<Turn[]>> {
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Select turns by session_id
+      const rows = await db
+        .select()
+        .from(turns)
+        .where(eq(turns.session_id, sessionId.toString()))
+        .orderBy(asc(turns.created_at));
+
+      // Return turns
+      return Result.ok(rows.map((row) => TurnDrizzleMapper.toDomain(row)));
+    } catch (error) {
+      return Result.fail("Failed to get turns by session id");
+    }
+  }
+
   async deleteTurnById(
     id: UniqueEntityID,
     tx?: Transaction,

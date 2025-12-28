@@ -5,6 +5,7 @@ import { SessionDrizzleMapper } from "@/entities/session/mappers/session-drizzle
 import { SearchSessionsQuery, SessionListItem } from "@/entities/session/repos";
 import { UniqueEntityID } from "@/shared/domain/unique-entity-id";
 import { queryOptions } from "@tanstack/react-query";
+import { getSessionCharacterRegistry } from "@/entities/session/usecases";
 
 export const sessionQueries = {
   all: () => ["sessions"] as const,
@@ -86,6 +87,24 @@ export const sessionQueries = {
       gcTime: 1000 * 60 * 5, // 5 minutes cache
       staleTime: 0, // Always consider stale - force refetch (same as flows)
     }),
+
+  // Character registry - cached for compression system
+  characterRegistries: () => [...sessionQueries.all(), "characterRegistry"] as const,
+  characterRegistry: (sessionId: string) =>
+    queryOptions({
+      queryKey: [...sessionQueries.characterRegistries(), sessionId],
+      queryFn: async () => {
+        const registryResult = await getSessionCharacterRegistry(sessionId);
+        if (registryResult.isFailure) {
+          console.error("[sessionQueries] Failed to fetch character registry:", registryResult.getError());
+          return {};
+        }
+        return registryResult.getValue();
+      },
+      gcTime: 1000 * 60 * 5, // 5 minutes cache
+      staleTime: 1000 * 60 * 5, // 5 minutes stale time (registry rarely changes)
+      enabled: !!sessionId,
+    }),
 };
 
 /**
@@ -100,4 +119,18 @@ export async function fetchSession(id: UniqueEntityID): Promise<Session> {
     throw new Error(`Session not found: ${id.toString()}`);
   }
   return SessionDrizzleMapper.toDomain(data as any);
+}
+
+/**
+ * Fetch character registry from cache or DB
+ * Returns mapping of sanitized character names to display names
+ * Example: { "alice-the-great": "Alice the Great", "bob": "Bob" }
+ */
+export async function fetchSessionCharacterRegistry(
+  sessionId: string
+): Promise<Record<string, string>> {
+  const registry = await queryClient.fetchQuery(
+    sessionQueries.characterRegistry(sessionId)
+  );
+  return registry;
 }

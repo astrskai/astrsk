@@ -7,6 +7,8 @@ import { Session } from "@/entities/session/domain/session";
 import { LoadSessionRepo, SaveSessionRepo } from "@/entities/session/repos";
 import { Turn } from "@/entities/turn/domain/turn";
 import { SaveTurnRepo } from "@/entities/turn/repos/save-turn-repo";
+import { LoadTurnRepo } from "@/entities/turn/repos/load-turn-repo";
+import { compressTurn } from "@/entities/turn/usecases/compress-turn";
 
 type Command = {
   sessionId: UniqueEntityID;
@@ -22,6 +24,7 @@ type SessionAndMessage = {
 export class AddMessage implements UseCase<Command, Result<SessionAndMessage>> {
   constructor(
     private saveMessageRepo: SaveTurnRepo,
+    private loadTurnRepo: LoadTurnRepo,
     private loadSessionRepo: LoadSessionRepo,
     private saveSessionRepo: SaveSessionRepo,
   ) {}
@@ -77,9 +80,30 @@ export class AddMessage implements UseCase<Command, Result<SessionAndMessage>> {
         );
       }
 
+      // Compress message if compression is enabled for this session
+      const compressedMessageOrError = await compressTurn({
+        turnId: savedMessage.id,
+        sessionId: sessionId,
+        loadTurnRepo: this.loadTurnRepo,
+        saveTurnRepo: this.saveMessageRepo,
+        tx,
+      });
+
+      if (compressedMessageOrError.isFailure) {
+        // Log compression failure but don't fail the entire operation
+        console.warn(
+          "[AddMessage] Compression failed:",
+          compressedMessageOrError.getError()
+        );
+      }
+
+      const finalMessage = compressedMessageOrError.isSuccess
+        ? compressedMessageOrError.getValue()
+        : savedMessage;
+
       return Result.ok({
         session: savedSesssionOrError.getValue(),
-        message: savedMessage,
+        message: finalMessage,
       });
     } catch (error) {
       return formatFail("Failed to add message", error);

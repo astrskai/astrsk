@@ -7,6 +7,7 @@ import { timestamps } from "@/db/types/timestamps";
 import { ChatStyles } from "@/entities/session/domain/chat-styles";
 import { TranslationConfigJSON } from "@/entities/session/domain/translation-config";
 import { CardListItemJson } from "@/entities/session/mappers/session-drizzle-mapper";
+import type { SessionConfig } from "@/entities/session/domain/session-config";
 
 export const sessions = pgTable(TableName.Sessions, {
   id: uuid().primaryKey(),
@@ -29,7 +30,7 @@ export const sessions = pgTable(TableName.Sessions, {
   data_schema_order: jsonb().$type<string[]>().notNull().default([]),
   widget_layout: jsonb().$type<Array<{ i: string; x: number; y: number; w: number; h: number }>>(),
   is_play_session: boolean().notNull().default(false),
-  config: jsonb().$type<Record<string, unknown>>().notNull().default({}),
+  config: jsonb().$type<SessionConfig>().notNull().default({}),
   ...timestamps,
 });
 

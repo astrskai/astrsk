@@ -6,7 +6,7 @@
  */
 
 // Query factory
-export { sessionQueries, fetchSession } from "./query-factory";
+export { sessionQueries, fetchSession, fetchSessionCharacterRegistry } from "./query-factory";
 
 // Types
 export type { SessionListItem } from "@/entities/session/repos";

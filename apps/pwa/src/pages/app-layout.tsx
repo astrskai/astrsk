@@ -6,6 +6,7 @@ import { ConvexReady } from "@/shared/ui/convex-ready";
 import { SubscribeChecker } from "@/widgets/dialog/subscribe-checker";
 import { SubscribeNudgeDialog } from "@/widgets/dialog/subscribe-nudge-dialog";
 import { ErrorDetailsDialog, MigrationDetailsDialog } from "@/shared/ui/dialogs";
+import { CompressionDebugPanel } from "@/widgets/compression-debug-panel";
 
 export function AppLayout() {
   return (
@@ -24,6 +25,9 @@ export function AppLayout() {
       </MainLayout>
 
       <ModalPages />
+
+      {/* Compression Debug Panel */}
+      <CompressionDebugPanel />
     </>
   );
 }

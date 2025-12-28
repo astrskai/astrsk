@@ -5,6 +5,7 @@ import { formatFail } from "@/shared/lib";
 import { LoadSessionRepo } from "@/entities/session/repos/load-session-repo";
 import { SaveSessionRepo } from "@/entities/session/repos/save-session-repo";
 import { DeleteTurnRepo } from "@/entities/turn/repos/delete-turn-repo";
+import { CompressionAnchorRepo } from "@/entities/compression/repos";
 
 type Command = {
   sessionId: UniqueEntityID;
@@ -16,6 +17,7 @@ export class DeleteMessage implements UseCase<Command, Result<void>> {
     private deleteMessageRepo: DeleteTurnRepo,
     private loadSessionRepo: LoadSessionRepo,
     private saveSessionRepo: SaveSessionRepo,
+    private compressionAnchorRepo: CompressionAnchorRepo,
   ) {}
 
   async execute(command: Command): Promise<Result<void>> {
@@ -32,6 +34,15 @@ export class DeleteMessage implements UseCase<Command, Result<void>> {
       // Delete message from session
       const session = sessionOrError.getValue();
       session.deleteMessage(messageId);
+
+      // Delete compression anchors for this turn (if any exist)
+      try {
+        await this.compressionAnchorRepo.deleteAnchorsByTurnId(messageId.toString());
+        console.log(`[DeleteMessage] Deleted compression anchors for turn ${messageId.toString()}`);
+      } catch (error) {
+        // Log but don't fail - anchors might not exist
+        console.warn("[DeleteMessage] Failed to delete compression anchors:", error);
+      }
 
       // Delete message
       const deleteMessageOrError =

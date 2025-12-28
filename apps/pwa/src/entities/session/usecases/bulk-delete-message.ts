@@ -6,6 +6,7 @@ import { Session } from "@/entities/session/domain/session";
 import { LoadSessionRepo } from "@/entities/session/repos/load-session-repo";
 import { SaveSessionRepo } from "@/entities/session/repos/save-session-repo";
 import { DeleteTurnRepo } from "@/entities/turn/repos/delete-turn-repo";
+import { CompressionAnchorRepo } from "@/entities/compression/repos";
 
 type Command = {
   sessionId: UniqueEntityID;
@@ -17,6 +18,7 @@ export class BulkDeleteMessage implements UseCase<Command, Result<Session>> {
     private deleteMessageRepo: DeleteTurnRepo,
     private loadSessionRepo: LoadSessionRepo,
     private saveSessionRepo: SaveSessionRepo,
+    private compressionAnchorRepo: CompressionAnchorRepo,
   ) {}
 
   async execute(command: Command): Promise<Result<Session>> {
@@ -34,6 +36,17 @@ export class BulkDeleteMessage implements UseCase<Command, Result<Session>> {
       const session = sessionOrError.getValue();
       for (const messageId of messageIds) {
         session.deleteMessage(messageId);
+      }
+
+      // Delete compression anchors for these turns (if any exist)
+      try {
+        for (const messageId of messageIds) {
+          await this.compressionAnchorRepo.deleteAnchorsByTurnId(messageId.toString());
+        }
+        console.log(`[BulkDeleteMessage] Deleted compression anchors for ${messageIds.length} turns`);
+      } catch (error) {
+        // Log but don't fail - anchors might not exist
+        console.warn("[BulkDeleteMessage] Failed to delete compression anchors:", error);
       }
 
       // Delete messages

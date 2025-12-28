@@ -1,6 +1,7 @@
 import { Guard } from "@/shared/core/guard";
 import { Result } from "@/shared/core/result";
 import { ValueObject } from "@/shared/domain";
+import type { CompressionSegment } from "@/entities/compression/domain/types";
 
 export interface DataStoreSavedField {
   id: string; // DataStoreSchemaField.id
@@ -21,6 +22,10 @@ export interface OptionProps {
 
   // Translation
   translations: Map<string, string>;
+
+  // Compression (stored in first option of each turn)
+  compressionSegments?: CompressionSegment[];
+  compressedText?: string; // Pre-built compressed XML: <characterName><anchor1/><anchor2/>...</characterName>
 }
 
 export interface OptionJSON {
@@ -30,6 +35,10 @@ export interface OptionJSON {
   assetId?: string;
   dataStore?: DataStoreSavedField[];
   translations: Record<string, string>;
+
+  // Compression data (stored in first option of each turn)
+  compressionSegments?: CompressionSegment[];
+  compressedText?: string; // Pre-built compressed XML
 }
 
 export class Option extends ValueObject<OptionProps> {
@@ -57,6 +66,14 @@ export class Option extends ValueObject<OptionProps> {
     return this.props.assetId;
   }
 
+  get compressionSegments(): CompressionSegment[] | undefined {
+    return this.props.compressionSegments;
+  }
+
+  get compressedText(): string | undefined {
+    return this.props.compressedText;
+  }
+
   public static create(props: Partial<OptionProps>): Result<Option> {
     const guardResult = Guard.againstNullOrUndefinedBulk([
       { argument: props.content, argumentName: "content" },
@@ -73,6 +90,8 @@ export class Option extends ValueObject<OptionProps> {
       variables: props.variables ?? {},
       dataStore: props.dataStore ?? [],
       assetId: props.assetId,
+      compressionSegments: props.compressionSegments,
+      compressedText: props.compressedText,
     };
     const option = new Option(propsWithDefaults);
     return Result.ok(option);
@@ -117,6 +136,8 @@ export class Option extends ValueObject<OptionProps> {
       translations: Object.fromEntries(
         this.props.translations?.entries() ?? [],
       ),
+      compressionSegments: this.props.compressionSegments,
+      compressedText: this.props.compressedText,
     };
   }
 
@@ -128,6 +149,8 @@ export class Option extends ValueObject<OptionProps> {
       assetId: json.assetId,
       dataStore: json.dataStore ?? [],
       translations: new Map(Object.entries(json.translations)),
+      compressionSegments: json.compressionSegments,
+      compressedText: json.compressedText,
     });
   }
 }

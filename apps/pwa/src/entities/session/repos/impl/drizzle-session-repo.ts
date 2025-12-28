@@ -353,6 +353,12 @@ export class DrizzleSessionRepo
 
       return Result.ok(rows);
     } catch (error) {
+      // If config column doesn't exist yet (during migrations), return empty array
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('column "config" does not exist')) {
+        console.warn("[DrizzleSessionRepo] Config column not yet available, skipping session configs query");
+        return Result.ok([]);
+      }
       return formatFail("Failed to get session configs", error);
     }
   }
