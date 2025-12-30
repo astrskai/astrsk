@@ -161,7 +161,9 @@ export class CompressionSystem {
 
       // Replace each occurrence sequentially with the correct turn's content
       // Use replace callback to handle multiple occurrences
-      const anchorTagRegex = new RegExp(`<${anchorName}\\s*/>`, 'g');
+      // Escape regex metacharacters to prevent unexpected matching behavior
+      const escapedAnchorName = anchorName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const anchorTagRegex = new RegExp(`<${escapedAnchorName}\\s*/>`, 'g');
       hybridContext = hybridContext.replace(
         anchorTagRegex,
         () => {
