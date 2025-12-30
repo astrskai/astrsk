@@ -37,7 +37,7 @@ export const compressionAnchors = pgTable(
     ...timestamps,
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.session_id, table.anchor] }),
+    pk: primaryKey({ columns: [table.session_id, table.turn_id, table.anchor] }),
     idx_session_character: index("idx_compression_session_character").on(
       table.session_id,
       table.character_name

@@ -34,8 +34,9 @@ interface CompressionStoreState {
 
   /**
    * Get multiple anchors by names from DB
+   * Returns arrays of anchor instances (supports duplicate anchor names across turns)
    */
-  getAnchors: (anchorNames: string[]) => Promise<Record<string, AnchorData>>;
+  getAnchors: (anchorNames: string[]) => Promise<Record<string, AnchorData[]>>;
 
   /**
    * Get all anchors for a character from DB

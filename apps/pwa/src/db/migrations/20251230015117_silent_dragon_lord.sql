@@ -1,0 +1,2 @@
+ALTER TABLE "compression_anchors" DROP CONSTRAINT "compression_anchors_session_id_anchor_pk";--> statement-breakpoint
+ALTER TABLE "compression_anchors" ADD CONSTRAINT "compression_anchors_session_id_turn_id_anchor_pk" PRIMARY KEY("session_id","turn_id","anchor");

@@ -26,6 +26,8 @@ export interface CompressRequest {
   characterName?: string;
   characterRegistry?: Record<string, string>; // Normalized name → Display name mapping
   previousContext?: string; // Previously compressed context
+  sessionId: string; // Session ID for storing anchors in Redis backend
+  turnId: string; // Turn ID for anchor cleanup on turn deletion
 }
 
 export interface CompressResponse {
@@ -74,11 +76,7 @@ export interface RetrieveRequest {
   query: string;
   compressedText: string;
   requestingCharacter?: string;
-  anchorMappings: Record<string, {
-    text: string;
-    accessible_to: string[];
-    starting_text: string;
-  }>;
+  sessionId: string; // Session ID for BM25 search in Redis backend
 }
 
 export interface RetrieveResponse {
@@ -96,11 +94,7 @@ export interface RetrieveResponse {
       query: string;
       compressedText: string;
       requestingCharacter?: string;
-      anchorMappings: Record<string, {
-        text: string;
-        accessible_to: string[];
-        starting_text: string;
-      }>;
+      sessionId: string;
     };
     output?: {
       key_concepts: string[];
@@ -149,6 +143,18 @@ export interface ChunkRequest {
 
 export interface ChunkResponse {
   chunks: string[];
+}
+
+// Delete Anchors API
+export interface DeleteAnchorsRequest {
+  sessionId: string;
+  turnId: string;
+}
+
+export interface DeleteAnchorsResponse {
+  success: boolean;
+  deleted: number;
+  anchors: string[];
 }
 
 /**
@@ -335,6 +341,38 @@ export class CompressionApi {
       return data.chunks;
     } catch (error) {
       console.error("[CompressionApi] chunkText failed:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete all anchors for a specific turn from Redis backend
+   * Called when a turn/message is deleted
+   */
+  async deleteAnchors(request: DeleteAnchorsRequest): Promise<DeleteAnchorsResponse> {
+    try {
+      const response = await this.fetchWithTimeout(`${this.baseUrl}/anchors`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Delete anchors API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data: DeleteAnchorsResponse = await response.json();
+      console.log(
+        `[CompressionApi] Deleted ${data.deleted} anchors from Redis:`,
+        data.anchors
+      );
+      return data;
+    } catch (error) {
+      console.error("[CompressionApi] deleteAnchors failed:", error);
       throw error;
     }
   }

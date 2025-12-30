@@ -1,9 +1,11 @@
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, asc } from "drizzle-orm";
 
 import { Drizzle } from "@/db/drizzle";
 import { compressionAnchors, type InsertCompressionAnchor, type SelectCompressionAnchor } from "@/db/schema/compression-anchors";
+import { turns } from "@/db/schema/turns";
 import { Transaction } from "@/db/transaction";
 import type { AnchorData } from "@/entities/compression/domain/types";
+import { compressionApi } from "@/entities/compression/api";
 
 /**
  * Repository for compression anchor operations
@@ -48,34 +50,48 @@ export class CompressionAnchorRepo {
 
   /**
    * Find multiple anchors by names within a session
-   * Optimized batch query using IN clause
+   * Returns all instances of each anchor, ordered by turn (turns.created_at)
+   *
+   * Returns a Map where each anchor name maps to an array of instances in turn order
    */
   async findAnchorsByNames(
     sessionId: string,
     anchorNames: string[],
     tx?: Transaction
-  ): Promise<Record<string, AnchorData>> {
+  ): Promise<Record<string, AnchorData[]>> {
     if (anchorNames.length === 0) return {};
 
     const db = tx ?? (await Drizzle.getInstance());
     try {
+      // Join with turns table to get proper turn ordering
       const rows = await db
-        .select()
+        .select({
+          anchor: compressionAnchors.anchor,
+          text: compressionAnchors.text,
+          accessible_to: compressionAnchors.accessible_to,
+          starting_text: compressionAnchors.starting_text,
+          turn_created_at: turns.created_at,
+        })
         .from(compressionAnchors)
+        .innerJoin(turns, eq(compressionAnchors.turn_id, turns.id))
         .where(
           and(
             eq(compressionAnchors.session_id, sessionId),
             inArray(compressionAnchors.anchor, anchorNames)
           )
-        );
+        )
+        .orderBy(asc(turns.created_at)); // Order by turn creation time (session order)
 
-      const result: Record<string, AnchorData> = {};
+      const result: Record<string, AnchorData[]> = {};
       for (const row of rows) {
-        result[row.anchor] = {
+        if (!result[row.anchor]) {
+          result[row.anchor] = [];
+        }
+        result[row.anchor].push({
           text: row.text,
           accessible_to: row.accessible_to,
           starting_text: row.starting_text,
-        };
+        });
       }
 
       return result;
@@ -202,16 +218,36 @@ export class CompressionAnchorRepo {
   /**
    * Delete all anchors for a specific turn
    * Called when a turn is deleted (cleanup)
+   * Also deletes anchors from Redis backend for BM25 search
    */
   async deleteAnchorsByTurnId(
     turnId: string,
+    sessionId: string,
     tx?: Transaction
   ): Promise<void> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
+      // Delete from PGlite (local storage)
       await db
         .delete(compressionAnchors)
         .where(eq(compressionAnchors.turn_id, turnId));
+
+      // Delete from Redis backend (BM25 search)
+      try {
+        await compressionApi.deleteAnchors({
+          sessionId,
+          turnId,
+        });
+        console.log(
+          `[CompressionAnchorRepo] Deleted anchors from Redis for turn ${turnId}`
+        );
+      } catch (error) {
+        // Log but don't fail - backend might be unavailable or anchors might not exist
+        console.warn(
+          "[CompressionAnchorRepo] Failed to delete anchors from Redis backend:",
+          error
+        );
+      }
     } catch (error) {
       console.error(
         "[CompressionAnchorRepo] deleteAnchorsByTurnId failed:",

@@ -36,8 +36,12 @@ export class DeleteMessage implements UseCase<Command, Result<void>> {
       session.deleteMessage(messageId);
 
       // Delete compression anchors for this turn (if any exist)
+      // Deletes from both PGlite (local) and Redis backend (BM25 search)
       try {
-        await this.compressionAnchorRepo.deleteAnchorsByTurnId(messageId.toString());
+        await this.compressionAnchorRepo.deleteAnchorsByTurnId(
+          messageId.toString(),
+          sessionId.toString()
+        );
         console.log(`[DeleteMessage] Deleted compression anchors for turn ${messageId.toString()}`);
       } catch (error) {
         // Log but don't fail - anchors might not exist
