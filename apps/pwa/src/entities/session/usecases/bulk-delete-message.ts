@@ -39,9 +39,13 @@ export class BulkDeleteMessage implements UseCase<Command, Result<Session>> {
       }
 
       // Delete compression anchors for these turns (if any exist)
+      // Deletes from both PGlite (local) and Redis backend (BM25 search)
       try {
         for (const messageId of messageIds) {
-          await this.compressionAnchorRepo.deleteAnchorsByTurnId(messageId.toString());
+          await this.compressionAnchorRepo.deleteAnchorsByTurnId(
+            messageId.toString(),
+            sessionId.toString()
+          );
         }
         console.log(`[BulkDeleteMessage] Deleted compression anchors for ${messageIds.length} turns`);
       } catch (error) {

@@ -183,6 +183,13 @@
       "when": 1766567148630,
       "tag": "20251224090548_wonderful_spot",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1767059477292,
+      "tag": "20251230015117_silent_dragon_lord",
+      "breakpoints": true
     }
   ]
 }

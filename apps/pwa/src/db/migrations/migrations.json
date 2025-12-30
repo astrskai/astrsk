@@ -256,5 +256,14 @@
     "bps": true,
     "folderMillis": 1766567148630,
     "hash": "44817115375ef36bd8f59b6ccd138175f8c1df808615e63535bb2a5c57867f17"
+  },
+  {
+    "sql": [
+      "ALTER TABLE \"compression_anchors\" DROP CONSTRAINT \"compression_anchors_session_id_anchor_pk\";",
+      "\nALTER TABLE \"compression_anchors\" ADD CONSTRAINT \"compression_anchors_session_id_turn_id_anchor_pk\" PRIMARY KEY(\"session_id\",\"turn_id\",\"anchor\");"
+    ],
+    "bps": true,
+    "folderMillis": 1767059477292,
+    "hash": "92dc9ed500eba36de4218d5bbced55f1c27354f4b8ae5e39848df82a1d787624"
   }
 ]

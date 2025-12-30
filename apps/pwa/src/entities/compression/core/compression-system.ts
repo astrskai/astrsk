@@ -50,13 +50,15 @@ export class CompressionSystem {
       throw new Error("CompressionSystem not initialized with session ID");
     }
 
-    // Call compression API with character registry
+    // Call compression API - backend will store anchors in Redis
     const output = await compressionApi.compress({
       text,
       type: 'message',
       characterName,
       characterRegistry: this.characterRegistry,
       previousContext,
+      sessionId: this.sessionId, // Backend stores anchors in Redis by sessionId
+      turnId, // Backend stores turnId for anchor cleanup on turn deletion
     });
 
     // Save anchors to DB for fast lookup
@@ -118,12 +120,12 @@ export class CompressionSystem {
       : compressedContext;
 
     // Call retrieval API to get relevant anchor names
-    // Backend LLM analyzes BOTH compressed anchors AND recent uncompressed messages
+    // Backend searches Redis by sessionId and returns relevant anchor names
     const retrievalResult = await compressionApi.retrieve({
       query: userQuery,
       compressedText: fullContextForRetrieval,
       requestingCharacter: characterName,
-      anchorMappings: {}, // Not needed for retrieval - backend uses compressedText
+      sessionId: this.sessionId, // Backend uses sessionId to search Redis
     });
 
     const { relevantAnchors, key_concepts, response_goal } = retrievalResult;
@@ -145,22 +147,37 @@ export class CompressionSystem {
     //       -> <yui><anchor1/>\n\nDecompressed text for relevant-anchor\n\n...<anchor5/></yui>
     let hybridContext = compressedContext;
 
-    for (const anchorName of relevantAnchors) {
-      const anchorData = anchorMappings[anchorName];
-      if (!anchorData) continue;
+    // Track occurrence index for each anchor to replace in turn order
+    const anchorOccurrences: Record<string, number> = {};
 
-      // Replace the anchor tag with decompressed text
-      // Match: <anchorName/> or <anchorName />
+    for (const anchorName of relevantAnchors) {
+      const anchorInstances = anchorMappings[anchorName];
+      if (!anchorInstances || anchorInstances.length === 0) continue;
+
+      // Initialize occurrence counter for this anchor
+      if (!anchorOccurrences[anchorName]) {
+        anchorOccurrences[anchorName] = 0;
+      }
+
+      // Replace each occurrence sequentially with the correct turn's content
+      // Use replace callback to handle multiple occurrences
       const anchorTagRegex = new RegExp(`<${anchorName}\\s*/>`, 'g');
       hybridContext = hybridContext.replace(
         anchorTagRegex,
-        `\n\n${anchorData.text}\n\n`
+        () => {
+          const index = anchorOccurrences[anchorName];
+          // Use the corresponding turn's content, or fallback to last instance if we run out
+          const anchorData = anchorInstances[index] || anchorInstances[anchorInstances.length - 1];
+          anchorOccurrences[anchorName]++;
+          return `\n\n${anchorData.text}\n\n`;
+        }
       );
     }
 
     console.log(
       `[CompressionSystem] Retrieved ${relevantAnchors.length} anchors, decompressed ${Object.keys(anchorMappings).length} anchors into hybrid context`
     );
+    console.log(`[CompressionSystem] Relevant anchors: [${relevantAnchors.join(", ")}]`);
     console.log(`[CompressionSystem] Key concepts: ${key_concepts?.join(", ") || "(none)"}`);
     console.log(`[CompressionSystem] Response goal: ${response_goal || "(none)"}`);
     console.log(`[CompressionSystem] Hybrid context length: ${hybridContext.length} chars (was ${compressedContext.length} chars compressed)`);
@@ -454,13 +471,56 @@ export class CompressionSystem {
   /**
    * Extract text segment from original content
    * Uses starting_text as reference point and extracts up to next segment or end
+   *
+   * Supports fuzzy matching for cases where backend LLM adds quotes/punctuation
    */
   private extractSegmentText(
     originalText: string,
     startingText: string,
     nextStartingText?: string
   ): string {
-    const startIndex = originalText.indexOf(startingText);
+    // Try exact match first
+    let startIndex = originalText.indexOf(startingText);
+
+    // Fallback: Try partial match with first few words (minimum 3 words or 10 chars)
+    if (startIndex === -1) {
+      // Extract core content (remove quotes, punctuation from both ends)
+      const coreStartingText = startingText
+        .replace(/^["''""\s]+|["''""\s]+$/g, '') // Remove quotes/spaces from ends
+        .trim();
+
+      // Validation: Must have at least 3 characters
+      if (coreStartingText.length < 3) {
+        console.warn(
+          `[CompressionSystem] starting_text too short for partial match: "${startingText}"`
+        );
+      } else {
+        // Use first 10 characters or 3 words, whichever is longer
+        const words = coreStartingText.split(/\s+/).filter(w => w.length > 0);
+        const partialMatch = words.length >= 3
+          ? words.slice(0, 3).join(' ')
+          : coreStartingText.slice(0, Math.min(10, coreStartingText.length));
+
+        // Validation: Partial match must be at word boundary
+        const matchIndex = originalText.indexOf(partialMatch);
+        if (matchIndex !== -1) {
+          const isWordBoundary = matchIndex === 0 ||
+            /\s/.test(originalText[matchIndex - 1]);
+
+          if (isWordBoundary) {
+            startIndex = matchIndex;
+            console.warn(
+              `[CompressionSystem] Used partial match: "${startingText}" -> "${partialMatch}"`
+            );
+          } else {
+            console.warn(
+              `[CompressionSystem] Partial match found but not at word boundary: "${partialMatch}"`
+            );
+          }
+        }
+      }
+    }
+
     if (startIndex === -1) {
       console.warn(
         `[CompressionSystem] Could not find starting_text: "${startingText}"`

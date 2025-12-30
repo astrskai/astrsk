@@ -3,6 +3,7 @@ export interface CompressionSegment {
   starting_text: string; // First 2-5 words of original text
   anchor: string; // Semantic name (e.g., "silky-black-waist-tied")
   accessible_to: string[]; // Access control (["*"], ["yui"], ["yui", "ren"])
+  // tags are only used by backend for BM25 search, frontend doesn't need them
 }
 
 // Structured output from compression LLM
