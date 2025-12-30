@@ -5,12 +5,14 @@ import { formatFail } from "@/shared/lib";
 import { DeleteSessionRepo } from "@/entities/session/repos/delete-session-repo";
 import { LoadSessionRepo } from "@/entities/session/repos/load-session-repo";
 import { DeleteTurnRepo } from "@/entities/turn/repos/delete-turn-repo";
+import { CompressionAnchorRepo } from "@/entities/compression/repos";
 
 export class DeleteSession implements UseCase<UniqueEntityID, Result<void>> {
   constructor(
     private loadSessionRepo: LoadSessionRepo,
     private deleteMessageRepo: DeleteTurnRepo,
     private deleteSessionRepo: DeleteSessionRepo,
+    private compressionAnchorRepo: CompressionAnchorRepo,
   ) {}
 
   async execute(id: UniqueEntityID): Promise<Result<void>> {
@@ -35,6 +37,19 @@ export class DeleteSession implements UseCase<UniqueEntityID, Result<void>> {
             `Failed to delete messages: ${bulkDeleteResult.getError()}`,
           );
         }
+      }
+
+      // Delete compression anchors for all turns in this session (bulk operation)
+      // Deletes from both PGlite (local) and Redis backend (BM25 search)
+      // More efficient than per-turn deletion (1 API call instead of N)
+      try {
+        await this.compressionAnchorRepo.deleteAnchorsBySessionId(
+          id.toString()
+        );
+        console.log(`[DeleteSession] Deleted all compression anchors for session ${id.toString()}`);
+      } catch (error) {
+        // Log but don't fail - anchors might not exist
+        console.warn("[DeleteSession] Failed to delete compression anchors:", error);
       }
 
       // Delete session

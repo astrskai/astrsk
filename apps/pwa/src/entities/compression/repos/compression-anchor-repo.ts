@@ -258,8 +258,53 @@ export class CompressionAnchorRepo {
   }
 
   /**
-   * Delete all anchors for a session
+   * Delete anchors for multiple turns (batch operation)
+   * Called when multiple messages are deleted
+   * More efficient than calling deleteAnchorsByTurnId() in a loop (1 API call instead of N)
+   */
+  async batchDeleteAnchorsByTurnIds(
+    turnIds: string[],
+    sessionId: string,
+    tx?: Transaction
+  ): Promise<void> {
+    if (turnIds.length === 0) return;
+
+    const db = tx ?? (await Drizzle.getInstance());
+    try {
+      // Delete from PGlite (local storage)
+      await db
+        .delete(compressionAnchors)
+        .where(inArray(compressionAnchors.turn_id, turnIds));
+
+      // Delete from Redis backend (BM25 search) - batch operation
+      try {
+        await compressionApi.batchDeleteAnchors({
+          sessionId,
+          turnIds,
+        });
+        console.log(
+          `[CompressionAnchorRepo] Deleted anchors from Redis for ${turnIds.length} turns`
+        );
+      } catch (error) {
+        // Log but don't fail - backend might be unavailable or anchors might not exist
+        console.warn(
+          "[CompressionAnchorRepo] Failed to batch delete anchors from Redis backend:",
+          error
+        );
+      }
+    } catch (error) {
+      console.error(
+        "[CompressionAnchorRepo] batchDeleteAnchorsByTurnIds failed:",
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Delete all anchors for a session (bulk operation)
    * Called when a session is deleted (cleanup)
+   * Deletes from both PGlite (local) and Redis backend (BM25 search) in one operation
    */
   async deleteAnchorsBySessionId(
     sessionId: string,
@@ -267,9 +312,24 @@ export class CompressionAnchorRepo {
   ): Promise<void> {
     const db = tx ?? (await Drizzle.getInstance());
     try {
+      // Delete from PGlite (local storage)
       await db
         .delete(compressionAnchors)
         .where(eq(compressionAnchors.session_id, sessionId));
+
+      // Delete from Redis backend (BM25 search) - bulk operation
+      try {
+        await compressionApi.deleteSessionAnchors({ sessionId });
+        console.log(
+          `[CompressionAnchorRepo] Deleted all anchors from Redis for session ${sessionId}`
+        );
+      } catch (error) {
+        // Log but don't fail - backend might be unavailable or anchors might not exist
+        console.warn(
+          "[CompressionAnchorRepo] Failed to delete session anchors from Redis backend:",
+          error
+        );
+      }
     } catch (error) {
       console.error(
         "[CompressionAnchorRepo] deleteAnchorsBySessionId failed:",
