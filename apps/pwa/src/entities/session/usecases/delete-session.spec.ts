@@ -8,6 +8,7 @@ import { DeleteSession } from "@/entities/session/usecases";
 import { Option } from "@/entities/turn/domain/option";
 import { Turn } from "@/entities/turn/domain/turn";
 import { DrizzleTurnRepo } from "@/entities/turn/repos/impl/drizzle-turn-repo";
+import { CompressionAnchorRepo } from "@/entities/compression/repos";
 
 describe("DeleteSession", () => {
   let target: DeleteSession;
@@ -18,8 +19,9 @@ describe("DeleteSession", () => {
   beforeEach(() => {
     turnRepo = new DrizzleTurnRepo();
     sessionRepo = new DrizzleSessionRepo();
+    const compressionAnchorRepo = new CompressionAnchorRepo();
 
-    target = new DeleteSession(turnRepo, sessionRepo, sessionRepo);
+    target = new DeleteSession(sessionRepo, turnRepo, sessionRepo, compressionAnchorRepo);
   });
 
   const createMessage = ({

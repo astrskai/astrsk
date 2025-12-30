@@ -145,7 +145,7 @@ export interface ChunkResponse {
   chunks: string[];
 }
 
-// Delete Anchors API
+// Delete Anchors API (single turn)
 export interface DeleteAnchorsRequest {
   sessionId: string;
   turnId: string;
@@ -155,6 +155,27 @@ export interface DeleteAnchorsResponse {
   success: boolean;
   deleted: number;
   anchors: string[];
+}
+
+// Delete Session Anchors API (bulk delete all anchors for a session)
+export interface DeleteSessionAnchorsRequest {
+  sessionId: string;
+}
+
+export interface DeleteSessionAnchorsResponse {
+  success: boolean;
+  deleted: number;
+}
+
+// Batch Delete Anchors API (bulk delete anchors for multiple turns)
+export interface BatchDeleteAnchorsRequest {
+  sessionId: string;
+  turnIds: string[];
+}
+
+export interface BatchDeleteAnchorsResponse {
+  success: boolean;
+  deleted: number;
 }
 
 /**
@@ -373,6 +394,69 @@ export class CompressionApi {
       return data;
     } catch (error) {
       console.error("[CompressionApi] deleteAnchors failed:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete all anchors for an entire session from Redis backend (bulk operation)
+   * Called when a session is deleted
+   * More efficient than deleting turn-by-turn (1 API call instead of N)
+   */
+  async deleteSessionAnchors(request: DeleteSessionAnchorsRequest): Promise<DeleteSessionAnchorsResponse> {
+    try {
+      const response = await this.fetchWithTimeout(`${this.baseUrl}/session/${request.sessionId}/anchors`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Delete session anchors API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data: DeleteSessionAnchorsResponse = await response.json();
+      console.log(
+        `[CompressionApi] Deleted ${data.deleted} anchors from Redis for session ${request.sessionId}`
+      );
+      return data;
+    } catch (error) {
+      console.error("[CompressionApi] deleteSessionAnchors failed:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete anchors for multiple turns from Redis backend (batch operation)
+   * Called when multiple messages are deleted
+   * More efficient than deleting turn-by-turn (1 API call instead of N)
+   */
+  async batchDeleteAnchors(request: BatchDeleteAnchorsRequest): Promise<BatchDeleteAnchorsResponse> {
+    try {
+      const response = await this.fetchWithTimeout(`${this.baseUrl}/anchors/batch`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Batch delete anchors API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data: BatchDeleteAnchorsResponse = await response.json();
+      console.log(
+        `[CompressionApi] Deleted ${data.deleted} anchors from Redis for ${request.turnIds.length} turns`
+      );
+      return data;
+    } catch (error) {
+      console.error("[CompressionApi] batchDeleteAnchors failed:", error);
       throw error;
     }
   }

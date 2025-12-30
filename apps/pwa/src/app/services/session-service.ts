@@ -158,6 +158,7 @@ export class SessionService {
       this.sessionRepo,
       turnRepo,
       this.sessionRepo,
+      compressionAnchorRepo,
     );
     this.getSession = new GetSession(this.sessionRepo);
     this.getModelsFromSessionFile = new GetModelsFromSessionFile(
