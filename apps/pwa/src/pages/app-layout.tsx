@@ -7,6 +7,7 @@ import { SubscribeChecker } from "@/widgets/dialog/subscribe-checker";
 import { SubscribeNudgeDialog } from "@/widgets/dialog/subscribe-nudge-dialog";
 import { ErrorDetailsDialog, MigrationDetailsDialog } from "@/shared/ui/dialogs";
 import { CompressionDebugPanel } from "@/widgets/compression-debug-panel";
+import { MemoryTestFloatingButton } from "@/widgets/memory-test-panel";
 
 export function AppLayout() {
   return (
@@ -28,6 +29,9 @@ export function AppLayout() {
 
       {/* Compression Debug Panel */}
       <CompressionDebugPanel />
+
+      {/* Memory Test Panel */}
+      <MemoryTestFloatingButton />
     </>
   );
 }

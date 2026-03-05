@@ -61,8 +61,7 @@ export type UpdateHistoryPromptMessageProps =
 
 export class HistoryPromptMessage
   extends Entity<PromptMessageProps & HistoryPromptMessageProps>
-  implements Renderable
-{
+  implements Renderable {
   get type(): PromptMessageType {
     return this.props.type;
   }
@@ -410,6 +409,7 @@ export class HistoryPromptMessage
     // Prioritize main character (speaker) role over user role
     // When char.id === context.char?.id, the main char should get charMessageRole (assistant)
     const charIdHistoryRoleMap = new Map<string, MessageRole>();
+
     for (const char of context.cast.all ?? []) {
       if (char.id === context.char?.id && this.props.charMessageRole) {
         charIdHistoryRoleMap.set(char.id, this.props.charMessageRole);
@@ -483,6 +483,13 @@ export class HistoryPromptMessage
     } else {
       return Result.fail("Invalid history message type");
     }
+
+    // DEBUG: Log final rendered messages with roles
+    console.log("[HistoryPromptMessage] Rendered messages:");
+    messages.forEach((msg, i) => {
+      console.log(`  [${i}] role: ${msg.role}`);
+      console.log(`      content: ${msg.content}`);
+    });
 
     return Result.ok(messages);
   }

@@ -55,6 +55,7 @@ import { toastError, toastSuccess } from "@/shared/ui/toast";
 import BackgroundGrid from "./settings/background-grid";
 import MessageStyling from "./settings/message-styling";
 import { IconWorkflow } from "@/shared/assets";
+import { MemoryTestPanel } from "@/widgets/memory-test-panel";
 
 interface SessionSettingsProps {
   actionButton?: React.ReactNode;

@@ -481,10 +481,48 @@ export class CompressionSystem {
     startingText: string,
     nextStartingText?: string
   ): string {
+    // Helper: Normalize text to letters and spaces only for matching
+    const normalizeForMatching = (text: string): string => {
+      return text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '') // Remove all punctuation, keep only letters, numbers, spaces
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+    };
+
     // Try exact match first
     let startIndex = originalText.indexOf(startingText);
 
-    // Fallback: Try partial match with first few words (minimum 3 words or 10 chars)
+    // Fallback 1: Try normalized letter-only match (ignoring punctuation)
+    if (startIndex === -1) {
+      const normalizedOriginal = normalizeForMatching(originalText);
+      const normalizedStarting = normalizeForMatching(startingText);
+
+      if (normalizedStarting.length >= 3) {
+        const normalizedIndex = normalizedOriginal.indexOf(normalizedStarting);
+
+        if (normalizedIndex !== -1) {
+          // Find the corresponding position in the original text
+          // by counting non-punctuation characters
+          let charCount = 0;
+          for (let i = 0; i < originalText.length; i++) {
+            const normalizedChar = normalizeForMatching(originalText[i]);
+            if (normalizedChar.length > 0) {
+              if (charCount === normalizedIndex) {
+                startIndex = i;
+                console.warn(
+                  `[CompressionSystem] Used normalized match: "${startingText}" (ignoring punctuation)`
+                );
+                break;
+              }
+              charCount += normalizedChar.length;
+            }
+          }
+        }
+      }
+    }
+
+    // Fallback 2: Try partial match with first few words (minimum 3 words or 10 chars)
     if (startIndex === -1) {
       // Extract core content (remove quotes, punctuation from both ends)
       const coreStartingText = startingText
@@ -503,21 +541,26 @@ export class CompressionSystem {
           ? words.slice(0, 3).join(' ')
           : coreStartingText.slice(0, Math.min(10, coreStartingText.length));
 
-        // Validation: Partial match must be at word boundary
-        const matchIndex = originalText.indexOf(partialMatch);
-        if (matchIndex !== -1) {
-          const isWordBoundary = matchIndex === 0 ||
-            /\s/.test(originalText[matchIndex - 1]);
+        // Try normalized partial match
+        const normalizedOriginal = normalizeForMatching(originalText);
+        const normalizedPartial = normalizeForMatching(partialMatch);
 
-          if (isWordBoundary) {
-            startIndex = matchIndex;
-            console.warn(
-              `[CompressionSystem] Used partial match: "${startingText}" -> "${partialMatch}"`
-            );
-          } else {
-            console.warn(
-              `[CompressionSystem] Partial match found but not at word boundary: "${partialMatch}"`
-            );
+        const matchIndex = normalizedOriginal.indexOf(normalizedPartial);
+        if (matchIndex !== -1) {
+          // Find corresponding position in original text
+          let charCount = 0;
+          for (let i = 0; i < originalText.length; i++) {
+            const normalizedChar = normalizeForMatching(originalText[i]);
+            if (normalizedChar.length > 0) {
+              if (charCount === matchIndex) {
+                startIndex = i;
+                console.warn(
+                  `[CompressionSystem] Used normalized partial match: "${startingText}" -> "${partialMatch}"`
+                );
+                break;
+              }
+              charCount += normalizedChar.length;
+            }
           }
         }
       }
@@ -526,6 +569,9 @@ export class CompressionSystem {
     if (startIndex === -1) {
       console.warn(
         `[CompressionSystem] Could not find starting_text: "${startingText}"`
+      );
+      console.warn(
+        `[CompressionSystem] Original text snippet: "${originalText.substring(0, 100)}..."`
       );
       return originalText;
     }

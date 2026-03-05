@@ -405,11 +405,14 @@ export class CompressionApi {
    */
   async deleteSessionAnchors(request: DeleteSessionAnchorsRequest): Promise<DeleteSessionAnchorsResponse> {
     try {
-      const response = await this.fetchWithTimeout(`${this.baseUrl}/session/${request.sessionId}/anchors`, {
+      const response = await this.fetchWithTimeout(`${this.baseUrl}/session`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          sessionId: request.sessionId,
+        }),
       });
 
       if (!response.ok) {
