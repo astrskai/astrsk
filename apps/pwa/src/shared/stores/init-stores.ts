@@ -104,17 +104,17 @@ export async function initStores(
                 }
               }
 
-              // Find DeepSeek for strong model (if not already set)
+              // Use Gemini 2.5 Flash for strong model as well (if not already set)
               if (!modelStore.defaultStrongModel) {
-                const deepseek = models.find(
-                  (m) => m.id === "openai-compatible:deepseek/deepseek-chat"
+                const geminiFlashStrong = models.find(
+                  (m) => m.id === "openai-compatible:google/gemini-2.5-flash"
                 );
-                if (deepseek) {
+                if (geminiFlashStrong) {
                   modelStore.setDefaultStrongModel({
                     apiConnectionId: astrskaiProvider.id.toString(),
                     apiSource: ApiSource.AstrskAi,
-                    modelId: deepseek.id,
-                    modelName: deepseek.name,
+                    modelId: geminiFlashStrong.id,
+                    modelName: geminiFlashStrong.name,
                   });
                 }
               }

@@ -79,13 +79,13 @@ import { translate } from "@/shared/lib/translate-utils";
 // When using AstrskAi, format must be "openai-compatible:modelId"
 // The modelId is what gets sent to the Cloud LLM backend
 const MODEL_TIER_MAPPING = {
-  [ModelTier.Light]: "openai-compatible:deepseek/deepseek-chat",
-  [ModelTier.Heavy]: "openai-compatible:deepseek/deepseek-chat",
+  [ModelTier.Light]: "openai-compatible:google/gemini-2.5-flash",
+  [ModelTier.Heavy]: "openai-compatible:google/gemini-2.5-flash",
 } as const;
 
 // Display names for the fallback models
 const MODEL_DISPLAY_NAMES: Record<string, string> = {
-  "openai-compatible:deepseek/deepseek-chat": "DeepSeek V3.2",
+  "openai-compatible:google/gemini-2.5-flash": "Gemini 2.5 Flash",
 };
 
 // Helper function to check if user is logged in

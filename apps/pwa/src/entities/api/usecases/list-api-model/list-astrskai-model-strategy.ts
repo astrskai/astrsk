@@ -7,20 +7,8 @@ import { ListApiModelStrategy } from "@/entities/api/usecases/list-api-model/lis
 // Hardcoded available models for Astrsk Cloud LLM
 const ASTRSK_CLOUD_MODELS = [
   {
-    id: "openai-compatible:deepseek/deepseek-chat",
-    name: "DeepSeek v3.2",
-  },
-  {
     id: "openai-compatible:google/gemini-2.5-flash",
     name: "Gemini 2.5 Flash",
-  },
-  {
-    id: "openai-compatible:google/gemini-3-flash",
-    name: "Gemini 3 Flash",
-  },
-  {
-    id: "openai-compatible:zai-org/GLM-4.6",
-    name: "GLM-4.6",
   },
 ];
 
