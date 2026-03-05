@@ -194,6 +194,7 @@ This project uses the following third-party software. The full text of each lice
         globIgnores: ["manifest.webmanifest"], // Do not pre-cache the manifest file
         cleanupOutdatedCaches: true,
         clientsClaim: true,
+        skipWaiting: true, // New service worker activates immediately
         maximumFileSizeToCacheInBytes: 20 * 1024 * 1024, // 20MB
       },
 

@@ -8,22 +8,13 @@ import { LocalPersistStorage } from "@/shared/stores/local-persist-storage";
 // Language model options - using openai-compatible format for AstrskAi backend
 // These match the model IDs from list-astrskai-model-strategy.ts
 export const LANGUAGE_MODELS = {
-  DEEPSEEK_OFFICIAL: "openai-compatible:deepseek/deepseek-chat",
-  GEMINI_3_PRO: "openai-compatible:google/gemini-3-pro",
   GEMINI_2_5_FLASH: "openai-compatible:google/gemini-2.5-flash",
-  GEMINI_2_5_FLASH_LITE: "openai-compatible:google/gemini-2.5-flash-lite",
-  GLM_4_6_FRIENDLI: "openai-compatible:zai-org/GLM-4.6",
-  GLM_4_6_OFFICIAL: "openai-compatible:glm-4.6",
-  DEEPSEEK_V3_1_BYTEPLUS: "openai-compatible:byteplus/deepseek-v3-1",
-  OSS_120B_BYTEPLUS: "openai-compatible:byteplus/oss-120b",
 } as const;
 
 // Specific model IDs for different use cases (astrsk.ai provider)
 export const SPECIFIC_MODELS = {
-  // For session creation - use Gemini 2.5 Flash
   SESSION_CREATION: "openai-compatible:google/gemini-2.5-flash",
-  // For workflow generation - use Gemini 3 Pro
-  WORKFLOW_GENERATION: "openai-compatible:google/gemini-3-pro",
+  WORKFLOW_GENERATION: "openai-compatible:google/gemini-2.5-flash",
 } as const;
 
 export type LanguageModel =
@@ -139,9 +130,6 @@ export async function getAstrskAiModel(modelId: string): Promise<DefaultModelSel
   // Hardcode model names for known AstrskAi models instead of querying the API
   const MODEL_NAMES: Record<string, string> = {
     "openai-compatible:google/gemini-2.5-flash": "Gemini 2.5 Flash",
-    "openai-compatible:google/gemini-3-pro": "Gemini 3 Pro",
-    "openai-compatible:deepseek/deepseek-chat": "DeepSeek v3.2",
-    "openai-compatible:zai-org/GLM-4.6": "GLM-4.6",
   };
 
   const modelName = MODEL_NAMES[modelId];
